@@ -1,0 +1,5197 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0"
+xmlns:content="http://purl.org/rss/1.0/modules/content/"
+xmlns:dc="http://purl.org/dc/elements/1.1/"
+xmlns:slash="http://purl.org/rss/1.0/modules/slash/"
+xmlns:atom="http://www.w3.org/2005/Atom"
+xmlns:wfw="http://wellformedweb.org/CommentAPI/">
+<channel>
+<title>毒奶 - 欢迎使用代理访问本站。</title>
+<link>https://limbopro.com/</link>
+<atom:link href="https://limbopro.com/feed/" rel="self" type="application/rss+xml" />
+<language>zh-CN</language>
+<description>每天1次，每次3分钟：奇怪的知识又㕛叒叕增加了！</description>
+<lastBuildDate>Mon, 03 Nov 2025 01:20:00 +0800</lastBuildDate>
+<pubDate>Mon, 03 Nov 2025 01:20:00 +0800</pubDate>
+<item>
+<title>iOS/iPadOS/油猴 - 即刻加入毒奶去网页广告计划，移除特定网页上的广告，新增“额外特性”（QX/Surge/Shadowrocket/Loon/Stash/油猴支持）</title>
+<link>https://limbopro.com/archives/12904.html</link>
+<guid>https://limbopro.com/archives/12904.html</guid>
+<pubDate>Sun, 01 Nov 2020 11:42:00 +0800</pubDate>
+<dc:creator>毒奶</dc:creator>
+<description><![CDATA[via Twitter；前序（必看/Mac/Windows/Android/网页广告拦截方案）选择适合自己的去网页广告方案[post cid="9659" cover="https:\/\/li...]]></description>
+<content:encoded xml:lang="zh-CN"><![CDATA[
+<p><img src="https://limbopro.com/usr/uploads/2021/08/3373964069.jpg" alt="毒奶去网页广告计划 - Quantumult X 去广告效果.jpg" /></p>
+<p>via <a href="https://twitter.com/limboprossr/status/1319689504316219393">Twitter</a>；</p>
+<h2>前序（必看/Mac/Windows/Android/网页广告拦截方案）</h2>
+<h3>选择适合自己的去网页广告方案</h3>
+<p>[post cid="9659" cover="https:\/\/limbopro.com\/usr\/uploads\/2020\/03\/2088172066.png"/]</p>
+<p>@&gt; 如果你更喜欢使用 <strong>Safari</strong> for iOS/iPad/Mac，那么博主推荐搭配使用 <strong>Safari + 内容拦截器</strong>，拦截器支持对 <strong>更多网站</strong> 上网页广告的屏蔽移除；</p>
+<h4>安卓用户</h4>
+<p>[post cid="26805" cover="https:\/\/limbopro.com\/usr\/uploads\/2023\/09\/1865623357.png"/]</p>
+<p>@&gt; <strong>Android 用户</strong>推荐使用 <strong>Firefox 浏览器 + uBlock Origin</strong>；</p>
+<h4>macOS/Windows 用户</h4>
+<p>[post cid="1098" cover="https:\/\/limbopro.com\/usr\/uploads\/2019\/12\/153575874.jpg"/]</p>
+<p>@&gt; <strong>macOS/Windows 用户</strong>推荐安装 <strong>uBlock Orgin</strong> 浏览器扩展（支持Chrome/Edge/Firefox/Opera）；</p>
+<h4>移除 YouTube（网页版）广告</h4>
+<p><img src="https://limbopro.com/usr/uploads/2023/10/754474630.jpg" alt="photo_2023-10-27_19-00-23.jpg" /></p>
+<p>√&gt; “<strong>使用广告拦截器违反 YouTube 服务条款你似乎在使用广告拦截器</strong>。 除非停用广告拦截器或将 YouTube 列入许可名单，否则将无法播放视频。广告让全球数十亿用户能够使用 YouTube。你可以订阅 YouTube Premium，畅享无广告打扰的体验，而创作者通过你的订阅仍然可以。” 截止目前，Adguard 在屏蔽 Youtube 广告已经失效；<strong>ublock Orgin 仍然有效</strong>。博主至今已有好几年没见过 YouTube（PC网页版）广告了。10.28.2023 更新</p>
+<h4>毒奶去网页广告计划</h4>
+<p>[post cid="12904" cover="https:\/\/limbopro.com\/usr\/uploads\/2020\/11\/887520402.png"/]</p>
+<p>√&gt;  <strong>毒奶去网页广告计划</strong>，<strong>导航</strong>、<strong>移除特定网站上的广告并新增额外特性</strong>，需配合代理App使用（如<strong>Surge/QuantumultX/Shadowrocket/Loon</strong>==）；桌面浏览器用户推荐配合<strong>油猴</strong>使用，具体操作步骤参阅后文教程部分；</p>
+<p>i&gt; 其去广告原理与 Adguard/uBlock Origin 大同小异；因为 iOS Chrome 无法安装去广告扩展，遂开启本计划，实现完美度更高的去广告拦截...；本计划开源，源码已同步至 <a href="https://github.com/">Github - Adblock4limbo</a>，有前端基础知识的小伙伴未来如有需要也可自行制作去广告重写/模块，以满足自己个性化需求；</p>
+<h3>毒奶去网页广告计划支持平台</h3>
+<p>√&gt; <strong>支持平台</strong>： iOS/Mac/Windows；<br />
+<strong>使用代理软件或浏览器扩展实现</strong>： Quantumult X /Surge/Shadowrocket/Loon/Stash）；<br />
+<strong>涉及模块</strong>： Rewrite/MITM（<strong>中间人攻击</strong>（英語：Man-in-the-middle attack，缩写：MITM）在密码学和计算机安全领域中是指攻击者与通讯的两端分别建立独立的联系，并交换其所收到的数据，使通讯的两端认为他们正在通过一个私密的连接与对方直接对话，但事实上整个会话都被攻击者完全控制。）；</p>
+<h3>前端知识参阅</h3>
+<p>@&gt; <strong>前端学习与代理软件应用可参考</strong>：<br />
+<a href="https://github.com/limbopro/Adblock4limbo">https://github.com/limbopro/Adblock4limbo</a> ；<br />
+全部代码已放在 Github 仓库，大家可以自行取用，里面有丰富的去网页广告示例；对于前端的学习与Quantumult X/Surge/Shadowrocket 的实操应用（如嵌入脚本/样式）或许也会有一些帮助；值得一提的是，无论 Adguard/Adblock 或油猴脚本，大都是通过嵌入脚本/样式的方式实现对网页中广告元素的移除，Adguard 付费版本提供额外的DNS拦截功能。</p>
+<h4>JavaScript</h4>
+<p>window.open-defuser.js ，脚本来自 <a href="https://github.com/gorhill/uBlock/wiki/Resources-Library#windowopen-defuserjs-">https://github.com/gorhill/uBlock/wiki/Resources-Library#windowopen-defuserjs-</a> ；可将其追加嵌入网页响应体的 <code>&lt;head&gt;</code> 标签开始之后 或 <code>&lt;/body&gt;</code> 标签结束之前，即可打断 <strong>弹窗</strong>；</p>
+<p>window.open-defuser.js </p>
+<p>[collapse status="false" title="window.open-defuser.js 源码"]</p>
+<pre><code>function window_open_defuser() {
+    'use strict';
+    let arg1 = '{{1}}';
+    if (arg1 === '{{1}}') { arg1 = ''; }
+    let arg2 = '{{2}}';
+    if (arg2 === '{{2}}') { arg2 = ''; }
+    let arg3 = '{{3}}';
+    if (arg3 === '{{3}}') { arg3 = ''; }
+    const log = /\blog\b/.test(arg3)
+        ? console.log.bind(console)
+        : () =&gt; { };
+    const newSyntax = /^[01]?$/.test(arg1) === false;
+    let pattern = '';
+    let targetResult = true;
+    let autoRemoveAfter = -1;
+    if (newSyntax) {
+        pattern = arg1;
+        if (pattern.startsWith('!')) {
+            targetResult = false;
+            pattern = pattern.slice(1);
+        }
+        autoRemoveAfter = parseInt(arg2);
+        if (isNaN(autoRemoveAfter)) {
+            autoRemoveAfter = -1;
+        }
+    } else {
+        pattern = arg2;
+        if (arg1 === '0') {
+            targetResult = false;
+        }
+    }
+    if (pattern === '') {
+        pattern = '.?';
+    } else if (/^\/.+\/$/.test(pattern)) {
+        pattern = pattern.slice(1, -1);
+    } else {
+        pattern = pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&amp;');
+    }
+    const rePattern = new RegExp(pattern);
+    const createDecoy = function (tag, urlProp, url) {
+        const decoy = document.createElement(tag);
+        decoy[urlProp] = url;
+        decoy.style.setProperty('height', '1px', 'important');
+        decoy.style.setProperty('position', 'fixed', 'important');
+        decoy.style.setProperty('top', '-1px', 'important');
+        decoy.style.setProperty('width', '1px', 'important');
+        document.body.appendChild(decoy);
+        setTimeout(() =&gt; decoy.remove(), autoRemoveAfter * 1000);
+        return decoy;
+    };
+    window.open = new Proxy(window.open, {
+        apply: function (target, thisArg, args) {
+            log('window.open:', ...args);
+            const url = args[0];
+            if (rePattern.test(url) !== targetResult) {
+                return target.apply(thisArg, args);
+            }
+            if (autoRemoveAfter &lt; 0) { return null; }
+            const decoy = /\bobj\b/.test(arg3)
+                ? createDecoy('object', 'data', url)
+                : createDecoy('iframe', 'src', url);
+            let popup = decoy.contentWindow;
+            if (typeof popup === 'object' &amp;&amp; popup !== null) {
+                Object.defineProperty(popup, 'closed', { value: false });
+            } else {
+                const noopFunc = (function () { }).bind(self);
+                popup = new Proxy(self, {
+                    get: function (target, prop) {
+                        if (prop === 'closed') { return false; }
+                        const r = Reflect.get(...arguments);
+                        if (typeof r === 'function') { return noopFunc; }
+                        return target[prop];
+                    },
+                    set: function () {
+                        return Reflect.set(...arguments);
+                    },
+                });
+            }
+            if (/\blog\b/.test(arg3)) {
+                popup = new Proxy(popup, {
+                    get: function (target, prop) {
+                        log('window.open / get', prop, '===', target[prop]);
+                        return Reflect.get(...arguments);
+                    },
+                    set: function (target, prop, value) {
+                        log('window.open / set', prop, '=', value);
+                        return Reflect.set(...arguments);
+                    },
+                });
+            }
+            return popup;
+        }
+    });
+};</code></pre>
+<p>[/collapse]</p>
+<h4>CSS</h4>
+<p>对于图片/iframe等元素广告，我们可以利用<strong>元素选择器</strong>配合 <strong>!important</strong> 使用；将 <strong>新样式文件</strong> 追加嵌入网页响应体的 <code>&lt;head&gt;</code> 标签开始之后，即可<strong>覆盖原广告样式</strong>；</p>
+<p>Adblock4limbo.user.css （举例命名）</p>
+<pre><code>.ad_img,img[class*=\"ad_img\"], iframe[src*=\"ads\"], img[href*='.gif'] {display:none ! important; pointer-events: none !important;}</code></pre>
+<h3>开源技术资源参阅</h3>
+<p>@&gt; <strong>默认过滤器/EasyList/EasyPrivacy</strong>：<a href="https://easylist.to/index.html">https://easylist.to/index.html</a>； （去广告分流以及通用元素屏蔽规则均提取自 easylist）；<br />
+<strong>uBOL-home</strong>：<a href="https://github.com/uBlockOrigin/uBOL-home">https://github.com/uBlockOrigin/uBOL-home</a>；<br />
+<strong>uBlock Origin Resources Library</strong>：<a href="https://github.com/gorhill/uBlock/wiki/Resources-Library">https://github.com/gorhill/uBlock/wiki/Resources-Library</a>；<br />
+<strong>Adguard Scriptlets</strong> ：<a href="https://github.com/AdguardTeam/Scriptlets">https://github.com/AdguardTeam/Scriptlets</a>；<br />
+<strong>AdGuard 过滤器</strong>：<a href="https://adguard.com/kb/zh-CN/general/ad-filtering/adguard-filters/">https://adguard.com/kb/zh-CN/general/ad-filtering/adguard-filters/</a>；<br />
+<strong>urlhaus-filter</strong>：<a href="https://gitlab.com/malware-filter/urlhaus-filter#full-version；https://urlhaus.abuse.ch/">https://gitlab.com/malware-filter/urlhaus-filter#full-version；https://urlhaus.abuse.ch/</a>；<br />
+<strong>油猴-Tampermonkey®-技术文档</strong>：<a href="https://www.tampermonkey.net/documentation.php?locale=zh">https://www.tampermonkey.net/documentation.php?locale=zh</a>；</p>
+<h2>去网页广告计划介绍（在维护的网站列表及功能更新日志）</h2>
+<p>√&gt; <strong>毒奶去网页广告计划</strong>，<strong>导航</strong>、<strong>移除特定网站上的广告并新增额外特性(如提取M3U8文件/视频下载指引/视频网站搜索集成/<a href="https://limbopro.com/archives/34562.html">划词搜索</a>等)</strong>，手机用户需配合代理App使用（如<strong>Surge/QuantumultX/Shadowrocket/Loon</strong>==）；电脑桌面浏览器用户推荐配合<strong>油猴</strong>使用，具体操作步骤参阅后文教程部分；</p>
+<p>!&gt; 本计划<strong>只对特定网站生效</strong>，具体查看后文<strong>如何反馈问题/提交新网站（重要）</strong>的<strong>在维护网站列表</strong>部分；另外，请确保自己有一定的代理软件（Surge/QX...）/油猴脚本的使用经验，<strong>基本的问题排查能力</strong>，反馈问题时能<strong>提供足够的细节</strong>，提建议时<strong>有自己见解</strong>；</p>
+<p>i&gt; 言而总之，本计划仍<strong>出于业余爱好更新维护</strong>；对于能提出好的建议或意见的用户，我们<strong>热烈欢迎，赞赏</strong>；</p>
+<h3>毒奶去网页广告计划支持时间线</h3>
+<p>i&gt; <strong>毒奶去网页广告计划支持时间线</strong>：<br />
+2025.11.18 导航详情页新增支持<strong>分类按点击率排序和拖拽排序</strong>（点击越多，排序越靠前！（排序数据存储基于localStorage；默认置顶分类不加入点击统计排序；））；<br />
+2025 逐步借助AI(<a href="https://limbopro.com/tag/AI/">Grok/Gemini</a>)协助维护/优化/更新/增加新功能；<br />
+10.15.2024 新增对 Loon的支持（网友送来 Loon 兑换码一枚，熬夜移植...Orz）；<br />
+10.25.2023 <strong>最新Feature、导航使用指南及常见FAQ</strong> -&gt;  <a href="https://t.me/Adblock4limbo/21">https://t.me/Adblock4limbo/21</a><br />
+10.13.2023 为去网页广告计划新增导反馈/建议按钮，同时也起到导航左右；（P.S. 不需要使用到导航的用户可以点击进入导航页面，选择隐藏；）<br />
+08.27.2023 已在服务器部署多端自动化适配脚本，未来维护会更加轻松；<br />
+08.27.2023 新增对 Shadowrocket 的支持（移植自QuantumultX）；<br />
+04.13.2022 新增对 油猴的支持（按油猴的格式重写了用户脚本）；<br />
+03.21.2022 新增对 Surge的支持（移植自Quantumult X）；<br />
+28.10.2020 新增对 Quantumult X的支持；</p>
+<h3>导航功能一览</h3>
+<p>[vplayer url="https:\/\/limbopro.com\/usr\/uploads\/2023\/10\/1625924739.mp4" pic="https:\/\/limbopro.com\/usr\/uploads\/2023\/10\/2427552253.png" /]</p>
+<p>i&gt; 导航及功能使用操作视频；</p>
+<p><img src="https://limbopro.com/usr/uploads/2023/10/400222393.png" alt="功能截图 - 页面右下角按钮.png" /><br />
+<img src="https://limbopro.com/usr/uploads/2024/10/1985797666.png" alt="导航页面内容截图.png" /><br />
+<img src="https://limbopro.com/usr/uploads/2025/11/1783155016.jpg" alt="导航页面-反馈/建议/功能设置//.jpg" /></p>
+<p>i&gt; 你可以在导航详情页的 <strong>反馈/建议/功能设置//</strong> 处<strong>开启</strong>或<strong>关闭</strong>部分特性（OFF代表该功能当前状态为关闭中，ON则代表功能开启中。）；</p>
+<p>i&gt; 新增关闭导航详情页的方法：当你打开 <strong>导航详情页面</strong> 后 ，（方便起见）可<strong>1秒内点击2次导航页面上的空白处关闭导航详情页，或按ESC键关闭</strong>；04.04.2024 更新；</p>
+<h3>在维护的网站列表（示例）</h3>
+<h4>在线影视/动漫/番剧/综艺/娱乐</h4>
+<table>
+<thead>
+<tr>
+<th>网站</th>
+<th>网站类型</th>
+<th>支持软件</th>
+<th>移除广告类型/新增额外特性</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://ddys.pro/">低端影视</a></td>
+<td>在线影视/高清/视频内无澳门新葡京广告/我的最爱</td>
+<td>Surge/QuantumultX/小火箭/油猴</td>
+<td>移除图片/跳过视频广告倒计时</td>
+</tr>
+<tr>
+<td><a href="https://xiaoheimi.net/index.php">小宝影视</a></td>
+<td>在线影视</td>
+<td>同上</td>
+<td>移除图片广告</td>
+</tr>
+<tr>
+<td><del><a href="https://www.nivod8.tv/">泥巴影视</a></del></td>
+<td>在线影视</td>
+<td>同上</td>
+<td>播放页片头20秒广告加速移除</td>
+</tr>
+<tr>
+<td><a href="https://cnys.tv/">CN影视</a></td>
+<td>在线影视</td>
+<td>同上</td>
+<td>图片广告/片头广告</td>
+</tr>
+<tr>
+<td><a href="https://gimy.ai/">剧迷网</a></td>
+<td>在线影视</td>
+<td>同上</td>
+<td>图片</td>
+</tr>
+<tr>
+<td><a href="https://www.duboku.tv/">独播库</a></td>
+<td>在线影视</td>
+<td>同上</td>
+<td>图片</td>
+</tr>
+<tr>
+<td><a href="https://www.olevod.tv/index.html">欧乐影院</a></td>
+<td>在线影视</td>
+<td>同上</td>
+<td>XHR</td>
+</tr>
+<tr>
+<td><del>555影院</del></td>
+<td>在线影视</td>
+<td>同上</td>
+<td>图片</td>
+</tr>
+<tr>
+<td><a href="https://www.libvio.one/">libvio</a></td>
+<td>在线影视</td>
+<td>同上</td>
+<td>图片</td>
+</tr>
+<tr>
+<td><a href="https://www.tvn.cc/">韩剧TV</a></td>
+<td>在线影视</td>
+<td>同上</td>
+<td>图片（需配合去广告分流）</td>
+</tr>
+<tr>
+<td><a href="https://ttsp.tv/">天天视频</a></td>
+<td>在线影视</td>
+<td>同上</td>
+<td>动图/弹窗</td>
+</tr>
+<tr>
+<td><a href="https://www.ntdm.com/">NT动漫</a></td>
+<td>在线影视</td>
+<td>同上</td>
+<td>图片</td>
+</tr>
+</tbody>
+</table>
+<h4>在线精品高清AV、免费AV、JAV线上看、免费JAV、手机AV</h4>
+<p><img src="https://limbopro.com/usr/uploads/2025/07/2407451926.jpg" alt="额外特性示例.jpg" /></p>
+<table>
+<thead>
+<tr>
+<th>网站</th>
+<th>网站类型</th>
+<th>支持软件</th>
+<th>移除广告类型/新增额外特性</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://jable.tv/">Jable</a></td>
+<td>Porn/高清/但不够全</td>
+<td>同上</td>
+<td>图片/弹窗/M3U8文件提取；在番号播放页新增番号搜索按钮，<strong>方便用户直接搜索其他站点对应番号资源</strong></td>
+</tr>
+<tr>
+<td><a href="https://missav.com/">MissAV</a></td>
+<td>Porn/大而全/720p</td>
+<td>同上</td>
+<td>图片/弹窗/离开页面后正常播放视频；在番号播放页新增番号搜索按钮，<strong>方便用户直接搜索其他站点对应番号资源</strong></td>
+</tr>
+<tr>
+<td><a href="https://supjav.com/">Supjav</a></td>
+<td>Porn/高清/全</td>
+<td>Surge/QuantumultX/小火箭/</td>
+<td>播放页弹窗/图片；在番号播放页新增番号搜索按钮，<strong>方便用户直接搜索其他站点对应番号资源</strong></td>
+</tr>
+<tr>
+<td><a href="https://javday.tv/">Javday</a></td>
+<td>Porn</td>
+<td>Surge/QuantumultX/小火箭/</td>
+<td>图片/弹窗</td>
+</tr>
+<tr>
+<td><a href="https://njav.tv/zh/">njav</a></td>
+<td>Porn</td>
+<td>Surge/QuantumultX/小火箭/</td>
+<td>图片</td>
+</tr>
+<tr>
+<td><a href="https://netflav.com/">Netflav</a></td>
+<td>Porn</td>
+<td>Surge/QuantumultX/小火箭/</td>
+<td>图片/播放页弹窗</td>
+</tr>
+<tr>
+<td><a href="https://cn.pornhub.com/">Pornhub</a></td>
+<td>Porn</td>
+<td>Surge/QuantumultX/小火箭/</td>
+<td>图片/视频广告（需配合去广告分流）</td>
+</tr>
+<tr>
+<td><a href="https://www.dmm.co.jp/">DMM</a></td>
+<td>日本某网站</td>
+<td>Surge/QuantumultX/小火箭/</td>
+<td>在番号详情页新增番号搜索按钮，<strong>方便用户直接搜索在线番号资源</strong>；<strong>同人</strong>漫画详情页支持直接搜索在线免费漫画资源；</td>
+</tr>
+<tr>
+<td><a href="https://www.javlibrary.com/cn/">Javlibrary</a></td>
+<td>Jav图书馆</td>
+<td>同上</td>
+<td>移除图片广告；在番号详情页新增番号搜索按钮，<strong>方便用户直接搜索在线番号资源</strong></td>
+</tr>
+<tr>
+<td><a href="https://www.javbus.com/">Javbus</a></td>
+<td>Jav图书馆</td>
+<td>同上</td>
+<td>移除图片广告；在番号详情页新增番号搜索按钮，<strong>方便用户直接搜索在线番号资源</strong></td>
+</tr>
+<tr>
+<td><a href="https://www.xvideos.com/">Xvideos</a></td>
+<td>在线Porn</td>
+<td>Surge/QuantumultX/小火箭/</td>
+<td>片头广告/图片</td>
+</tr>
+<tr>
+<td><a href="https://91porn.com/">91Porn</a></td>
+<td>在线Porn</td>
+<td>同上</td>
+<td>图片/视频广告（需配合去广告分流）；在视频播放页<strong>提供提取91视频资源的下载地址</strong>；</td>
+</tr>
+<tr>
+<td><a href="https://4hu.tv/">4hu</a></td>
+<td>在线Porn</td>
+<td>同上</td>
+<td>图片/弹窗</td>
+</tr>
+</tbody>
+</table>
+<h4>在线漫画/工口漫画/工口动漫</h4>
+<table>
+<thead>
+<tr>
+<th>网站</th>
+<th>网站类型</th>
+<th>支持软件</th>
+<th>移除广告类型/新增额外特性</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Hitomi</td>
+<td>工口漫画及下载</td>
+<td>同上</td>
+<td>图片</td>
+</tr>
+<tr>
+<td>肉漫</td>
+<td>工口漫画</td>
+<td>同上</td>
+<td>图片</td>
+</tr>
+<tr>
+<td>绅士漫画</td>
+<td>工口漫画</td>
+<td>同上</td>
+<td>图片</td>
+</tr>
+<tr>
+<td>禁漫天堂</td>
+<td>工口漫画</td>
+<td>同上</td>
+<td>图片</td>
+</tr>
+<tr>
+<td>anime1</td>
+<td>漫画在线</td>
+<td>同上</td>
+<td>图片</td>
+</tr>
+<tr>
+<td>hanime1</td>
+<td>工口动漫</td>
+<td>同上</td>
+<td>图片</td>
+</tr>
+</tbody>
+</table>
+<h4>在线搜索/问答</h4>
+<table>
+<thead>
+<tr>
+<th>网站</th>
+<th>网站类型</th>
+<th>支持软件</th>
+<th>移除广告类型/新增额外特性</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://www.google.com.hk/">Google</a>/<a href="https://www.bing.com/">Bing</a></td>
+<td>搜索引擎</td>
+<td>同上</td>
+<td>（P.S. 暂时移除）屏蔽搜索结果页的内容农场结果/文字及图片</td>
+</tr>
+<tr>
+<td><a href="https://www.baidu.com/">百度搜索</a>/<a href="https://zhidao.baidu.com/">知道</a></td>
+<td>搜索引擎</td>
+<td>同上</td>
+<td>图片</td>
+</tr>
+<tr>
+<td><a href="https://www.zhihu.com/knowledge-plan/hot-question/hot/0/hour">知乎</a></td>
+<td>问答</td>
+<td>油猴</td>
+<td>PC端未登录状态浏览知乎体验优化</td>
+</tr>
+</tbody>
+</table>
+<h4>在线游戏/游戏玩家服务</h4>
+<table>
+<thead>
+<tr>
+<th>网站</th>
+<th>网站类型</th>
+<th>支持软件</th>
+<th>移除广告类型/新增额外特性</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://op.gg/zh-cn">op.gg</a></td>
+<td>为游戏玩家服务的网站</td>
+<td>全部支持</td>
+<td>移除图片广告</td>
+</tr>
+</tbody>
+</table>
+<p>i&gt; 目前去网页广告计划支持约30+网站：涵盖<strong>在线影视</strong>/<strong>电子漫画</strong>/XXXX；<br />
+参阅完整的：<a href="https://github.com/limbopro/Adblock4limbo/blob/main/Adblock4limbo.weblist">在维护的网站列表</a>（仅针对代理软件如Surge，QX生效..，<strong>该列表即时更新，如与上文列出的网站有出入，请以此为准</strong>）；<a href="https://github.com/limbopro/Adblock4limbo/blob/main/Adguard/Adblock4limbo.user.js">油猴脚本支持网站列表</a>（⬅️ 打开链接后，搜索关键字 @match 即可知道详情）；如果其中没有你 <strong>希望支持去广告的网站</strong>或在维护的网站换了域名，或又出现了广告，可以在本文 <strong>反馈问题/提交新网站</strong> 部分，按要求 <strong>反馈问题/提交新网站</strong>；</p>
+<p>i&gt; 在后续的日常使用中，大家可以参阅本文<strong>导航使用攻略</strong>部分的说明，快速访问在维护的网站。</p>
+<p>i&gt; 如无特别说明，【毒奶去网页广告计划】在对以上网站网页广告去除过程中，代理软件（如Surge、<strong>QuantumultX（最优先适配）</strong>、Shadowrocket等）将优先支持，油猴用户次之或不完美支持；PC、Mac等桌面浏览器用户优先推荐安装 <a href="https://limbopro.com/archives/1098.html">ublock origin</a> 等浏览器扩展，Android 用户推荐安装 <a href="https://limbopro.com/archives/26805.html">Firefox 浏览器 + ublock origin 组合</a> 以屏蔽网页广告，然后再按我们后文的教程安装我们的脚本（以使用脚本提供的额外特性）。</p>
+<h2>如何反馈问题/提交新网站（重要）</h2>
+<p><img src="https://limbopro.com/usr/uploads/2023/09/407956982.png" alt="New issue.png" /></p>
+<p>i&gt; <strong>电报机器人</strong>🤖： <a href="http://t.me/limboprobot">http://t.me/limboprobot</a> （简单建议/问题反馈/有趣文章或讯息投稿/...） ；<br />
+<strong>讨论群组</strong>：<a href="https://t.me/Adblock4limbo/21">https://t.me/Adblock4limbo/21</a> 反馈与去网页广告相关问题，非相关话题可能会被移出群组； </p>
+<p>i&gt; → <a href="https://github.com/limbopro/Adblock4limbo/issues">https://github.com/limbopro/Adblock4limbo/issues</a> ；</p>
+<p>@&gt; 1.如果 <a href="https://github.com/limbopro/Adblock4limbo/blob/main/Adblock4limbo.weblist">在维护的网站列表</a> 里没有你 <strong>希望支持去广告的网站</strong>，你可以 <a href="https://github.com/limbopro/Adblock4limbo/issues">提交issue</a>；2.然后按照后文的 <strong>配置教程</strong> 部分安装去广告分流/模块/重写/或油猴脚本；（如无意外，你提交的网站较有价值的话，一般24h内会完成去广告支持，届时请更新相应模块/重写/分流）；3.在日常使用过程中<strong>你的反馈很重要</strong>，如果 <a href="https://github.com/limbopro/Adblock4limbo/blob/main/Adblock4limbo.weblist">在维护的网站列表</a> 里的网站<strong>换了域名</strong>，或<strong>又出现了广告</strong>，请<a href="https://github.com/limbopro/Adblock4limbo/issues">提交issue</a> 为我们提供相关信息；</p>
+<p>i&gt; <strong>反馈问题/提交新网站</strong> 需包含信息：网站域名/广告出现页面网址/广告类型如(GIF|弹窗|底部横幅|...)，你使用的代理软件(如QuantumultX/Shadowrocket/Surge)或 浏览器扩展 油猴-Tampermonkey...；</p>
+<h3><strong>举例说明</strong>：</h3>
+<p>问题简单描述：某某网站网页还是有广告 ？使用重写或模块后打不开某网站？；<br />
+对应的网页链接：xxx.com/archives/12904.html ？ ==<br />
+使用到的手机：iPhone?<br />
+使用到的应用：QuantumultX ？ Stay？ Surge？<br />
+使用到的重写：<a href="https://limbopro.com/Adblock4limbo.conf">https://limbopro.com/Adblock4limbo.conf</a> ..?<br />
+使用到的脚本：<a href="https://github.com/limbopro/Adblock4limbo/raw/main/Adguard/Adblock4limbo.user.js">https://github.com/limbopro/Adblock4limbo/raw/main/Adguard/Adblock4limbo.user.js</a><br />
+自行尝试：是否尝试清理浏览器缓存？使用无痕模式浏览该网页问题是否仍在？开启或关闭重写/模块再打开该网页是否有不同？哪里不同？==<br />
+截图：出现广告的位置的截图（涉及🔞请打码）？错误日志或提示信息截图..<br />
+其他细节...<br />
+...</p>
+<p>以上仅为举例说明，具体以你的实际为准；</p>
+<p>提供必要的信息，为快速锁定及解决问题有很大的问题；不要叽里呱啦说一大堆，字里行间全是<strong>这啊那啊</strong>这些指示代词看着令人头疼，请不要再这样了。</p>
+<h2>去网页广告配置教程（QX/Surge/Shadowrocket/Loon/Stash...）</h2>
+<p>i&gt; 毒奶去网页广告计划已适配 <strong>QuantumultX/Surge/Shadowrocket/Loon/油猴-Tampermonkey/油猴 - Tampermonkey</strong>，请<strong>根据自己常用的代理软件按步骤操作即可</strong>；</p>
+<p>i&gt; （Chrome/Firefox(for <strong>Mac/Windows</strong>)等 <strong>桌面浏览器用户</strong>以及 <strong>Android 用户</strong> 请直接查看本文 <strong>for 油猴 - Tampermonkey</strong> 部分）；</p>
+<h3>毒奶去广告计划（for QuantumultX）</h3>
+<p>致力于通过 Quantumult X 去除网页上的广告内容（包括横幅、JS弹出广告等等）；</p>
+<p>i&gt; <strong>毒奶去网页广告计划仓库</strong>：<br />
+<a href="https://github.com/limbopro/Adblock4limbo">https://github.com/limbopro/Adblock4limbo</a>；<br />
+<strong>在维护的网站列表</strong>：<a href="https://github.com/limbopro/Adblock4limbo/blob/main/Adblock4limbo.weblist">https://github.com/limbopro/Adblock4limbo/blob/main/Adblock4limbo.weblist</a>；<br />
+<strong>讨论群组</strong>：<a href="https://t.me/Adblock4limbo/21">https://t.me/Adblock4limbo/21</a>；<br />
+<strong>反馈问题/提交新网站</strong>：可以在本文 <strong>反馈/问题提交新网站</strong> 部分，按要求 <strong>反馈问题/提交新网站</strong>；<br />
+<strong>Quantumult X 技术参考文档</strong>：<br />
+<a href="https://github.com/crossutility/Quantumult-X/blob/master/rewrite.md">https://github.com/crossutility/Quantumult-X/blob/master/rewrite.md</a><br />
+<strong>过滤器参考</strong>：AdGuard 过滤器及 Adblock<br />
+<a href="https://adguard.com/zh_cn/blog/adguard-filters.html">https://adguard.com/zh_cn/blog/adguard-filters.html</a> / <a href="https://easylist.to/">https://easylist.to/</a> </p>
+<h4>食用方法</h4>
+<h4>第一步：分流引用</h4>
+<p>1.复制分流地址链接</p>
+<pre><code>https://limbopro.com/Adblock4limbo.list</code></pre>
+<p><img src="https://limbopro.com/usr/uploads/2023/09/217498422.png" alt="Quantumult X - 引用分流规则 - 策略偏好操作图示.png" /></p>
+<p>2.如图所示，打开 QuantumultX App -&gt; 点击右下角<strong>三菱按钮</strong> -&gt; 分流 -&gt; 规则资源 - 点击右上角 <strong>+号</strong>，在<strong>资源路径</strong>处粘贴刚刚<strong>复制的链接</strong> -&gt; 开启 <strong>策略偏好</strong> -&gt; 然后再选则 <strong>Reject</strong>，保存，退至上层分流-规则资源列表页面；P.S. 无论以后是否还会 + 新的分流<strong>规则资源</strong>，请确保该分流<strong>规则资源</strong>（此处我们假设命名为Adblock）始终处于分流-规则资源列表的<strong>顶部</strong>（上图 <strong>3个截图的拼图</strong>中，第2个截图所示，Adblock始终处于<strong>顶部</strong>位置）；</p>
+<p>!&gt; 粘贴链接时，注意删除链接尾部空格；</p>
+<p><strong>第二步：重写引用</strong>： </p>
+<pre><code>https://limbopro.com/Adblock4limbo.conf</code></pre>
+<p>复制👆🏻链接 -&gt; 打开 Quantumult X -&gt; 重写 -&gt; 规则资源 -&gt; 点击右上角 🔗+ 按钮，在 资源路径 输入框 粘贴链接，保存；</p>
+<p>!&gt; 粘贴链接时，注意删除链接尾部空格；</p>
+<p>最后，<strong>生成并信任证书</strong>：如果再此之前已经生成并信任证书则 <strong>生成并配置证书</strong>这一步可选择忽略；</p>
+<blockquote>
+<ol>
+<li>进入 QuantumultX ，点击右下角 [三菱按钮]</li>
+<li>找到 [MitM] 模块 - 生成并配置证书📄</li>
+</ol>
+</blockquote>
+<blockquote>
+<blockquote>
+<ul>
+<li>进入QuantumultX，点击页面右下角三菱<code>按钮</code>，找到<code>MinM</code>模块，点击<code>生成证书</code>，提示生成成功，点击<code>安装证书</code>此时会跳转至 <code>Safari</code>，提示<code>此网站...下载一个配置描述文件。您要允许吗？</code>，点击<code>允许</code>，网页提示<code>已下载描述文件</code>；</li>
+<li>进入 iOS 系统<code>设置</code>- <code>通用</code>-<code>描述文件</code>-<code>已下载的描述文件</code>-选中，并安装，输入密码...完成描述文件安装；</li>
+<li>进入 iOS 系统<code>设置</code>- <code>通用</code>-<code>关于本机</code>-<code>证书信任设置</code>-<code>针对根证书启用完全信任</code>-选中刚刚安装的并启用即可；</li>
+</ul>
+</blockquote>
+</blockquote>
+<blockquote>
+<ol start="3">
+<li>找到 [重写] 模块 - 开启按钮 🔘</li>
+<li>找到 [MitM] 模块 - 开启按钮 🔘</li>
+</ol>
+</blockquote>
+<blockquote>
+<blockquote>
+<p>⚠️ <code>点击安装证书</code>后不是在 <code>Safari</code> 打开，而是在其他浏览器打开，导致证书无法安装；</p>
+</blockquote>
+</blockquote>
+<blockquote>
+<blockquote>
+<p>✅ 解决办法：打开 iPhone <code>设置</code> app - 搜索或下滑找到 <code>Safari浏览器</code> 点击 ， -找到 <code>默认浏览器App</code> ，选择 <code>Safari浏览器</code>， 然后重试第二步即可。</p>
+</blockquote>
+</blockquote>
+<p>i&gt; iOS 屏蔽网站广告的方法大抵有两种，一种是使用 专为 <strong>Safari浏览器</strong> 设计的 <a href="https://limbopro.com/archives/safari-content-blocker.html"><strong>内容拦截器</strong></a>（见附注）；另一种就是本计划所使用到的 网络调试工具（Quantumult X/Surge等代理工具），通过<strong>改写网络请求及其内容实现屏蔽广告的目的</strong>，无论你使用的Chrome浏览器或是safari等其他浏览器...；毒奶去广告计划会带大家更深入的了解 Quantumult X等代理工具 的一些功能，如<a href="https://zh.wikipedia.org/zh-hans/%E4%B8%AD%E9%97%B4%E4%BA%BA%E6%94%BB%E5%87%BB">中间人攻击</a>（英語：Man-in-the-middle attack，缩写：MITM）；屏蔽网页广告的一些原理（理论基础，前端知识如CSS/HTML/JavaScript）；如果你是QuantumultX、Surge等代理软件用户，且喜欢用 Chrome（Safari同样奏效；当你了解到屏蔽广告的实质的后，你会明白这一点；），那么毒奶计划会非常适合你。</p>
+<h3>Faq（N/A）</h3>
+<p>近期有用户反馈在使用TG（电报）时，网络日志会出现 MitM fail（www.google.com:80/443 N/A），有App持续频繁的刷新该请求（异常），如下图所示；</p>
+<p><img src="https://limbopro.com/usr/uploads/2022/08/1877923127.jpg" alt="QuantumultX - www.google.com:80/443 N/A.jpg" /></p>
+<p>@&gt; 原因大致可追踪至 Telegram/电报的奇怪请求，如果你卸载电报便不会再有此类问题；</p>
+<p>√&gt; 除了卸载奇怪的电报外，另外一个折中的解决方法是：打开 Quantumult X - 设置页 - MitM - MitM 主机名 - 添加一行主机名如下：</p>
+<pre><code>-www.google.com</code></pre>
+<p>用于排除代理软件对域名 www.google.com 的中间人攻击；</p>
+<p>@&gt; 另，需要说明清楚的是之所以添加 www.google.com ，<strong>是因为我们的去广告计划需要动态移除<a href="https://zh.wikipedia.org/zh-my/%E5%85%A7%E5%AE%B9%E8%BE%B2%E5%A0%B4">内容农场</a>的搜索结果</strong>；少数情况下，部分电报用户会触发奇怪的请求，如你刚好遭遇且不想看到 N/A 频繁刷新可按如上方法进行折中解决；</p>
+<p>[post cid="20405" /]</p>
+<p>以上。</p>
+<h4>Enjoy it!!</h4>
+<p>✅ 现在，一切完成后，参阅 <a href="https://github.com/limbopro/Adblock4limbo/blob/main/Adblock4limbo.weblist">在维护的网站列表</a>，选择并相应的网站，轻轻滑动页面，如果页面右下角出现 Adblock 按钮，则代表一切顺利；如果列表内没有你想要浏览的网站或相应网站重新出现了广告，可参阅本文 <strong>如何反馈问题/提交新网站</strong> 部分，提交反馈或你想要移除网页广告的网站！</p>
+<h3>毒奶去广告计划（for Surge）</h3>
+<p>致力于通过 Surge 去除网页上的广告内容（包括横幅、JS弹出广告等等）；</p>
+<p>i&gt; <strong>毒奶去网页广告计划仓库</strong>：<br />
+<a href="https://github.com/limbopro/Adblock4limbo">https://github.com/limbopro/Adblock4limbo</a><br />
+<strong>在维护的网站列表</strong>：<a href="https://github.com/limbopro/Adblock4limbo/blob/main/Adblock4limbo.weblist">https://github.com/limbopro/Adblock4limbo/blob/main/Adblock4limbo.weblist</a>；<br />
+<strong>讨论群组</strong>：<a href="https://t.me/Adblock4limbo/21">https://t.me/Adblock4limbo/21</a>；<br />
+<strong>反馈问题/提交新网站</strong>：可以在本文 <strong>反馈问题/提交新网站</strong> 部分，按要求 <strong>反馈问题/提交新网站</strong>；<br />
+<strong>Surge 官方技术参考文档</strong>：<a href="https://wiki.surge.community/">https://wiki.surge.community/</a> ； <a href="https://surge.mitsea.com/scripting/http-response">https://surge.mitsea.com/scripting/http-response</a><br />
+<strong>过滤器参考</strong>：AdGuard 过滤器及Adblock<br />
+<a href="https://adguard.com/zh_cn/blog/adguard-filters.html">https://adguard.com/zh_cn/blog/adguard-filters.html</a> / <a href="https://easylist.to/">https://easylist.to/</a> </p>
+<h4>食用方法</h4>
+<h4>安装及更新模块</h4>
+<pre><code>https://limbopro.com/Adblock4limbo.sgmodule</code></pre>
+<p><strong>第一步：安装模块</strong>：Surge - 首页 - 模块 - 安装新模块 - 粘贴下面的链接 - 好的；（如何 <strong>更新模块</strong>？：左滑 模块的名称 - 点击 更新；）；</p>
+<p>!&gt; 粘贴链接时，注意删除链接尾部空格；</p>
+<h4>配置分流规则</h4>
+<pre><code>https://limbopro.com/Adblock4limbo_surge.list</code></pre>
+<p><strong>第二步：配置分流</strong>：<strong>Surge</strong> - <strong>首页</strong> - <strong>出站模式</strong> - <strong>规则分流</strong> - <strong>代理规则</strong> - <strong>新增</strong> - <strong>增加新规则集</strong> - <strong>外部规则集</strong> - <strong>策略</strong>选择 - <strong>Reject</strong> - 粘贴 如下 URL</p>
+<p>!&gt; 粘贴链接时，注意删除链接尾部空格；</p>
+<h4>更新外部资源</h4>
+<p><strong>第三步：</strong> 更新 <strong>外部资源</strong>：<strong>Surge</strong> - <strong>首页</strong> - 点击左上角 - 进入你的 <strong>配置列表</strong> - <strong>编辑</strong> - <strong>外部资源</strong> - 点击 <strong>全部更新</strong>（这一步很重要，很多时候大家在第一次安装并更新模块完成附带更新<strong>外部资源</strong>，就再也不手动去更新 <strong>外部资源</strong> 了，而是等待它自动更新；）；</p>
+<p>√&gt; 模块引用后记得更新外部资源，并开启 <strong>Rewrite、MitM，脚本</strong>的 开关，配置并信任证书；</p>
+<p>√&gt; <strong>额外的配置</strong>：<strong>MitM</strong> - <strong>配置根证书</strong> - <strong>选项</strong> - 开启 “<strong>跳过服务端证书验证</strong>” 以及 “<strong>用于TCP连接</strong>”，正常情况下无需开启；</p>
+<p>!&gt; <strong>如何更新模块与外部资源（脚本/分流/重写等）？</strong>：模块安装好后，可点击 - <strong>模块</strong> - 找到 <strong>安装的模块</strong> ，左滑 想要更新的模块 - 点击 <strong>更新</strong> ；返回 Surge - <strong>首页</strong> - 点击左上角的 <strong>配置文件名称</strong> - 找到 <strong>编辑</strong> - <strong>外部资源</strong> - <strong>全部更新</strong>； </p>
+<h4>Faq（N/A）</h4>
+<p>目前（Surge）暂未发现因本计划造成的其他影响；</p>
+<h4>Enjoy it!!</h4>
+<p>✅ 现在，一切完成后，参阅 <a href="https://github.com/limbopro/Adblock4limbo/blob/main/Adblock4limbo.weblist">在维护的网站列表</a>，选择并相应的网站，轻轻滑动页面，如果页面右下角出现 Adblock 按钮，则代表一切顺利；如果列表内没有你想要浏览的网站或相应网站重新出现了广告，可参阅本文 <strong>如何反馈问题/提交新网站</strong> 部分，提交反馈或你想要移除网页广告的网站！</p>
+<h3>毒奶去广告计划（for Shadowrocket）</h3>
+<p>致力于通过 Shadowrocket 去除网页上的广告内容（包括横幅、JS弹出广告等等）；</p>
+<p>i&gt; <strong>毒奶去网页广告计划仓库</strong>：<br />
+<a href="https://github.com/limbopro/Adblock4limbo">https://github.com/limbopro/Adblock4limbo</a>；<br />
+<strong>在维护的网站列表</strong>：<a href="https://github.com/limbopro/Adblock4limbo/blob/main/Adblock4limbo.weblist">https://github.com/limbopro/Adblock4limbo/blob/main/Adblock4limbo.weblist</a>；<br />
+<strong>讨论群组</strong>：<a href="https://t.me/Adblock4limbo/21">https://t.me/Adblock4limbo/21</a>；<br />
+<strong>反馈问题/提交新网站</strong>：可以在本文 <strong>反馈问题/提交新网站</strong> 部分，按要求 <strong>反馈问题/提交新网站</strong>；</p>
+<h4>食用方法</h4>
+<p><img src="https://limbopro.com/usr/uploads/2023/08/917481691.png" alt="Shadowrocket - 小火箭安装模块的方法.png" /></p>
+<pre><code>https://limbopro.com/Adblock4limbo.module</code></pre>
+<h4>安装模块</h4>
+<p><strong>第一步：安装模块：</strong> 如图所示，打开 Shadowrocket - 配置 - 模块 - 点击 右上角的加号➕ 粘贴上面的链接 - 然后<strong>启用该模块</strong>；</p>
+<p>!&gt; 粘贴链接时，注意删除链接尾部空格；</p>
+<p><img src="https://limbopro.com/usr/uploads/2023/08/854542579.png" alt="Shadowrocket - 编辑配置文件 - 分流规则.png" /></p>
+<h4>配置分流</h4>
+<pre><code>https://limbopro.com/Adblock4limbo.list</code></pre>
+<p><strong>第二步：配置分流</strong>：复制上面的链接，打开 Shadowrocket - 配置 - 找到正在使用的<strong>配置文件</strong> - 点击 i 进入编辑页面 - 点击 右上角的加号➕ - 添加规则 - <strong>类型</strong>选择 <strong>RULE-SET</strong> - <strong>策略</strong>选择 <strong>REJECT</strong> - 规则集URL处粘贴刚刚复制的链接 - 保存；</p>
+<p>!&gt; 粘贴链接时，注意删除链接尾部空格；</p>
+<p>@&gt; 如之前已经启用HTTPS解密并信任 Shadowrocket 证书可忽略第三四步；</p>
+<h4>配置解密（MitM）</h4>
+<p><strong>第三步：配置解密</strong>：打开 Shadowrocket - 配置 - 找到正在使用的<strong>配置文件</strong> - 点击 i 进入编辑页面 - 找到并进入 <strong>HTTPS解密</strong> - 开启 <strong>HTTPS 解密开关</strong> - （如未安装证书？ 请先安装证书） - 证书授权 - 点击 <strong>证书</strong> - <strong>生成新的CA证书</strong> - <strong>安装证书</strong> - 提示“已下载描述文件” - 进入 iPhone的 <strong>设置</strong> - 找到 <strong>已下载描述文件</strong>（一般在飞行模式上面） - 点击并输入密码完成安装；</p>
+<p><strong>第四步</strong>：安装完成后，你需要去设置 -＞通用-＞关于本机一＞证书信任设置 信任 Shadowrocket 证书；</p>
+<p>OK，大工告成！</p>
+<h4>Enjoy it!!</h4>
+<p>✅ 现在，一切完成后，参阅 <a href="https://github.com/limbopro/Adblock4limbo/blob/main/Adblock4limbo.weblist">在维护的网站列表</a>，选择并相应的网站，轻轻滑动页面，如果页面右下角出现 Adblock 按钮，则代表一切顺利；如果列表内没有你想要浏览的网站或相应网站重新出现了广告，可参阅本文 <strong>如何反馈问题/提交新网站</strong> 部分，提交反馈或你想要移除网页广告的网站！</p>
+<h3>毒奶去广告计划（for Loon）</h3>
+<p>i&gt; Loon 使用手册：<a href="https://nsloon.app/docs/intro">https://nsloon.app/docs/intro</a> ；</p>
+<h4>QX 重写</h4>
+<pre><code>https://limbopro.com/Adblock4limbo.conf</code></pre>
+<p>[post cid="30972" cover="https:\/\/limbopro.com\/usr\/uploads\/2024\/10\/4226605959.png"/]</p>
+<p>i&gt; <del>博主未曾购买Loon（也不打算购买），故可能需要花些时间看下文档...；</del> <strong>Loon用户 可安装 Script-Hub，然后将 QX 重写转换为 Loon 可用的格式</strong>，然后再配置分流即可；</p>
+<h4>配置分流规则</h4>
+<pre><code>https://limbopro.com/Adblock4limbo_surge.list</code></pre>
+<p>第二步：配置分流：Loon - 配置 - 规则 - 右上角+ 添加订阅 - 在URL处粘贴上述链接 - 策略选择 - <strong>Reject</strong>；</p>
+<p>!&gt; 粘贴链接时，注意删除链接尾部空格；</p>
+<h4>安装证书并信任</h4>
+<p>Loon - 配置 - MitM - 证书管理 - （请暂时将<a href="https://support.apple.com/zh-cn/104975">Safari设置为默认浏览器</a>），然后点击 <strong>生成证书</strong> - 按提示 进入 <strong>iOS 设置 App</strong> - 通用 - 描述文件， <strong>安装刚刚下载的证书</strong>， 安装完成后<strong>信任该证书</strong>：设置 - 通用 - 关于本机 -  证书信任设置 - 信任刚刚安装的证书。（如已安装并信任证书，请忽略此步骤）</p>
+<p>最后，<strong>开启相应开关</strong>：Loon - 配置 - <strong>开启 脚本/复写/MitM 的开关</strong>；</p>
+<p>!&gt; 部分网友反馈安装好插件后<a href="https://github.com/limbopro/Adblock4limbo/issues/89">打不开Missav站点</a> 的解决方案：Loon -&gt; 设置 -&gt; MitM -&gt; 域名 ，<strong>关闭 MitM over http/2 选项</strong>。</p>
+<h4>Enjoy it!!</h4>
+<p>✅ 现在，一切完成后，参阅 <a href="https://github.com/limbopro/Adblock4limbo/blob/main/Adblock4limbo.weblist">在维护的网站列表</a>，选择并相应的网站，轻轻滑动页面，如果页面右下角出现 Adblock 按钮，则代表一切顺利；如果列表内没有你想要浏览的网站或相应网站重新出现了广告，可参阅本文 <strong>如何反馈问题/提交新网站</strong> 部分，提交反馈或你想要移除网页广告的网站！</p>
+<h3>毒奶去广告计划（for Stash）</h3>
+<h4>QX 重写</h4>
+<pre><code>https://limbopro.com/Adblock4limbo.conf</code></pre>
+<h4>去广告分流</h4>
+<pre><code>https://limbopro.com/Adblock4limbo.list</code></pre>
+<p>i&gt; 注意⚠️：引用去广告分流时，记得将策略偏好设置为reject；</p>
+<p>[post cid="30972" cover="https:\/\/limbopro.com\/usr\/uploads\/2024\/10\/4226605959.png"/]</p>
+<p>i&gt; <del>博主未曾购买Stash（也不打算购买），故可能需要花些时间看下文档...；</del> Stash用户 可安装 Script-Hub，然后将 QX 重写转换为 Stash 可用的格式，然后再配置分流即可；</p>
+<h3>毒奶去广告计划（for 油猴 - Tampermonkey）</h3>
+<p><img src="https://limbopro.com/usr/uploads/2024/04/950870479.png" alt="tampermonkey.png" /></p>
+<p>√&gt; 如无特别说明，【毒奶去网页广告计划】在对以上网站网页广告去除过程中，代理软件（如Surge、<strong>QuantumultX（最优先适配）</strong>、Shadowrocket等）将优先支持，油猴用户次之或不完美支持，PC、Mac等桌面浏览器用户优先推荐安装 <a href="https://limbopro.com/archives/1098.html">ublock origin</a> 等浏览器扩展，Android 用户推荐安装 <a href="https://limbopro.com/archives/26805.html">Firefox 浏览器 + ublock origin 组合</a> 以屏蔽网页广告。</p>
+<p>√&gt; 注意！如果你是 iPhone/iPad 用户，装有代理软件如 QuantumultX/Surge/Shadowrocket/Loon/Stash 其一，且代理软件处于正常使用状态，请优先按本文之前 <strong>相应代理软件配置</strong> 的使用说明<strong>在代理软件上进行操作</strong>，操作完成后无论是使用 Chrome/Safari/Edge，还是 Firefox 都可以得到无差别的去相应网站网页广告体验，无需再使用第三方用户脚本管理器（如Stay）为 Safari 安装用户脚本；<strong>本去网页广告计划优先支持代理软件</strong>；</p>
+<h2>去网页广告配置教程（油猴）</h2>
+<pre><code>https://github.com/limbopro/Adblock4limbo/raw/main/Adguard/Adblock4limbo.user.js</code></pre>
+<p>i&gt; <strong>复制上述<a href="https://github.com/limbopro/Adblock4limbo/raw/main/Adguard/Adblock4limbo.user.js">用户脚本</a>链接</strong>，并在已安装 <strong>Tampermonkey</strong> 扩展的浏览器打开，即可进行安装；</p>
+<p>i&gt; 专为 油猴 - Tampermonkey 浏览器扩展打造（<strong>更多的是 Chrome/Firefox </strong>桌面浏览器<strong>用户（Windows/Mac）/Firefox for Android 用户</strong>），致力于通过 Tampermonkey 引入 JS/CSS 文件的方式去除网页上的广告内容（包括横幅、JS弹出广告等等）； <strong>Android -&gt; Firefox -&gt; 附加组件 -&gt; 安装 Tampermonkey</strong> -&gt; 安装<a href="https://github.com/limbopro/Adblock4limbo/raw/main/Adguard/Adblock4limbo.user.js">用户脚本</a> / iOS -&gt; Safari -&gt; 安装 Stay /或其他用户脚本管理器 -&gt; 安装<a href="https://github.com/limbopro/Adblock4limbo/raw/main/Adguard/Adblock4limbo.user.js">用户脚本</a>；详细步骤可参阅后文；</p>
+<p>[vplayer url="https:\/\/limbopro.com\/usr\/uploads\/2023\/10\/1625924739.mp4" pic="https:\/\/limbopro.com\/usr\/uploads\/2023\/10\/2427552253.png" /]</p>
+<p>i&gt; 功能使用操作视频；</p>
+<p><img src="https://limbopro.com/usr/uploads/2023/10/400222393.png" alt="功能截图 - 页面右下角按钮.png" /><br />
+<img src="https://limbopro.com/usr/uploads/2024/10/1985797666.png" alt="导航页面内容截图.png" /></p>
+<p>√&gt; 相较于iOS 用户，桌面浏览器用户<strong>安装油猴脚本后</strong>将额外享受一些 <strong>特性</strong>（...因为手机没有快捷键可用）：</p>
+<p>i&gt; <strong>安装油猴脚本后</strong>，浏览器打开任何网页右下角都将出现一个导航按钮，相对于iOS用户，你可以<strong>使用ESC键快速操作一些功能</strong>：<br><br />
+【1.<strong>键盘快捷键妙用</strong>；】<br />
+1.1 当页面右下角导航按钮消失后，按ESC键可快速唤出；<br />
+1.2 当页面右下角出现导航按钮时，此时再按一次ESC键可唤出导航详情页； 1秒内（具体是500ms内）<strong>连续按 2次 ESC 键可唤出 导航详情页</strong>；<br />
+1.3 🔙<strong>当处于导航详情页时，按ESC可退出导航详情页</strong>；<br />
+1.4 🔍<strong>当处于导航详情页时，按G键或空格键 可快速唤出搜索框</strong>，可快速进行搜索操作（同时会退出导航页）；<br />
+1.5 【页面锁🔒】<strong>当处于导航详情页时，按L键可开启页面锁</strong>🔒（需设置密码）；<br><br />
+【2.<strong>成人保护模式</strong>】<br />
+2.1 当你浏览成人网站时，但因为其他事离开了当前页面：返回时，页面将会模糊化；此时按 ESC 键/点击屏幕/上下滑动都可以解除模糊；<br />
+2.2 当你浏览成人网站，看着看着睡着了，页面将会在10分钟后模糊；（未来按需会加锁🔐），再看。<br><br />
+【<strong>3.页面锁🔒模式</strong>】<br />
+3.1 导航详情页新增锁屏按钮；需要时可模糊/锁定当前网页内容，如需查看页面需输入密码；<br />
+3.2 PC端油猴用户可 <strong>连按3次ESC键</strong> 快速模糊/<strong>锁定当前页面</strong>；<del>GreasyFork 晚些时候同步更新</del> GreasyFork 版本已停更；</p>
+<p>@&gt; 关于<strong>丰富导航页面</strong>，如果你<strong>有好的网站推荐</strong>，欢迎通过本文 <strong>如何反馈问题/提交新网站</strong> 提供的方式进行建议/反馈；</p>
+<p>i&gt; <strong>毒奶去网页广告计划仓库</strong>：<br />
+<a href="https://github.com/limbopro/Adblock4limbo">https://github.com/limbopro/Adblock4limbo</a>；<br />
+<strong>在维护的网站列表</strong>：<a href="https://github.com/limbopro/Adblock4limbo/blob/main/Adblock4limbo.weblist">https://github.com/limbopro/Adblock4limbo/blob/main/Adblock4limbo.weblist</a>；<br />
+<strong>用户脚本</strong>：<a href="https://github.com/limbopro/Adblock4limbo/raw/main/Adguard/Adblock4limbo.user.js">https://github.com/limbopro/Adblock4limbo/raw/main/Adguard/Adblock4limbo.user.js</a><br />
+<strong>讨论群组</strong>：<a href="https://t.me/Adblock4limbo/21">https://t.me/Adblock4limbo/21</a>；<br />
+<strong>反馈问题/提交新网站</strong>：可以在本文 <strong>反馈问题/提交新网站</strong> 部分，按要求 <strong>反馈问题/提交新网站</strong>；</p>
+<h4>订阅转换工具/去广告分流</h4>
+<p>[post cid="21445" /]</p>
+<p>√&gt; 需要注意的是，较之于使用 Surge/QuantumultX/Loon/Shadowrocket等iOS代理App ，安卓用户（如使用Clash的用户）/ 以及<strong>使用油猴脚本管理器</strong>（如<strong>Stay/tampermonkey</strong>）的用户仍需对<strong>部分广告域名进行拦截</strong>才能<strong>使得网页上的广告得以完美去除</strong>；去广告分流规则放在Github上：<a href="https://github.com/limbopro/Adblock4limbo/tree/main/rule">Adblock4limbo.list/Adblock4limbo_surge.list</a>；</p>
+<p>i&gt; <del>greasyfork/<strong>sleazyfork</strong> 版</del> 及 <strong>Github版</strong>，两个版本请择一使用，同时使用将可能导致未知冲突；GreasyFork 版本已停更；</p>
+<h3>如何安装油猴脚本？</h3>
+<h4>Github版（推荐）</h4>
+<p>i&gt; <strong>未阉割</strong>：引入更多 uBlock Origin 原生脚本（如万能弹窗移除），匹配更多网站；测试功能优先体验；</p>
+<p>√&gt; <strong>尝鲜</strong>：位于 Github 仓库，每次代码更新均可审查；</p>
+<p><a href="https://github.com/limbopro/Adblock4limbo/raw/main/Adguard/Adblock4limbo.user.js">https://github.com/limbopro/Adblock4limbo/raw/main/Adguard/Adblock4limbo.user.js</a>；</p>
+<pre><code>https://github.com/limbopro/Adblock4limbo/raw/main/Adguard/Adblock4limbo.user.js</code></pre>
+<h4>greasyfork/sleazyfork 版（已停更！）</h4>
+<p>!&gt; 为了统一管理和维护，greasyfork/sleazyfork 版已停更！请替换安装 Github 版，issues 请在 GitHub 提交；</p>
+<p>i&gt; <strong>阉割版</strong>：不同于 Github 版，我们将按 GreasyFork 规范“阉割”后再同步至 GreasyFork；一些 Feature 碍于步骤繁琐，无法便捷移植至 GreasyFork；<strong>如果你喜欢尝鲜，可以选择 Github 版</strong>，Github 每次更新都会有<a href="https://github.com/limbopro/Adblock4limbo/commits/main">记录</a>，每次代码更新均可审计；</p>
+<p>√&gt; <strong>毒奶去广告计划油猴 - TamperMonkey版</strong>：<a href="https://greasyfork.org/zh-CN/scripts/443290-adblock4limbo">https://greasyfork.org/zh-CN/scripts/443290-adblock4limbo</a> （成人脚本限制，需登录greasyfork账号）；<br />
+<strong>Sleazyfork版免登陆即可安装</strong>：<a href="https://sleazyfork.org/zh-CN/scripts/443290-adblock4limbo">https://sleazyfork.org/zh-CN/scripts/443290-adblock4limbo</a> </p>
+<p>[post cid="6241" cover="https:\/\/limbopro.com\/usr\/uploads\/2019\/12\/3914946004.jpg"/]</p>
+<p>i&gt; <strong>如果你是安卓或Mac/Windows 用户</strong>，则可以在相应浏览器上<strong>安装油猴（用户）脚本管理器扩展</strong>：诸如 <a href="https://limbopro.com/archives/greasyfork.html">Tampermonkey</a>（<a href="https://download-chromium.appspot.com/?platform=Android_Arm64&amp;type=snapshots">Chromium</a>、Firefox（<a href="https://www.mozilla.org/zh-CN/firefox/channel/android/">Firefox Nightly for Developers</a>） 和 Safari 都支持安装）；<a href="https://apps.apple.com/cn/app/stay-%E7%94%A8%E6%88%B7%E8%84%9A%E6%9C%AC%E6%89%A9%E5%B1%95%E7%AE%A1%E7%90%86/id1591620171">Stay</a> for Safari（iPhone）、<a href="https://limbopro.com/archives/userscripts.html">userscripts</a> for Safari（iPhone）；</p>
+<p>√&gt; <strong>安卓用户</strong>：下载 Firefox（<a href="https://www.mozilla.org/zh-CN/firefox/channel/android/">Firefox Nightly for Developers</a>） -&gt; 安装完成后打开 Firfox，打开 <a href="https://addons.mozilla.org/en-US/android/addon/tampermonkey/">Tampermonkey for Firefox Browser ADD-ONS</a> -&gt; 安装完成后打开 <a href="https://sleazyfork.org/zh-CN/scripts/443290-adblock4limbo">GreasyFork</a>  即可安装毒奶去广告计划油猴脚本；其他同理；</p>
+<p>[post cid="6204" cover="https:\/\/limbopro.com\/usr\/uploads\/2019\/12\/1413602382.jpg"/]</p>
+<p>√&gt; 安卓用户，且使用 Clash 客户端的用户可使用<strong>博主自主维护的订阅转换</strong>，自带上述去广告域名；</p>
+<p>√&gt; 如觉得好用，请登录 <a href="https://greasyfork.org/zh-CN">GreasyFork</a> ，并给我们的脚本好评！ -&gt; <a href="https://greasyfork.org/zh-CN/scripts/443290-adblock4limbo">https://greasyfork.org/zh-CN/scripts/443290-adblock4limbo</a> ；</p>
+<p>!&gt; 请不要以<strong>差评</strong>的方式反馈问题。博主大多数时候（除需更新代码外）不会专门登录 Greasyfork 看评论；可以通过 Github issue 或群组提交反馈。</p>
+<p><img src="https://limbopro.com/usr/uploads/2023/02/4282468446.png" alt="截屏2023-02-05 21.34.21.png" /></p>
+<p>@&gt; 自 04.13.2022 至 02.05.2023 年，毒奶去广告计划（for 油猴脚本） 已安装用户达到 2.3K ，约合每日新增用户数7人！撒花~ ； </p>
+<h2>导航使用攻略（使用技巧/隐藏/禁用）</h2>
+<p><img src="https://limbopro.com/usr/uploads/2024/10/2885513946.png" alt="导航按钮.png" /><br />
+<img src="https://limbopro.com/usr/uploads/2024/10/1985797666.png" alt="导航页面内容截图.png" /></p>
+<p>[vplayer url="https:\/\/limbopro.com\/usr\/uploads\/2023\/10\/1625924739.mp4" pic="https:\/\/limbopro.com\/usr\/uploads\/2023\/10\/2427552253.png" /]</p>
+<p>i&gt; 导航及功能使用操作视频；</p>
+<p>/* 新增反馈&amp;导航按钮&amp;划词搜索&amp;执行JS&amp;成人保护模式</p>
+<h3>导航使用技巧</h3>
+<p>i&gt; 使用技巧最后更新于 11.17.2025；</p>
+<p>i&gt; 最新导航使用技巧：可参阅 Adguard/<a href="https://github.com/limbopro/Adblock4limbo/blob/main/Adguard/Adblock4limbo.user.js">Adblock4limbo.user.js</a> 功能注释部分；下文均为对注释的摘引，可能跟最新功能更新内容有所出入（但不会太大）；</p>
+<p>i&gt; <strong>【导航】使用指南（PC/Mac）</strong><br />
+/// 按教程安装好油猴脚本<br />
+/// 访问特定网站（详见 @match 部分）<br />
+/// 1.1 1秒内连续按2次 ESC键 可唤出【导航页面】；<br />
+/// 1.2 当处于导航页面时，按ESC键 或1秒内点击2次导航页的空白处 可退出【导航页面】；</p>
+<p>i&gt; <strong>【导航】使用指南（iOS）</strong><br />
+/// 按教程配置好相应重写/去广告分流<br />
+/// 访问【目前在维护的网站目录】里的（绝大多数）网站<br />
+/// 1.1 页面空白处1秒内连续点击4次及以上亦可唤出【导航页面】；</p>
+<p>i&gt; <strong>【导航】使用指南（PC/Mac/iOS）</strong><br />
+/// <strong>成人保护模式</strong>[开启的情况下，见导航详情页左上角设置部分]<br />
+/// 仅针对部分主要成人网站生效<br />
+/// 当你浏览成人网站时，切换到别的应用或页面再返回时，网站页面将被模糊<br />
+/// 可在 导航 - <strong>反馈/建议/功能设置//</strong> 开启或关闭成人保护模式(ON/OFF)；</p>
+<p>i&gt; <strong>导航页面</strong>包含部分【目前在维护的网站目录】里的网站，以方便大家快速访问。</p>
+<p>@&gt; 导航内容仍在完善中，欢迎大家<strong>补充好用的网站</strong>，以丰富其内容；（参阅 <strong>如何反馈问题/提交新网站</strong> 部分）；</p>
+<h3>如何全局隐藏/禁用右下角导航按钮以及成人保护模式</h3>
+<p>@&gt; 隐藏页面右下角导航🧭按钮🔘不影响PC/Mac端快捷键使用，移动端仍可<strong>1秒内连续点击页面空白处4次及以上</strong>唤出【导航页面】；</p>
+<p><img src="https://limbopro.com/usr/uploads/2024/11/1523541687.png" alt="iOS QX/Stash/Surge/等用户设置重写.png" /></p>
+<p>i&gt; // <strong>如何【全局隐藏/禁用右下角导航按钮以及成人保护模式（iOS）】</strong><br />
+/// iOS QX/Stash/Surge/等用户<br />
+/// 1.添加主机名， <strong>limbopro.com</strong><br />
+/// 2.添加重写， <strong>匹配的url</strong> 填写正则表达式 <strong>Adblock4limbo.user.js</strong> ，类型选择 <strong>response-body/http-response</strong><br />
+/// 3.<strong>匹配的body</strong>处 填写正则表达式 <strong>daohangMode|adultMode</strong> ，<strong>替换</strong>处 填写 <strong>off</strong><br />
+/// 4.daohangMode 代表导航，adultMode 代表成人保护模式，你可以都关闭或只关闭其一</p>
+<p><img src="https://limbopro.com/usr/uploads/2024/11/652858924.png" alt="tampermonkey 篡改猴🐒脚本管理器设置 PC/Mac.png" /></p>
+<p>i&gt; // <strong>如何【全局隐藏/禁用右下角导航按钮以及成人保护模式（PC/Mac）】</strong><br />
+/// PC/Mac 油猴用户...<br />
+/// 进入 Tampermonkey 管理面板 - 找到 <strong>Adblock4limbo.[github]</strong><br />
+/// 找到 daohang_build()  大概在 210 多行<br />
+/// 然后将 daohangMode/adultMode 的值修改成 false 即可</p>
+<h2>其他去广告分流（去广告增强/推荐添加）</h2>
+<p>这里需要再次强调的是，<strong><a href="https://github.com/limbopro/Adblock4limbo/tree/main/rule">Adblock4limbo.list</a></strong> 内包含的规则很少，仅适用于当前在 <a href="https://github.com/limbopro/Adblock4limbo/blob/main/Adblock4limbo.weblist">维护的网站</a>，<strong>如果你需要更强大的分流规则支持</strong>，<strong>可按需添加如下分流</strong>，<strong>并将策略偏好设置为 Rejec</strong>t；</p>
+<p><strong>更多去广告分流位于</strong>：<a href="https://github.com/limbopro/Adblock4limbo/tree/main/rule">https://github.com/limbopro/Adblock4limbo/tree/main/rule</a> ；</p>
+<h3>EasyList/EasyListChina/BanAD 介绍</h3>
+<p>以下分流， QuantumultX 和 小火箭 可直接引用，策略偏好选 Reject；Surge 用户：<a href="https://github.com/limbopro/Adblock4limbo/tree/main/rule/Surge">https://github.com/limbopro/Adblock4limbo/tree/main/rule/Surge</a> ，在这里就不过多介绍；</p>
+<p>BanAD.list 针对广告联盟的去广告分流（推荐添加）</p>
+<pre><code>https://raw.githubusercontent.com/limbopro/Adblock4limbo/main/rule/QuantumultX/BanAD.list</code></pre>
+<p>Peter_Lowe_adservers.list 各式各样都有 （推荐添加）</p>
+<pre><code>https://raw.githubusercontent.com/limbopro/Adblock4limbo/main/rule/QuantumultX/Peter_Lowe_adservers.list</code></pre>
+<p>easylist.list 针对国外网站的去广告分流（推荐添加）</p>
+<pre><code>https://raw.githubusercontent.com/limbopro/Adblock4limbo/main/rule/QuantumultX/easylist.list</code></pre>
+<p>easylistchina.list 针对中国大陆的网站的去广告分流（推荐添加）</p>
+<pre><code>https://raw.githubusercontent.com/limbopro/Adblock4limbo/main/rule/QuantumultX/easylistchina.list</code></pre>
+<h2>Faq（常见问题与解答）</h2>
+<p>Faq（常见问题与解答）参阅：<a href="https://t.me/Adblock4limbo/21">https://t.me/Adblock4limbo/21</a>；</p>
+<h3>出现 Cloudflare Challenge 如何排查问题</h3>
+<p>假设你访问 abc.com 网站，<strong>出现 Cloudflare 的相关提示</strong>，<strong>禁止或使得你无法正常访问 abc.com 网站</strong>，可能的原因有：1.代理节点脏，2.该网站启用了严格的防御策略；</p>
+<p><strong>可尝试如下解决方案</strong>：</p>
+<p>可尝试为该网站设置分流规则，1.<strong>使用不同节点访问 abc.com 网站</strong>，<br />
+如果仍出现 Cloudflare 的相关提示：</p>
+<p>2.进入代理软件 - MitM - 添加主机名：<code>-abc.com</code>，禁止对 abc.com 进行中间人攻击；</p>
+<p>3.通过本文 <strong>如何反馈问题/提交新网站（重要）</strong>，进行反馈；</p>
+<h3>关于内容安全策略以及一些解决办法</h3>
+<p>[post cid="24126" cover="https:\/\/limbopro.com\/usr\/uploads\/2022\/11\/674029100.png"/]</p>
+<p>使用iOS上的一些代理软件可以轻易做到绕过CSP；如果你尝试通过代理软件在一些网站的网页插入 JS，但未成功，可能该网站开启了CSP，可以参阅上文解决；</p>
+<p>一些额外可能会需要知道的小知识：CSP，内容安全策略；关于如何绕过CSP，目前PC端并没有很好的办法，所以去网页广告计划可能无法直接在全部网站投入使用完整功能；（其中的<strong>导航功能</strong>涉及引入 function.js；部分网站（如Twitter）由于开启了CSP，所以无法直接引用JS；），如你特别需要，可以再额外安装 function.js 对应的用户脚本：<a href="https://github.com/limbopro/Adblock4limbo/raw/main/Adguard/Adblock4limbo.function.user.js">function.user.js</a> ，之所以使用.user.js 后缀，是因为<strong>用户脚本管理器</strong>有这样的约定，用于识别与安装它们；<strong>需要注意的是，不能让 adblock4limbo.user.js / function.user.js 在一个没有内容安全策略的网站同时生效</strong>，也就是说，你应稍微配置一下 function.user.js ，使其只 match 有<strong>内容安全策略</strong>的网站；</p>
+<h2>其他去广告教程（YouTube App...）</h2>
+<h3>YouTube app 去广告</h3>
+<p>[post cid="12727" cover="https:\/\/limbopro.com\/usr\/uploads\/2020\/10\/4070142549.jpg"/]</p>
+<p>i&gt; 使用 QuantumultX/Surge/Shadowrocket/Loon/Stash 去除 YouTube app 视频播放页加载广告，方案实现来自神机规则；</p>
+<h3>NobyDa 去广告分流规则</h3>
+<p>√&gt; 为避免产生大量重复，如已添加 <a href="https://raw.githubusercontent.com/limbopro/Adblock4limbo/main/Adblock4limbo.list">Adblock4limbo.list</a> ，可不用再添加 NobyDa 去广告分流规则；</p>
+<p>i&gt; <strong>ND-AD</strong> <a href="https://github.com/NobyDa/ND-AD；（For">https://github.com/NobyDa/ND-AD；（For</a> QuantumultX &amp; Surge）<br />
+<del><strong>如何使用</strong>：自行参阅 <a href="https://github.com/NobyDa/ND-AD/blob/master/README.md">Readme</a> 文档；</del> 已很长时间不再维护；</p>
+<h3>iPhone/iPad/Mac/Windows/Android浏览器广告屏蔽扩展</h3>
+<p>[post cid="1098" cover="https:\/\/limbopro.com\/usr\/uploads\/2019\/12\/153575874.jpg"/]</p>
+<p>[post cid="4485" cover="https:\/\/limbopro.com\/usr\/uploads\/2019\/11\/4035067133.jpg"/]</p>
+<p>[post cid="9659" cover="https:\/\/limbopro.com\/usr\/uploads\/2020\/03\/2088172066.png"/]</p>
+<p>@&gt; Mac/Windows 用户，推荐使用 Adguard/Ublock Origin，它们家亦提供免费的浏览器扩展，Safari/Chrome 都有；<strong>Android 需要去网页广告的用户</strong> 可参阅 uBlock Origin 这篇文章的 Android 部分；</p>
+<p>[post cid="15628" /]</p>
+<h2>Tips</h2>
+<p>一些小 Tips</p>
+<h3>禁止浏览器自动跳转到App</h3>
+<p>[post cid="21171" /]</p>
+<h3>测试</h3>
+<p><a href="http://limbopro.com/Adblock4limbo.html">新窗口打开</a></p>
+]]></content:encoded>
+<slash:comments>0</slash:comments>
+<comments>https://limbopro.com/archives/12904.html#comments</comments>
+<wfw:commentRss>https://limbopro.com/feed/archives/12904.html</wfw:commentRss>
+</item>
+<item>
+<title>关于毒奶（02.25.2025）</title>
+<link>https://limbopro.com/archives/2041.html</link>
+<guid>https://limbopro.com/archives/2041.html</guid>
+<pubDate>Mon, 12 Aug 2019 23:55:00 +0800</pubDate>
+<dc:creator>毒奶</dc:creator>
+<description><![CDATA[via Dragon Ball]]></description>
+<content:encoded xml:lang="zh-CN"><![CDATA[
+<p><img src="https://limbopro.com/usr/uploads/2019/11/2264724749.jpg" alt="Dragon Ball.png" /></p>
+<p>via Dragon Ball</p>
+<p class="more"><a href="https://limbopro.com/archives/2041.html" title="关于毒奶（02.25.2025）">[...]</a></p>
+]]></content:encoded>
+<slash:comments>0</slash:comments>
+<comments>https://limbopro.com/archives/2041.html#comments</comments>
+<wfw:commentRss>https://limbopro.com/feed/archives/2041.html</wfw:commentRss>
+</item>
+<item>
+<title>飞鸟机场—100GB/￥15/月起（IEPL专线/ChatGPT/Netflix等流媒体解锁/季付9折起，最高享8折优惠）</title>
+<link>https://limbopro.com/archives/flyingbird.html</link>
+<guid>https://limbopro.com/archives/flyingbird.html</guid>
+<pubDate>Tue, 01 Apr 2025 19:08:00 +0800</pubDate>
+<dc:creator>毒奶</dc:creator>
+<description><![CDATA[Via Net，图片由AI生成；飞鸟机场-近期测速记录i&gt; 2025年11月2日；本次测速耗时约1小时，消耗流量约60GB；更好看的测速结果可查看历史测速记录；[collapse stat...]]></description>
+<content:encoded xml:lang="zh-CN"><![CDATA[
+<p><img src="https://limbopro.com/usr/uploads/2023/02/3621651051.jpg" alt="photo_2023-02-17_12-47-16.jpg" /></p>
+<p>Via Net，图片由AI生成；</p>
+<h2>飞鸟机场-近期测速记录</h2>
+<p><img src="https://limbopro.com/usr/uploads/2025/11/659784290.png" alt="飞鸟机场近期测速—2025年11月01日-194922.png" /></p>
+<p>i&gt; <strong>2025年11月2日</strong>；本次测速耗时约<strong>1小时</strong>，消耗流量约<strong>60GB</strong>；<del>更好看的测速结果可查看历史测速记录；</del></p>
+<p>[collapse status="false" title="飞鸟机场-最近3年历史测速记录"]</p>
+<p><img src="https://limbopro.com/usr/uploads/2025/10/3466071528.png" alt="飞鸟机场近期测速—2025年10月04日-145452.png" /></p>
+<p>i&gt; <strong>2025年10月4日</strong>；本次测速耗时约<strong>1小时</strong>，消耗流量约<strong>63.5GB</strong>；</p>
+<p><img src="https://limbopro.com/usr/uploads/2025/09/1606801178.png" alt="飞鸟机场近期测速—20250907-131258.png" /></p>
+<p>i&gt; <strong>2025年9月7日</strong>；本次测速耗时约<strong>1小时</strong>，消耗流量约<strong>60GB</strong>；</p>
+<p><img src="https://limbopro.com/usr/uploads/2025/08/2063952567.png" alt="飞鸟机场近期测速—20250805" /></p>
+<p>i&gt; 2025年8月5日；<strong>本次测速耗时约65分钟，消耗流量约80.5GB</strong>；</p>
+<p><img src="https://limbopro.com/usr/uploads/2025/07/672280595.png" alt="飞鸟机场近期测速—20250706-000355.png" /></p>
+<p>i&gt; <strong>2025年7月6日</strong>；148个节点，较上次新增73个；本次测速耗时约<strong>58分钟</strong>（较上次测速耗时<strong>多用32分钟</strong><del>26分钟</del>），消耗流量约<strong>81GB</strong>（较上次测速消耗流量多消耗<strong>24GB</strong><del>57GB</del>）；<del>更好看的测速结果可查看历史测速记录；</del></p>
+<p><img src="https://limbopro.com/usr/uploads/2025/06/646800254.png" alt="飞鸟机场近期测速——2025年06月03日-190939.png" /></p>
+<p>i&gt; <strong>2025年6月3日晚高峰</strong>；本次测速耗时约<strong>26分钟</strong>（较上次测速耗时<strong>少用1分钟</strong><del>27分钟</del>），消耗流量约<strong>57GB</strong>（较上次测速消耗流量多消耗<strong>6GB</strong><del>51GB</del>）；</p>
+<p><img src="https://limbopro.com/usr/uploads/2025/05/3537193894.png" alt="飞鸟机场近期测速——2025年05月07日-123320.png" /></p>
+<p>i&gt; <strong>2025年5月7日午间</strong>；本次测速耗时约<strong>27分钟</strong>，消耗流量约<strong>51GB</strong>；</p>
+<p><img src="https://limbopro.com/usr/uploads/2025/04/1689978179.png" alt="飞鸟机场近期测速——2025年04月08日-193214.png" /></p>
+<p>i&gt; <strong>2025年4月8日晚间</strong>；本次测速耗时约<strong>27分钟</strong>，消耗流量约<strong>44GB</strong>；</p>
+<p><img src="https://limbopro.com/usr/uploads/2025/03/2345479602.png" alt="飞鸟机场近期测速——2025年03月06日-213253.png" /></p>
+<p>i&gt; <strong>2025年3月6日晚间</strong>；本次测速耗时约<strong>27分钟</strong>，消耗流量约<strong>30GB</strong>；</p>
+<p><img src="https://limbopro.com/usr/uploads/2025/02/3476333608.png" alt="飞鸟机场近期测速——2025年02月06日-191602.png" /></p>
+<p>i&gt; <strong>2025年2月6日晚间</strong>；本次测速耗时约<strong>25分钟</strong>，消耗流量约<strong>41GB</strong>；</p>
+<p><img src="https://limbopro.com/usr/uploads/2025/01/2867206619.png" alt="飞鸟机场近期测速——2025年01月05日-213326.png" /></p>
+<p>i&gt; 2025年1月5日晚间；<strong>本次测速耗时约25分钟，消耗流量约44GB</strong>；</p>
+<p><img src="https://limbopro.com/usr/uploads/2024/10/3739463811.png" alt="飞鸟机场近期测速——2024年10月06日-200732.png" /></p>
+<p><img src="https://limbopro.com/usr/uploads/2024/11/959020839.png" alt="飞鸟机场近期测速——2024年11月04日-185409.png" /></p>
+<p>i&gt; <strong>2024年11月4日晚间</strong>；本次测速耗时约<strong>26分钟</strong>，消耗流量约<strong>47GB</strong>；</p>
+<p>i&gt; <strong>2024年10月6日晚间</strong>；本次测速耗时约<strong>26分钟</strong>，消耗流量约<strong>42GB</strong>；</p>
+<p><img src="https://limbopro.com/usr/uploads/2024/09/1239565629.png" alt="飞鸟机场近期测速——2024年09月07日-210038.png" /></p>
+<p>i&gt; <strong>2024年9月7日晚间</strong>；本次测速耗时约<strong>27分钟</strong>，消耗流量约<strong>27GB</strong>；</p>
+<p><img src="https://limbopro.com/usr/uploads/2024/08/3901183951.png" alt="飞鸟机场近期测速——2024年08月09日-214941.png" /></p>
+<p>i&gt; <strong>2024年8月9日晚间</strong>；本次测速耗时约<strong>28分钟</strong>，消耗流量约<strong>27GB</strong>；</p>
+<p><img src="https://limbopro.com/usr/uploads/2024/07/618108339.png" alt="飞鸟机场近期测速——2024年07月08日-184427.png" /></p>
+<p>i&gt; <strong>2024年7月8日 晚间</strong>；本次测速耗时约<strong>28分钟</strong>，消耗流量约<strong>28GB</strong>；</p>
+<p><img src="https://limbopro.com/usr/uploads/2024/06/403649692.png" alt="飞鸟机场——2024年06月04日-195951.png" /></p>
+<p>i&gt; <strong>2024年6月4日 晚间</strong>；本次测速耗时约26分钟，消耗流量约23.5GB；</p>
+<p><img src="https://limbopro.com/usr/uploads/2024/05/522654292.png" alt="飞鸟机场 - 近期测速 20240508-132052.png" /></p>
+<p>i&gt; <strong>2024年5月8日 午间，带宽充足</strong>；本次测速耗时约26分钟，消耗流量约35GB；</p>
+<p><img src="https://limbopro.com/usr/uploads/2024/04/3679126107.png" alt="飞鸟机场 - 近期测速 20240402-191607.png" /></p>
+<p>i&gt; <strong>2024年4月2日 晚间，带宽充足</strong>；本次测速耗时<strong>25分钟</strong>，消耗流量约<strong>40GB</strong>；</p>
+<p><img src="https://limbopro.com/usr/uploads/2024/02/3518036006.png" alt="飞鸟机场 - 近期测速 20240217-121652.png" /></p>
+<p>i&gt; <strong>2024年2月17日 午间，带宽充足</strong>；本次测速耗时<strong>25分钟</strong>，消耗流量约<strong>45.5GB</strong>；</p>
+<p><img src="https://limbopro.com/usr/uploads/2024/01/875621796.png" alt="飞鸟机场 - 近期测速 20240102-112001.png" /></p>
+<p>i&gt; <strong>2024年1月2日 午间，带宽充足</strong>；本次测速耗时25分钟，消耗流量约27.5GB；</p>
+<p><img src="https://limbopro.com/usr/uploads/2023/11/436179506.png" alt="飞鸟机场 - 近期测速 20231112-131316.png" /></p>
+<p>i&gt; <strong>2023年11月12日 午间，带宽充足</strong>；本次测速耗时26分钟，消耗流量约34GB；</p>
+<p><img src="https://limbopro.com/usr/uploads/2023/10/1412080424.png" alt="飞鸟机场 - 近期测速 20231028-114953.png" /></p>
+<p>i&gt; <strong>2023年10月28日 午间，带宽充足</strong>；本次测速耗时26分钟，消耗流量约30GB；</p>
+<p><img src="https://limbopro.com/usr/uploads/2023/09/1518916722.png" alt="飞鸟机场 - 近期测速 20230916-234841.png" /></p>
+<p>i&gt; <strong>2023年9月16日 晚间，带宽充足</strong>；本次测速耗时25分钟，消耗流量约30GB；</p>
+<p><img src="https://limbopro.com/usr/uploads/2023/08/2983535434.png" alt="飞鸟机场 - 近期测速 20230818-194406.png" /></p>
+<p>i&gt; <strong>2023年8月18日 晚高峰，带宽充足</strong>；本次测速耗时25分钟，消耗流量约36GB；</p>
+<p><img src="https://limbopro.com/usr/uploads/2023/07/2963819194.png" alt="飞鸟机场 - 近期测速 20230713-195702.png" /></p>
+<p>i&gt; <strong>2023年7月13日 晚高峰，带宽充足</strong>；本次测速耗时28分钟，消耗流量约29GB；</p>
+<p><img src="https://limbopro.com/usr/uploads/2023/07/3338176589.png" alt="飞鸟机场 - 近期测速 20230701-122618.png" /></p>
+<p>i&gt; <strong>2023年7月1日 午间段</strong>，Via 不愿意透露姓名的中原网友；本地带宽1000Mbps；带宽充足；本次测速耗时26分钟，消耗流量约40GB；</p>
+<p><img src="https://limbopro.com/usr/uploads/2023/06/3648845122.png" alt="飞鸟机场 - 近期测速 2023年6月9日-111507.png" /></p>
+<p>i&gt; <strong>2023年6月9日 午间段</strong>，Via 不愿意透露姓名的中原网友；本地带宽500Mbps（双拨千兆）；带宽充足；本次测速耗时25分钟，消耗流量约41GB；</p>
+<p><img src="https://limbopro.com/usr/uploads/2023/05/950622238.png" alt="飞鸟机场 - 近期测速 2023年5月14日-150142.png" /></p>
+<p>i&gt; <strong>2023年5月14日 下午</strong>，Via 不愿意透露姓名的中原网友；本地带宽500Mbps（双拨千兆）；带宽充足；本次测速耗时27分钟，消耗流量约27GB；</p>
+<p><img src="https://limbopro.com/usr/uploads/2023/04/2323363979.png" alt="飞鸟机场 - 近期测速 2023年4月-2023-04-03_17-39-55.png" /></p>
+<p>i&gt; <strong>2023年4月3日 晚高峰</strong>，Via 不愿意透露姓名的中原网友；本地带宽500Mbps（双拨千兆）；带宽充足；本次测速耗时26分钟，消耗流量约33GB；</p>
+<p><img src="https://limbopro.com/usr/uploads/2023/02/1729846557.png" alt="飞鸟机场 - 近期测速 2023年2月- image_2023-02-19_19-56-25.png" /></p>
+<p><img src="https://limbopro.com/usr/uploads/2023/02/3078076463.png" alt="飞鸟机场 - 近期测速 - 20230207-132347.png" /></p>
+<p><img src="https://limbopro.com/usr/uploads/2023/02/2048926906.png" alt="飞鸟机场 - 近期测速 1月- image_2023-01-16_20-01-18.png" /></p>
+<p><img src="https://limbopro.com/usr/uploads/2023/02/2410986651.png" alt="飞鸟机场 - 近期测速 1月- image_2023-01-12_18-46-31.png" /></p>
+<p>Via 中山电信，不限速；</p>
+<p><img src="https://limbopro.com/usr/uploads/2023/02/640538085.png" alt="飞鸟机场 - 近期测速 11月- IMG_20221115_200121_249.png" /></p>
+<p>[/collapse]</p>
+<p>[collapse status="false" title="近期流媒体解锁情况"]</p>
+<p><img src="https://limbopro.com/usr/uploads/2023/08/727100202.png" alt="Netflix等流媒体解锁-2023-08-20T19-54-46.png" /></p>
+<p><strong>2023年08月20日</strong>：飞鸟机场 Netflix/Youtube（新）/Disney+/OpenAI/Viu/Steam货币/Spotify/Hbomax/Bilibili台湾等流媒体解锁近况，表现良好；</p>
+<p><img src="https://limbopro.com/usr/uploads/2023/07/848146533.png" alt="2023-07-13T11-26-56.png" /><br />
+2023-07-13T11-26-56；<br />
+[/collapse]</p>
+<h2>飞鸟机场-套餐介绍(最高享8折优惠)</h2>
+<table>
+<thead>
+<tr>
+<th>套餐</th>
+<th>流量/价格</th>
+<th>季付<strong>折后</strong>[9折]</th>
+<th>半年付<strong>折后</strong>[85折]</th>
+<th>年付<strong>折后</strong>[8折]</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>青铜套餐</td>
+<td>100GB/￥15/月</td>
+<td>￥41/季</td>
+<td>￥77/半年</td>
+<td>￥144/年付</td>
+</tr>
+<tr>
+<td>白银套餐</td>
+<td>200GB/￥30/月</td>
+<td>￥81/季</td>
+<td>￥153/半年</td>
+<td>￥288/年付</td>
+</tr>
+<tr>
+<td>黄金套餐</td>
+<td>500GB/￥75/月</td>
+<td>￥203/季</td>
+<td>￥383/半年</td>
+<td>￥720/年付</td>
+</tr>
+</tbody>
+</table>
+<p>i&gt; <strong>常规优惠</strong>：所有套餐季付享9折，半年85折，年付8折（购买页面自动折算）；套餐如有变动，请以实际套餐价格为准；<strong>博客优惠码</strong>：limbopro （在常规优惠的基础上9折；优惠适用于所有产品，每人仅限一次）；</p>
+<h2>可用状态及运维日志</h2>
+<p>i&gt; <strong>机场创建于</strong>：2022年11月6日；<br />
+<strong>chatGPT解锁适用</strong>：适用，处于积极解锁状态；<br />
+<strong>流媒体解锁适用</strong>：Netflix/Disney+/Youtube/PCR等常规流媒体解锁；<br />
+<strong>新疆地区用户适用</strong>：适用；（由于该地区情况特殊且多变，购买前<strong>请咨询机场</strong>页面右下角客服新疆地区用户是否仍然适用）；<br />
+<strong>单位每元可使用流量</strong>：折后约合7Gb/元；<br />
+<strong>支持协议</strong>：SS协议/Trojan协议（于2025年7月新增）；<br />
+<strong>游戏加速</strong>：可以；<br />
+<strong>节点特性</strong>：BGP入口（华为云广州）-&gt;IEPL专线（广港）-&gt;BGP出口（香港）；稳定有保证；<br />
+<strong>节点倍率</strong>：1倍率；</p>
+<p>i&gt; 新入口上线，等待DNS生效；03.11.2023 更新；</p>
+<p>i&gt; <strong>紧急通知 - 请更新订阅</strong>：“由于最近一次国内DNS域名大污染，导致我们节点请求域名也被影响，所以大家使用节点会碰到不能使用或不稳定的现象，请大家更新订阅后使用即可恢复！如果不知道订阅地址请到网站复制！” 11.07.2023 更新；</p>
+<h2>注册以及优惠</h2>
+<p>i&gt; 已恢复；<del>官网维护中，请稍后重试；06.09.2025 傍晚更新；</del></p>
+<p>√&gt; <strong>目前可用状态</strong>：可用；<br />
+<strong>注册地址</strong>：<a href="https://fba01.fbva-s3h.cc/auth/register?code=2Wfw">fba01.fbva-s3h.cc</a>（未墙）；<a href="https://www.fbweb.cc/auth/register?code=2Wfw">www.fbweb.cc</a>；<a href="https://flyingbird.cc/auth/register?code=2Wfw">flyingbird.cc</a>；<a href="https://flyingbird.pro/auth/register?code=2Wfw">flyingbird.pro</a>；<a href="https://www.flyingbird.la/auth/register?code=2Wfw">flyingbird.la</a>；<br />
+<strong>更新时间</strong>：2025年11月14日更新；<br />
+<strong>站内常规优惠活动</strong>：季付9折，半年85折，年付8折（购买页面自动折算）；<br />
+<strong>博客优惠码</strong>：limbopro （在常规优惠的基础上9折；优惠适用于所有产品，每人仅限一次）；<br />
+<strong>购买建议</strong>：新手可<strong>月付体验完毕后</strong>再渐进式购买季付、半年付（最多）；<br />
+via 毒奶的<a href="https://bit.ly/4bMQJ6T">机场推荐</a> 清单，点击查看适合你的机场推荐；</p>
+<h4>节日活动优惠</h4>
+<p>i&gt; <strong>飞鸟双十一活动</strong>！！<br />
+1:<strong>月/季/半年付 85折</strong> , 优惠码：<strong>fb25111185</strong>  可重复使用5次<br />
+<del>2:年付8折（站内折上折，高达64折 ）优惠码：fb25111180  可重复使用5次</del><br />
+活动时间：即日至2025年11月30日23点59分</p>
+<h4>ChatGPT/流媒体服务解锁适用</h4>
+<p>i&gt; <strong>ChatGPT/流媒体服务解锁适用</strong>：“流媒体指的是运营视频的网站。<strong>解锁流媒体仅表示解锁视频资源的地区限制</strong>，这些<strong>支持流媒体服务解锁的线路/节点（特定的IP或DNS解锁方式）</strong>可以访问流媒体，<strong>而不是</strong>不用会员就能看视频的“<strong>破解</strong>”，观看视频仍需<strong>开通相应会员</strong>。比较流行的国外视频网站有：Netflix、Disney+、HBO、Amazon、Apple TV等，其中 Netflix 作为全球最大的视频网站最受国人欢迎，相对的它的地区限制更为严格。”；ChatGPT 解锁同理； Via Net；</p>
+<h4>其他特性</h4>
+<p>i&gt; <strong>海外地区用户翻墙适用</strong>：适用，首页 -&gt; 海外用户专用订阅；注意⚠️：不提供回国🇨🇳节点，即无法伪装成中国用户使用爱奇艺/优酷之类大陆互联网服务；<br />
+<strong>大陆地区翻墙用户</strong>：首页 -&gt; 大陆地区专用订阅；</p>
+]]></content:encoded>
+<slash:comments>0</slash:comments>
+<comments>https://limbopro.com/archives/flyingbird.html#comments</comments>
+<wfw:commentRss>https://limbopro.com/feed/archives/flyingbird.html</wfw:commentRss>
+</item>
+<item>
+<title>让 Grok 帮写了一个网页划词搜索🔍🔞油猴脚本</title>
+<link>https://limbopro.com/archives/34562.html</link>
+<guid>https://limbopro.com/archives/34562.html</guid>
+<pubDate>Mon, 03 Nov 2025 01:20:00 +0800</pubDate>
+<dc:creator>毒奶</dc:creator>
+<description><![CDATA[序i&gt; 油猴脚本安装地址：https://greasyfork.org/zh-CN/scripts/554546-limbopro@&gt; P.S. 让Grok帮写的，耗时不到1分钟，3...]]></description>
+<content:encoded xml:lang="zh-CN"><![CDATA[
+<h2>序</h2>
+<p><img src="https://limbopro.com/usr/uploads/2025/11/1050720541.jpg" alt="划词搜索🔍.jpg" /><br />
+<img src="https://limbopro.com/usr/uploads/2025/11/2382207881.jpg" alt="划词搜索🔍-&gt;影视搜索.jpg" /></p>
+<p>i&gt; <strong>油猴脚本安装地址</strong>：<a href="https://greasyfork.org/zh-CN/scripts/554546-limbopro">https://greasyfork.org/zh-CN/scripts/554546-limbopro</a></p>
+<p>@&gt; P.S. 让Grok帮写的，耗时不到1分钟，30分钟调试完毕上线；已集成进毒奶去网页广告计划；现在即可在博客内长按/鼠标划词<strong>选中想要搜索的文本</strong>试试！</p>
+<p>@&gt; 如果你有很棒的<strong>影视网站推荐</strong>或意见/建议，欢迎<a href="https://bit.ly/3JHDnAe">点此提交</a>分享给我们！我们将集成进影视搜索/番号搜索，进一步改进完善；</p>
+<h2>脚本特性</h2>
+<p>适合懒人搜索资源；<br />
+任意网页适用；</p>
+<h2>附注</h2>
+<p>[post cid="12904" cover="https:\/\/limbopro.com\/usr\/uploads\/2020\/11\/887520402.png"/]</p>
+]]></content:encoded>
+<slash:comments>0</slash:comments>
+<comments>https://limbopro.com/archives/34562.html#comments</comments>
+<wfw:commentRss>https://limbopro.com/feed/archives/34562.html</wfw:commentRss>
+</item>
+<item>
+<title>让 Grok 帮写了一个电报匿名留言板💬 [底部新增服务可用性提示]</title>
+<link>https://limbopro.com/archives/34518.html</link>
+<guid>https://limbopro.com/archives/34518.html</guid>
+<pubDate>Sat, 01 Nov 2025 11:04:00 +0800</pubDate>
+<dc:creator>毒奶</dc:creator>
+<description><![CDATA[图：Pexels；序用户没有邮箱？没有TG？不想登陆？保持匿名？！OK！适用无需博主回复的匿名留言：https://limbopro.com/feedback/ （问题反馈？建议？好看的番号？电...]]></description>
+<content:encoded xml:lang="zh-CN"><![CDATA[
+<p><img src="https://limbopro.com/usr/uploads/2025/11/3813027011.jpg" alt="pexels-pripicart-675764.jpg" /></p>
+<p>图：<a href="https://www.pexels.com/photo/brown-canoe-in-the-body-of-water-near-mountain-675764/">Pexels</a>；</p>
+<h2>序</h2>
+<p>用户<strong>没有邮箱？没有TG？不想登陆？保持匿名？！OK！</strong></p>
+<p>适用无需博主回复的匿名留言：<a href="https://bit.ly/3JHDnAe">https://limbopro.com/feedback/</a> （问题反馈？建议？好看的番号？电影？网站？书籍？====...推荐）；留言将会由我的电报机器人 <a href="http://t.me/limboprobot">@limboprobot</a> 发给我。</p>
+<p><img src="https://limbopro.com/usr/uploads/2025/11/2925287137.jpg" alt="11.14.2025 更新.jpg" /></p>
+<p><strong>11.14.2025 更新</strong>: 新增服务器POST（意味着你可以PO你的留言）连通状态检测；用户见留言版底部；同时我也为自己写了一个机器人通知，提醒我哪里出问题了；</p>
+<h2>留言示例</h2>
+<p><img src="https://limbopro.com/usr/uploads/2025/11/4169683106.jpg" alt="电报机器人留言示例.jpg" /></p>
+<h2>Feature</h2>
+<p>基于 linux + nginx + php 构建；未包含数据库（可以加）；</p>
+<p>功能,状态<br />
+多 Chat ID 支持,支持<br />
+10 种留言类型 + 分组,支持<br />
+"随机昵称（216,000 种）",支持<br />
+本地历史记录,支持<br />
+粘贴/清空/联系博主,支持<br />
+验证码 + 限流,支持<br />
+服务可用性显示  -&gt; 为很久后的一个版本更新</p>
+<p>绝对的匿名性；<br />
+可随机生成留言昵称（且可一直使用该昵称）；<br />
+最多保留10个已生成/使用过的昵称；<br />
+简易数字验证码；<br />
+60秒1次提交防刷；<br />
+多ChatID抄送（留言可以让机器人发给你的同时，抄送给别的频道？群组？==）；<br />
+...</p>
+<p><strong>扩展：</strong>你可以创建一个频道或群组，然后添加你的机器人：然后将匿名留言抄送到该群组或频道，已加入群组或已关注频道的用户就可以看到其他匿名留言了。</p>
+<h2>Faq</h2>
+<p>是的，全部在 Grok 的指导下完成，期间遇到许多bug（代码跑不起来？），通通在 Grok 的分析下解决了；</p>
+<p><strong>如果你觉得这个匿名留言板做的不错，也可以匿名给我们留言！夸夸Grok！</strong></p>
+<p>如果你也想动手做点什么？将你的想法告诉Grok；</p>
+<h2>附件</h2>
+<p><a href="https://limbopro.com/usr/uploads/2025/11/3029135439.zip">feedback.zip</a></p>
+<pre><code>feedback/
+├── index.php          ← 完整代码
+├── post_checker.php   ← 新增 服务可用状态检测
+├── .env               ← 现在在这里！
+├── style.css          ← 毛玻璃样式
+└── nicknames.json     ← 60×3 版本</code></pre>
+<p>如果你的博客根目录位于 /var/www/html/，则将 feedback 在 html 目录下解压即可；</p>
+<pre><code>/var/www/html/
+└── feedback/
+    ├── index.php
+    ├── post_checker.php   ← 新增 服务可用状态检测
+    ├── .env
+    ├── style.css
+    └── nicknames.json</code></pre>
+<p>进入 feedback 目录：</p>
+<pre><code>vi .env</code></pre>
+<p>.env 内容示例：</p>
+<pre><code>BOT_TOKEN=123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ
+ADMIN_CHAT_ID=123456789,987654321,-1001234567890</code></pre>
+<p>设置 .env 文件权限，仅主人可读</p>
+<pre><code>chmod 600 feedback/.env</code></pre>
+<p>如何创建，获取电报机器人 token，以及你的个人chatid ==，可参阅：</p>
+<p>[post cid="3097" cover="https:\/\/limbopro.com\/usr\/uploads\/2019\/09\/53339647.png"/]</p>
+<p>如有不懂，可以将 feedback 整个文件夹丢给 Grok 或其他AI，让它给你做符合你喜好的优化（样式？标题？功能==）；</p>
+<p>当然，自己动手从头开始做体验更佳！Just do IT!</p>
+<p>以上。</p>
+]]></content:encoded>
+<slash:comments>0</slash:comments>
+<comments>https://limbopro.com/archives/34518.html#comments</comments>
+<wfw:commentRss>https://limbopro.com/feed/archives/34518.html</wfw:commentRss>
+</item>
+<item>
+<title>一周互联网观察 👀 —— 10.28.2025 ♻️ 更新</title>
+<link>https://limbopro.com/archives/30340.html</link>
+<guid>https://limbopro.com/archives/30340.html</guid>
+<pubDate>Tue, 28 Oct 2025 12:03:00 +0800</pubDate>
+<dc:creator>毒奶</dc:creator>
+<description><![CDATA[Via Pexels；本文隶属于 观察报告 分类，点击分类名称可以查看更多相关文章；主理人序i&gt; 本文♻️每周不定时循环更新（见标题时间戳）；@&gt; 时光荏苒，光阴似箭，距离最近一次更...]]></description>
+<content:encoded xml:lang="zh-CN"><![CDATA[
+<p><img src="https://limbopro.com/usr/uploads/2024/08/1657083045.jpg" alt="pexels-trvlust-6108085.jpg" /></p>
+<p>Via <a href="https://www.pexels.com/photo/back-view-of-a-woman-admiring-the-mountain-landscape-under-cloudy-sky-6108085/">Pexels</a>；</p>
+<p>本文隶属于 <a href="https://limbopro.com/category/Internetlog/">观察报告</a> 分类，点击分类名称可以查看更多相关文章；</p>
+<h2>主理人序</h2>
+<p>i&gt; 本文♻️每周不定时循环更新（见标题时间戳）；</p>
+<p>@&gt; 时光荏苒，光阴似箭，距离最近一次更新<strong>联网观察</strong> <a href="https://limbopro.com/archives/9243.html">栏目内容</a>（03.21.2024）已经过去5个月，距离上上次更新实则已过去4年（04.18.2020）。今天博主决定 <strong>重拾记录的乐趣，将每周的有趣见闻以简易文字 + 图片的形式分享给大家</strong>。相关见闻或许你已从其他途径了解到，但没关系的，分享的乐趣正在于此，如果你也有很有趣的见闻，也可以分享给博主。以上， 08.20.2024 凌晨特别更新；</p>
+<h2>美股历史新新高（10.28.2025）</h2>
+<p><img src="https://limbopro.com/usr/uploads/2025/10/1135805768.jpg" alt="纳斯达克综合指数.jpg" /></p>
+<p><img src="https://limbopro.com/usr/uploads/2025/10/996928886.jpg" alt="标普500.jpg" /></p>
+<h2>沪指重回4000点（10.28.2025）</h2>
+<p><img src="https://limbopro.com/usr/uploads/2025/10/2133487652.jpg" alt="上海证券交易所综合股价指数.jpg" /></p>
+<p><img src="https://limbopro.com/usr/uploads/2025/10/1325532606.jpg" alt="上海证券交易所综合股价指数新闻截图.jpg" /></p>
+<p>时隔10年，沪指重新站上4000点！</p>
+<h2>黄金站上史上最高点$4000/盎司(10.08.2025)</h2>
+<p>RT</p>
+<h2>沪指重回3800点（09.05.2025）</h2>
+<p><img src="https://limbopro.com/usr/uploads/2025/09/3519979653.jpg" alt="上海证券交易所综合股价指数.jpg" /><br />
+<img src="https://limbopro.com/usr/uploads/2025/09/2838951437.jpg" alt="深圳证券交易所成份股价指数.jpg" /><br />
+<img src="https://limbopro.com/usr/uploads/2025/09/920440498.jpg" alt="创业板指数.jpg" /></p>
+<p>9月5日，A股低开高走，创业板指领涨，上证指数重回3800点！截至收盘，沪指涨1.24%，深成指涨3.89%，创业板指涨6.55%。<strong>两市共4857只个股上涨，107只个股涨停，473只个股下跌。</strong> cr 东方财富：<a href="https://finance.eastmoney.com/a/202509053506110456.html">“沸腾了” 牛回速归！沪指重回3800点 创业板指大涨 强势反包</a></p>
+<p>6！</p>
+<p><img src="https://limbopro.com/usr/uploads/2025/09/4109018065.jpg" alt="寒武纪科技" /></p>
+<p>今年的创新药，CPO，数字经济，人工智能板块你都参与了吗？你知道易中天是指的哪几只股票吗？</p>
+<h2>美股历史新高（07.01.2025）</h2>
+<p><img src="https://limbopro.com/usr/uploads/2025/07/2716273894.jpg" alt="标普500指数-截屏2025-07-01.jpg" /></p>
+<p><img src="https://limbopro.com/usr/uploads/2025/07/2620156649.jpg" alt="纳斯达克综合指数-截屏2025-07-01.jpg" /></p>
+<p>以伊为期12日冲突结束，<strong>美股上半年完美收官！标普纳指创历史新高！</strong></p>
+<p>“周一美股全线上涨，标普、纳指再度联袂创历史新高，对贸易协议和可能降息的希望缓解了投资者的不确定性。截至收盘，道指涨275.50点，涨幅0.63%，报44094.77点，纳指涨0.47%，<strong>报20369.73点</strong>，标普500指数涨0.52%，<strong>报6204.95点</strong>。” </p>
+<p>cr <a href="https://www.stcn.com/article/detail/2326814.html">证券时报</a></p>
+<h2>以伊冲突升级（06.20.2025）</h2>
+<p>动荡的局势，A股再次失守3400点，恒生也不大好受，黄金再次冲高失败...</p>
+<p>2024年，伊朗与以色列的代理人冲突升级为两国之间的直接冲突。 4月1日，伊朗驻大马士革大使馆的附属的领事馆建筑遭到以色列空袭，造成穆罕默德-礼萨·扎赫迪等多名伊朗军官死亡。作为回应，伊朗于4月13日对以色列本土发动“真实承诺行动”，大规模发射无人机及导弹。4月19日，以色列又攻击伊朗多个城市。</p>
+<p>查看以色列伊朗冲突<a href="https://www.google.com/search?q=%E4%BC%8A%E4%BB%A5%E5%86%B2%E7%AA%81">最新消息</a>；冲突起始参阅：<a href="https://zh.wikipedia.org/wiki/%E4%BB%A5%E4%BC%8A%E5%86%B2%E7%AA%81_(2024%E5%B9%B4%E8%87%B3%E4%BB%8A">https://zh.wikipedia.org/wiki/%E4%BB%A5%E4%BC%8A%E5%86%B2%E7%AA%81_(2024%E5%B9%B4%E8%87%B3%E4%BB%8A</a>)； </p>
+<h2>关税暂停⏸️(05.12.2025)</h2>
+<p><img src="https://limbopro.com/usr/uploads/2025/05/1230296837.jpeg" alt="美国驻华使领馆 U.S. Mission to China" /></p>
+<p>美国宣布与中国在日内瓦达成贸易协定：<a href="https://china.usembassy-china.org.cn/zh/u-s-announces-china-trade-deal-in-geneva/">https://china.usembassy-china.org.cn/zh/u-s-announces-china-trade-deal-in-geneva/</a></p>
+<p>中美关税暂停措施起始时间是2025年5月14日12时01分。﻿</p>
+<p>中国10年期国债上行3.9BP！黄金大跌4%，跌至$3226/盎司！美股纳指/标普期货大涨3-4%；</p>
+<p>下一个信号应该就是<a href="https://www.google.com/search?q=%E7%BE%8E%E8%81%94%E5%82%A8%E9%99%8D%E6%81%AF">美联储降息</a>了。</p>
+<h2>黄金站上史上最高点$3320/盎司(04.16.2025)</h2>
+<p><img src="https://limbopro.com/usr/uploads/2025/04/2987143314.jpg" alt="Gold Futures 黄金期货.jpg" /></p>
+<p><img src="https://limbopro.com/usr/uploads/2025/04/3016635601.jpg" alt="Gold Overview Last Updated16 Apr 2025 05:37:47 AM CT.jpg" /></p>
+<p>年内涨幅 24%；近1年涨幅37.86%；<br />
+cr <a href="https://www.cmegroup.com/markets/metals/precious/gold.html">https://www.cmegroup.com/markets/metals/precious/gold.html</a> ;<br />
+查看<a href="https://www.google.com/finance/quote/GCW00:COMEX?sa=X&amp;ved=2ahUKEwjAocSsrtyMAxXaE0QIHX94EvEQ3ecFegQIHhAX">黄金最新期货价</a>；</p>
+<h2>全球股市集体暴跌📉(04.07.2025)</h2>
+<h3>全球股指</h3>
+<p>特朗普关税政策影响延续</p>
+<p><img src="https://limbopro.com/usr/uploads/2025/04/2443996421.jpg" alt="4月4日, UTC-4 16:35:58 · INDEXSP" /></p>
+<p>i&gt; 点此<a href="https://www.google.com/finance/quote/.IXIC:INDEXNASDAQ?sa=X&amp;ved=2ahUKEwiumKi98MWMAxX2JEQIHSGdJBsQ3ecFegQINBAf&amp;window=YTD&amp;comparison=INDEXSP%3A.INX%2CINDEXDJX%3A.DJI%2CINDEXCBOE%3AVIX">查看 VIX 指数</a>最新涨幅；点此<a href="https://www.google.com/finance/quote/.IXIC:INDEXNASDAQ?sa=X&amp;ved=2ahUKEwiumKi98MWMAxX2JEQIHSGdJBsQ3ecFegQINBAf&amp;window=YTD">查看 INDEXNASDAQ</a> 最新涨幅；</p>
+<h3>股市暴跌原因分析(Grok总结)</h3>
+<p>截至2025年4月7日，全球股市暴跌的原因可以从多个层面进行分析，结合当前的经济背景、市场动态以及可能的政策和地缘政治因素，以下是一些可能的触发因素和深层原因：</p>
+<p>1.<strong>宏观经济不确定性加剧</strong><br />
+全球经济在2025年可能面临多重压力，例如美国经济增速放缓、通货膨胀持续高于预期，以及其他主要经济体的复苏乏力。美国作为全球经济引擎，其经济数据疲软（如失业率上升或GDP预测下调）可能引发投资者对衰退的担忧，导致股市抛售情绪蔓延。</p>
+<p>2.<strong>货币政策调整的影响</strong><br />
+如果美联储或其他主要央行（如欧洲央行、日本央行）在2025年调整货币政策，比如收紧利率以应对通胀，或未能如市场预期那样宽松政策，可能会导致流动性收紧。特别是日本结束长期低利率政策后，日元套利交易的平仓可能引发资金从高风险资产撤离，冲击全球股市。</p>
+<p>3.<strong>地缘政治和贸易紧张局势</strong><br />
+2025年初，美国特朗普政府上台后可能推行激进的关税政策（如“对等关税”），这不仅影响中美贸易，还可能波及全球供应链。贸易战升级会导致企业盈利预期下降，尤其是依赖出口的科技和制造业公司，进而引发股市下跌。此外，俄乌冲突、以哈局势等地缘政治风险如果未能缓解，也可能加剧市场的不确定性。</p>
+<p>4.<strong>科技股泡沫的破裂</strong><br />
+过去几年受益于人工智能热潮的科技股，可能在2025年面临估值调整。如果关键公司（如特斯拉、英伟达）的业绩未达预期，或市场对其增长故事失去信心，科技板块的下跌可能拖累纳斯达克等主要指数，引发全球连锁反应。</p>
+<p>5.<strong>投资者情绪与市场恐慌</strong><br />
+当股市出现大幅波动时，恐慌性抛售往往会放大跌幅。2025年年初，如果有重大事件（如重要投资者抛售重仓股，或某国股市触发熔断），可能会引发多米诺效应，导致全球市场同步下跌。X平台上的帖子也反映了这种情绪，提到“恐慌值拉满”和“熔断式暴跌”。</p>
+<p>6.<strong>结构性风险显现</strong><br />
+例如，商业地产债务（如CMBS）问题如果在2025年暴露，可能重现类似2008年金融危机的风险信号。此外，外资从新兴市场撤离、汇率波动（如台币跌破关键关口）等因素，也可能加剧股市的动荡。</p>
+<h3>综合分析</h3>
+<p>目前全球股市暴跌可能不是单一事件驱动，而是多重因素叠加的结果。短期来看，政策不确定性和市场情绪可能是主要推手；长期来看，经济基本面的疲软和结构性调整的压力正在逐步显现。尽管如此，具体原因还需结合最新数据和事件进一步验证，例如美股是否因关税政策暴跌，或A股是否受国内经济数据拖累。</p>
+<blockquote class="twitter-tweet" data-media-max-width="560"><p lang="zh" dir="ltr">今天光是A股应该单日亏损在80万以上，还不算港股和美股，还不算其他基金。<br>亏麻了不想计算了<br>我就想问一句：<br>川普这老逼登什么时候下台？ <a href="https://t.co/BQshzcdFDu">pic.twitter.com/BQshzcdFDu</a></p>&mdash; 陈一发儿 (@yifaer_chen) <a href="https://twitter.com/yifaer_chen/status/1909207012728279362?ref_src=twsrc%5Etfw">April 7, 2025</a></blockquote> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+<p>RT. </p>
+<h2>关税(03.07.2025)</h2>
+<p>03.07.2025 北京时间</p>
+<h3>关税</h3>
+<p><img src="https://limbopro.com/usr/uploads/2025/03/933568717.jpg" alt="关税-特朗普-贸易战.jpg" /></p>
+<h3>美股</h3>
+<p>i&gt; 一份由 <a href="https://limbopro.com/archives/google_bard.html">Google Gemini</a> Deep Research 生成的美股走势评估报告，<a href="https://docs.google.com/document/d/1sqoGVqnGTFDhqMlOQEDSL42_2eeTXVvgX4vdEGWjxT8/edit?usp=sharing">点此查阅</a>；</p>
+<p><img src="https://limbopro.com/usr/uploads/2025/03/2132431295.jpg" alt="纳斯达克综合指数-过去1年涨幅+9.05%.jpg" /></p>
+<p><img src="https://limbopro.com/usr/uploads/2025/03/2130515708.jpg" alt="特斯拉股票-今年-YTD-30.63%.jpg" /></p>
+<p><img src="https://limbopro.com/usr/uploads/2025/03/1849328441.jpg" alt="纳斯达克100指数-YTD -4%.jpg" /></p>
+<p><img src="https://limbopro.com/usr/uploads/2025/03/210454137.jpg" alt="美股七姐妹-YTD- -9.34%.jpg" /></p>
+<p><img src="https://limbopro.com/usr/uploads/2025/03/2523372560.jpg" alt="VIX-恐慌指数涨幅33.85%.jpg" /></p>
+<p>@&gt; 持有美股的小伙伴们你们还好吗？欢迎跟博主分享吐槽：<a href="https://t.me/limboprobot">https://t.me/limboprobot</a></p>
+<h3>恒生指数</h3>
+<p><img src="https://limbopro.com/usr/uploads/2025/03/1092913733.jpg" alt="小米股票-2025-YTD-+59.85%.jpg" /></p>
+<p><img src="https://limbopro.com/usr/uploads/2025/03/4286234449.jpg" alt="恒生指数-2025-YTD-+23.48%.jpg" /></p>
+<p>i&gt; 恒生指数今年涨幅达 23.48+%；或港股牛市开启！？“港股的暴涨很大程度上由科技板块引领，<strong>尤其是“港股科技七姐妹”（阿里巴巴、腾讯、美团、小米、联想、比亚迪、中芯国际）</strong>。这些公司受益于AI热潮和消费电子需求的增长。例如，DeepSeek等AI模型的商业化落地推动了相关产业链的发展，吸引了大量资金流入科技股。此外，小米等公司在2025年初表现出色，市场情绪被进一步点燃。”  Cr <a href="https://limbopro.com/archives/32208.html">Grok</a>；</p>
+<h2>美国大选🇺🇸(11.05.2024)</h2>
+<p>11.05.2024 美国时间</p>
+<p><img src="https://limbopro.com/usr/uploads/2024/11/3520623063.png" alt="美国大选 - 2024-11-05 21.46.20.png" /></p>
+<iframe width="100%" height="522" src="https://www.youtube.com/embed/klrdS_Bdt5U" title="【美国大选】特朗普 vs 哈里斯 经济政策有什么不一样？" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+<p>@&gt; <strong>2024年美国总统选举</strong>（英语：2024 United States presidential election）于2024年11月5日星期二举行，此次选举是美国第60届总统选举，同时众议院全部435个席位及参议院其中33个议席也将进行改选，以产生第119届美国国会。 Credit <a href="https://zh.wikipedia.org/zh-hans/2024%E5%B9%B4%E7%BE%8E%E5%9C%8B%E7%B8%BD%E7%B5%B1%E9%81%B8%E8%88%89">Wikipedia</a>；</p>
+<h2>A股(10.08.2024)</h2>
+<p>10.08.2024</p>
+<p><img src="https://limbopro.com/usr/uploads/2024/10/2345701279.png" alt="A股.png" /></p>
+<p><img src="https://limbopro.com/usr/uploads/2024/10/1178904491.png" alt="2024-10-08 11.17.47.png" /></p>
+<p><strong>为期一周的牛市</strong>，大盘涨幅30%+，<strong>老韭菜解套？00后开户？卖房买入？还是观望？踏空？</strong></p>
+<h3>A股新语录</h3>
+<p>“我是交易的王者，是A股的传说，散户膜拜我，机构针对我，证监会调查我，我会带着巨额资产归隐田园，只给这个血雨腥风的二级市场留下8个大字‘<strong>巴菲特就那么回事</strong>’。”</p>
+<h3>股市📈实用投资建议</h3>
+<p><img src="https://limbopro.com/usr/uploads/2024/10/1120257417.jpg" alt="A股股市📈实用投资建议分享.jpg" /></p>
+<h2>国足(09.05.2024)</h2>
+<p>09.05.2024 </p>
+<p><img src="https://limbopro.com/usr/uploads/2024/09/2083407834.png" alt="0:7" /></p>
+<p>“国足在2026年世界杯预选赛亚洲区18强赛首战 0:7 大败于日本；”...<br />
+“18强赛首战国足7球失利，一战刷新多项“耻辱纪录”...</p>
+<p><strong>国足有进过世界杯吗？</strong><br />
+国足先后12次参加亚洲杯足球赛正赛，并于1984年和2004年两度获得亚军；1936年、1948年、1988年和2008年四次参加奥运会足球赛决赛圈；2002年首次参加世界杯决赛圈比赛。 Cr <a href="https://baike.baidu.com/item/%E4%B8%AD%E5%9B%BD%E5%9B%BD%E5%AE%B6%E7%94%B7%E5%AD%90%E8%B6%B3%E7%90%83%E9%98%9F/5152172">百度百科</a>；</p>
+<p><strong>更多相关资讯ℹ️参阅</strong>：<br />
+维基百科：<a href="https://zh.wikipedia.org/wiki/%E4%B8%AD%E5%9B%BD%E5%9B%BD%E5%AE%B6%E8%B6%B3%E7%90%83%E9%98%9F">中国国家足球队</a>；<br />
+2022<a href="https://36kr.com/video/1690149285770502">中国男足：工资谁发？发多少？能不发吗？</a>；<br />
+2022<a href="https://m.36kr.com/p/2043568241003526">在工资上，中国球员赢了日本五次</a>；<br />
+2019<a href="https://www.peopleapp.com/column/30036819590-500001869320">国足世界排名76，工资却排第6？足协出手！</a>；<br />
+2019<a href="http://www.nbd.com.cn/rss/toutiao/articles/1387781.html">限薪！国足输给有球员月薪仅1600元的叙利亚后</a>；</p>
+<h2>调休(08.28.2024)</h2>
+<p>08.28.2024 </p>
+<p><img src="https://limbopro.com/usr/uploads/2024/08/187772223.png" alt="调休哪一年开始的.png" /></p>
+<p>“2024中秋国庆调休安排日前出炉，<strong>中秋节放假安排为9月15日至9月17日，共计3天，其中9月14日（星期六）需要上班调休</strong>。 国庆节放假安排，则是10月1日至10月7日放假，9月29日（星期日）和10月12日（星期六）需要上班调休，两个假期接连调休引发热议。” Credit <a href="https://m.fsonline.com.cn/p/341421.html">佛山在线</a>；</p>
+<p>网友表示：上6休3上3休2上5休1上2休7，最后再上5休1，竟有5周调休。</p>
+<p>“牛马”苦调休久已。</p>
+<h2>黑神话：悟空正式上线(08.20.2024)</h2>
+<p>08.20.2024 </p>
+<p><img src="https://limbopro.com/usr/uploads/2024/08/3719237573.gif" alt="SteamGIF_Battle.gif" /></p>
+<iframe id="adjustYT" height="522" onload="adjustYT()" src="https://www.youtube.com/embed/bzyMLoSwYvk" title="Black Myth: Wukong - Final Trailer | Launching August 20, 2024" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+<p>@&gt; 谁说中国没有3A大作？千呼万唤始出来！点击查看黑神话：悟空 <a href="https://www.youtube.com/watch?v=bzyMLoSwYvk">最终预告视频</a>；</p>
+<p>i&gt; <strong>黑神话介绍</strong>：悟空：《黑神话：悟空》是一款以中国神话为背景的动作角色扮演游戏，<strong>现已于 PS5 / STEAM / EPIC GAMES STORE / WEGAME <del>Xbox</del> 平台正式发售</strong>。你将扮演一位“天命人”，为了探寻昔日传说的真相，踏上一条充满危险与惊奇的西游之路。<strong>官网</strong>：<a href="https://www.gamesci.com.cn/">https://www.gamesci.com.cn/</a> “标准版在Steam和WeGame等<strong>PC平台统一售价268元</strong>（PSN港区售价296元港币），<strong>豪华版售价328元</strong>。” 想玩吗？让你女朋友/老婆给你买。୧(๑•̀⌄•́๑)૭ </p>
+<h3>后话</h3>
+<p>《西游记》是一个不错的IP，游戏开发也好，影视开发也好，都值得大讲特讲。最重要的是，个人主观认为《西游记》比起其他三大名著，故事情节更深入人心，大人小孩更喜闻乐见 —— 一路降妖除魔，九九八十一难，情节跌宕起伏扣人心弦。</p>
+<p>周星驰版大话西游（1995-1999）里的至尊宝，张卫健版的西游记 (1996)，动画版西游记 (1999)，宝莲灯‎ (1999)里的斗战胜佛，各个都是经典。西游记之大圣归来（2015）更是一次不错的电影尝试，豆瓣8.3分，天真派：西游记 (2019)亦得到不错的评价 8.8分（因为是小朋友演的，受众似乎不是很多...）；时隔多年，游戏科学带着《黑神话：悟空》归来，又是一次《西游记》的伟大复兴。</p>
+<p>不说了，开打了！</p>
+]]></content:encoded>
+<slash:comments>0</slash:comments>
+<comments>https://limbopro.com/archives/30340.html#comments</comments>
+<wfw:commentRss>https://limbopro.com/feed/archives/30340.html</wfw:commentRss>
+</item>
+<item>
+<title>提升幸福感的4种“快乐物质”</title>
+<link>https://limbopro.com/archives/34346.html</link>
+<guid>https://limbopro.com/archives/34346.html</guid>
+<pubDate>Wed, 17 Sep 2025 12:55:00 +0800</pubDate>
+<dc:creator>毒奶</dc:creator>
+<description><![CDATA[有用功；文字内容整理自网络；Grok；Gemini；ChatGPT；图片由 Google Gemini AI Pro生成；序总忍不住拿起手机看消息，刷 Social app？那你要注意了。我们常...]]></description>
+<content:encoded xml:lang="zh-CN"><![CDATA[
+<p><img src="https://limbopro.com/usr/uploads/2025/09/577578824.png" alt="提升幸福感的4种“快乐物质”.png" /></p>
+<p>有用功；文字内容整理自网络；Grok；Gemini；ChatGPT；图片由 <a href="https://limbopro.com/archives/34295.html">Google Gemini AI Pro</a>生成；</p>
+<h2>序</h2>
+<p>总忍不住拿起手机看消息，刷 Social app？那你要注意了。</p>
+<p>我们常说的“上头”通常指的是情绪或心理状态的高度兴奋或愉悦感，这很可能与大脑中提到的化学物质有关。特别是<strong>多巴胺</strong>，作为奖励化学物质，当你完成目标、吃到喜欢的食物或经历其他愉悦活动时，多巴胺分泌会增加，带来满足感和兴奋感。这种状态常被描述为“上头”。此外，内啡肽在运动或大笑等活动中释放，也可能增强这种感觉。因此，“上头”多半是多巴胺和内啡肽共同作用的结果。</p>
+<h2>主要神经递质</h2>
+<p>神经递质种类繁多，按化学结构可分为胆碱类（如乙酰胆碱）、单胺类（如多巴胺、血清素）、氨基酸类（如谷氨酸、GABA）、肽类（如内啡肽）、气体类（如一氧化氮）、嘌呤类（如腺苷）和脂类（如前列腺素）等。常见的神经递质包括乙酰胆碱、多巴胺、血清素、谷氨酸和γ-氨基丁酸（GABA）等，它们通过化学信号在神经元之间传递信息，影响着情绪、认知、运动等多种生理功能。﻿</p>
+<p>按化学结构分类</p>
+<p><strong>胆碱类</strong>：:主要为乙酰胆碱（ACh）。﻿<br />
+<strong>单胺类</strong>：:包括儿茶酚胺类（多巴胺、去甲肾上腺素、肾上腺素）和吲哚胺类（血清素）等。﻿<br />
+<strong>氨基酸类</strong>：:包括兴奋性神经递质如谷氨酸、天冬氨酸，和抑制性神经递质如γ-氨基丁酸（GABA）、甘氨酸。﻿<br />
+<strong>肽类</strong>：:如内源性阿片肽、催产素、生长抑素、P物质等。﻿<br />
+<strong>气态类</strong>：:如一氧化氮（NO）、一氧化碳（CO）。﻿<br />
+<strong>嘌呤类</strong>：:如腺苷、三磷酸腺苷（ATP）。﻿<br />
+<strong>脂类</strong>：:如前列腺素、神经活性类固醇等。﻿</p>
+<p>主要神经递质示例</p>
+<p><strong>乙酰胆碱（ACh）</strong>：:对认知、记忆、觉醒等脑功能至关重要。﻿<br />
+<strong>多巴胺（DA）</strong>：:与情绪、奖励和运动控制有关。﻿<br />
+<strong>血清素（5-HT）</strong>：:影响体温、情绪、食欲和睡眠。﻿<br />
+<strong>谷氨酸（Glu）</strong>：:中枢神经系统中主要的兴奋性神经递质，对学习和记忆起重要作用。﻿<br />
+<strong>γ-氨基丁酸（GABA）</strong>：:中枢神经系统主要的抑制性神经递质，具有镇静和抗焦虑作用。﻿<br />
+<strong>去甲肾上腺素（NE）</strong>：:具有兴奋性作用，与应激反应和警觉性有关。﻿</p>
+<p>神经递质在人体内扮演着至关重要的角色，与情绪、行为、学习等密切相关，并与多种疾病如帕金森病、抑郁症、阿尔茨海默症等有关。</p>
+<h2>多巴胺、内啡肽、血清素和催产素</h2>
+<p>幸福四重奏：多巴胺、内啡肽、血清素和催产素；</p>
+<table>
+<thead>
+<tr>
+<th>神经递质/激素</th>
+<th>类型</th>
+<th>主要功能</th>
+<th>相关脑区</th>
+<th>相关疾病</th>
+<th>影响因素</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>多巴胺 (Dopamine)</strong></td>
+<td>单胺类神经递质</td>
+<td>奖励与动机、运动控制、认知功能（注意力、决策、学习）</td>
+<td>黑质、腹侧被盖区（VTA）、伏隔核</td>
+<td>过低：帕金森病、抑郁症<br>过高：精神分裂症、成瘾行为</td>
+<td>运动、奖励性活动（音乐、美食）、药物（如可卡因）</td>
+</tr>
+<tr>
+<td><strong>内啡肽 (Endorphins)</strong></td>
+<td>肽类神经递质/内源性阿片类物质</td>
+<td>止痛、愉悦感、应激调节</td>
+<td>下丘脑、垂体、中枢神经系统</td>
+<td>慢性疼痛、抑郁、成瘾</td>
+<td>剧烈运动、冥想、针灸、巧克力、辣椒</td>
+</tr>
+<tr>
+<td><strong>血清素 (Serotonin, 5-HT)</strong></td>
+<td>单胺类神经递质</td>
+<td>情绪调节、睡眠与昼夜节律、食欲与消化</td>
+<td>中缝核、前额叶皮层</td>
+<td>过低：抑郁症、焦虑症、强迫症<br>过高：血清素综合征</td>
+<td>阳光暴露、运动、色氨酸食物（火鸡、香蕉）、SSRIs</td>
+</tr>
+<tr>
+<td><strong>催产素 (Oxytocin)</strong></td>
+<td>肽类激素和神经递质</td>
+<td>社交联结、生殖与分娩、情绪调节（减轻焦虑）</td>
+<td>下丘脑、杏仁核</td>
+<td>自闭症、社交焦虑、产后抑郁</td>
+<td>身体接触（拥抱）、分娩、哺乳、亲密社交</td>
+</tr>
+</tbody>
+</table>
+<h4>补充说明</h4>
+<p><strong>共同点</strong>：这四种物质被称为“幸福四重奏”，在情绪、幸福感和社交行为中协同作用。<br />
+<strong>不同点</strong>：多巴胺驱动动机，内啡肽聚焦止痛，血清素稳定情绪，催产素促进社交联结。</p>
+<h5><strong>实际应用</strong>：</h5>
+<p><strong>心理健康</strong>：SSRIs提升血清素治疗抑郁；多巴胺药物用于帕金森病。<br />
+<strong>生活方式</strong>：运动、社交、健康饮食可自然提升这些物质水平。<br />
+<strong>研究领域</strong>：催产素在自闭症治疗、多巴胺在成瘾机制中备受关注。</p>
+<p>哪些活动可能产生<strong>多巴胺</strong>（dopamine）、<strong>内啡肽</strong>（endorphins）、<strong>血清素</strong>（serotonin）和<strong>催产素</strong>（oxytocin）。以下是简要回答：</p>
+<h4>多巴胺（Dopamine） 奖励化学物质</h4>
+<p><strong>工作</strong>: 完成任务、获得认可、达成工作目标。<br />
+<strong>游戏</strong>: 赢得比赛、获得奖励（如积分或装备）、完成关卡。<br />
+<strong>恋爱</strong>: 收到对方关心、约会顺利、感受到吸引力。</p>
+<h4>内啡肽（Endorphins） 天然镇痛剂</h4>
+<p><strong>工作</strong>: 长时间专注工作后放松、运动（如午间健身）。<br />
+<strong>游戏</strong>: 激烈竞技后释放压力、长时间沉浸感。<br />
+<strong>恋爱</strong>: 亲密接触（如拥抱）、大笑或愉悦的互动。</p>
+<h4>血清素（Serotonin） 情绪稳定剂</h4>
+<p><strong>工作</strong>: 晒太阳（比如户外会议）、保持规律作息。<br />
+<strong>游戏</strong>: 在自然环境中玩游戏（如户外AR游戏）、感到掌控感。<br />
+<strong>恋爱</strong>: 与伴侣共处自然环境、感到被爱和支持。</p>
+<h4>催产素（Oxytocin） 爱的荷尔蒙</h4>
+<p><strong>工作</strong>: 与团队合作完成项目、获得同事信任。<br />
+<strong>游戏</strong>: 与朋友组队玩游戏、分享胜利喜悦。<br />
+<strong>恋爱</strong>: 肌肤接触（如牵手、拥抱）、表达爱意、建立信任。</p>
+<p>这些行为通过刺激大脑化学物质的分泌，提升幸福感和满足感。</p>
+<h2>游戏为何成瘾？</h2>
+<p>游戏成瘾是生理、心理和社会因素共同作用的结果，包括游戏设计诱发的大脑奖赏回路改变，使玩家对游戏线索更敏感；现实中难以获得的即时成就感；以及因缺乏现实成就感和社交而产生的逃避现实的心理需求。当玩家对自然奖励的敏感性降低，但对游戏奖励的敏感性提高时，游戏便会主导其动机，最终发展为成瘾。﻿</p>
+<h4>生理因素﻿</h4>
+<p><strong>大脑奖赏系统的改变</strong>：</p>
+<p>游戏中的即时反馈和恰当的强化频率会刺激大脑释放多巴胺，产生愉悦感。长期玩游戏会使大脑奖赏环路功能出现障碍，导致玩家对自然奖励的敏感性降低，而对游戏线索的敏感性增强。</p>
+<p><strong>神经递质的干扰</strong>：</p>
+<p>长时间玩游戏会激活边缘奖励回路，干扰神经递质的降解和再吸收。</p>
+<h4>心理因素</h4>
+<p><strong>对现实的逃避</strong>：</p>
+<p>游戏能提供一个虚假的环境，玩家可以在其中快速获得成就感和满足感，这与现实生活中获取成功所需的巨大努力、时间和不确定性形成对比。﻿</p>
+<p><strong>心流状态</strong>：</p>
+<p>游戏设计通过匹配玩家的技能与游戏难度，让玩家进入一种高度愉悦的心理状态（心流），从而产生强烈的投入感和熟练感。﻿</p>
+<p><strong>虚假成就感</strong>：</p>
+<p>在游戏中获得的装备或等级提升，虽然是虚拟的，但大脑会将其视为真实的成就，从而产生虚假满足感。﻿</p>
+<p><strong>对游戏线索的增强敏感性</strong>：</p>
+<p>玩家可能对游戏相关的图像、声音等线索产生强烈的反应，即使只是看到游戏截图或直播，也会诱发想玩游戏的欲望。﻿</p>
+<h4>社会因素</h4>
+<p><strong>缺乏社会支持</strong>：</p>
+<p>良好的家庭环境和积极的心理状态是预防游戏成瘾的保护因素。当玩家在现实生活中缺乏亲情关怀和支持时，更容易沉迷于虚拟世界寻求慰藉。﻿</p>
+<p><strong>人际关系受损</strong>：</p>
+<p>游戏成瘾会影响玩家的社交能力，导致家庭关系紧张、朋友疏远，从而进一步加剧对游戏的依赖。﻿</p>
+<p><strong>兴趣爱好的缺失</strong>：</p>
+<p>培养其他兴趣爱好是抵御游戏成瘾的重要保护因素，因为这可以为玩家提供现实生活中的替代性奖赏和成就感。</p>
+<h2>延迟满足</h2>
+<p>延迟满足是指为了获得更有价值的长远结果，而放弃眼前的即时满足的能力和选择取向，同时包括在等待过程中展示的自我控制能力。这个概念源自心理学家沃尔特·米歇尔（<a href="https://www.google.com/search?newwindow=1&amp;sca_esv=d3afabf8eb9d2f2d&amp;rlz=1C5CHFA_enSG988SG988&amp;sxsrf=AE3TifNhlgGT4XDo4mJOlOju4OD1G9eXew%3A1758732040441&amp;q=Walter+Mischel&amp;sa=X&amp;ved=2ahUKEwiC-5m06_GPAxVqADQIHSBUGWQQxccNegQISBAB&amp;mstk=AUtExfCABJUnQsNxc7iT2hNJh7grjGsgRU5m5H0rY4Fta6_XN3FWc6dAS_OpbRy6LMCV5Irs8X8Dn8oY4h09PbXsLB6N_IvgLfcSuEdiJUjW0oHswNbSPCXFhHvPFN0lksPU8JDLEfttNOBRoYGip2UbfWfRZNcFXeq2CXV33MYLYB-L_9E3nIZfqBMNMA7Wsw5crbb4N2N6wFPClBtUyzxrLtkDai2U9YivmMwLRpF3hXyRj3db1tNzAXumeXIJ8zo1KB2i2t1ptAgI1IrE_2G7dXh2&amp;csui=3">Walter Mischel</a>）经典的“<a href="https://www.google.com/search?newwindow=1&amp;sca_esv=d3afabf8eb9d2f2d&amp;rlz=1C5CHFA_enSG988SG988&amp;sxsrf=AE3TifNhlgGT4XDo4mJOlOju4OD1G9eXew%3A1758732040441&amp;q=%E6%A3%89%E8%8A%B1%E7%B3%96%E5%AE%9E%E9%AA%8C&amp;sa=X&amp;ved=2ahUKEwiC-5m06_GPAxVqADQIHSBUGWQQxccNegQISBAC&amp;mstk=AUtExfCABJUnQsNxc7iT2hNJh7grjGsgRU5m5H0rY4Fta6_XN3FWc6dAS_OpbRy6LMCV5Irs8X8Dn8oY4h09PbXsLB6N_IvgLfcSuEdiJUjW0oHswNbSPCXFhHvPFN0lksPU8JDLEfttNOBRoYGip2UbfWfRZNcFXeq2CXV33MYLYB-L_9E3nIZfqBMNMA7Wsw5crbb4N2N6wFPClBtUyzxrLtkDai2U9YivmMwLRpF3hXyRj3db1tNzAXumeXIJ8zo1KB2i2t1ptAgI1IrE_2G7dXh2&amp;csui=3">棉花糖实验</a>”，研究发现，具备延迟满足能力的人在学业、健康和社交等各方面表现更佳。﻿</p>
+<p>具体内容：</p>
+<p><strong>放弃眼前小奖赏，追求未来大奖赏：</strong></p>
+<p>当一个人在短期内选择牺牲较小的即时回报，以换取未来可能更大、更持久的回报时，就体现了延迟满足。﻿</p>
+<p><strong>体现自我控制能力：</strong></p>
+<p>延迟满足需要耐心、冲动管理和意志力等技能，是个人自制力的重要体现。﻿</p>
+<p><strong>对个人成就有益：</strong></p>
+<p>这种能力与更高的学业成就、更好的身体和心理健康，以及更佳的社交能力相关。﻿</p>
+<p>棉花糖实验的启示：</p>
+<p><strong>实验过程：</strong></p>
+<p>在1960年代，米歇尔在幼儿园对孩子们进行了“棉花糖实验”，让他们在两颗棉花糖和一颗棉花糖之间做选择，选择等待更久的孩子就能得到更多的棉花糖。﻿</p>
+<p><strong>长远影响：</strong></p>
+<p>后续对这些孩子的跟踪研究表明，当年能够延迟满足的孩子，后来在学习成绩、社交能力和应对挫折能力上表现更优异，并且成年后事业和家庭关系也更和谐。﻿</p>
+<p>延迟满足的重要性：﻿</p>
+<p><strong>有助于实现长期目标：</strong></p>
+<p>它是完成需要长期投入的任务（如学习或工作）的必要条件，因为它能帮助人们抵制短期诱惑，坚持到底。</p>
+<p><strong>促进更健康的社会行为：</strong></p>
+<p>拥有延迟满足能力的人更倾向于采取积极的社会行为，比如乐于分享和与同伴互动。</p>
+<p><strong>减少冒险行为：</strong></p>
+<p>具备延迟满足能力强的年轻人较少出现冒险行为，如烟瘾和酒瘾。</p>
+<h2>放弃多巴胺，追求内啡肽</h2>
+<h4>理解“放弃多巴胺，追求内啡肽”的目标</h4>
+<p><strong>“放弃多巴胺，追求内啡肽”本质上是一种生活方式转变</strong>：多巴胺（dopamine）是大脑的“奖励激素”，它驱动我们寻求即时、短暂的快感，如刷短视频、吃零食或玩游戏，但过度依赖会导致成瘾和空虚感。 而<strong>内啡肽（endorphins）是“幸福激素”，通过克服挑战、身体活动或深度连接来释放，能带来持久的满足、减压和自我提升</strong>。 这个转变不是完全“放弃”多巴胺（因为多巴胺是必需的），而是“训练”它转向更有益的方向，避免成瘾，同时主动追求内啡肽。 研究显示，这种方法能<strong>提升自律、幸福感和整体身心健康</strong>。</p>
+<p>实现这个目标需要系统的方法，通常分为准备阶段、执行阶段和维护阶段。以下是详细步骤，基于科学建议和实用策略。整个过程可能需要几周到几个月，建议从小变化开始，避免急躁。</p>
+<h5>步骤1: 自我评估与觉醒</h5>
+<p>（准备阶段，1-3天）</p>
+<p>首先，认识自己的多巴胺“陷阱”，这是转变的基础。没有觉醒，就容易半途而废。</p>
+<p><strong>记录当前习惯</strong>：用笔记本或App（如Habitica）记录一周内的活动。列出哪些行为给你即时快感（如刷TikTok、吃甜食、网购），并计算时间。问自己：这些活动后，我感到满足还是空虚？例如，刷短视频会刺激多巴胺分泌，但很快消退，导致循环成瘾。</p>
+<p><strong>评估多巴胺水平</strong>：注意症状，如注意力分散、焦虑或无法专注长期任务。如果这些存在，你可能有“多巴胺成瘾”。 同时，检查内啡肽缺乏迹象，如慢性压力或缺乏动力。</p>
+<p><strong>设定个人目标</strong>：明确为什么要做这个转变（如提升工作效率、改善关系）。目标要具体、可衡量，例如“每周减少手机使用2小时，增加运动3次”。</p>
+<h5>步骤2: 减少多巴胺刺激</h5>
+<p>（执行阶段核心，逐步实施1-4周）</p>
+<p>多巴胺成瘾像“廉价毒药”，需要渐进式“戒断”。突然停止可能导致不适（如烦躁），所以用替换法。</p>
+<p><strong>实施“多巴胺斋戒”</strong>：从30天挑战开始，避免高刺激活动。不是完全禁绝，而是限制：每天手机使用不超过1小时，关闭通知，删除诱惑App。 代替刷视频，用阅读书籍或散步填充时间。研究显示，这种“斋戒”能重置大脑奖励系统。</p>
+<p><strong>优化饮食</strong>：减少糖分、加工食品和咖啡因，这些会人为提升多巴胺，导致崩溃。转向富含酪氨酸（tyrosine）的食物，如杏仁、香蕉、鸡蛋和牛油果，帮助平衡多巴胺而不成瘾。 同时，吃高蛋白食物（如鸡肉、南瓜籽）支持自然调节。</p>
+<p><strong>环境调整</strong>：把手机放在另一个房间，创建“无干扰区”。用工具如Freedom App屏蔽网站。避免深夜娱乐，因为多巴胺在疲劳时更容易主导。</p>
+<h5>步骤3: 主动追求内啡肽</h5>
+<p>（执行阶段并行，持续实践）</p>
+<p>内啡肽需要“克服本能”来获得，但回报是持久满足。重点是日常融入这些活动。</p>
+<p><strong>增加身体活动</strong>：运动是内啡肽的最佳触发器。每天30-60分钟中等强度运动，如跑步、瑜伽或游泳，能提升内啡肽水平，缓解压力。 冷水浴也能指数级增加多巴胺和内啡肽（但从温水开始，避免过激）。 例如，健身后那种“跑者高潮”（runner's high）就是内啡肽在起作用。</p>
+<p><strong>练习 mindfulness 和深度连接</strong>：每天10-20分钟冥想或深呼吸，能释放内啡肽，提升心情。 参与社交，如与朋友深度聊天或志愿活动，而不是浅层互动。按摩或拥抱也能刺激内啡肽。</p>
+<p><strong>追求有挑战的任务</strong>：学习新技能（如弹吉他、写日记），或完成长期项目（如阅读一本厚书）。这些带来“成就感”，远胜即时奖励。 听音乐、吃黑巧克力或大笑也能温和提升内啡肽。</p>
+<h5>步骤4: 建立习惯与跟踪进度</h5>
+<p>（维护阶段，长期）</p>
+<p>转变不是一次性，而是习惯养成。</p>
+<p><strong>使用追踪工具</strong>：App如Streaks记录进度，每周回顾。庆祝小成就，但用内啡肽方式（如散步奖励）。</p>
+<p><strong>应对挑战</strong>：初期可能有“戒断症状”如无聊或焦虑。用正念应对，或找支持者分享。 如果复发，别自责，从头开始。</p>
+<p><strong>渐进扩展</strong>：第一周专注减少一两个习惯，第二周添加内啡肽活动。长期目标：让内啡肽成为主导，如每周马拉松或创意项目。</p>
+<h3>潜在益处与注意事项</h3>
+<p>成功后，你可能感受到更强的自律、更好睡眠和更高幸福感。 但如果有严重成瘾或心理问题，咨询专业医生。记住，这是个个性化过程，根据自己调整。</p>
+<p>Cr Grok；</p>
+]]></content:encoded>
+<slash:comments>0</slash:comments>
+<comments>https://limbopro.com/archives/34346.html#comments</comments>
+<wfw:commentRss>https://limbopro.com/feed/archives/34346.html</wfw:commentRss>
+</item>
+<item>
+<title>如何使用 Google Gemini(Nano Banana) 生成个性化公仔手办模型？</title>
+<link>https://limbopro.com/archives/34295.html</link>
+<guid>https://limbopro.com/archives/34295.html</guid>
+<pubDate>Thu, 11 Sep 2025 14:08:00 +0800</pubDate>
+<dc:creator>毒奶</dc:creator>
+<description><![CDATA[序想象力决定一切。还记得之前大家使用 ChatGPT 将现有图片转换为 吉卜力风格 的图片吗？现在 Google Gemini(Nano Banana) 在图片生成也有了非常大的进步；快来试试看...]]></description>
+<content:encoded xml:lang="zh-CN"><![CDATA[
+<h2>序</h2>
+<p><img src="https://limbopro.com/usr/uploads/2025/09/688951373.jpg" alt="HkDoll 吉卜力风格.jpg" /></p>
+<p>想象力决定一切。</p>
+<p>还记得之前大家使用 ChatGPT 将现有图片转换为 吉卜力风格 的图片吗？现在 Google Gemini(Nano Banana) 在图片生成也有了非常大的进步；快来试试看吧！<del>有女朋友的小伙伴更加要试试了！</del> P.S. 博主在同样的条件下，使用了 Grok 和 ChatGPT ，效果（如细节/提示词符合度)均不如 Google 的 Nano Banana。</p>
+<h2>公仔手办模型效果参考</h2>
+<p><img src="https://limbopro.com/usr/uploads/2025/09/916251753.jpg" alt="photo_2025-09-10_20-34-37.jpg" /><br />
+<img src="https://limbopro.com/usr/uploads/2025/09/4259226980.png" alt="Gemini_Generated_Image_27gzoo27gzoo27gz.png" /></p>
+<p>上面是自拍，下面是根据该自拍生成的手办模型；</p>
+<h2>图片生成手办模型操作步骤</h2>
+<h3>操作步骤图</h3>
+<p><img src="https://limbopro.com/usr/uploads/2025/09/2401546990.jpg" alt="Google gemini 2.5Pro.jpg" /></p>
+<p>如图所示，打开 <a href="https://gemini.google.com/">https://gemini.google.com/</a><br />
+选择 2.5Pro；</p>
+<p><img src="https://limbopro.com/usr/uploads/2025/09/627662319.jpg" alt="Google gemini Nano banana 模型生成图片步骤.jpg" /></p>
+<p>上传你的自拍，或者其他需要被生成手办模型的图片；</p>
+<p>...</p>
+<p>提示词参考：</p>
+<h3>提示词1</h3>
+<p>with this photo, create a 1/7 scale commercialized figure of thecharacter in the illustration， in a realistic style and environment. Place the figure on a computer desk， using a circular transparent acrylic base without any text.On the computer screen， display the ZBrush modeling process of the figure. Next to the computer screen， place a BANDAI-style toy packaging box printed with the original artwork.</p>
+<p><strong>翻译过来就是：</strong></p>
+<p>使用这张照片，在写实的风格和环境中，创建插图中人物的 1/7 比例商业化人物。将人物放置在电脑桌上，使用圆形透明亚克力底座，不添加任何文字。在电脑屏幕上，显示人物的ZBrush建模过程。在电脑屏幕旁边，放置一个印有原创艺术品的 BANDAI 风格玩具包装盒。</p>
+<p>以上，提示词收集自网络；玩法非常多，大家可以自发想象，尽情的天马行空！</p>
+<h3>提示词2</h3>
+<p><img src="https://limbopro.com/usr/uploads/2025/09/1116225076.png" alt="Gemini_Generated_Image.png" /></p>
+<p>提示词2：转换成手办模型，BANDAI，放置于电脑右侧，房间布景为赛博朋克风格，电脑墙纸为宫崎骏的天空之城；</p>
+<h3>需要注意的是</h3>
+<p>上传的图片尽量清晰，Ai才能从中提取更多的细节用于生成手办；</p>
+<h2>更多好用的提示词</h2>
+<h3>图片转提示词</h3>
+<p><a href="https://imagetoprompt.com/">https://imagetoprompt.com/</a></p>
+<p>获取任何图像的文本提示：<strong>如果你看到一个由AI生成的图片很棒很惊艳很天马行空，但又不知道提示词，可以使用该工具！你可以结合从它这里获得的提示词进一步改造！</strong></p>
+<p>更多相关类型工具可谷歌搜索：image to prompt；</p>
+<h4>提示词集合</h4>
+<p>Google Gemini Nano Banana 图片生成<strong>提示词集合</strong>，满足各类常见场景图片生成需求：<a href="https://github.com/PicoTrex/Awesome-Nano-Banana-images">https://github.com/PicoTrex/Awesome-Nano-Banana-images</a> （收集自小红书/X等自媒体平台）</p>
+<h3>更多网站</h3>
+<p>以下是一些可以找到优秀图片生成提示词（AI image generation prompts）的网站。这些网站通常提供提示词库、生成器或社区分享，用户可以从中获取灵感、复制现成提示词，或使用工具自动生成高质量的提示词。我根据可靠来源（如AI工具评测和社区推荐）整理了这些推荐，主要聚焦于免费或易用的资源。它们适用于像Stable Diffusion、Midjourney、DALL·E等AI图像生成工具。</p>
+<p>我将它们整理成表格，便于比较。表格包括网站名称、主要功能和链接（基于最新搜索结果）。</p>
+<table>
+<thead>
+<tr>
+<th>网站名称</th>
+<th>主要功能</th>
+<th>链接</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PromptBase</td>
+<td>一个专门交易和分享提示词的市场。你可以在这里找到各种高质量、经过优化的提示词，涵盖多种风格（如3D渲染、摄影、动漫等）。适合寻找特定风格或效果的提示词。</td>
+<td><a href="https://promptbase.com/">https://promptbase.com/</a></td>
+</tr>
+<tr>
+<td><strong>Midjourney Community Showcase</strong></td>
+<td>Midjourney官方的社区画廊。你可以浏览其他用户生成的图片，并点击查看它们使用的提示词。这不仅能让你看到各种令人惊叹的创意，也能让你学习Midjourney特有的提示词用法和技巧。</td>
+<td><a href="https://www.midjourney.com/showcase/">https://www.midjourney.com/showcase/</a></td>
+</tr>
+<tr>
+<td>PromptHero</td>
+<td>世界上最大的AI提示词搜索引擎，支持Stable Diffusion、Midjourney、ChatGPT等模型。用户可以搜索数百万提示词和生成图像，包含艺术风格、主题分类。</td>
+<td><a href="https://prompthero.com/">prompthero.com</a></td>
+</tr>
+<tr>
+<td>PromptoMANIA</td>
+<td>AI艺术提示词生成器和社区，提供详细提示词构建工具，支持Midjourney和Stable Diffusion。用户可以生成自定义提示词，并查看示例图像。</td>
+<td><a href="https://promptomania.com/">promptomania.com</a></td>
+</tr>
+<tr>
+<td>Lexica</td>
+<td>Stable Diffusion专用提示词库，用户可以浏览AI生成图像并直接复制关联提示词。支持搜索风格、主题，支持直接生成图像。</td>
+<td><a href="https://lexica.art/">lexica.art</a>（从社区推荐中推断）</td>
+</tr>
+<tr>
+<td>ImagePrompt.org</td>
+<td>图像到提示词转换工具（反向工程），也可生成文本提示词。免费核心功能，支持Midjourney、Flux等模型，提供详细描述和风格指导。</td>
+<td><a href="https://imageprompt.org/">imageprompt.org</a></td>
+</tr>
+<tr>
+<td>Narrato</td>
+<td>提供70+现成AI图像提示词示例，针对旅行、自然、摄影等主题。适合初学者快速复制使用，并有提示词编写技巧。</td>
+<td><a href="https://narrato.io/blog/40-ai-image-prompts-to-create-amazing-visuals-effortlessly/">narrato.io/blog</a></td>
+</tr>
+<tr>
+<td>QuillBot</td>
+<td>分享50+高质量AI图像提示词列表，适用于2025年最新模型。包括负面提示词建议，帮助优化输出质量。</td>
+<td><a href="https://quillbot.com/blog/image-tools/ai-image-prompts/">quillbot.com/blog</a></td>
+</tr>
+<tr>
+<td>WhyTryAI</td>
+<td>汇总14个提示词工具和站点列表，包括生成器和库。提供Midjourney和Stable Diffusion的灵感来源，便于探索。</td>
+<td><a href="https://www.whytryai.com/p/image-prompt-sites">whytryai.com</a></td>
+</tr>
+</tbody>
+</table>
+<h4> 额外建议：</h4>
+<p><strong>如何使用这些网站</strong>：在PromptHero或Lexica上搜索关键词（如“cyberpunk city”），即可看到匹配的提示词和示例图像。PromptoMANIA适合从零构建提示词，添加细节如“highly detailed, 8K resolution”。</p>
+<p><strong>为什么这些很棒</strong>：这些站点基于用户社区和AI模型优化，提供高匹配度的提示词，能生成更逼真、创意十足的图像。相比通用搜索引擎，它们更专注AI艺术。</p>
+<p><strong>注意事项</strong>：部分网站有免费额度，高级功能可能需订阅。提示词效果取决于AI工具（如Midjourney通常需Discord访问），建议结合实际测试。</p>
+<p>如果你需要特定主题的提示词（如科幻或肖像），可以提供更多细节，我可以帮你搜索或生成示例！</p>
+<p>Cr Grok;</p>
+<h2>faq</h2>
+<h3>想象力</h3>
+<p>TIP: Ask Gemini to refine images<br />
+With image generation in Gemini, your imagination is the limit. If what you see doesn't quite match what you had in mind, try adding more details to the prompt. The more specific you are, the better Gemini can create images that reflect your vision.</p>
+<p>这是 Google Gemini Nano Banana 给的提示，翻译过来就是：</p>
+<p><strong>提示：让Gemini优化图像</strong><br />
+借助Gemini的图像生成功能，想象力就是你的极限。若生成的图像与构想存在偏差，请尝试在提示词中添加更多细节。描述越具体，Gemini就越能精准呈现你脑海中的画面。</p>
+<h3>使用除中国（含港澳）外的国家或地区的节点访问</h3>
+<p><img src="https://limbopro.com/usr/uploads/2025/09/1606801178.png" alt="飞鸟机场近期测速—20250907-131258.png" /></p>
+<p>[post cid="14202" cover="https:\/\/limbopro.com\/usr\/uploads\/2019\/11\/1256061520.jpg"/]</p>
+<table>
+<thead>
+<tr>
+<th>套餐</th>
+<th>流量/价格</th>
+<th>季付<strong>折后</strong></th>
+<th>半年付<strong>折后</strong></th>
+<th>年付<strong>折后</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>青铜套餐</td>
+<td>100GB/￥15/月</td>
+<td>￥41/季</td>
+<td>￥77/半年</td>
+<td>￥144/年付</td>
+</tr>
+<tr>
+<td>白银套餐</td>
+<td>200GB/￥30/月</td>
+<td>￥81/季</td>
+<td>￥153/半年</td>
+<td>￥288/年付</td>
+</tr>
+<tr>
+<td>黄金套餐</td>
+<td>500GB/￥75/月</td>
+<td>￥203/季</td>
+<td>￥383/半年</td>
+<td>￥720/年付</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>系统基础优惠折扣</strong>：所有套餐季付享9折，半年85折，年付8折；</p>
+</blockquote>
+<p>参阅：<a href="https://support.google.com/gemini/answer/13575153?hl=zh-Hans">Gemini Web 应用支持的语言和国家/地区</a>；</p>
+<h2>后话</h2>
+<p>人是很聪明的动物，从工业革命到AI革命，没买到便宜的英伟达到股票，那就好好利用AI，希望大家不要在茫然中错过太多机会。从现在起，使用AI，利用AI，成为AI，让AI成为你的“外骨骼”，提高认知和生产力！</p>
+<p>最后，再来看看AI能做什么？</p>
+<p>“<br />
+<strong>回答问题</strong>：我可以回答各种主题的问题，从事实性知识到更复杂的概念解释。<br />
+<strong>创作文本</strong>：我可以写故事、诗歌、电子邮件、代码、脚本、音乐作品、信件等。<br />
+<strong>总结信息</strong>：我可以帮你总结一篇文章、报告或任何长篇文本的要点。<br />
+<strong>提供创意</strong>：如果你需要一些想法或灵感，我可以帮你集思广益。<br />
+<strong>翻译语言</strong>：我可以将文本从一种语言翻译成另一种语言。<br />
+<strong>生成图像</strong>：如果你想看一些有趣的图片，我可以为你生成。<br />
+” Cr Gemini 2.5Flash；</p>
+<p>有问题，问AI，问到底！不会问？那也问AI！譬如问AI：如何向AI提问？如何获得自己想要的答案？==</p>
+<p>以上，祝大家和AI玩得愉快。</p>
+]]></content:encoded>
+<slash:comments>0</slash:comments>
+<comments>https://limbopro.com/archives/34295.html#comments</comments>
+<wfw:commentRss>https://limbopro.com/feed/archives/34295.html</wfw:commentRss>
+</item>
+<item>
+<title>《逐利而生》3000年公司演变史</title>
+<link>https://limbopro.com/archives/34170.html</link>
+<guid>https://limbopro.com/archives/34170.html</guid>
+<pubDate>Sat, 16 Aug 2025 23:45:00 +0800</pubDate>
+<dc:creator>毒奶</dc:creator>
+<description><![CDATA[介绍i&gt; 作者: [美]威廉·马格努森（William Magnuson）出版社: 社会科学文献出版社出品方: 方寸（The Unique World ）副标题: 3000年公司演变史原作...]]></description>
+<content:encoded xml:lang="zh-CN"><![CDATA[
+<p><img src="https://limbopro.com/usr/uploads/2025/08/1949735799.jpg" alt="《逐利而生》3000年公司演变史.jpg" /></p>
+<h2>介绍</h2>
+<p>i&gt; 作者: [美]威廉·马格努森（William Magnuson）<br />
+出版社: 社会科学文献出版社<br />
+出品方: 方寸（The Unique World ）<br />
+副标题: 3000年公司演变史<br />
+原作名: For Profit: A History of Corporations<br />
+译者: 张洁 / 黄志华<br />
+出版年: 2024-3<br />
+页数: 432<br />
+定价: 98<br />
+装帧: 平装<br />
+丛书: 方寸·新知课<br />
+ISBN: 9787522828671</p>
+<h3>目录</h3>
+<p>目录  · · · · · ·<br />
+引 言<br />
+第1章 经济体<br />
+第2章 银 行<br />
+第3章 股 票<br />
+第4章 垄 断<br />
+第5章 流水线<br />
+第6章 跨国公司<br />
+第7章 掠夺者<br />
+第8章 初创公司<br />
+结 语<br />
+致 谢</p>
+<p><a href="https://book.douban.com/subject/36661132/">豆瓣</a>；</p>
+<h3>摘录</h3>
+<p>“是什么造成了这一切？我们是如何走到这一步的——整整一代聪明尽职的年轻人，把一天中的每个清醒都用来为公司牟利？这一切意味着什么？” </p>
+<p>引自 引 言</p>
+<p>印度纺织品的涌入在英国引发了广泛的变革，从语言、时尚到政治，无不深受其影响。首先，印度词汇开始进入英语，比如bandana、calico、chintz、dungaree、seersucker（即花色丝质大手帕、印花棉布、轧光印花棉布、粗蓝斜纹布、绉条纹薄织物）等英语单词都是从印度词汇衍生而来的。其次，印花棉布在英国颇为热销，甚至连女王也十分喜爱。《鲁滨逊漂流记》(Robinson Crusoe)的作者丹尼尔·笛福(Daniel Defoe)对英国文化具有敏锐的洞察力，他根据所见所闻写道：“人们对印度纺织品如此痴迷，以至于曾用于绗缝毯子和贴身儿童衣物的彩色印花棉布都受到追捧，就连精英女性也对之热爱至极。时尚的力量是如此强大，以前只有女仆才穿的印度服装如今却出现在了有权有势的人身上。”约翰·布兰奇(John Blanch)则对此表示，印度时尚是“女性无法抵御的”，英国人应尽快“将我们的女性从印度政府手中解救出来”。正如这些褒贬不一的评论所示，并非所有人都认同东印度公司的贸易成就。其中，最严厉的批评声来自英国的纺织业，因为工人们担心高质量的印度进口纺织品会威胁到他们的生计。于是，包括织布工、纺纱工、染色工和牧羊人等在内的工人纷纷联合起来，指责东印度公司压低价格，对国内的就业形势造成威胁。整个17世纪后半叶，这样的政治压力不断增大。1696年，英国下议院提出一项法案，禁止公司从印度进口任何丝绸或印花棉布。该法案被上议院否决后，数千名愤怒的伦敦纺织业工人拥入威斯敏斯特游行抗议。一路上，他们砸开东印度公司大楼的大门，将东印度公司副总督的住所洗劫一空，政府因此不得不召集士兵来守卫其他东印度公司高管的宅邸。最终，纺织业的工人如愿以偿：1700年，英国议会颁布《印花棉布法案》(Calico Act)，禁止进口印度印花棉布。</p>
+<p>引自 第3章 股 票</p>
+<h2>编辑推荐</h2>
+<p>《经济学人》《出版人周刊》《金融时报》、美国亚马逊等多家媒体2022年度推荐图书；</p>
+<p>公司的本质到底是什么，它们为何存在？公司是进步与繁荣的引擎，还是无情追求利润的机器？通过本书抽丝剥茧的分析，我们将看到这些问题的答案</p>
+<p>罗马大税吏公司、美第奇银行、英国东印度公司、福特汽车公司、KKR私募公司、Facebook……以它们的故事为核心，阐述公司如何随着时间的推移演变为今天的模样</p>
+<p>公司的故事归根结底是人的故事，从资助公司的股东、管理公司的高管，到维持公司运转的员工，在本书中，我们会与臭名昭著的奴隶贩子和强盗大亨相遇，也能同贡献卓越的科学家和创新者对话</p>
+<h2>内容简介</h2>
+<p>从传统制造商到新兴科技巨头，公司一直都是历史舞台上备受关注的角色。有人将其视为进步与繁荣的引擎，有人则认为它们不计后果地追求利润，而让整个社会一起来承担发展的成本。公司的本质到底是什么，它们为何存在？</p>
+<p>从被视为“国家支柱”的罗马大税吏公司到日不落帝国缔造者的英国东印度公司，从消费型社会始作俑者的福特汽车公司到可以左右选举的Facebook……本书将通过不同时代不同类型的8家公司，展现公司如何随着时间的推移演变为今天的模样，洞察它们如何崛起和运转，又因何失败；了解它们使哪些领域得到了高贵的地位，又使哪些领域受到了腐蚀。但无论历史如何演变，它们始终对世界局势产生着巨大而深远的影响。</p>
+<p>纵观历史，公司为谋求公共利益而生，虽时常偏离初衷，但其独特且持久存在的合理性始终在于增进人类福祉的能力。</p>
+<h2>书籍下载</h2>
+<p>使用微信读书，或Z-library下载；</p>
+<p>[post cid="30553" cover="https:\/\/limbopro.com\/usr\/uploads\/2024\/09\/3421446972.jpg"/]</p>
+]]></content:encoded>
+<slash:comments>0</slash:comments>
+<comments>https://limbopro.com/archives/34170.html#comments</comments>
+<wfw:commentRss>https://limbopro.com/feed/archives/34170.html</wfw:commentRss>
+</item>
+<item>
+<title>台北國際成人展（TRE）日本女优参展名单及其经典番号推荐（2025）</title>
+<link>https://limbopro.com/archives/34135.html</link>
+<guid>https://limbopro.com/archives/34135.html</guid>
+<pubDate>Wed, 13 Aug 2025 11:28:00 +0800</pubDate>
+<dc:creator>毒奶</dc:creator>
+<description><![CDATA[序@&gt; “河北彩花妥妥C位，桜空もも，石川澪伴其左右。”“除了接班三上悠亚成为「天下第一人」的河北彩伽外，「神之乳美少女」樱空桃也升格到了白金卡，取代将在今年引退的新有菜。今年金卡女优则有...]]></description>
+<content:encoded xml:lang="zh-CN"><![CDATA[
+<p><img src="https://limbopro.com/usr/uploads/2025/08/3011184453.png" alt="TRE台北国际成人展日本女优参展名单.png" /></p>
+<h2>序</h2>
+<p>@&gt; “河北彩花妥妥C位，桜空もも，石川澪伴其左右。”</p>
+<blockquote>
+<p>“除了接班三上悠亚成为<strong>「天下第一人」</strong>的<strong>河北彩伽</strong>外，<strong>「神之乳美少女」樱空桃</strong>也升格到了<strong>白金卡</strong>，取代将在今年引退的<strong>新有菜</strong>。今年金卡女优则有<strong>石川澪、凉森玲梦、七泽米亚、伊藤舞雪、明里紬</strong>，以及来自白银卡升格的<strong>神木丽</strong>、<strong>西宫梦</strong>、<strong>miru</strong>，以及登上TRE舞台的<strong>金松季步</strong>。之前跟金松季步来台宣传的S1新人<strong>濑户环奈</strong>虽然今年才出道，但在社群上爆棚的人气也让她火速取得了白银卡的资格！” Cr mobile01；</p>
+</blockquote>
+<p>i&gt; <strong>关注博主</strong>：<a href="https://x.com/limboprossr">https://x.com/limboprossr</a>；<br />
+在 X/Twitter 上一键关注 <strong>日本🇯🇵AV女演员们的推特（AV女优）</strong>：<a href="https://x.com/limboprossr/lists">https://x.com/limboprossr/lists</a> / <a href="https://x.com/i/lists/1411708980456419333">https://x.com/i/lists/1411708980456419333</a>；</p>
+<script async src="https://telegram.org/js/telegram-widget.js?22" data-telegram-post="airportbbq/25034" data-width="100%" data-color="343638" data-dark="1" data-dark-color="FFFFFF"></script>
+<h2>河北彩伽</h2>
+<p>河北彩伽 <a href="https://x.com/Saika_Kawakita">@Saika_Kawakita</a> </p>
+<h3>最高收藏作品</h3>
+<pre><code>OFJE-448 过去6年作品精彩集锦 - 河北彩花
+SONE-543 在爱人面前被侵犯的背德感，以及可能被同事发现的刺激感！这就是让美丽OL沦陷的办公室NTR性爱 河北彩伽 收藏人数 19567
+SONE-763 平常文静的气质系美女，把我的鸡鸡调教得服服贴贴 河北彩伽 收藏人数 14869
+SONE-454 快感・极致！使出各种手段，彻底让极品正妹达到高潮巅峰 河北彩伽 收藏人数 12410
+SONE-687 绝美正妹被灌醉之后…就被轮着干了 河北彩伽 收藏人数 11099
+SONE-499 魅惑学生神魂颠倒、无法自拔的超正游泳部顾问 河北彩伽 收藏人数 10888
+SONE-560 S1 PRECIOUS GIRLS 2024 オールスター24名大集合ハーレムアイランドSpecial 上集 收藏人数 10350
+SONE-725 因彩伽的技巧连续射精的话就做奖励的做爱？ 河北彩伽 收藏人数 9274
+SONE-560 S1 PRECIOUS GIRLS 2024 オールスター24名大集合ハーレムアイランドSpecial 下集 收藏人数 9083
+SONE-642 喜欢喜欢喜欢喜欢喜欢好～喜欢 河北彩伽来溺爱您的肉棒，为了每次最棒的射精用尽全心全力的恋人射精协助 河北彩伽 收藏人数 8773
+SONE-563 S1 20周年纪念・AV业界史上的最强组合作品。忍不住就射吧，我们可是传说级的鸡鸡口技师 收藏人数 8670
+SONE-561 S1 20周年纪念！AV界历史留名的超强组合作品—超级VVVIP大乱交派对！舔翻天、插不停、高潮连连，疯狂沉浸在非日常的奇蹟梦幻共演 河北彩伽 金松季步 本乡爱 田野忧 清原美优 儿玉七海 榊原萌 神乐桃果 五条恋 收藏人数 7832
+OAE-262 伽の花 河北彩伽 收藏人数 4155</code></pre>
+<h2>桜空もも</h2>
+<p>桜空もも <a href="https://x.com/sakumomo1203">@sakumomo1203</a></p>
+<h3>最高收藏作品</h3>
+<pre><code>IPX-485 我的巨乳老婆樱空桃在我不知道的时候和健身教练私通一边被玩弄还一边给我打电话 樱空桃 收藏人数 34494
+IPX-743 禁慾的结果 汗水与高潮潮水布满全身的3天 樱空桃 收藏人数 26404
+IPX-149 凌辱纯洁女大学生樱空桃 收藏人数 25931
+IPZZ-034 BEAUTY VENUS VIII 樱空桃 伊藤舞雪 楪可怜 收藏人数 24133
+IPX-980 因为同学会而再会 和曾经喜欢的男人SEX 重复出轨中出的我... 樱空桃 收藏人数 19315
+IPZZ-050 「已经进入了…」≪软体配对≫ 见面就马上抽插即交型的方便绝伦婊子 总射精11发！！  樱空桃 收藏人数 18639
+IPZZ-598 巨乳内衣销售员靠着推销试穿、甜腻淫语和中出绝技，登顶销售冠军！她的诱人推销术和淫荡技巧超厉害，全片都是色色的内衣巨乳癡女玩法 樱空桃 收藏人数 18536
+IPX-690 女友的姊姊是写真偶像！失控搓揉弹嫩大奶中出爆抽插 樱空桃 收藏人数 18322
+IPZZ-046 老公不在家从早到晚、被公公的舔舐舌技持续搞到高潮… 樱空桃 收藏人数 17902
+IPZZ-002 对面房间可以让人狂打手枪的巨乳写真偶像 用Q弹胸部和穿着可看见重点部位的泳衣卖弄诱惑！用超淫荡的腰技数次被中出的我 樱空桃 收藏人数 17768
+IPX-916 「去宾馆吧?」在新职员欢迎会上，我喝醉了被公司接待小姐带走了 樱空桃 收藏人数 16533
+CAWD-676 「一人前の男になりたくない？」新入社员のボクたちは社员旅行でホロ酔いの憧れ女上司2人に部屋に连れ込まれ朝までみっちりオトナの4POJT研修 樱空桃 伊藤舞雪 收藏人数 16173
+IPZZ-342 ≪计划性≫同房逆NTR 超绝技术被高级女主管NTR 一次又一次的升天。 樱空桃 收藏人数 14959
+IPZZ-407 不穿内衣 无意识的奶头诱惑 巨乳姐姐的天然淫荡诱惑中出性爱 樱空桃 收藏人数 14641
+IPX-613 「抱歉，今晚也要值班…」 夜班新婚护士的深夜病房NTR 妻子没回家的空白12小时 樱空桃 收藏人数 14618
+IPZZ-119 疑？现在在这里！？ 巨乳婊子大姊的醉酒逆搭讪！不管场所对素人肉棒搞癡女玩法无套中出公然做爱！ 樱空桃 收藏人数 14529
+IPX-674 S级超单体女演员将日第1名周第1名月第1名超人气同人漫画真人版! ! 樱空桃 收藏人数 14273
+IPZZ-546 与樱空桃的过夜中出连发约会H，被她24小时痴女玩到高潮不断的我 樱空桃 收藏人数 13673
+IPX-868 出勤时... 原写真偶像的巨乳女社员突然发情诱惑 樱空桃 收藏人数 13192
+IPX-851 代偿肉便器 永无止尽的射精 被绝伦黑道大叔监禁的10天 樱空桃 收藏人数 13142
+IPZZ-366 黑发双马尾戴着眼镜的部下身体比想像中还要淫荡...两人一起逃离公司，彻底地性慾满足直到精疲力尽的24小时 樱空桃 收藏人数 12770
+IPX-707「不可以直接插入！因为太爽了！我会立即高潮！」 高潮后的追击直接内射抽插樱空桃 收藏人数 12467
+IPX-884 住隔壁的巨乳女子本来只把我的肉棒当玩物﹐我的慾望暴走直到射精为止的每一天… 樱空桃 收藏人数 12340
+IPX-777 中出OK 走光女上司的诱惑 樱空桃 收藏人数 12207
+MIMK-200 40，000部突破の人気作堂々実写化！日间1位周间1位月间1位3冠获得！ 早漏克服クリニック 実写版 何度も何度も射精させてチ○ポ耐久アップさせてくれるエロカワ女医さん 樱空桃</code></pre>
+<h2>宫下玲奈</h2>
+<p>宮下玲奈/宫下玲奈 <a href="https://x.com/rena_miyashita">@rena_miyashita</a></p>
+<h3>最高收藏作品</h3>
+<pre><code>MIDV-640 前辈要不要再到我家继续喝一杯？ 后辈女子社员的丝袜诱惑 用轻声淫语手技感度高涨之后还延长交配17发 宫下玲奈 收藏人数 27764
+MIDV-266 被女友的好朋友告白，女友不在的时候沉溺SEX之中的苦闷超色情回忆 宫下玲奈 收藏人数 20643
+MIDV-791 「我已经射精了啦」这样的状态下还是汗水直流紧密痴女来玩弄我的超正坏坏姊姊 宫下玲奈 收藏人数 20277
+MIDV-402 用药做爱女教师NTR 喜欢的新任玲奈老师被最烂的大肉棒体育教师搞到疯狂高潮堕落勃起 宫下玲奈 收藏人数 17945
+MIDV-549 一夜激情 直到太阳升起 沉浸在只有两人的空间 想让宫下玲奈帮我射精 宫下玲奈 收藏人数 17076
+MIDV-118 初次的留宿约会 握着手 接吻 欢笑 忘记时间的浓密SEX 宫下玲奈 收藏人数 16807
+MIDV-890 已有家室的我却拜倒在年轻CA的丝袜美腿之下被小恶魔足交 宫下玲奈 收藏人数 16242
+MIDA-241 穿着黑丝袜的超正痴女女仆，24小时伺候你，用她修长美腿让你射好射满 宫下玲奈 收藏人数 15243
+MIDV-432 出差被中年大叔强行插入的我 一整个晚上黏密密的抚摸 性器官被玩弄 绝伦抽插 侮辱高潮性爱 宫下玲奈 收藏人数 15211
+MIDV-611 停电门锁监禁 深夜在便利商店性饥渴的店长性骚扰 大鸡巴缓急的活塞运动疯狂高潮 宫下玲奈 收藏人数 14844
+MIDV-185 被电车痴汉集团弄到堕落的我 宫下玲奈 收藏人数 13129
+MIDV-461 身为班主任的我输给学生诱惑放学后在爱情宾馆持续中出… 宫下玲奈 收藏人数 13099
+MIDA-008 让那个对我冷淡的援交美少女明白点！用黏糊糊的口水接吻加上复仇式的激烈冲刺，把她弄到早上高潮不断，最后还让她变成专属颜射女仆 宫下玲奈 收藏人数 13055
+MIDA-200 老公不给我满足也没差…上司的白嫩美翘臀年轻老婆，不穿内裤露出菊花勾引我！最终抵挡不住，陷进不伦关系 宫下玲奈 收藏人数 12533
+MIDV-700 在无聊的乡下，我用口水和舌头引诱附近大叔勃起，用汗水淋漓的贴身口交体位让他一次又一次射精... 宫下玲奈 收藏人数 10319
+MIDV-518 KISS然后口交 从阴囊到延伸到肛门然后口交 宫下玲奈 收藏人数 9969
+MIDV-671 公公喜欢的是我的奶头…花10年研究观察胸部的成长被异常性欲大叔玩弄奶头高潮的我 宫下玲奈 收藏人数 9521
+MIDV-075 新人 专属 宫下玲奈 19岁 AV出道！ 收藏人数 9331
+MIDA-161 超猛吸吮口交！用顶级脸蛋接下所有臭臭精液，还加码口交清理黏稠肉棒，颜射特别版 宫下玲奈 收藏人数 9066
+MIDV-822 子宫春药！舒服到身体扭曲疯狂高潮昇天 宫下玲奈 收藏人数 8897
+MIDV-854 家庭老师的玲奈…父母不在的一个礼拜淫语技术逆痴汉每天被强迫射10发的我。 宫下玲奈 收藏人数 8755
+MIDV-925 极美苗条身材美少女 快感绝活！从鲍鱼流出来的淫荡汁 绝顶全套服务 宫下玲奈 收藏人数 8742
+MIDV-284 和傲慢的青梅竹马后辈 五日的傲娇同居生活 宫下玲奈 收藏人数 8492
+MIDV-580 脑汁洩漏甘甜淫语满溢ASMR 小恶魔美少女的五感融化自慰协助 宫下玲奈 收藏人数 8301</code></pre>
+<h2>石川澪</h2>
+<p>石川澪 <a href="https://x.com/_ishikawamio_">@<em>ishikawamio</em></a></p>
+<h3>最高收藏作品</h3>
+<pre><code>MIDV-670 回到乡下老家的我因为有东京女友而感到嫉妒的青梅竹马…汗水直流嫉妒淫语精子喷来喷去被取精的我夏日回忆 石川澪 收藏人数 19686
+MIDV-011 初次的留宿约会 忘记时间的浓密交融SEX 石川澪 收藏人数 18122
+MIDV-433 会把主人（我）玩弄到变笨的性感女仆！趁倦怠期的老婆跟女儿出去旅游不在家 NTR淫语诱惑性爱 石川澪 收藏人数 16240
+MIDV-699 不爱出门丧女妹子不小心看到她在自慰理智崩溃的我…妹妹都高潮了，我却没有发现继续暴走插入 石川澪 收藏人数 15652
+MIDV-946 星期天的早上，睡醒的澪很可爱，一发，两发，三发......持续打炮疯狂射精 一直做爱到黄昏的一天 石川澪 收藏人数 15262
+MIDV-229 身为班主任的我输给学生诱惑放学后在爱情宾馆持续中出… 石川澪 收藏人数 14317
+MIDV-041 走光诱惑 很会撩拨的妹妹 石川澪 收藏人数 12317
+MIDV-908 跟青梅竹马结婚…从小就知道的澪 今天被她诱惑 一次又一次的被玩弄到射精 美少女小恶魔的坏坏性爱 石川澪 收藏人数 11997
+MIDA-101 「要不要偷偷来点色色特训？」多管閒事的青梅竹马美少女学生明明是个早洩敏感体质，却要来教我如何「锻鍊精力」 石川澪 收藏人数 11109
+MIDA-213 老婆的超正妹妹澪用她的粉嫩小穴挑逗，使我失去理智。在慾望驱使下，我与她发生了激烈的不伦性爱 石川澪 收藏人数 10937
+MIDV-735 「把硬梆梆的敏感奶头彻底的玩弄！」表情甜美吸好吸满的紧密淫荡技术！爱爱玩弄胸部淫荡派对 石川澪 收藏人数 10599
+MIDV-186 狂流口水的痴女护士用接吻及SEX的方式来欺负！ 石川澪 收藏人数 10551
+MIDV-488 女经理的小穴随时使用 性慾消解宠物 石川澪 收藏人数 10501
+MIDV-373 一整个晚上 在家里独处两人…想要被石川澪痴女玩弄 石川澪 收藏人数 10317
+MIDV-835 租借老婆带来的小孩一个礼拜。被陌生大叔跟公公的肉棒插入…一次又一次的高潮的我… 石川澪 收藏人数 9466
+MIDV-639 我的可爱女友在同学会里被侵犯到高潮沉沦 石川澪 收藏人数 9324
+MIDA-024 出差被讨厌的上司设计同房，不让我去厕所，还用双手玩弄我下面，让我羞到失禁，正妹OL最后还被他的绝伦肉棒搞到整晚不停尖叫高潮，哭到不行 石川澪 收藏人数 8731
+MIDV-872 澪的淫荡口交再口交！完美的脸蛋迎接很臭的精子！射精后追击口交帮你清干净 然后再次颜射 石川澪 收藏人数 8214
+MIDV-516 无防备的青梅竹马不穿内衣胸部露出来我马上勃起！受不了的奶头挑逗攻击 石川澪 收藏人数 8046
+MIDV-207 出道一周年 Cosplay四本番 10发颜射Special 石川澪 收藏人数 7985
+MIDV-285 「让澪来让你超～舒服射精」［融化脑袋的ASMR主观］ 耳边细语心动射精的恋爱自慰帮手！ 石川澪 收藏人数 7761
+MIDV-248 泡浴社新学生会长澪穿淫装大奋斗 无限发射服务 石川澪 收藏人数 7645
+MIDV-267 突破极限 子宫颈开发小穴激烈抽插潮吹绝顶 石川澪 收藏人数 7593
+MIDE-974 新人 専属19歳AVデビュー ‘普通’の中で见つけたスターの原石 石川澪 收藏人数 7065</code></pre>
+<h2>七沢みあ</h2>
+<p>七沢みあ <a href="https://x.com/mia_nanasawa">@mia_nanasawa</a></p>
+<h3>最高收藏作品</h3>
+<pre><code>MIDE-960 在父母不在的时候，被寄养在空閒的乡下的我诱惑住在附近的哥哥，任性地摆动着腰… 七泽美亚 收藏人数 28213
+MIDV-032 【美亚竟然交男朋友了...】10年份的单相思 瞬间爆发 被隔壁的异常性慾大叔下媚药 七泽美亚 收藏人数 21133
+MIDE-970 认真内向的部下共处一室时瞬间淫乱豹变 淫语撩拨巨根逆NTR 七泽美亚 收藏人数 18719
+MIDV-562 把小屁孩妹妹花三天时间成为我的性爱玩具 七泽米亚 收藏人数 17745
+MIDV-049 强硬女上司和处男部下在出差处共处一室... 一夜情之后 仍然被部下的肉棒吸引... 七泽美亚 收藏人数 13811
+MIDV-752 那个性爱影片的声音竟然是来自 米亚！我的女友穿着极小比基尼 没有许可就被摄影拍照…被宅男的绝伦大肉棒 绝伦抽插 疯狂高潮NTR勃起！违法性爱影片NTR 七泽米亚 收藏人数 13032
+MIDV-531 「只有口交就不是外遇了吧？」对已婚者教师诱惑口交20发舔舐堕落NTR 七泽美亚 收藏人数 12349
+MIDE-983 短时营业的閒暇 打工处的后辈小恶魔的诱惑 射精也不停下的肉棒奴隶 七泽美亚 收藏人数 11364
+MIDV-274 青梅竹马已经成为当地有名的公交车辣妹！跟她见面之后三天三夜 连续发射12发的色色回忆 七泽米亚 收藏人数 11068
+MIDV-236 大切な彼女がクラスのDQN达に媚薬を使って犯●れキメセク堕ちしているのを见てクズ勃起 七泽米亚 收藏人数 10483
+MIDV-624 嫉妬女友米亚的嫉妒爱淫语持续被榨精的超癡女同居生活 七泽米亚 收藏人数 9907
+MIDV-593 【早安的颜面骑乘】【晚安的双腿挟击】和让舔小穴的小恶魔痴女美亚贪欲舔鲍的10天生活 七泽美亚 收藏人数 9490
+MIDV-109 ソープ部を新たにつくった生徒会长みあちゃんがエッチな衣装で大奋闘！発射无制限サービス 七泽米亚 收藏人数 9165
+MIDV-174 从打情骂俏到极浓相爱的不出门温泉约会 七泽米亚 收藏人数 9090
+MIDV-069 知道去风俗店而吃醋的青梅竹马用10分钟的口交就把我了结... 七泽米亚 收藏人数 9070
+MIDV-087 喂 从今往后... 随时随地想玩弄你的乳头可以吗 偷笑着玩弄乳头 七泽美亚 收藏人数 9024
+MIDE-938 和心仪的女同事同房互相贪婪连续高潮 七泽美亚 收藏人数 8904
+MIDV-654 【给我看私处我就原谅你 】威胁偷盗少女 让她成为性玩物的便利商店 七泽米亚 收藏人数 8894
+MIDV-683 「老板请你吃完饭晚上11点去饭店」刚开公司不久的我被温柔小恶魔秘书逆性爱管理 七泽米亚 收藏人数 8794
+MIDE-658 女友超可爱的妹妹在三天内不断当着她面诱惑我射精 七泽美亚 收藏人数 8487
+MIDE-760 被好友的小恶魔妹妹七泽美亚近距离耳语诱惑的七天满脑子只想着和她做爱 七泽美亚 收藏人数 8445
+MIDE-642 来我家借住的表妹七泽美亚居然没有穿内裤 七泽美亚 收藏人数 8017
+MIDV-217 诶？在这种地方的话 发出声音会... 小恶魔的密着 强制射精 七泽米亚 收藏人数 7804
+MIDV-819 公司的丧女后辈 在喝酒的场合理性崩溃…喝醉就很爱接吻 错过末班车热情舌吻求爱！大量精子被注入 酒醉连续性爱中 七泽米亚 收藏人数 7745</code></pre>
+<h2>伊藤舞雪</h2>
+<p>伊藤舞雪 <a href="https://x.com/mayukiito">@mayukiito</a></p>
+<h3>最高收藏作品</h3>
+<pre><code>CAWD-243 第一次交到女友有点害怕 让姐姐成为我SEX的练习台 激发性慾的数次中出 伊藤舞雪 收藏人数 52392
+CAWD-365 半年前和大叔再婚的大姐姐 无防备的丰满美尻 忍耐不住的后入中出 伊藤舞雪 收藏人数 33339
+IPZZ-034 BEAUTY VENUS VIII 樱空桃 伊藤舞雪 楪可怜 收藏人数 24133
+PRED-733 超美貌×惊人美巨乳×极品翘臀！两个美女直接拼个你死我活，变成内射狂欢的痴女后宫 山岸绮花 伊藤舞雪 收藏人数 22851
+CAWD-386 最上级淫技！肉棒麻木之前的连续射精 会员制男性沙龙 伊藤舞雪 山岸逢花 收藏人数 20341
+CAWD-676 「一人前の男になりたくない？」新入社员のボクたちは社员旅行でホロ酔いの憧れ女上司2人に部屋に连れ込まれ朝までみっちりオトナの4POJT研修 樱空桃 伊藤舞雪 收藏人数 16173
+MEYD-698 溜池15周年联动第8弹 仍然在和义母做爱的绝伦义父 勾起媳妇的慾情 危险日寻求中出的逆NTR 伊藤舞雪 收藏人数 15521
+PRED-465 下课后到隔天早上 一次又一次的…看到舞雪老师的无防备大胸部跟寂寞表情 发情暴走插入中出 成为性爱魔人的我 伊藤舞雪 收藏人数 15231
+CAWD-259 【投入感MAX !完全主观&amp;双耳录音】在她的好友被发现了绝命的状况中出现低语诱惑 伊藤舞雪 收藏人数 12548
+CAWD-589 偷窥传言可爱巨乳性感专门夜勤护理师伊藤一手拿手电筒一手帮患者性处理巡逻的我…… 伊藤舞雪 收藏人数 12350
+CAWD-313 【只能借给你浴室用哦】错过末班车在女同事的家里... 无防备的姿态让我更加性奋 抛开理性的整晚SEX 伊藤舞雪 收藏人数 12033
+CAWD-321 「故意的吧…」让勃起的龟头摩擦那里隔着布料前端1cm插入体验诱惑做爱的美容师 伊藤舞雪 收藏人数 11266
+CAWD-044 女朋友去社员旅行三天我和巨乳前女友伊藤舞雪死灰复燃疯狂内射做爱 伊藤舞雪 收藏人数 11117
+CAWD-656 巨乳辣妹要住宅男家里 必须得提供鲍鱼给我吃…原本只想来我家看漫画，后来变成只想来我家打炮。 伊藤舞雪 收藏人数 10525
+CAWD-762 妈宝处男的我，居然和性感火辣的暴露系巨乳辣妹家教合体了？！结果反差太大，越玩越上瘾，无套中出内射爽到失控 伊藤舞雪 收藏人数 10167
+CAWD-030 经典漫改在温泉看到暗恋的学妹伊藤舞雪的裸体顾不上她已经有男友直接做爱内射 收藏人数 9986
+CAWD-428 斜眼怒瞪2年之间无性生活的丈夫，回老家的7天中沉溺在巨根绝伦公公安慰浓密SEX 伊藤舞雪 收藏人数 9362
+CAWD-337 【这种地方 也可以吗】神出鬼没的伊藤舞雪的痴女性交 伊藤舞雪 收藏人数 9149
+CAWD-557 停电的10分钟 跟姐夫在黑暗之中偷偷打炮 欲求不满的身体 一次解放疯狂打炮 伊藤舞雪 收藏人数 9144
+CAWD-400 同房用药性交NTR～被想要把记忆消除的最讨厌绝伦前男友下春药… 伊藤舞雪 收藏人数 8712
+CAWD-299 让胸部敏感度暴涨 异常觉醒！让胸部成为G点 乳腺开发计划 伊藤舞雪 收藏人数 8363
+CAWD-439 粉丝活动回来同屋NTR听我男朋友的抱怨，陪我做爱的打工的店长 伊藤舞雪 收藏人数 8268
+CAWD-582 「什么？想在我家洗澡！」活泼的巨乳的性感淫荡同事的头发和小可爱…露出来的无防备胸部诱惑 我勃起了… 伊藤舞雪 收藏人数 7963
+CAWD-688 便利店打工的妻子在后面休息的30分钟里反复进行了短时间出轨 伊藤舞雪 收藏人数 7921</code></pre>
+<h2>Miru</h2>
+<p>Miru <a href="https://x.com/miruteer_29">@miruteer_29</a></p>
+<h3>最高收藏作品</h3>
+<pre><code>SSIS-816 超级明星女优大乱交 激烈稀有共演 S1粉丝感谢祭 收藏人数 29659
+SSIS-260 三年没有回老家的青梅竹马 成为bitch后的她撩拨作为处男的我 Miru 收藏人数 16978
+SSIS-169 女友就在旁边却从背后耳语责弄乳头让我狂乱的女友姐姐 Miru 收藏人数 15980
+SSIS-740 「我爱我老公…」只有今晚跟性爱很符合的前男友爱爱的欲求不满人妻 miru 收藏人数 15206
+SSIS-106 老婆就在我旁边却跨坐在我上面轻声耳边细语超紧贴诱惑的淫语姐姐 miru 收藏人数 15054
+SSIS-342 想被miru玩弄吗？很想对吧？  miru 收藏人数 13344
+SSIS-200 【老师的口交更舒服对吧？ 】交到女友后被痴女教师嫉妒 数次的被迫NTR Miru 收藏人数 13158
+SSIS-573 今天也被迫在学妹的长裙里面偷偷贴紧骑乘位，就这样冷静发生出轨关系的超坏的我 Miru 收藏人数 11652
+SSIS-369 想在插入后直到射精都永远在MIRU的骑乘位下生活 miru 收藏人数 10833
+SONE-560 S1 PRECIOUS GIRLS 2024 オールスター24名大集合ハーレムアイランドSpecial 上集 收藏人数 10350
+SONE-288 漂亮系「巨乳女主管」可爱系「美腿女部下」 被发现在公司脚踏两条船…疯狂嫉妒并抢夺我的鸡鸡 性爱技术一流的女友们 一整个晚上被她们取精的我 葵司 miru 收藏人数 9840
+SSIS-423 清楚看见从身体流出来的一滴一滴水滴…汗水×潮吹× 涎4K拍摄湿答答的绝顶性爱 miru 收藏人数 9589
+SSIS-452 10年之间持续单相思的同学在同学会今天要让她嗑药做爱堕落 Miru 收藏人数 9383
+SSIS-655 客厅、厨房、寝室不分地方插不停、非预期地潮吹不断的miru情慾全开放的完全私生活大量失禁性交 miru 收藏人数 9331
+SSIS-823 我站立不动前后被墙壁和翘臀挟击 狼狈地高潮了！ miru 收藏人数 9221
+SONE-560 S1 PRECIOUS GIRLS 2024 オールスター24名大集合ハーレムアイランドSpecial 下集 收藏人数 9083
+SONE-052 美人温柔女老师扳倒被男子全员在观光地侵犯的小穴校外教学 miru 收藏人数 9023
+SSIS-932 miru 终于崩溃了 舒服到升天 高潮身体抖动 春药不停止的性爱 miru 收藏人数 8965
+SONE-523 垃圾场里眼神慵懒的微醺美腿姐姐衣襟大开，每次早晨相遇都让我心痒难耐 miru 收藏人数 8937
+SONE-477 「女友都不帮我口交…」那样说着，和美乳女性朋友商量的那瞬间，肉棒被要融化般的深喉咙吸允即口交黏腻舔舐被睡走了的我。 miru 收藏人数 8796
+IPZZ-081 收录未公开影像 导演剪辑版BEAUTY VENUS 7 初川南 枫可怜 Miru 收藏人数 8765
+SONE-563 S1 20周年纪念・AV业界史上的最强组合作品。忍不住就射吧，我们可是传说级的鸡鸡口技师 收藏人数 8670
+SSIS-291 不能在我面前射精！女友作为我的射精管理 射精量射精时机 全部被把控的我 miru 收藏人数 8229
+SONE-618 超浓厚爱爱契约！业绩不佳的美腿女保险业务，被带到住着精力旺盛大叔的老旧宅邸，被下春药，然后像野兽般的疯狂做爱 miru 收藏人数 7977</code></pre>
+<h2>神木丽</h2>
+<p>神木丽 <a href="https://x.com/rei_kamiki">@rei_kamiki</a></p>
+<h3>最高收藏作品</h3>
+<pre><code>STARS-804 随着本能络合的极上内衣与精油4本番 神木丽 收藏人数 60172
+STARS-734 身材出众的部下的弱点被我抓住 胁迫她成为我的肉奴调教！！ 神木丽 收藏人数 38052
+STARS-979 美人旅馆经营者的隐藏趣味 是对有着妻子或恋人的顾客呢喃淫语诱惑寝取 神木丽 收藏人数 28212
+STARS-725 因为突然的暴雨 而发觉女朋友的美体 无法忍耐的我开始揉捏美乳！ 神木丽 收藏人数 27783
+START-255 家里那个自以为是的女王姐姐，老是对我摆高姿态，受够了！偷偷给她吃了超浓缩版的性欲增强剂，结果姐姐直接爽翻，看着她的样子，身为弟弟的我居然也硬了 神木丽 收藏人数 27415
+STARS-818 美巨乳无自觉对男学生挑逗的天然般神木老师担心成绩提升不起来的我是连肉棒都照顾的女神…！ 神木丽 收藏人数 26206
+START-094 看到女友妹妹洗完澡 无防备的性感居家服！受不了的我疯狂勃起 本来想要扑上去，没想到她比我还要淫荡反被超绝伦中出 神木丽 收藏人数 25380
+STARS-573 魔镜号灰姑娘试镜冠军 AV出道 22 歳 神木丽 收藏人数 24819
+STARS-894 只有我知道的女友变态般素颜 与公司内美人评判的K桑秘密的公司恋情 想说是无法靠近的高岭之花实际上是超M的女友 神木丽 收藏人数 21488
+START-169 颤抖并达到高潮的身体，浸泡在体液中 品味神木丽主演的 5CORNER 中的每一滴汗水、喷水和唾液 神木丽 收藏人数 21394
+STARS-964 我抢救的男人竟然是一位强●魔人！陷入在强制性连续强●的急诊救命医生 神木丽 收藏人数 21210
+STARS-923 超凡脱俗地欣赏神木丽「美臀」的5种模式！ 其实我……不仅有美丽的胸部还有惊人的翘臀 神木丽 收藏人数 21198
+START-126 「我要结婚了，所以我不能再见到你了…」我交往了两年的性朋友再也见不到我了…我们有一次悲伤的最后一次，结束了原始性行为 神木丽 收藏人数 19046
+START-046 搬入高级大楼的新妻成为有钱男人们的性玩具化 嗑药做爱乱交派对下堕落快乐 神木丽 收藏人数 17981
+START-326 和菁英职场OL神木小姐出差时同住一房，两人亲亲舌吻，一路干到天亮。看似冷酷的巨乳OL前辈，其实是个喜欢依赖人的亲亲痴女 神木丽 收藏人数 16846
+STARS-766 生中出解禁 满身是汗的大绝顶 神木丽 收藏人数 16830
+STARS-896 请让我学习更多不同侍奉男人的方式！喇叭店、男士按摩、 印象俱乐部、 M SEX…4店舗的风俗玩法让神木丽1日体验！ 神木丽 收藏人数 16637
+STARS-703 绝顶开发 G乳惠体 震盪激潮 初次巨根大绝顶 神木丽 收藏人数 16260
+START-306 周五夜晚，巨乳正妹和比男友还熟的好友碰面，像学生一样疯玩到累垮。临时起意跑去爱爱旅馆，直到天亮还像疯了一样一直做最后还中出 神木丽 收藏人数 15545
+STARS-778 与身体相性最棒的超商打工主妇H小姐在休息2小时的短时间幽会最低3回射精 神木丽 收藏人数 14931
+START-232 慾求不满的巨乳女大学生在海边的短期打工中，被聚集在海滩男人们的肌肉跟汗水…抑制不住的性慾...用口交诱惑中 神木丽 收藏人数 14929
+STARS-678 精子垂流无限昇天角色扮演按摩妹6COSPLAY3sex 神木丽 收藏人数 14556
+STARS-881 THE 比基尼女子会 两位顶级火辣肉体亲密好友豪华W中出！ 神木丽 恋渕桃菜 收藏人数 14421
+START-111 从把孩子送到保育园到迎接为止的8个小时…和儿子的足球队教练疯狂出轨做爱的绝伦妈妈车人妻。 神木丽 收藏人数 13589</code></pre>
+<h2>凉森れむ</h2>
+<p>凉森れむ <a href="https://x.com/remu19971203">@remu19971203</a></p>
+<h3>最高收藏作品</h3>
+<pre><code>ABW-087 因为偷窃被报复的清纯美女凉森玲梦在男友面前惨遭轮●堕落高潮 凉森玲梦 收藏人数 55695
+ABP-984 强制射精执行官凉森玲梦的爆速骑乘位内射精液榨取 凉森玲梦 收藏人数 44609
+ABF-017 搞坏新人OL到完全堕落 湿濡性交 凉森玲梦 收藏人数 20202
+ABW-096 绝顶lingerie 完全展现绝美肉体的极上lingerie性交 凉森玲梦 收藏人数 16519
+ABW-179 二人独处 成年人的中出旅行 两天一夜 ALL中出4SEX 凉森玲梦 收藏人数 15912
+ABF-087 我的从顺宠物候补生 06 凉森玲梦 收藏人数 14697
+ABW-108 极品空灵女优凉森玲梦角色扮演职业装OL的诱惑 凉森玲梦 收藏人数 13976
+ABF-007 凉森玲梦的臀部 凉森玲梦 收藏人数 13437
+ABF-029 完全主観×鬼イカせ イッても止めない激FUCK！！！追撃5，000ピストン 凉森玲梦 收藏人数 13307
+ABP-901 意外遇见女友姐姐凉森玲梦自慰的我从此被她缠上每天都诱惑我出轨 凉森玲梦 收藏人数 13257
+ABW-198 120%肯定的女友 超早漏的我和过于温柔的恋人玲梦 射精同居性生活 凉森玲梦 收藏人数 13198
+ABW-054 穿越回异世界和清纯NPC凉森玲梦的性爱历险 凉森玲梦 收藏人数 12277
+ABW-232 被学校最可爱的学生射精管理 被抖S女高中生每天撩拨的中年教师 凉森玲梦 收藏人数 11789
+ABW-244 12P大乱交 终极1对1性爱拍摄 凉森玲梦最强的性爱拍摄 凉森玲梦 收藏人数 11335
+ABF-125 いいなりっ娘 総贩売数15万DL突破人気作を実写化 凉森玲梦 收藏人数 11062
+ABW-276 ねっちょりセックスに溺れる文系女子。 ねっちょり中出し4连発 凉森玲梦 收藏人数 10670
+ABW-265 跟看不起的主管一起出差住进同间房然后被他下药！崩溃高潮结婚前夕的NTR！ 凉森玲梦 收藏人数 10390
+ABF-137 「我们来生小孩吧」饥渴的子宫 想被中出4种情境 凉森玲梦 收藏人数 10279
+ABF-159 不爱工作的妹子 没工作又是个宅女 性慾却很强 干物美少女回想大肉棒的快感！凉森玲梦 收藏人数 9743
+ABW-032 人生初・トランス状态 激イキ绝顶セックス 54 F乳美少女を完肤なきまでイカせまくる。 凉森玲梦 收藏人数 9579
+ABF-073 患有失眠症的我跟在爱情旅馆里当清洁工的美乳女孩激情做爱中出 凉森玲梦 收藏人数 9496
+ABF-246 傲娇美巨乳OL的「M性」觉醒！凉森玲梦 收藏人数 9039
+ABW-366 恍惚的高潮表情高潮升天到忘记自我3本番 凉森玲梦 收藏人数 8901
+ABW-158 全裸家政妇 新感覚ヴァーチャルセックス性活をあなたに Staff04 「性奉仕」の愿いを叶える家政妇とヴァーチャルセックス 凉森玲梦 收藏人数 8746</code></pre>
+<h2>神宫寺ナオ</h2>
+<p>神宫寺ナオ <a href="https://x.com/nao_jinguji">@nao_jinguji</a></p>
+<h3>最高收藏作品</h3>
+<pre><code>MIDV-168 女友在家的两天 被女友姊妹密着诱惑 被迫勃起 只好去最近的酒店数次中出 神宫寺奈绪 收藏人数 21737
+MIDV-231 果然还是很喜欢老婆！虽然处于倦怠期但我们夫妇二人试着SEX后...果然身体还是最适应彼此然后做爱到天亮！！ 神宫寺绪奈 收藏人数 13716
+JUL-734 请把我当成飞机杯被暴露在背垢中的抖M人妻OL的犯罪愿望 神宫寺奈绪 收藏人数 12507
+JUL-185 和新婚妻子神宫寺奈绪蜜月都没渡过就因为经济危机看着她成为老头社长的秘书穿着黑丝在办公室内被内射 神宫寺奈绪 收藏人数 11566
+MIDV-103 拜讬姐姐穿着过激内衣 无法忍耐后的暴走 每日中出 神宫寺奈绪 收藏人数 11238
+MIDE-832 暗恋的女孩神宫寺奈绪上学时是朋友的女友如今作为普通女性朋友再会止不住情愫疯狂内射 神宫寺奈绪 收藏人数 10767
+HNDS-069 美少女中出岛10周年完全版！240分钟特别编 收藏人数 10506
+MIDV-615 平常看不起我的姐姐 逼她穿害羞角色扮演卑微服装！让她知道我的厉害 神宫寺奈绪 收藏人数 10330
+JUR-186 「这可能是人生最后一次勃起了，拜讬让我插进去一下就好」本来只是同情勃起障碍的继父，陪他混浴，没想到他竟然硬起来了，巨乳继女忍不住跨坐上去，骑乘位无套干砲到高潮 神宫寺奈绪 收藏人数 10295
+HND-776 时隔一年再次遇到暗恋的青梅竹马神宫寺奈绪可聊天时她一直和我描述和现在的男友疯狂做爱内射的过程 神宫寺奈绪 收藏人数 8446
+JUL-920 我被她一手带大 最爱的姐姐却被人渣友人NTR 神宫寺奈绪 收藏人数 8433
+HND-765 小恶魔痴女神宫寺奈绪在耳边低语诱惑出轨中出 收藏人数 8313
+MIDV-980 完全没意识到自己在撩人的巨乳家政妇，注意到我偷瞄她还硬了之后，直接用她的翘臀、巨乳还有她的小穴好好地伺候我，让我喷个爽 神宫寺奈绪 收藏人数 8158
+JUL-021 参加同学会的我被当初表过白的女同学和老师灌醉带到酒店接受这两个痴女人妻的玩弄 神宫寺奈绪 三浦步美 收藏人数 8050
+MIDV-746 不能全套的人妻外送偷偷下药之后变成淫荡化！自己把保险套拿掉无套中出! 神宫寺奈绪 收藏人数 7947
+MIDV-045 倦怠期的我和情人的社内不伦 神宫寺奈绪 收藏人数 7628
+JUL-388 妖艳华丽极至淫荡的人妻娼妇 神宫寺奈绪 收藏人数 7536
+JUQ-614 有空閒的旅行处人妻们、持续被W中出搾精的温泉旅行 神宫寺奈绪 竹内有纪 收藏人数 7465
+URE-055 经典漫改NTR名作夜里绽放的向日葵 神宫寺奈绪 收藏人数 7447
+ACHJ-005 M男专用的大臀狂热 神宫寺奈绪 收藏人数 7050
+MIDE-932 嗯，真的，在这里…男潮吹! !?约会的过程中，不能出声，不能让任何人知道的强●射精·男潮吹小恶魔姐姐 神宫寺奈绪 收藏人数 6928
+MIDV-435 停止不了的右手 帮我温柔打手枪的可爱护士 停止不了的淫语！羞耻射精管理诊所【主观镜头高潮ASMR】神宫寺奈绪 收藏人数 6718
+JUY-723 对面房间的人妻神宫寺奈绪 收藏人数 6716
+MIDV-880 高级住宅NTR 下层楼人妻被召唤到住着很多优秀男人的上层楼！完全败给了绝伦鸡鸡 神宫寺奈绪 收藏人数 6707</code></pre>
+<h2>七瀬アリス</h2>
+<p>七瀬アリス <a href="https://x.com/Alice_Nanase_">@Alice<em>Nanase</em></a></p>
+<h3>最高收藏作品</h3>
+<pre><code>EBWH-054 记录性的酷暑而和心仪的女上司在出差地点匆忙同房间 汗水湿身的苗条巨乳让人受不了 处男的我不停渴求上司直到早上 七濑爱丽丝 收藏人数 33788
+EBWH-092 谁也无法抗拒的高岭之花给您如同国王般甜蜜又淫荡的侍奉不伦性交 七濑爱丽丝 收藏人数 21420
+HMN-566 真人故事！淫荡性爱之夜！被港区男子下药并猛烈抽插到高潮升天！淫乱觉醒旅行性爱 七濑爱丽丝 收藏人数 19481
+DASS-585 每当情夫们对她纠缠不休，就会敞开双腿，让别人的肉棒带她飞上高潮！这样的老婆你还爱得下去吗？【巨乳卖春女篇】 七濑爱丽丝 收藏人数 18967
+DASS-405 苗条巨乳继母是我的天菜！！ 七濑爱丽丝 收藏人数 17772
+EBWH-068 七濑爱丽丝的压倒般颜面与苗条美巨乳的双重特化 让您肉棒搞坏般恶魔的自慰协助 七濑爱丽丝 收藏人数 16670
+EBWH-164 在一个晚上100万的VIP房间 专属巨乳护士 想怎么样就怎么样 七濑爱丽丝 收藏人数 14805
+HMN-653 二阶段NTR中出内射 讨厌到不行的老公上司，用痴汉般的指技把白皙巨乳的美人妻迷得神魂颠倒，最后还一步步掉进了不伦的深渊  七濑爱丽丝 收藏人数 14463
+HMN-586 以前喜欢的同级生因为欠债而陷入困境，于是我雇用了和当时那个人长得一模一样的女儿，作为我的专属替身肉便器女仆每周20发服务 七濑爱丽丝 收藏人数 13324
+HMN-694 与青梅竹马时隔三年再次重逢。长大后的我们久违地互相贴着奶头玩起小游戏，她的巨乳敏感度和以前一样，于是演变成延长赛，边做爱边让她奶头高潮、还中出内射的爱爱游戏 七濑爱丽丝 收藏人数 12598
+PFES-088 错过末班电车只好到巨乳学姊家过夜…穿着居家运动服还有健康的巨乳苗条身材让人兴奋不已，我们像运动员一样打炮一整晚 七濑爱丽丝 收藏人数 12128
+DASS-704 【观看注意】被岳父说「生我的孩子」洗脑完成。让她失去理智的过激颜射灌爆。 七濑爱丽丝 收藏人数 12024
+EBWH-188 把听话的小男友戴上贞操带，让他禁慾一个月，结果变成了超级色慾猛兽！立场大逆转，巨乳姐姐被他一次又一次送上天堂完全停不下来 七濑爱丽丝 收藏人数 11697
+DASD-938 人妻黑人NTR 黑人社长的超激活塞 七濑爱丽丝 收藏人数 11351
+EBWH-146 最高に美人でド痴女なW女社长に意识飞ぶ寸前まで射精され続けた12时间 七濑爱丽丝 梦实香苗 收藏人数 11090
+DASS-331 被派遣按摩师碰触秘部受不了快乐被寝取 七濑爱丽丝 收藏人数 10676
+HMN-675 人気AV女优がプライベートで禁欲・连射・ザーメン爆抜きハメ管调教！！ 七瀬アリス専用従顺中出しペットを绍介します。 七濑爱丽丝 收藏人数 10656
+DASS-611 用自行车锻鍊出的结实蜜桃臀，化作最强骑乘武器！高速律动骑乘位，让对手在无止境快感中崩溃的巨乳痴女SP 七濑爱丽丝 收藏人数 10189
+DASS-550 淫荡大叔的NTR 被讨厌的男主管玩弄…闻到淫荡的味道两腿自然打开了 七濑爱丽丝 收藏人数 9504
+MKMP-509 恶魔般的变速色色攻撃！让病人鸡鸡的瞬间崩溃 中出诱惑发射 七濑爱丽丝 收藏人数 9272
+CAWD-238 大学里最可爱的爱丽丝喝醉后变成亲吻狂！最喜欢的肉棒直到早晨不停吮吸 以为是在做梦的一夜 七濑爱丽丝 收藏人数 9246
+EBWH-083 让破产当前的服装公司用色情变装新事业和陪睡来起死回生 传说的苗条美巨乳逆兔女郎 七濑爱丽丝 收藏人数 9050
+EBWH-094 息子の嫁は元裸族 桃尻丸出しルームウェアで中出しバックピストンを无自覚おねだりしてくる 七濑爱丽丝 收藏人数 8819
+EBWH-132 社长夫人が倒产で一気に风俗堕ち 主人がこき使った下请企业の社员たちに知られ中出し20発の违法サービスを强要された… 七濑爱丽丝 收藏人数 8799</code></pre>
+<h2>森日向子</h2>
+<p>森日向子 <a href="https://x.com/morihinako_">@morihinako_</a></p>
+<h3>最高收藏作品</h3>
+<pre><code>MIAB-009 对黑道儿子体罚的我复仇让最爱的未婚妻被下药强● 森日向子 收藏人数 26045
+MIAB-317 诱惑不来学校的宅男学生，让他嗅到蒸腾的光脚大屁股和袜子美腿的癡女热臀女教师，进行20发的生活指导 森日向子 收藏人数 23563
+DASS-215 对不良男子全力补习直到朝阳升起！不管射几发射精都不让人睡的小恶魔女教师 一整晚13搾精！ 森日向子 收藏人数 22388
+EBWH-063 港区系美女们以美人计来抢夺1位男子 像模特儿般的高挑美腿小三W中出痴女后宫 佐野由真 森日向子 收藏人数 20688
+MIKR-014 在乡下老家5年后重逢！与回老家的日向子小姐凝视彼此，被她美丽的脸蛋和浓烈舌吻诱惑，沉溺于中出内射的激情之中 森日向子 收藏人数 20037
+MIAB-259 无法勃起的M病人 用美腿奶头按摩 淫语检查的痴女医生 性爱改善射精20发诊所 森日向子 收藏人数 19379
+BF-687 叫了援交来的是女友的姐姐！「不要和妹妹说，另外…让你中出」 森日向子 收藏人数 17385
+MIKR-018 用高雅的脸蛋和嘴巴，超下流地满嘴口水舔个不停，全程看着镜头卖力口交，让人连射10次也停不下来 森日向子 收藏人数 17073
+LULU-194 参加完公司的饮酒会后把后辈的苗条美女OL带回家 森日向子 收藏人数 16132
+NNPJ-466 把被男朋友临时取消约会而自暴自弃的辣妹带回家后…「我再也不想他了！」摆动腰部到早上幸运中出SEX Hina 森日向子 收藏人数 15592
+MKMP-570 以为是最后的爸爸活旅行…却无法逃出。纤长手脚的港区女子魔女般的交缠抽插，不用扭腰连续射精的2天1夜 夜森日向子 收藏人数 15455
+MIAB-462 「各位社员，取精时间到囉！」用提升业务效率的足交管理，淫荡美腿女秘书精确安排取精日程无套20发 森日向子 收藏人数 14789
+MIAA-797 惠比寿酒吧出没的长腿美女。用她的美腿来帮你射精！如果她喝醉了 就可以玩弄她的美腿并猛烈干她 森日向子 收藏人数 14664
+BLK-633 对住隔壁垃圾房间男人发牢骚后阴沉男人性欲猛兽化！异臭当中被下春药用药做爱监禁！ 森日向子 收藏人数 14435
+SAME-025 轮●计画 美人OL编 森日向子 收藏人数 14130
+CJOD-439 色気ムンムン森日向子先生に阴湿ハァハァ淫语で耳元から脳内犯●れてねっちょりベロキスで神経トロけイキ中出しスケベ指导を受ける生徒の仆达… 森日向子 收藏人数 14050
+MIAB-301 果然，还是爱我的妻子！在我们夫妻进入倦怠期后，我们久违的性生活再次展开…果然，我们的身体相性非常合拍，一直到早上都不断地求爱！！ 森日向子 收藏人数 13667
+PRED-715 美腿空姐痴女天堂 高挑姐姐穿着性感丝袜 疯狂玩弄我的鸡鸡 高潮升天的我。 星宫一花 木下日葵 森日向子 收藏人数 13015
+WAAA-497 美乳人妻天天被讨厌的公公干 森日向子 收藏人数 12561
+JUQ-502 在一个月当中最容易怀孕的危险日… 最爱的妻子一整天讬付给哥哥直接播种 森日向子 收藏人数 12068
+PFES-081 働く美脚お姉さんの黒タイツハーレム スベスベタイツ脚の挟撃ロックで身动き出来ずに射精させられる仆。 木下日葵 森日向子 都月琉衣纱 月乃露娜 收藏人数 11924
+MIAB-086 ささやき淫语と甘ハメ空気イス1cm挿入焦らしで痴女ナースに感度高められ1泊2日で20発射精させられた検査入淫 森日向子 收藏人数 11799
+PRED-734 外遇调查NTR！才刚让她跟后辈单独相处，背叛的性爱马上就发生了 森日向子 收藏人数 11516
+HMN-222 无血缘关系的继姐和弟弟在父母不在家时偷偷SEX，目睹一切的妹妹因此发情也一起参进去的逆3P后宫中出近●交配 松本一香 森日向子 收藏人数 11282</code></pre>
+<h2>北野未奈</h2>
+<p>北野未奈 <a href="https://x.com/kitano_mina">@kitano_mina</a></p>
+<h3>最高收藏作品</h3>
+<pre><code>JUFE-507 为了让妻子怀孕忍耐一个月… 妻子因故没法做爱被不戴胸罩爆乳大姨横夺精液 北野未奈 收藏人数 27209
+NIMA-035 又淫荡又温柔的巨乳单亲妈妈 爱爱同人杂志 真人改编！隔壁无防备的性感妈妈 北野未奈 收藏人数 18495
+JUL-784 搬家时被青梅竹马的无防备巨尻弄到忍不住 后入体位数次中出的我 北野未奈 收藏人数 17319
+WAAA-386 超肉感教师骂倒淫语密着打桩！压迫爆弹臀部吞吐肉棒搾精11发射！ 北野未奈 收藏人数 13878
+HMN-574 「本来是我要带领你…结果太舒服直接高潮了 对不起！！」本来要解除邻居大学生的性爱烦恼…结果太久没打炮了，被年幼的鸡鸡疯狂玩弄抽插 子宫崩 停止不了的淫荡骑乘位 一次又一次的被中出的欲求不满人妻 北野未奈 收藏人数 13587
+FPRE-004 睡眠性交 用安眠药让傲慢自大儿子的巨乳老婆睡着并集团进犯她 北野未奈 收藏人数 12775
+PPPE-351 女友姐姐不仅是个巨乳，还允许无套中出内射拚命诱惑我 北野未奈 收藏人数 12345
+HMN-372 癡汉电车NTR 对昨日遭遇到癡汉讨厌到死的上司妻子 玩弄巨臀到高潮堕落中出。 北野未奈 收藏人数 12295
+HMN-623 为了没有生育能力的老公 巨乳人妻去了垃圾屋 被单身男子的大肉棒完弄！享受浓密的性爱 北野未奈 收藏人数 11896
+JUFE-467 不想让家人知道掌握住大嫂弱点的我一面展现讨厌脸蛋一面对柔嫩白虎小穴中出… 北野未奈 收藏人数 11187
+MIDV-713 自单身赴任后半年… 睽违许久在自家看到巨乳爱妻与陌生男人们在做爱的姿态… 北野未奈 收藏人数 11127
+HMN-387 人妻自宅风俗大厦 老公不在中 2位閒暇华丽妻子出租自家密着夹击尽情玩弄 高级后宫逆3P中出 藤森里穂 北野未奈 收藏人数 10258
+CJOD-337 超色情的两个情人 争夺中出不伦 淫语&amp;暴走抗打骑乘位 直到早晨被迫射精的我... 藤森里穂 北野未奈 收藏人数 9412
+HMN-439 在老公不在家时 被底层废渣宅在家垃圾屋义兄当成肉便器用绝伦早洩肮脏肉棒狂中出的上等国民级美女人妻 北野未奈 收藏人数 9402
+EYAN-181 姉はヤンママ授乳中in実家 実写版 北野未奈 收藏人数 9315
+WAAA-340 「我已经高潮了！」在这样的状态下，我还是继续被插入！ 北野未奈 收藏人数 9156
+HMN-489 穿上过激般竞技泳装… 羞耻与快乐互相攻防结果 让陌生人肉棒中出的的我的妻子… 北野未奈 收藏人数 9145
+FPRE-080 结婚前在风俗店工作被开除的中年男人居然是公公… 被精力绝伦猛兽公公连射播种性爱快乐堕落的巨乳媳妇 北野未奈 收藏人数 8999
+MIDV-586 妹妹的性慾超强男友中出让我疯狂高潮 好害羞.. 北野未奈 收藏人数 8971
+HMN-446 100cm大屁股 北野未奈 卑猥巨尻五种造型！精子中出诱惑 完美屁股来帮助你打手枪 北野未奈 收藏人数 8910
+HMN-507 和总是表现强硬不流露弱点的女上司住同房… 无防背胸部与寂寞的素颜让人发情暴走抽插中出绝伦早洩的我… 北野未奈 收藏人数 8866
+MDBK-207 拘束玩弄射精术 冲击的乳压感榨取 乳交CLUB 稻场流花 辻井穗乃果 北野未奈 收藏人数 8804
+HMN-471 我即将要结婚…之前只有在晚上见面的爱人 今天白天就见面！猛烈中出性爱 最后的酒店不伦 北野未奈 收藏人数 8036
+EBWH-195 职场仲间で性格正反対の巨乳2人と交互に浮気SEXを缲り返す不贞な日々 宫本留衣 北野未奈 收藏人数 7669</code></pre>
+<h2>五日市芽依</h2>
+<p>五日市芽依 <a href="https://x.com/5may_itsukaichi">@5may_itsukaichi</a></p>
+<h3>最高收藏作品</h3>
+<pre><code>MEYD-831 人妻秘书 狂舔拭的奴隶契约 五日市芽依 收藏人数 37424
+WAAA-426 偷看阿姨的无防备的无胸罩巨乳…被她发现之后愤怒的痴女变化！勃起的鸡鸡，大屁股，淫荡！从高潮到精子逆流为止多次内射 五日市芽依 收藏人数 19133
+ROYD-181 有男友的女生朋友们每天都来过夜被无自觉诱惑，拿不出勇气变得死气沉沉的我 五日市芽依 收藏人数 18791
+ROYD-174 为国王游戏突然走近的淫乱朴素巨乳女 两天一夜的恩爱中出SEX 五日市芽依 收藏人数 17961
+MIAB-262 败给了女友姐姐的卑猥高级身材的诱惑接吻…一次又一次的背着女友偷偷中出性爱17发 五日市芽依 收藏人数 16880
+ROYD-146 和大嫂只有KISS的关系…却彼此都忍不住浓厚唾液交缠，无数次躲起来反复播种性交 五日市芽依 收藏人数 14683
+MTALL-098 只要主人勃起马上过来处理的 性爱处理巨乳全裸女仆！天天被她们照顾我的小鸡鸡 五日市芽依 月野香澄 收藏人数 14504
+PPPE-225 女友的姐姐 使用巨乳跟中出OK来诱惑我 五日市芽依 收藏人数 13389
+HMN-673 G罩杯巨乳女技师的秘密加购服务，几乎擦到鲍鱼的鼠蹊部按摩，再加上五感全开的低语诱惑，让你无套中出20发 五日市芽依 收藏人数 13049
+HMN-618 想用口交结束的清纯泡泡浴女郎，用我那超大肉棒猛烈抽插让她高潮连连，爽到不行！最后连续中出16发射精确定怀孕！ 五日市芽依 收藏人数 12533
+DASS-238 被拜讬的话就拒绝不了 被各种住户麻烦的巨乳G CUP管理员 五日市芽依 收藏人数 11787
+WAAA-492 出差时，微醺的巨乳女上司突然变身成痴女！她们抢着征服我的超持久大鸡鸡，直到把我榨干为止，疯狂逆3P中出之夜 五日市芽依 宍户里帆 收藏人数 10865
+MIMK-159 让我来帮你射精吧？-真人版- 原作:暗中摸索 马上突破10，000部的快作！ 五日市芽依 收藏人数 10664
+PPPE-141 巨乳女老师的诱惑 五日市芽依 收藏人数 10028
+WAAA-477 青梅竹马的逆NTR！久违重逢的巨乳女邻居芽依，听到我说『要结婚了』后直接嫉妒暴走，狂榨我10发！结婚前就被榨到空空，生不出孩子了 五日市芽依 收藏人数 9694
+JUFE-538 天天被同父异母的哥哥 眼神性骚扰！春药跟挑逗 一次又一次的绝顶性爱肉便器NTR 五日市芽依 收藏人数 9570
+HMN-678 「老师，我可以去你家吗？」毕业的学生整天赖在巨乳女老师家三天，把女老师当成他们的自慰中出内射宠物 五日市芽依 收藏人数 9415
+DASS-399 跟不良男子淫荡全力补习直到天亮为止！就算射了几次，也不让我睡觉的小恶魔女老师一整晚取精14发！ 五日市芽依 收藏人数 9289
+DASS-688 漂亮巨乳纤细女大学生，被住在垃圾堆的绝伦男子，用脏肉棒上下猛插，连续无套内射，最后绝望轮●强● 五日市芽依 收藏人数 9164
+MVSD-578 美女家庭老师被恶劣的爸爸下药 玩弄到高潮升天！痉挛！汗水直流！失禁！我在隔壁房间读书 爸爸跟老师在隔壁房猛烈中出性爱 五日市芽依 收藏人数 9104
+WAAA-528 悩杀パンスト美脚で甘サド爆ヌキ！ 五日市芽依 收藏人数 8939
+DASS-648 甜美巨乳人妻被健身教练从后面插到子宫深处高潮沦陷，每天都忍不住跑来被NTR 五日市芽依 收藏人数 8774
+WAAA-501 借金を抱えたご主人様の身代わりに…极道の中出し肉便器メイド 膣内射精后も続行ピストンで妊娠确定20発！ 五日市芽依 收藏人数 8286
+DASS-502 因为压力过大 成为社畜的性爱处理玩具！疯狂精子喷来喷去 纯朴O L巨乳肉便器 五日市芽依 收藏人数 7918</code></pre>
+<h2>瀬戸环奈</h2>
+<p>瀬戸环奈 <a href="https://x.com/kanna_seto0510">@kanna_seto0510</a></p>
+<h3>最高收藏作品</h3>
+<pre><code>SONE-614 新人NO.1 STYLE 天然J罩杯巨乳最强女主角AV出道 濑户环奈 收藏人数 28805
+SONE-638 最强巨乳女主角的素颜大公开，还有超真实的爱爱！抛开剧本，纯粹凭慾望一次次地互相索求，真实的三天两夜性爱约会 濑户环奈 收藏人数 18157
+SONE-682 最强巨乳女主角潜藏的色色能量全面爆发 濑户环奈 收藏人数 14705
+SONE-811 千年一遇的超正巨乳女高中生对我这个班主任告白了！管他什么道德我全都丢一边，沉溺在跟她的禁忌爱爱中 濑户环奈 收藏人数 12490
+SONE-615 最强ヒロインAV初体験3本番 濑户环奈 收藏人数 12212
+SONE-720 可以看到最强巨乳身材女主角的风俗店 濑户环奈 收藏人数 10528
+SONE-758 和最强女主角一起体验极致自慰！濑户环奈在梦境8角3小时特辑中为你全力应援 濑户环奈 收藏人数 10256
+OAE-275 ALL NUDE 濑户环奈 收藏人数 4048</code></pre>
+<h2>青空ひかり</h2>
+<p>青空ひかり <a href="https://x.com/aozora_cmore">@aozora_cmore</a></p>
+<h3>最高收藏作品</h3>
+<pre><code>STARS-435 装模作样的超绝伦阴部剧变!高速打桩!让精子空出来几次中出的变相骑乘位。  青空光 收藏人数 23505
+START-128 相隔10年 姊弟一起洗澡！控制不了勃起的处男弟弟每天跟姐姐打炮。 青空光 收藏人数 13482
+STARS-655 终于可以和女友做人生第一次的SEX了！！正这么想…却被邻居姊姊夺走第一次…被射精了12发左右…精子全没了…。 青空光 收藏人数 11716
+STARS-679 结婚当前才注意到。自己性慾旺盛很喜欢SEX…。在最后的单身时期与在SNS上认识的男人一个接着一个，直到腻了为止的出轨SEX。 青空光 收藏人数 9944
+START-153 把儿子送去幼儿园到接儿子的中间八个小时空档…跟长子的足球教练不伦性爱的绝伦妈妈。 青空光 收藏人数 9718
+START-057 专门锁定来看房子的新婚夫妻 NTR老公之后顺利成交不动产小姐的无套中出营业 青空光 收藏人数 9687
+STARS-368 被极恶医师盯上 面对性骚扰面诊也只能忍耐的OL 青空光 收藏人数 9153
+START-353 住在跟我同一栋公寓的邻居…美女人妻是个欲求不满女人！每次夫妻吵架…就用直径10公分的墙洞 从后面猛烈干爆 秘密不伦关系的五天 青空光 收藏人数 8958
+STARS-388 连夜大雨，和女上司两人回不了家一直缠绵到早上 青空光 收藏人数 8706
+START-290 轮●中出大乱交 公司研修训练营担任领队的人事部美腿OL，被一群没大没小的新进员工怀恨在心，结果上下双穴同时被侵犯，连续中出到身体发抖 青空光 收藏人数 8429
+STARS-308 教育实习生在校内巨根求爱 安排4P的学园美少女们 青空光 夏目响 宫岛芽衣 收藏人数 8323
+STARS-915 共处一室NTR 被最讨厌的绝伦前男友下媚药... 青空光 收藏人数 7796
+STARS-932 射精依赖改善治疗中心新医务人员A先生（化名）将为性慾异常患者提供帮助 青空光 收藏人数 7174
+STARS-743 社畜OL每天排解压力的方法是，瞒着公司做像快死掉般的中出。 青空光 收藏人数 7160
+STARS-693 因为援交 被绝伦大叔在酒店整日中出 青空光 收藏人数 7061
+START-091 喜欢鸡鸡的癡女 光 在街道随时随地吃肉棒！跟超绝伦男人 青空吃鸡鸡约会 青空光 收藏人数 7029
+STARS-351 媚药X奢华美体X超激活塞 让头脑变奇怪的高潮漏液喷射！大绝顶！ 青空光 收藏人数 6840
+STARS-758 新婚第一年的人妻被绝伦恶心爸爸怨恨…监禁欺负中出 青空光 收藏人数 6670
+START-258 被派驻到偏远小村庄的护士，竟然每天都在接受岛上男人的「播种」款待，在子宫内孕育新生命 青空光 收藏人数 6585
+START-328 专为烦恼男性量身打造！出差时专用，充满母性的自慰治疗师，用快慢交替打手枪和甜蜜淫语，带你直奔完美射精 青空光 收藏人数 6532
+STARS-968 夫妇交换クラブ セックスレスを解消するため他人の旦那とのSEXにのめり込む淫乱人妻 青空光 收藏人数 6397
+STARS-556 夺走我的初吻的是我的表姐。深深的湿吻，侵犯了嘴唇，直至肉棒转入打桩般的活塞运动，被侵犯了… 青空光 收藏人数 6165
+START-214 出差时在小酒馆遇见的单亲妈妈，她有着坚强的个性，有着一子，我对她那张淫荡脸庞着迷恋…在三天限定的不伦关系中，我们不断地缠绵相依，互相慰借… 青空光 收藏人数 6097
+STARS-439 「ほんとは君が好きだったのに…」さっさと告白してくれない同期（幼驯染）の目の前で上司と见せつけSEXをしてしまう私… 青空光 收藏人数 5962</code></pre>
+<h2>金松季歩</h2>
+<p>金松季歩 <a href="https://x.com/kiho_kanematsu">@kiho_kanematsu</a></p>
+<h3>最高收藏作品</h3>
+<pre><code>SONE-521 出差途中与令人厌恶的性骚中年上司共住一室…经历一整夜疯狂干砲而意外沦陷的F罩杯巨乳前偶像OL 金松季歩 收藏人数 16466
+SONE-227 写真女艺人 金松季步 决定S1专属！3本番 金松季步 收藏人数 10522
+SONE-560 S1 PRECIOUS GIRLS 2024 オールスター24名大集合ハーレムアイランドSpecial 上集 收藏人数 10350
+SONE-305 偶像女明星 解禁 进击的4本番 金松季歩 收藏人数 9489
+SONE-560 S1 PRECIOUS GIRLS 2024 オールスター24名大集合ハーレムアイランドSpecial 下集 收藏人数 9083
+SONE-563 S1 20周年纪念・AV业界史上的最强组合作品。忍不住就射吧，我们可是传说级的鸡鸡口技师 收藏人数 8670
+SONE-262 大人系写真偶像 金松季歩 S1第二章 全裸性交 初体验特别编 金松季歩 收藏人数 8366
+SONE-561 S1 20周年纪念！AV界历史留名的超强组合作品—超级VVVIP大乱交派对！舔翻天、插不停、高潮连连，疯狂沉浸在非日常的奇蹟梦幻共演 河北彩伽 金松季步 本乡爱 田野忧 清原美优 儿玉七海 榊原萌 神乐桃果 五条恋 收藏人数 7833
+SONE-632 疯狂潮喷高潮！喷到失禁、巨乳美女不停颤抖，直到彻底被榨干飞天 金松季步 收藏人数 7226
+SONE-492 写真女艺人挑战人生首次完全禁慾生活！自宅、素颜、私生活全程大公开！不断挑逗，直到她的鲍鱼彻底被搞坏，度过了40天极限高潮的完全真实纪录片 金松季步 收藏人数 7086
+SONE-676 与绝世苗条美巨乳爱人纠缠沉沦，直到人生无法回头，无止境的不伦性爱 金松季步 收藏人数 6831
+SONE-791 圣职者でありながら电车痴●の虏になってしまった女教师 金松季步 收藏人数 6524
+SONE-399 苗条美巨乳写真偶像艺人 金松季步 淫荡是我的错吗？ 金松季步 收藏人数 6384
+SONE-714 美巨乳写真女星被大肉棒插到子宫高潮，深处被彻底开发的多人性爱乱交 金松季步 收藏人数 5493
+SONE-752 来嘛来嘛，来做男士油压放松一下 金松季步 收藏人数 5384
+SONE-353 高潮汁2900cc！ 写真女郎金松季步情慾觉醒第一次的的大痉挛特别节目 金松季步 收藏人数 5344
+SONE-586 与金松季步一同享受人生巅峰的射精体验。ULTRA VIP GRAVURE 10种风俗体验 金松季步 收藏人数 5061
+SONE-790 庆祝S1出道一周年，美巨乳写真艺人金松季步首次对一般粉丝全面开放。20人共同参与，混浴温泉、两天一夜的粉丝感谢祭 金松季步 收藏人数 3398</code></pre>
+<h2>西宫ゆめ</h2>
+<p>西宫ゆめ <a href="https://x.com/_nishimiyayume">@_nishimiyayume</a></p>
+<h3>最高收藏作品</h3>
+<pre><code>IPX-780 【要去酒店休息一下吗？ 】新入社员欢迎会 喝醉的我被前台姐姐带到酒店 直到早晨的榨精一夜 西宫梦 收藏人数 11497
+IPZZ-263 老婆生小孩回娘家中。跟我一起跑业务的女同事「西宫」一次又一次的跟她不伦…身体非常符合 西宫梦 收藏人数 10587
+IPZZ-084 以完美美脚挑逗我们肉棒的紧身裙癡女教师 生脚！裤袜脚！ 自上头眼光的美脚玩弄全套！ 西宫梦 收藏人数 9677
+IPZZ-044 因台风停飞…空姐和机长同房间过一夜 不能飞行的空姐把时间太多的机长吞噬狂痴女到隔天早上 西宫梦 收藏人数 9219
+IPZZ-244 把朋友的女友灌醉并下药再来充分彻底的昏迷强●…最后在男友面前春药高潮受孕轮● 西宫梦 收藏人数 8633
+IPZZ-521 パンストマニアの标的になった美脚女教师 股下85cm！スレンダー脚线美！パンスト勃起がおさまらない狂気的ストーカーの粘着孕ませ性交 西宫梦 收藏人数 8235
+IPX-970 看到勃起肉棒就扑来的淫乱护士 慢慢撩拨品味肉棒的变态护士！！ 西宫梦 收藏人数 7860
+IPX-936 被女友的婊子姊姊盯上 妹妹就在旁边却狂诱惑我的好色姊姊 西宫梦 收藏人数 7183
+IPX-441 强制夫妻交换NTR和最爱的女友西宫梦温泉旅行被强迫性的换妻内射做爱 西宫梦 八乃翼 收藏人数 6948
+IPZZ-059 出差遇到大下雨，只好跟处男之身的部下住进同间房！看到被淋湿的我 部下发情直接被插入到早上连续九发！绝伦性交 西宫梦 收藏人数 6684
+IPZZ-362 淫荡过头的翘臀让我的肉棒暴走中出！ 喝醉酒醒来后发现身边是半裸的辣妹！？总是高傲的她现在却温柔的…搞上了！看来是做过爱的样子（汗） 西宫梦 收藏人数 6394
+IPX-815 禁慾的最后 汗液淫液交融的三天 西宫梦 收藏人数 6314
+IPX-505 好色的后辈社员和人妻美女黑丝OL西宫梦出差同住一屋连续多次射在她的小穴里面 西宫梦 收藏人数 5933
+IPZZ-289 夏暑假从乡下去的东京的我（处女）…败给了哥哥女友的大人的性感 无自觉的诱惑 理智崩溃！趁哥哥出差不在的三天三夜 用力干来干去！立场大逆转 暴走抽插＆下种抽插 射精8发 西宫梦 收藏人数 5878
+IPZZ-586 日本よ、これがアイポケだー。 BEAUTY VENUS THE HARLEM もう绝対に揃わない梦の究极共演！！ 痴女プレイ全10コーナー330分！ 樱空桃 长滨蜜璃 西宫梦 古川穗花 樱若菜 佐佐木纱希 爱才莉亚 役野满里奈 收藏人数 5769
+IPX-989 「你来插我吧…」＜交友软体＞认识后即刻旅馆ＩＮ的即刻交配型网友 西宫梦 收藏人数 5732
+IPX-953 在意的那个打工女交到男朋友了 中年店长用特权轮●来祝贺 西宫梦 收藏人数 5683
+IPX-903 看到部下穿着情趣内衣 燃起欲情 强制中出狂妄部下的三天 西宫梦 收藏人数 5652
+IPX-693 傲娇女超商偷窃遭店员威胁进犯中出 西宫梦 收藏人数 5605
+IPX-919 【店长 和我做吧】营业中的偷閒NTR性交 被打工女诱惑 失去理性的忘我中出 西宫梦 收藏人数 5581
+IPX-762 上司那个让人火大的妻子 被部下全数中出... 西宫梦 收藏人数 5578
+IPZZ-498 美巨乳家教老师的亲亲特训，一对一辅导 西宫梦 收藏人数 5396
+JUQ-921 特别演出！美少女跟成熟美女 共存的小恶魔专属 降临在Madonna！内衣模特儿NTR！人妻陷入在客户跟摄影师的魔掌之中！【注意观看】NTR影像 西宫梦 收藏人数 5226
+IPZZ-224 仔细舔舐肉棒执着的舔龟头清洁口交狂舔舐的下流护士 西宫梦 收藏人数 5195</code></pre>
+<p>TRE台北国际成人展 <a href="https://x.com/TREtaipei">https://x.com/TREtaipei</a></p>
+<h2>番号搜索</h2>
+<p>[post cid="10713" cover="https:\/\/limbopro.com\/usr\/uploads\/2020\/05\/4241648918.png"/]</p>
+<h2>番号推荐</h2>
+<p>[post cid="12299" /]<br />
+[post cid="31512" cover="https:\/\/limbopro.com\/usr\/uploads\/2025\/01\/1846669432.jpg"/]</p>
+]]></content:encoded>
+<slash:comments>0</slash:comments>
+<comments>https://limbopro.com/archives/34135.html#comments</comments>
+<wfw:commentRss>https://limbopro.com/feed/archives/34135.html</wfw:commentRss>
+</item>
+<item>
+<title>经典投资理财书单推荐</title>
+<link>https://limbopro.com/archives/34109.html</link>
+<guid>https://limbopro.com/archives/34109.html</guid>
+<pubDate>Sun, 10 Aug 2025 10:43:00 +0800</pubDate>
+<dc:creator>毒奶</dc:creator>
+<description><![CDATA[理财书单推荐有用的，一些最近看过的经典投资理财书籍。文末提供了书籍资源下载方式，按需下载即可。《投资最重要的事》《投资最重要的事》一本股神巴菲特读了两遍的书；《投资最重要的事》概要霍华．马克斯浓...]]></description>
+<content:encoded xml:lang="zh-CN"><![CDATA[
+<p><img src="https://limbopro.com/usr/uploads/2025/04/3369612332.png" alt="ChatGPT Image 2025年4月2日.png" /></p>
+<h1>理财书单推荐</h1>
+<p>有用的，一些最近看过的经典投资理财书籍。文末提供了书籍资源下载方式，按需下载即可。</p>
+<h2>《投资最重要的事》</h2>
+<p><strong>《投资最重要的事》一本股神巴菲特读了两遍的书；</strong></p>
+<h3>《投资最重要的事》概要</h3>
+<p>霍华．马克斯浓缩历年备忘录及价值投资心得，<strong>总结为二十项原则，包涵著名的「第二层思考」、价格与价值的关系、耐心等待机会、避开投资陷阱、对抗情绪带来的负面影响……含括所有价值投资者的关键面向，处处都是洞见与启发</strong>。学习第二层思考，第一层思考简单、肤浅，几乎人人做得到；第二层思考则比较深入、复杂，而且迂回。 </p>
+<p>掌握第二层思考、打败市场的关键是高度的洞察力。</p>
+<h3>注意景气循环</h3>
+<p>我们相信以下两个概念：<br />
+法则1：多数事物都有周期。<br />
+法则2：在其他人忘记法则1时，就是产生获利和亏损的最大机会。 </p>
+<h3>在泡沫中避免亏损</h3>
+<p>在这种关键时刻要拒绝投资：贪婪和人性偏误造成利多消息广泛宣传，使股价受到高估；或是利空消息被忽视时。</p>
+<h2>《怎样选择成长股》</h2>
+<p>在读完《怎样选择成长股》之后，我开始寻找菲利普·Ａ·费舍…….，当我见到他时，他和他的思想都给我留下了深刻的印象。<strong>利用菲利普的技能，就能获得对行业及其商业模式的彻底理解………..能使一个人做出明智的投资决定。</strong></p>
+<p>——沃伦·巴菲特</p>
+<h2>《聪明的投资者》</h2>
+<p><strong>这是一本证券投资实务领域的经典著作，自从1949年首次出版以来，在股市上一直被奉为“股票投资圣经”。</strong></p>
+<p>《聪明的投资者》首先<strong>明确了“投资”与“投机”的区别</strong>，<strong>指出聪明的投资者当如何确定预期收益</strong>。它着重介绍防御型投资者与积极型投资者的投资组合策略，论述了投资者如何应对市场波动。该书还对基金投资、投资者与投资顾问的关系、普通投资者证券分析的一般方法、防御型投资者与积极型投资者的证券选择、可转换证券及认股权证等问题进行了详细阐述。</p>
+<p>《聪明的投资者》主要面向个人投资者，全面体现了格雷厄姆的价值投资思想，为普通人在证券投资策略的选择和执行方面提供了重要的指导。</p>
+<h2>《安全边际》</h2>
+<p>《安全边际》（Margin of Safety）是由赛斯·卡拉曼（Seth Klarman）撰写的一本关于价值投资的经典书籍。<strong>这本书深入探讨了如何通过分析和评估公司的内在价值，并在安全边际内进行投资，以实现长期稳健的投资回报。</strong>。</p>
+<h2>《金钱心理学》</h2>
+<p><strong>《金钱心理学》副标题: 财富、人性和幸福的永恒真相；</strong></p>
+<p>你和金钱的关系，决定了财富和你的距离！在风云变幻的投资理财领域，带你找到亘古不变的财富真相。</p>
+<p><strong>人们总把投资理财当作一门硬科学，却忽略了心理因素在其中的重要作用。实际上，理财行为并非仅依靠冷冰冰的数字和公式，很多时候会受到你的情绪、喜好、立场和很多意料外的因素影响。因此，致富和守富的关键并不在于懂得多少知识，总结了多少规律，而常常在于如何克服人性的弱点，认清事物运作的本质。 </strong></p>
+<p><strong>摩根·豪泽尔从心理角度入手，在本书中分享了18条一针见血的理财智慧。</strong>如果你是理财新手，你会接受一堂朴素、简明却能令你受用终生的理财课，先人一步实现财务自由。如果你是投资老手，本书也会帮你查缺补漏，返璞归真，守护好来之不易的财富。在风云变幻的投资理财领域，有些道理亘古不变，无论何时都能帮你实现财富的稳定增长。只有发现它们，把握它们，你才能在起伏不定的经济形势下实现长久的富足与幸福。 </p>
+<h2>《逐利而生》</h2>
+<p>《逐利而生》副标题: 3000年公司演变史；</p>
+<p><strong>从传统制造商到新兴科技巨头，公司一直都是历史舞台上备受关注的角色。有人将其视为进步与繁荣的引擎，有人则认为它们不计后果地追求利润，而让整个社会一起来承担发展的成本。公司的本质到底是什么，它们为何存在？</strong></p>
+<p>从被视为“国家支柱”的罗马大税吏公司到日不落帝国缔造者的英国东印度公司，从消费型社会始作俑者的福特汽车公司到可以左右选举的Facebook……本书将通过不同时代不同类型的8家公司，展现公司如何随着时间的推移演变为今天的模样，洞察它们如何崛起和运转，又因何失败；了解它们使哪些领域得到了高贵的地位，又使哪些领域受到了腐蚀。但无论历史如何演变，它们始终对世界局势产生着巨大而深远的影响。</p>
+<p>纵观历史，公司为谋求公共利益而生，虽时常偏离初衷，但其独特且持久存在的合理性始终在于增进人类福祉的能力。</p>
+<h2>《持续买入》</h2>
+<p><strong>《持续买入》副标题: 普通人投资致富的实证方法；</strong></p>
+<p>当我们谈到金钱时，每个人都想知道自己在储蓄、投资等财务决策上做得对不对。金融行业提供的许多答案常常基于观点和猜测，而不是数据和实证。 </p>
+<p>在本书中，数据科学家和投资专家尼克·马吉奥利通过数据分析引导我们客观地看待投资，构建正确的投资心态和理财方式。他建议我们不要只依靠直觉来投资或者盲目地接受投资建议，而要通过客观的数据分析来形成自己的投资策略。<strong>作者提出了持续买入的投资策略，即什么时候买入资产、买多少、买什么资产都不重要，估值是高还是低不重要，处于牛市还是熊市也不重要——对积累财富来说，重要的是买入一组多样化的可创收资产，并且坚持持续买入。</strong>只要持续买入，你的财富的雪球就会越滚越大。</p>
+<h2>书籍下载</h2>
+<p>使用微信读书，或Z-library下载；</p>
+<p>[post cid="30553" cover="https:\/\/limbopro.com\/usr\/uploads\/2024\/09\/3421446972.jpg"/]</p>
+<p>或参阅：<a href="https://t.me/limboprossr/3399">https://t.me/limboprossr/3399</a> 直接下载书单中提及的书籍(部分)对应EPUB文件</p>
+<h2>你的推荐</h2>
+<p>如果你有不错的投资理财书单推荐，欢迎在该频道内容后留言：<a href="https://t.me/limboprossr/3399">https://t.me/limboprossr/3399</a></p>
+]]></content:encoded>
+<slash:comments>0</slash:comments>
+<comments>https://limbopro.com/archives/34109.html#comments</comments>
+<wfw:commentRss>https://limbopro.com/feed/archives/34109.html</wfw:commentRss>
+</item>
+<item>
+<title>[理财] 10元起投，开启人生中的第一次ETF（联接基金）投资之旅</title>
+<link>https://limbopro.com/archives/33857.html</link>
+<guid>https://limbopro.com/archives/33857.html</guid>
+<pubDate>Wed, 02 Jul 2025 19:53:00 +0800</pubDate>
+<dc:creator>毒奶</dc:creator>
+<description><![CDATA[序!&gt; “理财非存款、产品有风险、投资须谨慎。”本文仅就理财相关知识进行整理，供参考，不形成实际投资建议。如需了解更多，可咨询相关人士，或AI助手，D老师，Germini，Grok，Cha...]]></description>
+<content:encoded xml:lang="zh-CN"><![CDATA[
+<p><img src="https://limbopro.com/usr/uploads/2025/07/1429562668.jpg" alt="etf.jpg" /></p>
+<h2>序</h2>
+<p>!&gt; “<strong>理财非存款、产品有风险、投资须谨慎</strong>。”本文仅就理财相关知识进行整理，供参考，不形成实际投资建议。如需了解更多，可咨询相关人士，或AI助手，D老师，Germini，Grok，ChatGPT...支付宝（蚂蚁财富），腾讯理财通自带金融AI大模型。</p>
+<p>i&gt; “种一棵树最好的时间是20年前，其次是现在。” 这句话同样适用于投资。尽早开始投资，即使金额不大，也能让你充分利用时间、复利和市场长期增长的优势，为自己创造一个更安全、更富裕的未来。</p>
+<p>i&gt; 本文更适合在 PC/Mac/iPad浏览器上查看，阅读体验佳。</p>
+<h2>基金是什么</h2>
+<p>基金（本文特指开放式基金，没有发行规模限制，通过<strong>认购、申购和赎回</strong>，其基金规模随时都在发生变化。）是一种<strong>集合投资工具，把多个投资者的钱汇集起来，由专业基金经理管理，投资于股票、债券、货币市场等多种资产，以追求收益或分散风险</strong>。</p>
+<h3>基金的要点：</h3>
+<h4>类别</h4>
+<table>
+<thead>
+<tr>
+<th>类别</th>
+<th>描述</th>
+<th>特点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>股票基金</td>
+<td>主要投资股票，风险较高，适合长期投资</td>
+<td>高风险高回报</td>
+</tr>
+<tr>
+<td>债券基金</td>
+<td>投资债券，收益较稳定，风险较低</td>
+<td>低风险稳定收益</td>
+</tr>
+<tr>
+<td>货币基金</td>
+<td>投资短期低风险资产，如余额宝，流动性强，收益低</td>
+<td>高流动性低收益</td>
+</tr>
+<tr>
+<td>指数基金</td>
+<td>跟踪市场指数（如沪深300），费用低，适合新手</td>
+<td>低费用，简单透明</td>
+</tr>
+<tr>
+<td>混合基金</td>
+<td>股票、债券等混合投资，风险收益平衡</td>
+<td>风险收益平衡</td>
+</tr>
+</tbody>
+</table>
+<h4>优点/费用/风险</h4>
+<table>
+<thead>
+<tr>
+<th>项目</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>优点</strong></td>
+<td>- <strong>专业管理</strong>：基金经理帮你选资产，省心。 - <strong>分散风险</strong>：投资多个标的，降低单一资产风险。 - <strong>门槛低</strong>：几十元就能开始，比如定投。</td>
+</tr>
+<tr>
+<td><strong>费用</strong></td>
+<td>包括管理费（通常0.5%-2%/年）、申购赎回费等，选基金时要注意费用低的产品。</td>
+</tr>
+<tr>
+<td><strong>风险</strong></td>
+<td>不同基金风险不同，股票基金波动大，货币基金较稳定。投资前需评估自己的风险承受能力。</td>
+</tr>
+</tbody>
+</table>
+<h3>基金公司</h3>
+<p>基金公司是专门<strong>从事投资管理的机构</strong>，通过汇集投资者的资金，投资于股票、债券、货币市场等多种资产，以实现收益和分散风险。</p>
+<h4>基金公司的主要特点：</h4>
+<table>
+<thead>
+<tr>
+<th>类别</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>业务核心</strong></td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>基金公司通过发行基金产品（如开放式基金、封闭式基金、ETF等），将投资者的资金集中起来，交由专业基金经理管理。</td>
+</tr>
+<tr>
+<td></td>
+<td>投资范围包括股票、债券、房地产、商品等，目标是根据基金的投资策略实现收益或保值。</td>
+</tr>
+<tr>
+<td><strong>运作方式</strong></td>
+<td></td>
+</tr>
+<tr>
+<td>开放式基金</td>
+<td>投资者可随时申购或赎回，基金规模不固定，常见如货币基金、股票基金。</td>
+</tr>
+<tr>
+<td>封闭式基金</td>
+<td>发行固定数量的份额，在二级市场交易，价格可能偏离净值（NAV）。</td>
+</tr>
+<tr>
+<td></td>
+<td>基金公司通常由投资顾问管理，需遵守监管规定（如美国SEC的《1940年投资公司法》）。</td>
+</tr>
+<tr>
+<td><strong>主要服务</strong></td>
+<td></td>
+</tr>
+<tr>
+<td>专业管理</td>
+<td>由基金经理和分析师团队根据市场分析选择投资标的。</td>
+</tr>
+<tr>
+<td>多元化投资</td>
+<td>通过投资多种资产降低风险。</td>
+</tr>
+<tr>
+<td>费用</td>
+<td>包括管理费（通常0.5%-2%/年）、申购赎回费等，投资者需关注费用对收益的影响。</td>
+</tr>
+<tr>
+<td><strong>中国市场</strong></td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>中国基金公司如<strong>易方达基金、博时基金、华夏基金、嘉实基金</strong>等发展迅速，管理规模快速增长。</td>
+</tr>
+</tbody>
+</table>
+<h4>基金经理</h4>
+<p>基金经理是负责<strong>管理基金投资组合的专业人士</strong>，通过分析市场、选择投资标的（如股票、债券等），为基金实现收益或控制风险。</p>
+<h2>ETF是什么</h2>
+<p>ETF（交易所交易基金，Exchange-Traded Fund）是一种在证券交易所上市交易的开放式基金，<strong>结合了股票和基金的特点</strong>。ETF是一种<strong>“跟踪特定指数（如标普500/上证）、行业（如医药/创新药/新能源）、商品（如原油/黄金）、债券（如国债/信用债）或其他资产”</strong>的基金（注意这点，将这些东西按比例打包到一个蓝子里），<strong>通过证券交易所像股票一样进行买卖</strong>。</p>
+<h2>ETF与基金区别</h2>
+<p><strong>ETF（交易所交易基金）和基金公司管理的传统基金（如开放式基金）都是集合投资工具</strong>，但<strong>在结构、交易方式、费用等方面有显著区别</strong>。以下是简明对比：</p>
+<h3>1. <strong>定义</strong></h3>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>ETF</strong></td>
+<td>在交易所上市交易的基金，跟踪特定指数（如沪深300、标普500）或资产类别，投资者可像股票一样买卖。</td>
+</tr>
+<tr>
+<td><strong>基金公司基金</strong></td>
+<td>通常指开放式基金或封闭式基金，由基金公司管理，投资于股票、债券等，投资者通过申购/赎回参与。</td>
+</tr>
+</tbody>
+</table>
+<h3>2. <strong>主要区别</strong></h3>
+<table>
+<thead>
+<tr>
+<th><strong>维度</strong></th>
+<th><strong>ETF</strong></th>
+<th><strong>基金公司基金（开放式基金为主）</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>交易方式</strong></td>
+<td>在交易所实时交易，价格随市场波动，类似股票。</td>
+<td>通过基金公司申购/赎回，通常按日末净值（NAV）交易。</td>
+</tr>
+<tr>
+<td><strong>流动性</strong></td>
+<td>高，可随时买卖，交易灵活。</td>
+<td>流动性较低，赎回通常T+1或更久，部分基金有限制。</td>
+</tr>
+<tr>
+<td><strong>费用</strong></td>
+<td>管理费低（0.1%-0.5%/年），可能有交易佣金。</td>
+<td>管理费较高（0.5%-2%/年），可能有申购/赎回费。</td>
+</tr>
+<tr>
+<td><strong>投资方式</strong></td>
+<td>多为被动投资，跟踪指数，少部分为主动管理ETF。</td>
+<td>主动管理为主，依赖基金经理选股/选债，部分为指数基金。</td>
+</tr>
+<tr>
+<td><strong>透明度</strong></td>
+<td>持仓通常每日披露，透明度高。</td>
+<td>持仓通常按月或季披露，透明度较低。</td>
+</tr>
+<tr>
+<td><strong>投资门槛</strong></td>
+<td>门槛低，可买1手（几十元起）。</td>
+<td>10元起投。</td>
+</tr>
+<tr>
+<td><strong>价格与净值</strong></td>
+<td>市场价格可能偏离净值（溢价/折价）。</td>
+<td>申购/赎回按净值计算，无溢价/折价。</td>
+</tr>
+</tbody>
+</table>
+<h3>3. <strong>优缺点</strong></h3>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>优点</th>
+<th>缺点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ETF</td>
+<td>费用低、交易灵活、透明度高，适合短期交易或长期定投</td>
+<td>需有证券账户，市场价格可能偏离净值，部分ETF流动性较低</td>
+</tr>
+<tr>
+<td>基金公司基金</td>
+<td>适合长期投资，主动管理可能带来超额收益，申购赎回简单</td>
+<td>费用较高，赎回时间较长，短期灵活性差</td>
+</tr>
+</tbody>
+</table>
+<h3>4. <strong>举例</strong></h3>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>示例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ETF</td>
+<td>华夏沪深300ETF（跟踪沪深300指数）<br>SPDR标普500 ETF（跟踪美股标普500）</td>
+</tr>
+<tr>
+<td>基金公司基金</td>
+<td>易方达蓝筹精选（张坤管理，主动选股）<br>博时债券基金（偏债券投资）</td>
+</tr>
+</tbody>
+</table>
+<h3>5. <strong>选择建议</strong></h3>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>适合人群</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ETF</td>
+<td>希望低成本、灵活交易、偏好指数投资的投资者，特别适合定投或短期波段操作</td>
+</tr>
+<tr>
+<td>基金公司基金</td>
+<td>追求专业管理、愿意承担较高费用、希望超额收益的投资者，适合长期持有</td>
+</tr>
+</tbody>
+</table>
+<p>@&gt; 对于小白而言，两者之间成本差异可以忽略不计；待到一定交易额度（100w+）再考虑开户交易买卖ETF不迟。</p>
+<h2>ETF联接基金</h2>
+<p>基金的一种。</p>
+<h3>ETF（交易所交易基金）和ETF联接基金区别</h3>
+<p>ETF（交易所交易基金）和ETF联接基金都是跟踪指数的投资工具，但在交易方式、费用和使用场景上有所不同。以下是简明对比，结合你的问题背景（关注基金投资），重点突出两者的区别和选择建议：</p>
+<h3>1. <strong>定义</strong></h3>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ETF</td>
+<td>在证券交易所上市的基金，直接跟踪特定指数（如沪深300、标普500），通过股票账户像买卖股票一样交易，价格随市场波动</td>
+</tr>
+<tr>
+<td>ETF联接基金</td>
+<td>一种开放式基金，主要投资于目标ETF（通常占比90%以上），通过基金公司或平台（如支付宝）申购/赎回，按日末净值交易</td>
+</tr>
+</tbody>
+</table>
+<h3>2. <strong>主要区别</strong></h3>
+<table>
+<thead>
+<tr>
+<th><strong>维度</strong></th>
+<th><strong>ETF</strong></th>
+<th><strong>ETF联接基金</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>交易方式</strong></td>
+<td>交易所实时交易，需股票账户，类似股票。</td>
+<td>通过基金公司、银行、支付宝等申购/赎回，按日末净值交易。</td>
+</tr>
+<tr>
+<td><strong>流动性</strong></td>
+<td>高，盘中随时买卖。</td>
+<td>较低，赎回通常T+1或更久。</td>
+</tr>
+<tr>
+<td><strong>费用</strong></td>
+<td>管理费低（0.1%-0.5%/年），可能有交易佣金。</td>
+<td>管理费稍高（0.5%-1.2%/年），可能有申购/赎回费。</td>
+</tr>
+<tr>
+<td><strong>投资方式</strong></td>
+<td>直接投资指数成分股，跟踪误差小。</td>
+<td>主要投资目标ETF，少量现金或其他资产，跟踪误差略大。</td>
+</tr>
+<tr>
+<td><strong>投资门槛</strong></td>
+<td>1手起（几十几百元），需股票账户。</td>
+<td>1元或10元或100元起投，无需股票账户。</td>
+</tr>
+<tr>
+<td><strong>价格与净值</strong></td>
+<td>市场价格可能有溢价/折价。</td>
+<td><strong>按净值交易，无溢价/折价</strong>。</td>
+</tr>
+<tr>
+<td><strong>透明度</strong></td>
+<td>持仓每日披露，透明度高。</td>
+<td>持仓按月/季披露，透明度较低。</td>
+</tr>
+</tbody>
+</table>
+<h3>3. <strong>优缺点</strong></h3>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>优点</th>
+<th>缺点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>ETF</strong></td>
+<td>费用低、交易灵活、跟踪指数精准，适合短期交易或长期定投</td>
+<td>需股票账户，可能有交易佣金，价格可能偏离净值</td>
+</tr>
+<tr>
+<td><strong>ETF联接基金</strong></td>
+<td>无需股票账户，适合支付宝等平台投资，便于定投，操作简单</td>
+<td>费用稍高，流动性较差，跟踪指数精度略低</td>
+</tr>
+</tbody>
+</table>
+<h3>4. <strong>举例（中国市场）</strong></h3>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>名称</th>
+<th>代码</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>ETF</strong></td>
+<td>华夏沪深300ETF</td>
+<td>510300</td>
+<td>跟踪沪深300指数，场内交易</td>
+</tr>
+<tr>
+<td><strong>ETF联接基金</strong></td>
+<td>华夏沪深300ETF联接基金</td>
+<td>000051</td>
+<td>投资于上述ETF，可通过支付宝等平台申购</td>
+</tr>
+</tbody>
+</table>
+<h3>5. <strong>注意事项</strong></h3>
+<table>
+<thead>
+<tr>
+<th>项目</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>风险</strong></td>
+<td>两者都受市场波动影响，宽基指数（如沪深300/标普500）较稳，行业ETF/联接基金（如科技ETF、纳斯达克100）波动大。</td>
+</tr>
+<tr>
+<td><strong>费用对比</strong></td>
+<td>ETF长期更省钱，但联接基金适合小额定投。</td>
+</tr>
+<tr>
+<td><strong>平台选择</strong></td>
+<td>支付宝、微信等平台购买联接基金操作简单；ETF需券商账户（如华泰、招商证券）。</td>
+</tr>
+</tbody>
+</table>
+<p>@&gt; 对于小白而言，两者之间成本差异可以忽略不计；待到一定交易额度（100w+）再考虑开户交易买卖ETF不迟。</p>
+<h2>如何投资ETF（联接基金）？</h2>
+<p><strong>可通过股票账户直接购买ETF</strong>或购买<strong>基金公司提供的ETF联接基金</strong>，在<strong>支付宝（蚂蚁财富）</strong>与<strong>腾讯理财通app</strong>均可操作；</p>
+<h3>购买基金操作举例</h3>
+<p><img src="https://limbopro.com/usr/uploads/2025/07/3811555197.jpg" alt="以在支付宝上购买易方达红利低波ETF联接C 020603 举例.jpg" /></p>
+<p><strong>如图，以在支付宝上购买基金和ETF举例</strong>：易方达红利低波ETF联接C（<strong>搜代码：020603</strong>），可以直接购买（1元起购）；找到它的持仓，进入ETF，开户后亦可直接操作购买ETF；其中C，代表C类；长期投资选A类，短期灵活选C类，具体看持有时间和费率（查看交易规则）。</p>
+<p>@&gt; 买一点试试看！1元10元均可。</p>
+<h3>交易规则</h3>
+<p><img src="https://limbopro.com/usr/uploads/2025/07/3208402766.jpg" alt="交易规则.jpg" /></p>
+<p>!&gt;  购买时注意：在输入金额申购前，请注意查阅<strong>交易规则</strong>。</p>
+<h2>指数及指数ETF（联接基金）</h2>
+<p><img src="https://limbopro.com/usr/uploads/2025/09/4013215150.jpg" alt="腾讯理财通-主页-股市行情-更多-全球-指数-2025.09.15.jpg" /></p>
+<p>i&gt; <strong>支付宝/蚂蚁财富/腾讯理财通</strong>：均提供相应<strong>指数的说明</strong>及相关指数ETF（场外基金ETF联接基金）购买；</p>
+<p><strong>买之前，要知道自己在买什么，自己的投资目标，风险承受能力</strong>（可参阅后文投资的艺术部分）。以下就全球知名ETF，如标普500指数ETF，纳斯达克100指数ETF以及大A相关款基ETF展开。</p>
+<p>美股</p>
+<h3>标普500指数ETF（联接基金）</h3>
+<p><img src="https://limbopro.com/usr/uploads/2025/07/3001732465.jpg" alt="标普500指数.jpg" /></p>
+<p><del>一句话总结，投资美国，薅资本主义羊毛，用收益点中国外卖。</del></p>
+<p><strong>标普500指数ETF是跟踪美国标普500指数的交易所交易基金，旨在复制标普500指数的表现，主要追踪美国500大企业指数，约占美国股市市值80％，覆盖美国大型上市公司的股票，广泛用于投资美国股市。</strong>标普500指数ETF（如SPY、VOO、513030）是投资美国股市的优质工具，<strong>适合长期持有或波段操作</strong>。</p>
+<h4><strong>标普500成分股概述</strong></h4>
+<p><strong>数量</strong>：500家公司，涵盖美国主要交易所（纽交所、纳斯达克）的股票。<br />
+<strong>行业分布</strong>（截至2025年7月，权重可能随市场变化）：</p>
+<table>
+<thead>
+<tr>
+<th>行业</th>
+<th>权重</th>
+<th>示例公司</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>信息技术</td>
+<td>~30%</td>
+<td>苹果、微软、英伟达</td>
+</tr>
+<tr>
+<td>金融</td>
+<td>~13%</td>
+<td>摩根大通、伯克希尔哈撒韦</td>
+</tr>
+<tr>
+<td>医疗</td>
+<td>~12%</td>
+<td>强生、辉瑞</td>
+</tr>
+<tr>
+<td>消费品（非必需）</td>
+<td>~10%</td>
+<td>亚马逊、特斯拉</td>
+</tr>
+<tr>
+<td>工业</td>
+<td>~8%</td>
+<td>波音、卡特彼勒</td>
+</tr>
+<tr>
+<td>通信服务</td>
+<td>~9%</td>
+<td>谷歌、Meta</td>
+</tr>
+<tr>
+<td>消费品（必需）</td>
+<td>~6%</td>
+<td>宝洁、可口可乐</td>
+</tr>
+<tr>
+<td>能源、材料、公用事业等</td>
+<td>~2-5%</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<p><strong>权重规则</strong>：按市值加权，前十大公司通常占总权重约30-35%。<br />
+<strong>调整机制</strong>：标普委员会定期调整成分股，确保代表性，通常基于市值、流动性、行业分布等标准。</p>
+<h4><strong>标普500主要成分股（2025年7月，示例）</strong></h4>
+<p>以下是标普500指数中权重靠前的一些公司：</p>
+<table>
+<thead>
+<tr>
+<th>公司</th>
+<th>代码</th>
+<th>权重</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>苹果</td>
+<td>AAPL</td>
+<td>~7-8%</td>
+<td>科技巨头，iPhone、Mac等</td>
+</tr>
+<tr>
+<td>微软</td>
+<td>MSFT</td>
+<td>~7%</td>
+<td>云计算、软件龙头</td>
+</tr>
+<tr>
+<td>英伟达</td>
+<td>NVDA</td>
+<td>~6-7%</td>
+<td>AI芯片领导者</td>
+</tr>
+<tr>
+<td>亚马逊</td>
+<td>AMZN</td>
+<td>~4-5%</td>
+<td>电商和云计算</td>
+</tr>
+<tr>
+<td>Meta</td>
+<td>META</td>
+<td>~2-3%</td>
+<td>社交媒体和元宇宙</td>
+</tr>
+<tr>
+<td>谷歌</td>
+<td>GOOGL/GOOG</td>
+<td>~4% (合计)</td>
+<td>搜索和广告</td>
+</tr>
+<tr>
+<td>特斯拉</td>
+<td>TSLA</td>
+<td>~2%</td>
+<td>电动车和能源</td>
+</tr>
+<tr>
+<td>伯克希尔哈撒韦</td>
+<td>BRK.A/B</td>
+<td>~2%</td>
+<td>金融和多元化投资</td>
+</tr>
+<tr>
+<td>摩根大通</td>
+<td>JPM</td>
+<td>~1.5%</td>
+<td>银行业龙头</td>
+</tr>
+<tr>
+<td>强生</td>
+<td>JNJ</td>
+<td>~1%</td>
+<td>医疗和制药</td>
+</tr>
+</tbody>
+</table>
+<h3>纳斯达克100指数ETF（联接基金）</h3>
+<p><img src="https://limbopro.com/usr/uploads/2025/07/261278157.jpg" alt="纳斯达克综合指数.jpg" /></p>
+<p><img src="https://limbopro.com/usr/uploads/2025/07/2351389635.jpg" alt="纳斯达克100指数.jpg" /></p>
+<p><del>一句话总结，同标普500总结。</del></p>
+<p>纳斯达克100指数ETF是跟踪纳斯达克100指数的交易所交易基金，旨在复制纳斯达克100指数的表现，该<strong>指数包含美国纳斯达克市场上100家非金融类大型科技公司（如苹果、微软、英伟达等）的股票</strong>。<strong>重点覆盖科技、消费服务和医疗等高增长行业，适合偏好科技股的投资者</strong>。</p>
+<h4><strong>纳斯达克100成分股概述</strong></h4>
+<p><strong>数量</strong>：100家非金融公司，均在纳斯达克交易所上市。<br />
+<strong>行业分布</strong>（截至2025年7月，权重可能随市场变化）：</p>
+<table>
+<thead>
+<tr>
+<th>行业</th>
+<th>权重</th>
+<th>示例公司</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>信息技术</td>
+<td>~50%</td>
+<td>苹果、微软、英伟达</td>
+</tr>
+<tr>
+<td>消费品（非必需）</td>
+<td>~18%</td>
+<td>亚马逊、特斯拉</td>
+</tr>
+<tr>
+<td>通信服务</td>
+<td>~15%</td>
+<td>谷歌、Meta</td>
+</tr>
+<tr>
+<td>医疗</td>
+<td>~7%</td>
+<td>吉利德科学、阿斯利康</td>
+</tr>
+<tr>
+<td>消费品（必需）、工业等</td>
+<td>~2-5%</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<p><strong>权重规则</strong>：按市值加权，前十大公司通常占总权重约40-50%。<br />
+<strong>调整机制</strong>：纳斯达克委员会每年12月调整成分股，基于市值、流动性等标准。</p>
+<h4><strong>纳斯达克100主要成分股（2025年7月，示例）</strong></h4>
+<p>以下是纳斯达克100指数中权重靠前的一些公司（权重和排名可能随市场波动变化，基于近期数据）：</p>
+<table>
+<thead>
+<tr>
+<th>公司</th>
+<th>代码</th>
+<th>权重</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>苹果</td>
+<td>AAPL</td>
+<td>~12-14%</td>
+<td>科技巨头（iPhone、Mac、云服务）</td>
+</tr>
+<tr>
+<td>微软</td>
+<td>MSFT</td>
+<td>~12%</td>
+<td>云计算（Azure）、软件（Windows）</td>
+</tr>
+<tr>
+<td>英伟达</td>
+<td>NVDA</td>
+<td>~10-12%</td>
+<td>AI芯片、GPU龙头</td>
+</tr>
+<tr>
+<td>亚马逊</td>
+<td>AMZN</td>
+<td>~8-10%</td>
+<td>电商、云计算（AWS）</td>
+</tr>
+<tr>
+<td>Meta</td>
+<td>META</td>
+<td>~5-6%</td>
+<td>社交媒体（Facebook、Instagram）、元宇宙</td>
+</tr>
+<tr>
+<td>谷歌</td>
+<td>GOOGL/GOOG</td>
+<td>~8% (合计)</td>
+<td>搜索、广告、云计算</td>
+</tr>
+<tr>
+<td>特斯拉</td>
+<td>TSLA</td>
+<td>~4-5%</td>
+<td>电动车、能源存储</td>
+</tr>
+<tr>
+<td>博通</td>
+<td>AVGO</td>
+<td>~3%</td>
+<td>半导体、软件解决方案</td>
+</tr>
+<tr>
+<td>高通</td>
+<td>QCOM</td>
+<td>~2%</td>
+<td>移动通信芯片</td>
+</tr>
+<tr>
+<td>Adobe</td>
+<td>ADBE</td>
+<td>~2%</td>
+<td>创意软件（Photoshop、Acrobat）</td>
+</tr>
+</tbody>
+</table>
+<h4><strong>投资目标与选择</strong></h4>
+<p><strong>如果你追求稳健投资</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>推荐投资</th>
+<th>示例ETF</th>
+<th>特点与适合人群</th>
+<th>理由</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>标普500 ETF</td>
+<td>SPY、VOO（美股）<br>513030（国内）</td>
+<td>行业分散，受单一行业波动影响小，适合长期持有（5-10年以上）或风险偏好较低的投资者</td>
+<td>更稳定的回报，适合养老、资产配置或保守型投资</td>
+</tr>
+</tbody>
+</table>
+<p><strong>如果你追求高增长</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>推荐投资</th>
+<th>示例ETF</th>
+<th>特点与适合人群</th>
+<th>理由</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>纳斯达克100 ETF</td>
+<td>QQQ（美股）<br>513300（国内）</td>
+<td>科技股占比高，受益于AI、云计算、电动车等趋势，适合看好科技行业的投资者</td>
+<td>过去十年表现优于标普500（15.9% vs 12.1%一年涨幅），但波动较高</td>
+</tr>
+<tr>
+<td>混合策略</td>
+<td>513030（标普500）+ 513300（纳斯达克100）</td>
+<td>可按比例分配（如70%标普500 + 30%纳斯达克100），兼顾稳定性和增长潜力</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<h3>黄金ETF（联接基金）</h3>
+<p><img src="https://limbopro.com/usr/uploads/2025/07/1195531949.png" alt="黄金价格走势" /></p>
+<p>Cr <a href="https://china.gold.org/goldhub/data/gold-prices">https://china.gold.org/goldhub/data/gold-prices</a> </p>
+<p><del>4个词总结，战争，天量买入，美元走弱，黄金走强。</del></p>
+<table>
+<thead>
+<tr>
+<th>黄金ETF联接基金</th>
+<th>基金代码</th>
+<th>对应ETF</th>
+<th>每日额度</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>易方达黄金ETF联接C</td>
+<td>002963</td>
+<td>易方达黄金ETF(159934)</td>
+<td>无限制</td>
+<td>无</td>
+</tr>
+</tbody>
+</table>
+<p>对于普通投资者来说，在资产配置中加入黄金的比例通常建议在<strong>5%至15%</strong>之间。虽然黄金本身不产生利息或股息，但它的独特属性使其成为一个有价值的补充。</p>
+<p>在经济衰退、金融危机、地缘政治冲突（如战争、贸易战）等不确定性时期，投资者对风险的厌恶情绪会急剧上升。黄金作为一种传统的避险资产，其需求会显著增加，从而推高价格，为投资组合提供保护。</p>
+<h3>H 股ETF（联接基金）</h3>
+<p>港股，恒生指数；</p>
+<p><img src="https://limbopro.com/usr/uploads/2025/07/1341614205.jpg" alt="恒生指数.jpg" /></p>
+<p><del>三个词总结，亚洲金融中心遗址，没量（交易量，流动性不足），外卖大战。</del></p>
+<h4>衍生指数</h4>
+<p>恒生指数（Hang Seng Index, HSI）是香港股市的主要基准指数，<strong>衍生出多个子指数以反映不同市场板块或投资主题的表现</strong>。以下是一些主要的恒生指数衍生指数，</p>
+<table>
+<thead>
+<tr>
+<th>指数名称</th>
+<th>简介</th>
+<th>代表公司或特点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>恒生科技指数</strong></td>
+<td>追踪香港交易所上市的30家最大型科技公司，涵盖互联网、电子商务、软件、硬件、人工智能等</td>
+<td>腾讯、阿里巴巴、美团、小米、京东等；聚焦高增长科技企业</td>
+</tr>
+<tr>
+<td>恒生中国企业指数 (H股指数)</td>
+<td>追踪在香港上市的内地企业（H股）表现</td>
+<td>中国移动、工商银行、比亚迪等；反映内地企业在香港市场的表现</td>
+</tr>
+<tr>
+<td>恒生香港中资企业指数</td>
+<td>涵盖在香港上市的中资企业（包括H股、红筹股及其他中资公司）</td>
+<td>聚焦香港上市的中资企业整体表现</td>
+</tr>
+<tr>
+<td><strong>恒生国企指数</strong></td>
+<td>专注于在香港上市的内地金融企业</td>
+<td>中国银行、建设银行等；聚焦金融行业</td>
+</tr>
+<tr>
+<td>恒生综合指数</td>
+<td>覆盖香港交易所上市股票，分为大型股、中型股和小型股</td>
+<td>提供香港市场整体表现的全面视角</td>
+</tr>
+<tr>
+<td>恒生可持续发展企业指数</td>
+<td>聚焦在环境、社会和公司治理（ESG）方面表现优异的公司</td>
+<td>吸引注重ESG的投资者</td>
+</tr>
+<tr>
+<td><strong>恒生高股息率指数</strong></td>
+<td>追踪在香港上市的高股息率公司</td>
+<td>适合追求稳定股息收入的投资者</td>
+</tr>
+<tr>
+<td>恒生小型股指数</td>
+<td>涵盖市值较小的香港上市公司</td>
+<td>反映小型企业市场表现，波动性较高</td>
+</tr>
+<tr>
+<td>恒生行业指数</td>
+<td>按行业划分的子指数，如金融、地产、能源、公用事业等</td>
+<td>提供特定行业的投资参考</td>
+</tr>
+<tr>
+<td>恒生50指数</td>
+<td>追踪香港市场50只最具代表性的股票</td>
+<td>覆盖主要蓝筹股，范围较恒生指数广</td>
+</tr>
+</tbody>
+</table>
+<p><strong>备注</strong>：</p>
+<p>恒生指数家族由恒生指数有限公司编制和管理，成分股定期调整。<br />
+具体指数信息可参考恒生指数有限公司官网（<a href="https://www.hsi.com.hk">https://www.hsi.com.hk</a>)  </p>
+<h4>部分与指数相关ETF联接基金</h4>
+<table>
+<thead>
+<tr>
+<th>ETF联接基金名称</th>
+<th>代码</th>
+<th>ETF</th>
+<th>追踪指数</th>
+<th>主要特点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>富国恒生红利ETF联接C</td>
+<td>019261</td>
+<td>富国恒生港股通高股息低波动ETF(QDII)(513950)</td>
+<td>富国恒生港股通高股息低波动ETF(QDII)(513950)</td>
+<td>追踪恒生高股息率指数，旨在投资于派息较高的香港上市公司。</td>
+</tr>
+<tr>
+<td>华泰柏瑞恒生科技ETF联接(QDII)C</td>
+<td>015311</td>
+<td>华泰柏瑞南方东英恒生科技(QDII-ETF)(513130)</td>
+<td>恒生科技指数</td>
+<td>恒生科技指数（Hang Seng Tech Index，简称 HSTECH）是香港市场上一项重要的股票指数，它旨在反映在香港上市的最大30家与科技主题高度相关的公司的整体表现。</td>
+</tr>
+<tr>
+<td>华夏恒生ETF联接C</td>
+<td>006381</td>
+<td>华夏恒生ETF(QDII)(159920</td>
+<td>恒生指数</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<h3>A股ETF（联接基金）</h3>
+<p><img src="https://limbopro.com/usr/uploads/2025/07/3023075733.jpg" alt="上海证券交易所综合股价指数" /></p>
+<p><img src="https://limbopro.com/usr/uploads/2025/07/934626979.jpg" alt="深圳证券交易所成份股价指数.jpg" /></p>
+<p><del>两个词总结，自己人，内卷。</del></p>
+<h3>大中小盘介绍</h3>
+<h4> 沪深宽基指数及行业比例</h4>
+<p>以下为沪深市场主要宽基指数（大盘、中盘、小盘）的特点及行业比例，数据参考中证指数公司及东方财富Choice数据（截至2024年12月，具体比例以最新公告为准）。</p>
+<h4> 大盘指数</h4>
+<table>
+<thead>
+<tr>
+<th>指数名称</th>
+<th>概述</th>
+<th>行业比例（大致估计）</th>
+<th>特点</th>
+<th>数据来源</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>沪深300指数</td>
+<td>沪深两市市值最大、流动性最好的300只股票，覆盖A股约60%市值</td>
+<td>金融：30%-35% <br> 工业：15%-20% <br> 信息技术：10%-15% <br> 消费品：10%-15% <br> 能源/材料：5%-10% <br> 其他：10%-15%</td>
+<td>金融权重高，偏价值投资，稳定性强</td>
+<td>中证指数公司、东方财富Choice</td>
+</tr>
+<tr>
+<td>上证50指数</td>
+<td>上海证券交易所市值最大、流动性最好的50只股票</td>
+<td>金融：40%-50% <br> 消费品：20%-25% <br> 工业：10%-15% <br> 医药：5%-10% <br> 其他：5%-10%</td>
+<td>金融和消费品为主，波动性低，代表上海核心资产</td>
+<td>上海证券交易所、中证指数公司</td>
+</tr>
+<tr>
+<td>深证100指数</td>
+<td>深圳市场市值和流动性排名前100的股票，偏成长型</td>
+<td>信息技术：20%-25% <br> 消费品：15%-20% <br> 工业：15%-20% <br> 金融：10%-15% <br> 医药：10%-15%</td>
+<td>科技和成长型企业占比高，波动性略大</td>
+<td>深圳证券交易所、中证指数公司</td>
+</tr>
+<tr>
+<td>上证180指数</td>
+<td>上海市场规模大、流动性好的180只股票，覆盖面较广</td>
+<td>金融：35%-40% <br> 工业：15%-20% <br> 消费品：15%-20% <br> 医药：5%-10% <br> 其他：10%-15%</td>
+<td>行业分布均衡，兼顾价值与成长</td>
+<td>上海证券交易所</td>
+</tr>
+</tbody>
+</table>
+<h4> 中盘指数</h4>
+<table>
+<thead>
+<tr>
+<th>指数名称</th>
+<th>概述</th>
+<th>行业比例（大致估计）</th>
+<th>特点</th>
+<th>数据来源</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>中证500指数</td>
+<td>沪深300之后排名靠前的500只股票，代表中盘股</td>
+<td>工业：20%-25% <br> 信息技术：15%-20% <br> 材料：10%-15% <br> 医药：10%-15% <br> 消费品：10%-15% <br> 金融：5%-10%</td>
+<td>成长性强，行业分散，波动性较高</td>
+<td>中证指数公司</td>
+</tr>
+<tr>
+<td>中证700指数</td>
+<td>沪深300和中证500之外的700只股票，覆盖中盘企业</td>
+<td>工业：20%-25% <br> 信息技术：15%-20% <br> 材料：15%-20% <br> 消费品：10%-15% <br> 医药：10%-15% <br> 金融：5%-10%</td>
+<td>兼顾成长与稳定，行业分布均衡</td>
+<td>中证指数公司</td>
+</tr>
+<tr>
+<td>深证200指数</td>
+<td>深圳市场市值和流动性排名靠前的200只股票，偏中盘</td>
+<td>信息技术：20%-25% <br> 工业：15%-20% <br> 消费品：15%-20% <br> 医药：10%-15% <br> 金融：5%-10%</td>
+<td>成长型企业占比高，适合关注科技和消费</td>
+<td>深圳证券交易所</td>
+</tr>
+</tbody>
+</table>
+<h4> 小盘指数</h4>
+<table>
+<thead>
+<tr>
+<th>指数名称</th>
+<th>概述</th>
+<th>行业比例（大致估计）</th>
+<th>特点</th>
+<th>数据来源</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>中证1000指数</td>
+<td>沪深市场市值较小、流动性较好的1000只股票，代表小盘股</td>
+<td>信息技术：20%-25% <br> 工业：20%-25% <br> 材料：15%-20% <br> 医药：10%-15% <br> 消费品：10%-15% <br> 金融：≤5%</td>
+<td>高成长性，高波动性，适合高风险偏好投资者</td>
+<td>中证指数公司</td>
+</tr>
+<tr>
+<td>创业板指</td>
+<td>深圳创业板市场中小市值公司，偏创新型企业</td>
+<td>信息技术：25%-30% <br> 医药：15%-20% <br> 工业：15%-20% <br> 消费品：10%-15% <br> 材料：5%-10% <br> 金融：几乎无</td>
+<td>科技和医药占比高，波动性大，成长潜力强</td>
+<td>深圳证券交易所</td>
+</tr>
+<tr>
+<td>中小板指</td>
+<td>深圳中小板市场市值和流动性较好的股票，偏中小盘</td>
+<td>信息技术：20%-25% <br> 工业：15%-20% <br> 医药：15%-20% <br> 消费品：10%-15% <br> 材料：10%-15% <br> 金融：≤5%</td>
+<td>成长性强，行业分布均衡</td>
+<td>深圳证券交易所</td>
+</tr>
+<tr>
+<td>国证2000指数</td>
+<td>沪深市场中较小的2000只股票，代表小盘股</td>
+<td>信息技术：20%-25% <br> 工业：20%-25% <br> 材料：15%-20% <br> 医药：10%-15% <br> 消费品：10%-15% <br> 金融：≤5%</td>
+<td>高风险高回报，适合关注小市值公司</td>
+<td>国证指数公司</td>
+</tr>
+</tbody>
+</table>
+<h4> 补充说明</h4>
+<table>
+<thead>
+<tr>
+<th>说明项</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>行业比例动态变化</strong></td>
+<td>指数成分股每半年（通常6月和12月）调整，行业比例会因市场表现和成分股变化而波动。以上为近期数据的大致估计。</td>
+</tr>
+<tr>
+<td><strong>数据来源</strong></td>
+<td>中证指数公司（www.csindex.com.cn）、上海证券交易所（www.sse.com.cn）、深圳证券交易所（www.szse.cn）、东方财富Choice数据。</td>
+</tr>
+<tr>
+<td><strong>获取最新数据</strong></td>
+<td>可通过中证指数公司官网、交易所官网或金融平台（如雪球、Wind、同花顺）查询实时行业权重和成分股。</td>
+</tr>
+<tr>
+<td><strong>投资建议</strong></td>
+<td>- <strong>大盘指数</strong>：适合追求稳健收益、偏好金融和消费板块的投资者。<br>- <strong>中盘指数</strong>：适合平衡成长与稳定的投资者，关注科技和工业。<br>- <strong>小盘指数</strong>：适合风险偏好高的投资者，关注 известно医药板块。</td>
+</tr>
+</tbody>
+</table>
+<p>以下是中国市场上主要的A股相关ETF，分为宽基、行业和主题类（数据基于市场公开信息，截至2025年）：</p>
+<h4>（1）宽基指数ETF</h4>
+<p>跟踪A股市场整体或主要板块的指数，风险较分散，适合长期投资。</p>
+<table>
+<thead>
+<tr>
+<th>ETF类型</th>
+<th>描述</th>
+<th>代表产品</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>沪深300 ETF</td>
+<td>跟踪沪深两市300只大中型股票，代表A股核心资产</td>
+<td>华夏沪深300ETF（510300）<br>嘉实沪深300ETF（159919）</td>
+</tr>
+<tr>
+<td>中证500 ETF</td>
+<td>跟踪中证500指数，覆盖中小市值股票，成长性较高</td>
+<td>南方中证500ETF（510500）</td>
+</tr>
+<tr>
+<td>创业板ETF</td>
+<td>跟踪创业板指数，聚焦科技和创新企业</td>
+<td>易方达创业板ETF（159915）</td>
+</tr>
+<tr>
+<td>上证50 ETF</td>
+<td>跟踪上交所50只大型蓝筹股，偏稳定</td>
+<td>华夏上证50ETF（510050）</td>
+</tr>
+<tr>
+<td>科创50 ETF</td>
+<td>跟踪科创板50只科技公司，适合高风险偏好者</td>
+<td>华夏科创50ETF（588000）</td>
+</tr>
+</tbody>
+</table>
+<h4>（2）行业指数ETF</h4>
+<p>聚焦特定行业，波动较大，适合看好某行业的投资者。</p>
+<table>
+<thead>
+<tr>
+<th>ETF类型</th>
+<th>代表产品</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>医药ETF</td>
+<td>华夏恒生医药ETF（159892）</td>
+</tr>
+<tr>
+<td>科技ETF</td>
+<td>华宝科技龙头ETF（515000）</td>
+</tr>
+<tr>
+<td>消费ETF</td>
+<td>鹏华中证消费ETF（159928）</td>
+</tr>
+<tr>
+<td>金融ETF</td>
+<td>华宝中证银行ETF（512800）</td>
+</tr>
+<tr>
+<td>新能源ETF</td>
+<td>华泰柏瑞中证光伏产业ETF（515790）</td>
+</tr>
+</tbody>
+</table>
+<h4>（3）主题/策略ETF</h4>
+<p>围绕特定主题或投资策略，风险较高。</p>
+<table>
+<thead>
+<tr>
+<th>ETF类型</th>
+<th>代表产品</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>红利ETF</td>
+<td>中证红利ETF（515180）</td>
+</tr>
+<tr>
+<td>碳中和ETF</td>
+<td>富国碳中和ETF（561190）</td>
+</tr>
+<tr>
+<td>智能汽车ETF</td>
+<td>国泰智能汽车ETF（513130）</td>
+</tr>
+</tbody>
+</table>
+<h2>投资标的选择（指数？题材？行业板块？）</h2>
+<p><img src="https://limbopro.com/usr/uploads/2025/07/2780893028.jpg" alt="投资策略-选择大于努力.jpg" /></p>
+<p>巴菲特如是说：“The goal of the non-professional investor should be to own a diversified cross-section of businesses that collectively perform well, rather than attempting to pick individual winning stocks. This can be achieved through low-cost index funds that track the overall market, like the S&amp;P 500.”</p>
+<p>翻译：“非专业投资者的目标应该是拥有整体表现良好的多元化业务，而不是试图挑选个别获胜股票。这可以通过跟踪整体市场的<strong>低成本</strong><del>（低买高卖/定投）</del>指数基金（例如标准普尔 500 指数）来实现。”</p>
+<p>巴菲特又说：“The market will experience drops, sometimes dramatic ones. But if you hold a low-cost S&amp;P 500 index fund, you’ll almost certainly do well over time.”</p>
+<p>翻译：“市场会有波动，但如果你持有标普500指数基金，长期来看，你的投资几乎肯定会获得不错的回报。”</p>
+<h4> 巴菲特观点总结</h4>
+<table>
+<thead>
+<tr>
+<th>观点</th>
+<th>描述</th>
+<th>原文（英文）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>简单且有效</td>
+<td>标普500指数基金适合普通投资者，能以低成本分享美国经济整体增长。</td>
+<td><em>“The goal of the non-professional should not be to pick winners... but should rather be to own a cross-section of businesses that in aggregate are bound to do well. A low-cost S&amp;P 500 index fund will achieve this goal.”</em> (2013 Shareholder Letter)</td>
+</tr>
+<tr>
+<td>低成本至上</td>
+<td>高管理费侵蚀收益，标普500指数基金的低费用是其长期优势。</td>
+<td><em>“When trillions of dollars are managed by Wall Streeters charging high fees, it will usually be the managers who reap outsized profits, not the clients. Both large and small investors should stick with low-cost index funds.”</em> (2017 Shareholder Letter)</td>
+</tr>
+<tr>
+<td>长期持有</td>
+<td>标普500的回报在长期（10年、20年以上）几乎总是优于主动管理基金。</td>
+<td><em>“The compounded annual increase to 2016 in the S&amp;P 500 was 7.1%... My regular recommendation has been a low-cost S&amp;P 500 index fund.”</em> (2016 Shareholder Letter)</td>
+</tr>
+<tr>
+<td>对美国经济的信心</td>
+<td>标普500代表美国企业的整体实力，长期看好其增长潜力。</td>
+<td><em>“American business — and consequently a basket of stocks — is virtually certain to be worth far more in the years ahead. A low-cost S&amp;P 500 index fund will allow you to participate in that growth.”</em> (2018 Shareholder Letter)</td>
+</tr>
+<tr>
+<td>波动不可怕</td>
+<td>短期市场波动正常，标普500长期趋势向上。</td>
+<td><em>“The market will experience drops, sometimes dramatic ones. But if you hold a low-cost S&amp;P 500 index fund, you’ll almost certainly do well over time.”</em> (2020 Shareholder Letter)</td>
+</tr>
+</tbody>
+</table>
+<h3> “指数基金”与“题材/行业板块基金”的定义与特点</h3>
+<table>
+<thead>
+<tr>
+<th>方面</th>
+<th>指数基金</th>
+<th>题材/行业板块基金</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>定义</strong></td>
+<td>跟踪市场指数（如沪深300、<strong>标普500</strong>，纳斯达克100）的基金，<strong>反映整体市场或宽基表现</strong>。</td>
+<td>投资<strong>特定题材</strong>（如新能源）或行业（如<strong>科技</strong>、<strong>医药</strong>）的基金，<strong>集中于某领域</strong>。</td>
+</tr>
+<tr>
+<td><strong>投资范围</strong></td>
+<td>覆盖广泛行业，分散投资。</td>
+<td><strong>集中投资单一题材/行业</strong>，如科技基金聚焦半导体、互联网等。</td>
+</tr>
+<tr>
+<td><strong>风险与波动</strong></td>
+<td>波动较低，风险分散，最大回撤通常10%-30%（如A股宽基指数）。</td>
+<td>波动较高，行业周期性强，最大回撤可达40%-60%（如科技板块熊市）。</td>
+</tr>
+<tr>
+<td><strong>收益潜力</strong></td>
+<td>收益稳定，长期跟随市场增长（如年化6%-10%），适合长期持有。</td>
+<td>收益潜力高（如牛市年化20%-50%），但波动大，适合低买高卖。</td>
+</tr>
+<tr>
+<td><strong>持仓成本控制</strong></td>
+<td>定投或分批建仓易降低成本，适合长期持有摊平回撤。</td>
+<td>需择时低买（如行业低谷），补仓降低成本，适合动态管理。</td>
+</tr>
+<tr>
+<td><strong>与投资金额的关系</strong></td>
+<td>大额投资因心理压力大，偏好指数基金的低回撤和稳健性；小额投资因容忍度高，倾向题材/行业板块的高收益潜力。</td>
+<td>小额投资可承受高回撤，追求题材/行业板块高收益；大额投资注重稳定。</td>
+</tr>
+</tbody>
+</table>
+<h3> 风险与回撤管理对比</h3>
+<table>
+<thead>
+<tr>
+<th>方面</th>
+<th>指数基金</th>
+<th>题材/行业板块基金</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>回撤幅度</strong></td>
+<td><strong>回撤较小，受市场整体波动影响</strong>。</td>
+<td><strong>回撤较大（如科技基金熊市回撤可超50%），受行业周期影响</strong>。</td>
+</tr>
+<tr>
+<td><strong>回撤修复时间</strong></td>
+<td>修复较快，市场反弹带动整体恢复，1-2年可回本。</td>
+<td>修复时间长，行业低谷可能需3-5年，需耐心或精准择时。</td>
+</tr>
+<tr>
+<td><strong>持仓成本控制</strong></td>
+<td>定投降低成本，长期持有摊平回撤，适合大额投资。</td>
+<td>低位补仓或调仓降低成本，需择时，适合小额投资高风险策略。</td>
+</tr>
+<tr>
+<td><strong>低买高卖适用性</strong></td>
+<td>低买高卖难度较高，需<strong>判断市场周期</strong>，适合长期持有。</td>
+<td>低买高卖潜力大，<strong>需精准行业择时，适合动态操作</strong>。</td>
+</tr>
+<tr>
+<td><strong>保留子弹作用</strong></td>
+<td>保留10%-20%现金，用于市场低位定投，降低成本，减少回撤。</td>
+<td>保留子弹用于行业低谷补仓，降低成本，抓住高收益机会。</td>
+</tr>
+</tbody>
+</table>
+<h2>年轻人的第一支ETF（联接基金）</h2>
+<p><strong>选择大于努力</strong></p>
+<h3>标普500ETF联接基金</h3>
+<table>
+<thead>
+<tr>
+<th>标普500ETF联接基金</th>
+<th>基金代码</th>
+<th>对应ETF</th>
+<th>每日额度</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>天弘标普500发起(QDII-FOF)C</td>
+<td>007722</td>
+<td>跟踪标普500指数</td>
+<td>5000元</td>
+<td>无</td>
+</tr>
+<tr>
+<td>博时标普500ETF联接C</td>
+<td>006075</td>
+<td>博时标普500ETF</td>
+<td>10w元</td>
+<td>无</td>
+</tr>
+<tr>
+<td>摩根标普500指数(QDII)人民币C</td>
+<td>019305</td>
+<td>跟踪标普500指数</td>
+<td>1000元</td>
+<td>无</td>
+</tr>
+</tbody>
+</table>
+<h3>纳斯达克100ETF联接基金</h3>
+<table>
+<thead>
+<tr>
+<th>纳斯达克100ETF联接基金</th>
+<th>基金代码</th>
+<th>对应ETF</th>
+<th>每日额度</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>天弘纳斯达克100指数发起(QDII)C</td>
+<td>018044</td>
+<td>跟踪纳斯达克100指数</td>
+<td>5000元</td>
+<td>无</td>
+</tr>
+<tr>
+<td>博时纳斯达克100ETF发起式联接(QDII)C人民币</td>
+<td>016057</td>
+<td>博时纳斯达克100ETF(QDII)(513390)</td>
+<td>10w元</td>
+<td>无</td>
+</tr>
+<tr>
+<td>摩根纳斯达克100指数(QDII)人民币C</td>
+<td>019173</td>
+<td>跟踪纳斯达克100指数</td>
+<td>1000元</td>
+<td>无</td>
+</tr>
+</tbody>
+</table>
+<h3>黄金ETF联接基金</h3>
+<table>
+<thead>
+<tr>
+<th>黄金ETF联接基金</th>
+<th>基金代码</th>
+<th>对应ETF</th>
+<th>每日额度</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>易方达黄金ETF联接C</td>
+<td>002963</td>
+<td>易方达黄金ETF(159934)</td>
+<td>无限制</td>
+<td>无</td>
+</tr>
+</tbody>
+</table>
+<h3>中证红利低波ETF联接基金</h3>
+<table>
+<thead>
+<tr>
+<th>中证红利低波ETF联接基金</th>
+<th>基金代码</th>
+<th>对应ETF</th>
+<th>每日额度</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>华泰柏瑞中证红利低波ETF联接C</td>
+<td>007467</td>
+<td>华泰柏瑞中证红利低波ETF(512890)</td>
+<td>不限制</td>
+<td>无</td>
+</tr>
+<tr>
+<td>天弘中证红利低波动100联接C</td>
+<td>008115</td>
+<td>天弘中证红利低波动100ETF(159549)</td>
+<td>不限制</td>
+<td>无</td>
+</tr>
+<tr>
+<td>景顺长城沪港深红利成长低波指数E(021735)</td>
+<td>021735</td>
+<td>自主跟踪</td>
+<td>不限制</td>
+<td>无</td>
+</tr>
+</tbody>
+</table>
+<h3>中证银行ETF联接基金</h3>
+<table>
+<thead>
+<tr>
+<th>中证银行ETF联接基金</th>
+<th>基金代码</th>
+<th>对应ETF</th>
+<th>每日额度</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>易方达中证银行ETF联接(LOF)C</td>
+<td>009860</td>
+<td>易方达中证银行ETF(516310)</td>
+<td>不限制</td>
+<td>无</td>
+</tr>
+<tr>
+<td>天弘中证银行ETF联接C</td>
+<td>001595</td>
+<td>天弘中证银行ETF(515290)</td>
+<td>不限制</td>
+<td>无</td>
+</tr>
+<tr>
+<td>南方中证银行ETF发起联接E</td>
+<td>012547</td>
+<td>南方中证银行ETF(512700)</td>
+<td>不限制</td>
+<td>无</td>
+</tr>
+</tbody>
+</table>
+<h3>港股通红利ETF联接基金</h3>
+<table>
+<thead>
+<tr>
+<th>港股通红利ETF联接基金</th>
+<th>基金代码</th>
+<th>对应ETF</th>
+<th>每日额度</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>华泰柏瑞港股通红利ETF联接基金C</td>
+<td>018388</td>
+<td>华泰柏瑞中证港股通高股息投资ETF(QDII)(513530)</td>
+<td>不限制</td>
+<td>无</td>
+</tr>
+<tr>
+<td>富国恒生红利ETF联接C</td>
+<td>019261</td>
+<td>富国恒生港股通高股息低波动ETF(QDII)(513950)</td>
+<td>不限制</td>
+<td>无</td>
+</tr>
+<tr>
+<td>易方达恒生港股通高股息低波动ETF联接发起式C</td>
+<td>021458</td>
+<td>易方达恒生港股通高股息低波动ETF(159545)</td>
+<td>不限制</td>
+<td>无</td>
+</tr>
+</tbody>
+</table>
+<h3>港股通银行ETF联接基金</h3>
+<table>
+<thead>
+<tr>
+<th>港股通银行ETF联接基金</th>
+<th>基金代码</th>
+<th>对应ETF</th>
+<th>每日额度</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>鹏华香港银行指数(LOF)C</td>
+<td>010365</td>
+<td>自主跟踪</td>
+<td>不限制</td>
+<td>无</td>
+</tr>
+</tbody>
+</table>
+<h2>时间的复利</h2>
+<h3> 复利公式</h3>
+<p>复利公式用于计算资金在一定时间内的增长情况，考虑了本金、利率和时间的影响。公式如下：</p>
+<p><strong>A = P × (1 + r/n)^(n×t)</strong></p>
+<h4> 参数说明</h4>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>A</strong></td>
+<td>期末本利和（本金加利息）</td>
+</tr>
+<tr>
+<td><strong>P</strong></td>
+<td>初始本金（投资金额）</td>
+</tr>
+<tr>
+<td><strong>r</strong></td>
+<td>年化收益率（小数形式，例如 5% 写为 0.05）</td>
+</tr>
+<tr>
+<td><strong>n</strong></td>
+<td>每年复利次数（例如，年度复利 n=1，季度复利 n=4，月度复利 n=12）</td>
+</tr>
+<tr>
+<td><strong>t</strong></td>
+<td>投资年限</td>
+</tr>
+</tbody>
+</table>
+<h3> 复利计算示例</h3>
+<p>以下是基于复利公式计算的投资收益，初始本金为 10000 元，第一天收益率 1%，第二天收益率 2%。（是的，就股票基金而言，这些涨幅是很稀疏平常的，所以跌起来也很肉痛。参阅后文<strong>投资策略</strong>部分，如何有效降低风险，平滑你的持仓成本。）</p>
+<h4> 已知数据</h4>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>初始本金 (P)</td>
+<td>10000 元</td>
+</tr>
+<tr>
+<td>第一天收益率</td>
+<td>1% (0.01)</td>
+</tr>
+<tr>
+<td>第二天收益率</td>
+<td>2% (0.02)</td>
+</tr>
+</tbody>
+</table>
+<h4> 复利计算过程</h4>
+<table>
+<thead>
+<tr>
+<th>步骤</th>
+<th>计算公式</th>
+<th>结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>第一天末本利和</td>
+<td>10000 × (1 + 0.01)</td>
+<td>10100 元</td>
+</tr>
+<tr>
+<td>第二天末本利和</td>
+<td>10100 × (1 + 0.02)</td>
+<td>10302 元</td>
+</tr>
+</tbody>
+</table>
+<h4> 最终结果</h4>
+<table>
+<thead>
+<tr>
+<th>项目</th>
+<th>值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>期末本利和</td>
+<td>10302 元</td>
+</tr>
+<tr>
+<td>收益</td>
+<td>302 元</td>
+</tr>
+</tbody>
+</table>
+<p><strong>结论</strong>：最终收益为 <strong>302 元</strong>，总金额为 <strong>10302 元</strong>。或许你觉得2元很少，但这正是复利（利滚利）的魅力所在。</p>
+<h2>投资的艺术</h2>
+<p>投资的艺术除了“低买高卖”（涉及持仓成本控制/控制回撤/止损止盈）和“耐心等待”（好的价格）外，还包括以下关键要素：</p>
+<h3>关键原则</h3>
+<table>
+<thead>
+<tr>
+<th>关键原则</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>研究与分析</strong></td>
+<td>深入了解投资标的，分析基本面（如财务报表、行业趋势）和技术面（如价格走势、市场情绪）。</td>
+</tr>
+<tr>
+<td><strong>风险管理</strong></td>
+<td><strong>分散投资、设置止损点、控制仓位，避免过度集中或情绪化决策</strong>。</td>
+</tr>
+<tr>
+<td><strong>长期视角</strong></td>
+<td>关注长期价值而非短期波动，复利效应是财富增长的核心。</td>
+</tr>
+<tr>
+<td><strong>情绪控制</strong></td>
+<td>避免恐惧或贪婪驱动的决策，保持理性，遵循投资计划。</td>
+</tr>
+<tr>
+<td><strong>持续学习</strong></td>
+<td>市场变化无常，学习新知识、适应新趋势至关重要。</td>
+</tr>
+<tr>
+<td><strong>税务与成本优化</strong></td>
+<td>考虑交易费用、税收影响，选择成本效益高的投资方式。</td>
+</tr>
+<tr>
+<td><strong>适应性</strong></td>
+<td>根据市场环境调整策略，灵活应对经济周期或政策变化。</td>
+</tr>
+</tbody>
+</table>
+<p>低买高卖是目标，等待是耐心，但<strong>结合研究、风险管理和纪律性能让投资更接近“艺术”</strong>。</p>
+<h3>有趣的发现</h3>
+<p><img src="https://limbopro.com/usr/uploads/2025/07/2481764576.jpg" alt="买的最少，涨得最多.jpg" /></p>
+<p><strong>买的越少，涨得越好</strong>，<strong>买的最少，涨得最多</strong>；如何理解这一广泛存在的理财现象？</p>
+<h4> 心理因素</h4>
+<table>
+<thead>
+<tr>
+<th>心理因素</th>
+<th>描述</th>
+<th>对大额投资的影响</th>
+<th>对小额投资的影响</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>风险容忍度差异</strong></td>
+<td>投资者对潜在亏损的心理负担因投资金额而异。</td>
+<td>倾向选择低风险低回报基金以避免重大损失，限制收益潜力。</td>
+<td>心理负担小，更愿意尝试高风险高回报基金，增加收益潜力。</td>
+</tr>
+<tr>
+<td><strong>决策压力与过度谨慎</strong></td>
+<td>大额投资伴随更高心理压力，可能导致过度分析和保守选择。</td>
+<td>花费更多时间分析，倾向选择成熟但增长潜力低的基金。</td>
+<td>决策更随意，可能无意中选中高增长基金。</td>
+</tr>
+<tr>
+<td><strong>频繁监控与短视行为</strong></td>
+<td>大额投资因金额高，投资者更易频繁检查，短期波动可能引发调整。</td>
+<td>频繁检查导致过早赎回或调整，错过长期上涨机会。</td>
+<td>常被“忽视”，持有时间长，享受更多复利效应。</td>
+</tr>
+<tr>
+<td><strong>心理锚定与预期管理</strong></td>
+<td>投资者对大额投资收益预期更高，可能设定不切实际目标。</td>
+<td>高预期未达时易失望，提前退出，错过长期回报。</td>
+<td>预期较低，更愿意耐心持有，获得更好长期回报。</td>
+</tr>
+<tr>
+<td><strong>损失厌恶的放大</strong></td>
+<td>损失的心理痛苦远超同等收益的愉悦，大额投资损失更敏感。</td>
+<td>因潜在损失金额大，更倾向选择低收益保守型基金。</td>
+<td>损失心理影响小，更愿意承担风险，投资高回报基金。</td>
+</tr>
+<tr>
+<td><strong>“试水”心态与灵活性</strong></td>
+<td>小额投资被视为“试水”，决策更灵活；大额投资更注重稳妥。</td>
+<td>倾向“稳妥”主流基金，错过高收益机会。</td>
+<td>更愿意尝试新兴行业或高增长基金，灵活性高。</td>
+</tr>
+</tbody>
+</table>
+<h4> 应对建议</h4>
+<table>
+<thead>
+<tr>
+<th>应对建议</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>统一投资策略</strong></td>
+<td>为大小额投资制定一致的风险偏好和目标，避免因金额差异导致决策偏差。</td>
+</tr>
+<tr>
+<td><strong>减少频繁操作</strong></td>
+<td>设定长期投资计划，减少对大额投资的过度监控，避免因短期波动冲动调整。</td>
+</tr>
+<tr>
+<td><strong>心理预期管理</strong></td>
+<td>对大额投资设定合理收益预期，接受市场波动，避免因高预期导致失望。</td>
+</tr>
+<tr>
+<td><strong>分散投资</strong></td>
+<td>将大额资金拆分成多个小额投资，模拟小额投资的灵活性和风险容忍度，同时保持多样化。</td>
+</tr>
+</tbody>
+</table>
+<h2>投资目标</h2>
+<p><strong>投资目标</strong>是投资者在进行投资（包括定投）时明确的<strong>目的和期望</strong>，<strong>指导投资策略、标的选择和时间规划</strong>。在定投等长期策略中，投资目标尤为重要，能<strong>帮助保持纪律、衡量进展并管理风险</strong>。</p>
+<h3>确定投资目标与收益率</h3>
+<table>
+<thead>
+<tr>
+<th>步骤</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>明确投资目标</strong></td>
+<td>- <strong>时间维度</strong>：短期（1-3年，平均年化<strong>收益率3%-5%</strong>）、中期（3-5年，年化<strong>5%-8%</strong>）、长期（5年以上，年化<strong>8%-12%</strong>）。<br>- <strong>资金用途</strong>：区分闲置资金与应急资金，应急资金优先低风险资产。<br>- <strong>个人情况</strong>：收入稳定性、年龄、风险承受能力影响目标设定。</td>
+</tr>
+<tr>
+<td><strong>设定收益率目标</strong></td>
+<td>- <strong>参考历史数据</strong>：股票指数基金（7%-10%）、债券基金（3%-5%）、货币基金（1.5%-3%）、黄金/REITs（3%-6%）。<br>- <strong>现实预期</strong>：加权平均收益率（如60%股票+30%债券+10%现金≈6.2%）。<br>- <strong>通胀调整</strong>：确保收益率超通胀（约2%-3%）。</td>
+</tr>
+<tr>
+<td><strong>评估风险与收益平衡</strong></td>
+<td>- <strong>风险承受能力</strong>：低风险（3%-5%）、中风险（5%-8%）、高风险（8%-12%）。<br>- <strong>回撤容忍度</strong>：评估可接受亏损（如10%或20%）。<br>- <strong>情景分析</strong>：牛市（股票15%+）、熊市（股票亏损10%-20%）。</td>
+</tr>
+<tr>
+<td><strong>具体操作方法</strong></td>
+<td>- <strong>SMART原则</strong>：<br> - Specific：如“5年后攒50万首付”。<br> - Measurable：用复利公式（FV = PV * (1 + r)^n）计算收益率。<br> - Achievable：根据资金和市场设定合理目标。<br> - Relevant：与生活需求一致。<br> - Time-bound：明确期限。<br>- <strong>示例</strong>：10万变15万（5年），需年化8.45%。</td>
+</tr>
+<tr>
+<td><strong>动态调整</strong></td>
+<td>- <strong>定期复盘</strong>：每年检查目标和市场环境。<br>- <strong>生活变化</strong>：根据收入、家庭责任调整。<br>- <strong>市场环境</strong>：熊市增加债券比例，降低预期。</td>
+</tr>
+<tr>
+<td><strong>小白常见误区与建议</strong></td>
+<td>- <strong>误区</strong>：追求高收益忽略风险、目标不明确。<br>- <strong>建议</strong>：<br> - 从低风险开始，逐步学习。<br> - 使用投资计算器模拟收益。<br> - 参考《聪明的投资者》《指数基金投资指南》。</td>
+</tr>
+</tbody>
+</table>
+<h3>示例目标设定</h3>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>目标与配置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>背景</strong></td>
+<td>25岁，月收入1万，闲置资金10万，5年后买房首付（需15万）。</td>
+</tr>
+<tr>
+<td><strong>收益率目标</strong></td>
+<td>年化8%-9%。</td>
+</tr>
+<tr>
+<td><strong>组合</strong></td>
+<td>60%沪深300ETF/标普500（预期8%）+ 30%中短债基金（预期4%）+ 10%货币基金（预期2%）。</td>
+</tr>
+<tr>
+<td><strong>操作</strong></td>
+<td>每月定投2000元，5年后预计接近目标。</td>
+</tr>
+</tbody>
+</table>
+<h2>投资组合</h2>
+<table>
+<thead>
+<tr>
+<th>资产类别</th>
+<th>占比</th>
+<th>推荐类型</th>
+<th>原因</th>
+<th>选择标准</th>
+<th>操作建议</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>指数基金</td>
+<td>50%-60%</td>
+<td>宽基指数基金（如沪深300、标普500、MSCI全球指数）</td>
+<td>跟踪市场整体表现，长期收益稳定，适合小白规避个股风险</td>
+<td>低管理费（年费率低于0.5%），跟踪误差小，基金规模较大（如10亿以上）</td>
+<td>通过定投方式，每月固定金额投入，平滑市场波动</td>
+</tr>
+<tr>
+<td>债券基金或货币基金</td>
+<td>30%-40%</td>
+<td>中短期债券基金、货币市场基金</td>
+<td>提供稳定收益，降低组合波动；货币基金流动性强，适合应急资金</td>
+<td>信用评级高的债券基金（如AAA级债券占比高）；货币基金关注7日年化收益率和流动性</td>
+<td>将部分资金放入债券或货币基金，作为安全垫</td>
+</tr>
+<tr>
+<td>现金或活期理财</td>
+<td>5%-10%</td>
+<td>银行活期存款、余额宝等低风险理财产品</td>
+<td>保持流动性，应对突发需求，避免全部资金暴露于市场波动</td>
+<td>选择安全性高、流动性好的产品</td>
+<td>预留3-6个月生活费，确保资金安全</td>
+</tr>
+<tr>
+<td>黄金或REITs（可选）</td>
+<td>0%-10%</td>
+<td>黄金ETF或房地产信托基金（REITs）</td>
+<td>黄金对冲通胀和市场不确定性，REITs提供不动产相关收益，分散风险</td>
+<td>选择流动性好、费用低的ETF产品</td>
+<td>小比例配置，避免过度集中</td>
+</tr>
+</tbody>
+</table>
+<h3>示例资产分配（以10万元为例）</h3>
+<table>
+<thead>
+<tr>
+<th>资产类别</th>
+<th>金额</th>
+<th>推荐类型</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>指数基金</td>
+<td>6万元 (60%)</td>
+<td>沪深300ETF或标普500ETF</td>
+<td>核心配置，长期增长</td>
+</tr>
+<tr>
+<td>债券/货币基金</td>
+<td>3万元 (30%)</td>
+<td>中短债基金或货币基金</td>
+<td>稳定收益，降低波动</td>
+</tr>
+<tr>
+<td>现金</td>
+<td>1万元 (10%)</td>
+<td>活期存款或余额宝</td>
+<td>保持流动性，应急资金</td>
+</tr>
+<tr>
+<td>黄金或REITs（可选）</td>
+<td>5000-1万元 (5%-10%)</td>
+<td>黄金ETF或房地产信托基金（REITs）</td>
+<td>对冲通胀，分散风险</td>
+</tr>
+</tbody>
+</table>
+<h3>实施步骤</h3>
+<table>
+<thead>
+<tr>
+<th>步骤</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>明确目标与风险承受能力</td>
+<td>确定投资期限（建议3年以上）和预期收益；评估风险承受能力，若无法接受短期波动，增加债券比例</td>
+</tr>
+<tr>
+<td>选择平台</td>
+<td>使用正规平台（如支付宝、微信理财、券商APP）购买基金；确保平台受监管，资金安全</td>
+</tr>
+<tr>
+<td>定投计划</td>
+<td>每月固定日期投入固定金额（如1000元）；市场下跌时坚持定投，摊平成本</td>
+</tr>
+<tr>
+<td>定期复盘</td>
+<td>每半年或一年检查组合表现，调整比例（如股票基金占比过高可适当卖出）；避免频繁交易，保持长期持有</td>
+</tr>
+</tbody>
+</table>
+<h3>注意事项</h3>
+<table>
+<thead>
+<tr>
+<th>注意事项</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>低成本为王</td>
+<td>选择费用低的基金，避免高管理费和高交易成本</td>
+</tr>
+<tr>
+<td>分散投资</td>
+<td>不要把资金集中在单一资产或市场</td>
+</tr>
+<tr>
+<td><strong>避免追涨杀跌</strong></td>
+<td>市场波动是正常现象，保持耐心</td>
+</tr>
+<tr>
+<td>学习基础知识</td>
+<td>了解基金类型、风险收益特征，推荐阅读《穷查理宝典》或《指数基金投资指南》</td>
+</tr>
+</tbody>
+</table>
+<h3>常见问题</h3>
+<table>
+<thead>
+<tr>
+<th>问题</th>
+<th>回答</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>我完全不懂投资，可以直接抄吗？</td>
+<td>可以，但建议先花1-2小时学习基金基础知识，理解风险。直接抄作业需确保资金是长期闲置的</td>
+</tr>
+<tr>
+<td>市场跌了怎么办？</td>
+<td>定投策略下，市场下跌是买入低价筹码的机会，坚持投入即可</td>
+</tr>
+<tr>
+<td>如何挑选具体基金？</td>
+<td>优先选择老牌基金公司（如华夏、易方达、Vanguard），查看历史业绩、费用率和规模</td>
+</tr>
+</tbody>
+</table>
+<h2>投资纪律</h2>
+<h3>纪律在投资中的含义</h3>
+<p>纪律是投资成功的关键，尤其在定投等长期策略中，指的是：</p>
+<table>
+<thead>
+<tr>
+<th>关键原则</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>坚持计划</strong></td>
+<td>按照既定目标、金额和周期投入，不因市场涨跌随意更改。</td>
+</tr>
+<tr>
+<td><strong>控制情绪</strong></td>
+<td><strong>避免因恐惧（市场下跌时卖出）或贪婪（高位追涨）偏离策略</strong>。</td>
+</tr>
+<tr>
+<td><strong>规则导向</strong></td>
+<td>基于理性制定的投资规则（如<strong>定投金额、止盈止损点</strong>），而不是主观判断。</td>
+</tr>
+</tbody>
+</table>
+<h3>止盈止损以及纪律</h3>
+<table>
+<thead>
+<tr>
+<th><strong>维度</strong></th>
+<th><strong>止盈与投资目标以及纪律</strong></th>
+<th><strong>止损与投资目标以及纪律</strong></th>
+<th><strong>投资目标与纪律的协同</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>目标导向</strong></td>
+<td>设定明确收益率（如10%）锁定收益，避免错过高点，量化投资成果</td>
+<td>设定最大回撤（如8%）控制风险，保护本金，明确风险底线</td>
+<td>清晰收益/风险目标（如年化8%或亏损10%）驱动理性决策</td>
+</tr>
+<tr>
+<td><strong>纪律保障</strong></td>
+<td>严格执行止盈纪律，防止情绪化追高，确保收益兑现</td>
+<td>严格执行止损纪律，避免“等反弹”导致更大亏损，保持计划稳健</td>
+<td>纪律性执行止盈止损规则，防止波动破坏长期计划</td>
+</tr>
+<tr>
+<td><strong>协同作用</strong></td>
+<td>目标提供止盈依据，纪律确保执行，避免贪心错失机会</td>
+<td>目标明确止损底线，纪律防止拖延，保护本金</td>
+<td>目标驱动纪律，纪律维护目标，收益稳定性提高3-5%</td>
+</tr>
+<tr>
+<td><strong>平衡与灵活性</strong></td>
+<td><strong>根据市场环境（如高估值降低止盈点）灵活调整，保持纪律框架</strong></td>
+<td><strong>根据市场或个人状况（如财务压力）调整止损点，遵循规则</strong></td>
+<td><strong>动态调整目标需在纪律框架内，保持长期计划一致性</strong></td>
+</tr>
+</tbody>
+</table>
+<h2>投资策略</h2>
+<p><img src="https://limbopro.com/usr/uploads/2025/07/2780893028.jpg" alt="投资策略-定投-选择大于努力.jpg" /></p>
+<h3>定投</h3>
+<p><strong>定投（定期定额投资）是一种投资策略</strong>，全称为“<strong>Dollar-Cost Averaging</strong>”（美元成本平均法，国内常译为定额投资）。它通过<strong>定期投入固定金额</strong>购买基金、ETF或其他资产，分散市场波动的风险，平滑投资成本，是一种简单且有效的长期投资方式。</p>
+<h3>定投作为投资策略的核心</h3>
+<p>定投的策略核心在于<strong>通过固定周期和金额投资，降低择时风险，追求长期复利增长</strong>。它不是短期投机，而是基于纪律性和长期视角的投资方法，特别适合波动市场。</p>
+<h3><strong>策略特点</strong></h3>
+<table>
+<thead>
+<tr>
+<th>关键优势</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>分批买入</strong></td>
+<td>无论市场涨跌，每月（或每周）投入固定金额，买在高位时份额少，低位时份额多，平均成本趋于合理。</td>
+</tr>
+<tr>
+<td><strong>降低择时压力</strong></td>
+<td><strong>无需预测市场高低点，减少“追涨杀跌”的错误决策</strong>。</td>
+</tr>
+<tr>
+<td><strong>复利效应</strong></td>
+<td>长期坚持，收益可通过复利增长（如每月定投1000元，沪深300年化8%，20年后约60万）。</td>
+</tr>
+<tr>
+<td><strong>纪律性</strong></td>
+<td>强制定期投资，避免情绪化操作。</td>
+</tr>
+</tbody>
+</table>
+<h3><strong>与其他策略对比</strong></h3>
+<table>
+<thead>
+<tr>
+<th>策略</th>
+<th>特点</th>
+<th>适用人群</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>定投</strong></td>
+<td>定期定额，分散风险，长期复利</td>
+<td>新手、忙碌人士、长期投资者</td>
+</tr>
+<tr>
+<td><strong>择时投资</strong></td>
+<td>预测市场高低点，集中买卖</td>
+<td>专业投资者，需高风险承受力</td>
+</tr>
+<tr>
+<td><strong>价值投资</strong></td>
+<td>选低估资产，长期持有</td>
+<td>需深入研究，适合耐心投资者</td>
+</tr>
+<tr>
+<td><strong>波段交易</strong></td>
+<td>短期捕捉价格波动</td>
+<td>需技术分析，适合高频交易者</td>
+</tr>
+</tbody>
+</table>
+<p>定投的独特之处在于<strong>简单、可执行性强</strong>，无需复杂分析，适合普通投资者。</p>
+<h3>定投的策略性实践</h3>
+<table>
+<thead>
+<tr>
+<th>关键步骤</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>设定规则</strong></td>
+<td>确定金额（建议收入5-20%）、周期（每月/每周）、标的（如宽基ETF）。</td>
+</tr>
+<tr>
+<td><strong>动态调整</strong></td>
+<td>结合市场估值（如PE、PB）或指标（如RSI）优化加减仓。</td>
+</tr>
+<tr>
+<td><strong>长期坚持</strong></td>
+<td>5-10年以上，复利效果显著，短期波动无需恐慌。</td>
+</tr>
+<tr>
+<td><strong>分散组合</strong></td>
+<td>70%宽基ETF（如标普500）+30%行业ETF（如纳斯达克100），平衡风险与收益。</td>
+</tr>
+</tbody>
+</table>
+<h3>定投遇到大跌</h3>
+<p><strong>定投遇大跌时的决策建议</strong>：</p>
+<table>
+<thead>
+<tr>
+<th><strong>维度</strong></th>
+<th><strong>建议</strong></th>
+<th><strong>核心要点</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>坚持定投或加大投入</strong></td>
+<td>- 继续定投<br>- 市场低位时考虑加码</td>
+<td>- <strong>摊薄成本</strong>：低净值买入更多份额，加快回本<br>- <strong>纪律性</strong>：避免情绪化暂停，错失低位机会<br>- <strong>周期机会</strong>：跌幅超15%时增投可提升长期收益</td>
+</tr>
+<tr>
+<td><strong>暂停扣款场景</strong></td>
+<td>- 暂停定投</td>
+<td>- <strong>财务压力</strong>：资金周转困难或心理负担大时<br>- <strong>基本面恶化</strong>：基金策略失效、业绩落后或团队变动时暂停调整</td>
+</tr>
+<tr>
+<td><strong>灵活调整策略</strong></td>
+<td>- 动态调整金额<br>- 优化投资组合<br>- 设定止盈止损</td>
+<td>- <strong>动态加码</strong>：根据估值（如市盈率低于历史30%分位）或跌幅分档调整<br>- <strong>分散风险</strong>：加入债券基金（20-30%）<br>- <strong>止盈止损</strong>：目标收益率10%或最大回撤8%</td>
+</tr>
+<tr>
+<td><strong>总体行动原则</strong></td>
+<td>- 保持冷静<br>- 咨询专业意见<br>- 定期评估</td>
+<td>- <strong>长期视角</strong>：坚持纪律，波动是常态<br>- <strong>专业指导</strong>：顾问定制方案<br>- <strong>定期优化</strong>：每季度审视估值和基金表现</td>
+</tr>
+</tbody>
+</table>
+<h2>投资风险</h2>
+<p><strong>基金的风险因其投资标的、策略和市场环境而异。</strong></p>
+<p>以下按基金类型分析风险等级、来源及应对措施。</p>
+<table>
+<thead>
+<tr>
+<th>基金类型</th>
+<th>风险等级</th>
+<th>主要风险来源</th>
+<th>适合人群</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>货币基金</strong></td>
+<td>低</td>
+<td>利率波动、流动性风险</td>
+<td>追求稳定、短期资金管理</td>
+</tr>
+<tr>
+<td><strong>债券基金</strong></td>
+<td>低至中</td>
+<td>利率风险、信用风险</td>
+<td>稳健投资者，偏好低波动</td>
+</tr>
+<tr>
+<td><strong>混合基金</strong></td>
+<td>中</td>
+<td>市场波动、管理能力</td>
+<td>平衡收益与风险</td>
+</tr>
+<tr>
+<td><strong>指数基金/ETF</strong></td>
+<td>中至高</td>
+<td>市场波动、跟踪误差</td>
+<td>长期投资者，接受波动</td>
+</tr>
+<tr>
+<td><strong>股票基金</strong></td>
+<td>高</td>
+<td>市场波动、个股风险</td>
+<td>高风险承受者，追求高收益</td>
+</tr>
+</tbody>
+</table>
+<h2>控制回撤</h2>
+<p><img src="https://limbopro.com/usr/uploads/2025/07/401577216.jpg" alt="控制回撤.jpg" /></p>
+<p>市场是波动的，一定程度上是不可预测的，<strong>专注于如何应对，而非精准预测</strong>。</p>
+<p>“在市场贪婪时恐惧，在市场恐惧时贪婪”这句原话由沃伦·巴菲特（Warren Buffett）提出。它出自他1986年致伯克希尔·哈撒韦股东的信中，原文是：“We simply attempt to be fearful when others are greedy and to be greedy only when others are fearful.” 这句话体现了巴菲特的投资哲学，强调逆向投资的重要性。</p>
+<h3> 回撤的定义与核心概念</h3>
+<table>
+<thead>
+<tr>
+<th>方面</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>回撤定义</strong></td>
+<td>回撤是投资组合或资产从最高点到最低点的价值下跌幅度（以百分比表示），衡量<strong>投资风险</strong>。例如，10万涨至12万后跌至9万，最大回撤为25%。</td>
+</tr>
+<tr>
+<td><strong>回撤类型</strong></td>
+<td>- <strong>最大回撤（MDD）</strong>：特定时间段内最大跌幅，评估最坏情况风险。<br>- <strong>绝对回撤</strong>：相对于初始本金的跌幅。<br>- <strong>相对回撤</strong>：相对于当前净值的跌幅。</td>
+</tr>
+<tr>
+<td><strong>回撤容忍度</strong></td>
+<td>投资者能接受的最大回撤水平，反映风险承受能力和心理底线。<strong>保守型接受5%-10%，激进型可接受20%-30%或更高。</strong></td>
+</tr>
+<tr>
+<td><strong>与投资金额的关系</strong></td>
+<td>大额投资因损失金额大，心理压力高，回撤容忍度低，倾向保守策略，收益潜力低；小额投资心理负担小，容忍度高，倾向高风险高回报资产，长期收益率可能更高。</td>
+</tr>
+</tbody>
+</table>
+<h3> 回撤对投资的影响</h3>
+<table>
+<thead>
+<tr>
+<th>影响</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>本金损失</strong></td>
+<td>回撤越大，损失本金越多，恢复成本越高。例如，20%回撤需25%涨幅回本，50%回撤需100%涨幅。</td>
+</tr>
+<tr>
+<td><strong>心理压力</strong></td>
+<td>大回撤引发恐慌，可能导致非理性抛售，错过反弹机会，尤其对大额投资影响显著。</td>
+</tr>
+<tr>
+<td><strong>投资信心</strong></td>
+<td>频繁或大幅回撤削弱信心，可能导致放弃长期投资计划，小额投资因心理负担小更易坚持。</td>
+</tr>
+<tr>
+<td><strong>收益波动</strong></td>
+<td>高回撤通常伴随高波动资产（如股票基金），可能带来高收益，但需高回撤容忍度。</td>
+</tr>
+</tbody>
+</table>
+<h3> 控制回撤的主要方法</h3>
+<table>
+<thead>
+<tr>
+<th>方法</th>
+<th>描述</th>
+<th>对回撤的控制效果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>资产配置多元化</strong></td>
+<td>投资股票、债券、黄金等，降低单一资产波动影响。</td>
+<td>减少单一资产下跌导致的大回撤，适合大额投资心理稳定。</td>
+</tr>
+<tr>
+<td><strong>仓位控制</strong></td>
+<td>限制高波动资产占比（如股票基金不超过50%），或单只基金仓位（如10%）。</td>
+<td>降低集中风险，控制回撤幅度，适合低回撤容忍度投资者。</td>
+</tr>
+<tr>
+<td><strong>动态资产调整</strong></td>
+<td><strong>根据市场环境调整仓位，如熊市减股票仓位，增债券或现金</strong>。</td>
+<td>减少下跌市场中的回撤，适合大额投资降低损失焦虑。</td>
+</tr>
+<tr>
+<td><strong>止损机制</strong></td>
+<td>设定回撤阈值（如10%），达到时减仓或清仓。</td>
+<td>限制单一资产损失，防止回撤扩大，适合高风险基金。</td>
+</tr>
+<tr>
+<td><strong>分批建仓</strong></td>
+<td>分阶段投入（如定投），避免高位重仓。</td>
+<td>平均成本，降低高点买入的回撤风险，适合小额投资长期持有。</td>
+</tr>
+<tr>
+<td><strong>选择低波动资产</strong></td>
+<td>投资债券基金、指数基金等低波动资产。</td>
+<td>减少回撤幅度，适合保守型或大额投资者的心理需求。</td>
+</tr>
+</tbody>
+</table>
+<h3> 心理因素（与投资金额相关）</h3>
+<table>
+<thead>
+<tr>
+<th>心理因素</th>
+<th>描述</th>
+<th>大额投资影响</th>
+<th>小额投资影响</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>风险容忍度</strong></td>
+<td>大额投资因损失金额大，心理压力高，回撤容忍度低；小额投资负担小，容忍度高。</td>
+<td>倾向低回撤资产（如债券），收益潜力低。</td>
+<td>接受高回撤资产（如股票基金），长期收益可能更高。</td>
+</tr>
+<tr>
+<td><strong>损失厌恶</strong></td>
+<td>大额投资回撤的心理痛苦大，倾向保守策略；小额投资损失影响小。</td>
+<td><strong>选择低波动资产或低仓位，减少回撤但收益增长慢。</strong></td>
+<td><strong>高仓位高风险资产，承受更大回撤，追求高收益。</strong></td>
+</tr>
+<tr>
+<td><strong>监控频率</strong></td>
+<td>大额投资关注度高，易因回撤频繁调整；小额投资常忽视，持仓稳定。</td>
+<td>频繁调仓可能错过反弹，放大回撤损失。</td>
+<td>长期持仓减少操作，享受复利，降低回撤影响。</td>
+</tr>
+<tr>
+<td><strong>心理预期</strong></td>
+<td>大额投资收益预期高，回撤易引发失望；小额投资预期低，易坚持。</td>
+<td>高预期导致回撤时提前退出，错过长期回报。</td>
+<td>低预期更易坚持，获得更高长期收益。</td>
+</tr>
+</tbody>
+</table>
+<h3> 确定回撤容忍度的方法</h3>
+<table>
+<thead>
+<tr>
+<th>方法</th>
+<th>描述</th>
+<th>实践建议</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>评估财务目标</strong></td>
+<td>短期目标需低回撤，长期目标可承受高回撤。</td>
+<td>短期：债券<strong>仓位</strong>60%+；长期：股票<strong>仓位</strong>60%-80%。</td>
+</tr>
+<tr>
+<td><strong>测试心理底线</strong></td>
+<td>模拟回撤情景（如10%、20%），评估心理承受力。</td>
+<td>回撤容忍度10%：<strong>单只基金仓位≤15%</strong>；20%：可增至25%。</td>
+</tr>
+<tr>
+<td><strong>参考历史数据</strong></td>
+<td>查看基金历史回撤（如股票基金20%-50%，债券基金5%-10%）。</td>
+<td><strong>高回撤基金仓位控制在5%-10%，低回撤基金可达20%-30%。</strong></td>
+</tr>
+<tr>
+<td><strong>咨询专业人士</strong></td>
+<td>通过理财顾问量化回撤容忍度，制定策略。</td>
+<td>定制组合，如风险平价模型，平衡仓位以控制回撤。</td>
+</tr>
+</tbody>
+</table>
+<h3> 回撤管理的意义</h3>
+<table>
+<thead>
+<tr>
+<th>意义</th>
+<th>描述</th>
+<th>与投资金额的关系</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>保护本金</strong></td>
+<td>控制回撤减少本金损失，缩短回本时间。</td>
+<td>大额投资需严格控制回撤以保护本金；小额投资可承受稍高回撤。</td>
+</tr>
+<tr>
+<td><strong>提升长期收益</strong></td>
+<td>避免大幅回撤，保持复利效应，长期收益更稳定。</td>
+<td>小额投资因高回撤容忍度可持高风险资产，收益潜力大。</td>
+</tr>
+<tr>
+<td><strong>维护投资信心</strong></td>
+<td>减少回撤带来的心理压力，防止非理性抛售。</td>
+<td>大额投资通过低回撤策略稳定情绪；小额投资可承受更大波动。</td>
+</tr>
+</tbody>
+</table>
+<h3>仓位管理与回撤修复</h3>
+<p>现就仓位管理与回撤修复展开说明。</p>
+<h4> 仓位的定义与核心概念</h4>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>方面</td>
+<td>描述</td>
+</tr>
+<tr>
+<td><strong>仓位定义</strong></td>
+<td>仓位是投资组合中某类资产、基金或个股的资金占比或金额，反映风险暴露。例如，10万元投资中，5万元投于股票基金，股票仓位为50%。</td>
+</tr>
+<tr>
+<td><strong>仓位类型</strong></td>
+<td>- <strong>单一仓位</strong>：单只基金或资产的占比（如某基金占20%）。<br>- <strong>资产类别仓位</strong>：某类资产（如股票、债券）的总占比。<br>- <strong>总仓位</strong>：已投资资金占总资金的比例（如80%投资，20%现金）。</td>
+</tr>
+<tr>
+<td><strong>仓位与回撤的关系</strong></td>
+<td><strong>仓位越高（如重仓高波动股票基金），回撤风险越大；低仓位或分散仓位可降低回撤幅度。</strong></td>
+</tr>
+<tr>
+<td><strong>与投资金额的关系</strong></td>
+<td>大额投资因心理压力大，倾向低仓位、保守资产，收益潜力低；小额投资心理负担小，仓位可更激进，长期收益率可能更高。</td>
+</tr>
+</tbody>
+</table>
+<h4> 仓位控制的主要方式</h4>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>方式</td>
+<td>描述</td>
+<td>对回撤的影响</td>
+</tr>
+<tr>
+<td><strong>固定比例仓位</strong></td>
+<td>设定固定资产分配比例（如股票50%、债券30%、现金20%），定期再平衡。</td>
+<td>降低单一资产波动影响，控制回撤，适合大额投资心理稳定。</td>
+</tr>
+<tr>
+<td><strong>风险平价仓位</strong></td>
+<td>根据资产波动性分配仓位，低波动资产（如债券）占比高，高波动资产（如股票）占比低。</td>
+<td>平衡风险，减少最大回撤，适合低回撤容忍度的投资者。</td>
+</tr>
+<tr>
+<td><strong>动态仓位调整</strong></td>
+<td>根据市场环境调整仓位，如牛市加仓股票，熊市减仓至债券或现金。</td>
+<td>减少下跌市场中的回撤，适合大额投资降低损失焦虑。</td>
+</tr>
+<tr>
+<td><strong>单只资产仓位限制</strong></td>
+<td>限制单只基金或个股的仓位（如不超过10%），避免集中风险。</td>
+<td>降低单一资产大幅下跌导致的回撤，适合分散投资策略。</td>
+</tr>
+<tr>
+<td><strong>分批建仓</strong></td>
+<td>分阶段投入资金（如定投），避免高位重仓。</td>
+<td>平均成本，减少高点买入的回撤风险，适合小额投资长期持有。</td>
+</tr>
+</tbody>
+</table>
+<h4> 仓位与相关操作的定义</h4>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>术语</td>
+<td>描述</td>
+</tr>
+<tr>
+<td><strong>仓位</strong></td>
+<td>投资组合中某类资产、基金或个股的资金占比或金额，反映风险暴露。例如，10万元投资中，股票基金占5万，仓位为50%。</td>
+</tr>
+<tr>
+<td><strong>补仓</strong></td>
+<td>在已有仓位基础上追加投资同一资产，增加其仓位，通常在价格下跌时降低平均成本或看好上涨时加码。</td>
+</tr>
+<tr>
+<td><strong>清仓</strong></td>
+<td>全部卖出某资产，仓位降为0，通常因止损、锁定收益或市场判断而执行。</td>
+</tr>
+<tr>
+<td><strong>调仓</strong></td>
+<td>调整投资组合中资产的仓位比例，如减少股票仓位、增加债券仓位，或在同类资产间切换（如更换基金）。</td>
+</tr>
+<tr>
+<td><strong>与回撤的关系</strong></td>
+<td>仓位管理（含补仓、清仓、调仓）直接影响回撤幅度。高仓位增加回撤风险，补仓可能放大或降低回撤，清仓可止损，调仓优化风险收益。</td>
+</tr>
+</tbody>
+</table>
+<h4> 补仓、清仓、调仓的操作方式与回撤管理</h4>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>操作</td>
+<td>描述</td>
+<td>对回撤的影响</td>
+<td>适用场景</td>
+</tr>
+<tr>
+<td><strong>补仓</strong></td>
+<td>增加某资产仓位，如基金跌10%时加投，降低平均成本，<strong>或看好反弹时加码</strong>。</td>
+<td>若价格继续下跌，可能放大回撤；若反弹，可降低回撤并提升收益。</td>
+<td>下跌时看好长期价值，或分批建仓降低成本，适合小额投资。</td>
+</tr>
+<tr>
+<td><strong>清仓</strong></td>
+<td>全部卖出某资产，如基金回撤达15%时止损，或获利后锁定收益。</td>
+<td>限制进一步回撤，保护本金，但可能错过反弹。</td>
+<td>回撤超容忍度、市场转熊或收益达标，适合大额投资止损。</td>
+</tr>
+<tr>
+<td><strong>调仓</strong></td>
+<td>调整仓位比例，如减股票仓位（50%→30%），增债券仓位，或更换低表现基金。</td>
+<td>降低高风险资产回撤，优化组合风险收益比。</td>
+<td>市场环境变化、资产表现分化或风险偏好调整，适合动态管理。</td>
+</tr>
+</tbody>
+</table>
+<h4> 保留充足子弹的定义与核心概念</h4>
+<table>
+<thead>
+<tr>
+<th>方面</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>保留充足子弹定义</strong></td>
+<td><strong>在投资组合中持有现金或高流动性资产（如现金、货币基金、短期债券），保持资金灵活性，以应对市场机会或风险</strong>。例如，10万元投资中保留2万元现金，现金仓位为20%。</td>
+</tr>
+<tr>
+<td><strong>主要作用</strong></td>
+<td>- <strong>补仓机会</strong>：市场下跌时低价买入，降低平均成本。<br>- <strong>应对风险</strong>：减少回撤影响，保护本金。<br>- <strong>突发需求</strong>：满足紧急资金需求，避免被迫清仓。<br>- <strong>灵活加仓</strong>：抓住市场上涨机会，增加高潜力资产仓位。</td>
+</tr>
+<tr>
+<td><strong>与回撤的关系</strong></td>
+<td>保留现金降低组合整体波动性，减少最大回撤，尤其<strong>在市场下跌时提供缓冲</strong>。</td>
+</tr>
+<tr>
+<td><strong>与仓位的关系</strong></td>
+<td><strong>现金仓位是总仓位的一部分，降低高风险资产占比，影响补仓、清仓、调仓的灵活性。</strong></td>
+</tr>
+<tr>
+<td><strong>与投资金额的关系</strong></td>
+<td>大额投资因心理压力大，倾向保留更多子弹以降低回撤和稳定情绪；小额投资心理负担小，可能保留较少子弹以追求高收益。</td>
+</tr>
+</tbody>
+</table>
+<h4> 回撤与回撤修复的定义</h4>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>术语</td>
+<td>描述</td>
+</tr>
+<tr>
+<td><strong>回撤</strong></td>
+<td>投资从最高点到最低点的价值下跌幅度（以百分比表示）。例如，10万涨至12万后跌至9万，最大回撤为25%。类型包括：最大回撤（MDD）、绝对回撤（相对初始本金）、相对回撤（相对当前净值）。</td>
+</tr>
+<tr>
+<td><strong>回撤修复</strong></td>
+<td>投资从最低点恢复到之前高点（或初始本金）的过程，衡量指标包括修复时间和所需涨幅。例如，25%回撤需33.33%涨幅回本。</td>
+</tr>
+<tr>
+<td><strong>与回撤容忍度的关系</strong></td>
+<td>回撤容忍度是投资者能接受的最大回撤水平，影响修复策略选择。保守型接受5%-10%回撤，激进型可接受20%-30%。</td>
+</tr>
+<tr>
+<td><strong>与投资金额的关系</strong></td>
+<td>大额投资因心理压力大，回撤容忍度低，倾向快速修复以稳定情绪；小额投资心理负担小，可承受长修复时间，追求高收益。</td>
+</tr>
+</tbody>
+</table>
+<h4> 回撤修复的影响因素</h4>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>因素</td>
+<td>描述</td>
+<td>对修复的影响</td>
+</tr>
+<tr>
+<td><strong>回撤幅度</strong></td>
+<td>回撤越大，修复所需涨幅越高。例如，50%回撤需100%涨幅回本。</td>
+<td>大回撤延长修复时间，增加心理压力。</td>
+</tr>
+<tr>
+<td><strong>市场环境</strong></td>
+<td>牛市修复快，熊市修复慢；高波动资产（如股票）修复潜力大但不确定。</td>
+<td>牛市缩短修复时间，熊市需更多子弹或调整策略。</td>
+</tr>
+<tr>
+<td><strong>仓位管理</strong></td>
+<td>高仓位高风险资产可能加剧回撤，但修复潜力大；低仓位低风险资产回撤小但修复慢。</td>
+<td>合理仓位（如保留子弹）加速修复，降低回撤影响。</td>
+</tr>
+<tr>
+<td><strong>投资操作</strong></td>
+<td>补仓降低成本，清仓止损，调仓优化配置，保留子弹提供灵活性。</td>
+<td>补仓/调仓可加速修复，清仓可能错过修复机会。</td>
+</tr>
+</tbody>
+</table>
+<h4> 回撤修复的仓位操作策略</h4>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>策略</td>
+<td>描述</td>
+<td>对回撤修复的效果</td>
+<td>适用场景</td>
+</tr>
+<tr>
+<td><strong>补仓</strong></td>
+<td>在回撤时追加投资，降低平均成本，如下跌10%时补仓10%仓位。</td>
+<td>加速修复，减少所需涨幅，但若继续下跌可能放大回撤。</td>
+<td>看好长期价值的小额投资或市场回调时。</td>
+</tr>
+<tr>
+<td><strong>清仓</strong></td>
+<td>回撤达阈值（如15%）时卖出全部资产，锁定损失。</td>
+<td>停止回撤扩大，但可能错过修复机会，延长回本时间。</td>
+<td>回撤超容忍度或市场转熊，适合大额投资止损。</td>
+</tr>
+<tr>
+<td><strong>调仓</strong></td>
+<td>调整仓位，如减高回撤资产（股票）增低波动资产（债券）。</td>
+<td>降低组合回撤，稳定修复过程，但可能减缓修复速度。</td>
+<td>市场环境变化或风险偏好调整，适合动态管理。</td>
+</tr>
+<tr>
+<td><strong>保留充足子弹</strong></td>
+<td>持有现金或高流动性资产（如10%-20%），用于回撤时补仓或应急。</td>
+<td>提供补仓机会，加速修复；现金仓位降低回撤幅度。</td>
+<td>大额投资心理稳定或小额投资追求长期收益。</td>
+</tr>
+</tbody>
+</table>
+<h2>低买高卖</h2>
+<p>交易拥挤度判断、持仓成本控制、分散投资、定投、长期持有。</p>
+<h3>交易拥挤度</h3>
+<table>
+<thead>
+<tr>
+<th><strong>主题</strong></th>
+<th><strong>内容</strong></th>
+<th><strong>与持仓成本的关系</strong></th>
+<th><strong>与交易拥挤度的关系</strong></th>
+<th><strong>与安全边际的关系</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>持仓成本</strong></td>
+<td>平均买入价格 = 总投入 ÷ 总份额。定投可平滑成本，降低波动影响。</td>
+<td>-</td>
+<td>高拥挤度推高买入价，增加持仓成本；低拥挤度降低成本。</td>
+<td>低持仓成本对应高安全边际，抗跌能力强；高持仓成本压缩安全边际。</td>
+</tr>
+<tr>
+<td><strong>交易拥挤度</strong></td>
+<td>投资者集中交易导致波动加剧、价差扩大。风险：流动性枯竭、价格泡沫。</td>
+<td>高拥挤度推高持仓成本，低拥挤度有助于低成本建仓。</td>
+<td>-</td>
+<td>高拥挤度推高价格，压缩安全边际；低拥挤度价格低，安全边际高。</td>
+</tr>
+<tr>
+<td><strong>安全边际</strong></td>
+<td>市场价格低于内在价值的缓冲 = (内在价值 - 市场价格) ÷ 内在价值 × 100%。基于基本面分析。</td>
+<td>低持仓成本通常意味着高安全边际。</td>
+<td>低拥挤度资产价格低，安全边际高；高拥挤度压缩安全边际。</td>
+<td>-</td>
+</tr>
+<tr>
+<td><strong>三者关系</strong></td>
+<td>- 高拥挤度推高价格，增加持仓成本，压缩安全边际。<br>- 低拥挤度降低成本，提高安全边际。<br>- 定投平滑成本，间接提升安全边际。</td>
+<td>低成本建仓（如定投）降低持仓成本，增强抗跌能力。</td>
+<td>低拥挤度降低成本和波动风险，高拥挤度增加成本和风险。</td>
+<td>高安全边际资产在低拥挤度时成本低，抗风险能力强。</td>
+</tr>
+<tr>
+<td><strong>应对策略</strong></td>
+<td>1. <strong>定投平滑成本</strong>：定期定额投资，降低高位买入风险。<br>2. <strong>监控拥挤度</strong>：用RSI、交易量等避开追高。<br>3. <strong>选择高安全边际资产</strong>：选低估值资产（如低P/B）。<br>4. <strong>分散投资</strong>：分配至股票、债券、商品等。<br>5. <strong>限价订单</strong>：设定买入/卖出价格，减少滑点。<br>6. <strong>长期持有</strong>：放大安全边际优势。</td>
+<td>定投降低持仓成本；分散投资减少单一资产波动影响。</td>
+<td>监控RSI、交易量，避免高拥挤度追高；分散投资降低拥挤风险。</td>
+<td>选择低估值资产，长期持有放大安全边际优势。</td>
+</tr>
+<tr>
+<td><strong>实际案例</strong></td>
+<td>A股科技股（内在价值100元）：<br>- 2021年：价格120元，RSI=85，高拥挤度，安全边际-20%。<br>- 2022年：价格70元，RSI=30，低拥挤度，安全边际30%。<br>- <strong>策略</strong>：2022年定投（持仓成本75元），限价70-80元买入，分散投资债券ETF。</td>
+<td>定投持仓成本75元，低于追高时的120元。</td>
+<td>2022年低拥挤度（RSI=30）买入，成本低、风险小。</td>
+<td>2022年买入安全边际30%，抗跌能力强；2021年追高安全边际为负，风险高。</td>
+</tr>
+<tr>
+<td><strong>总结</strong></td>
+<td>- 高拥挤度增加持仓成本，压缩安全边际，风险高。<br>- 低拥挤度降低成本，提高安全边际，抗跌能力强。<br>- 推荐：定投+限价订单+分散投资+价值投资，平衡成本、风险与回报。</td>
+<td>定投和限价订单有效降低持仓成本，适合波动市场。</td>
+<td>监控拥挤度、避开热点降低成本和风险。</td>
+<td>选择高安全边际资产，长期持有提升回报稳定性。</td>
+</tr>
+</tbody>
+</table>
+<p>注意 ETF 交易拥挤度，忌热门题材追高（如过去的新能源题材/今年的创新药）。RSI等指标在哪看怎么看，参阅文末常见指标参考。</p>
+<h3> 持仓成本的定义与核心概念</h3>
+<table>
+<thead>
+<tr>
+<th>方面</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>持仓成本定义</strong></td>
+<td>持有资产的平均买入价格，计算为总投入成本除以持有份额。例如，10元买1000份基金，后8元补仓1000份，持仓成本为(10×1000 + 8×1000) ÷ 2000 = 9元/份。</td>
+</tr>
+<tr>
+<td><strong>计算方式</strong></td>
+<td>持仓成本 = (Σ每次买入金额) ÷ 总份额。考虑交易费用、管理费等成本。</td>
+</tr>
+<tr>
+<td><strong>与回撤的关系</strong></td>
+<td>低持仓成本减少回撤影响（价格跌至成本以下时回撤较小），加速回撤修复。</td>
+</tr>
+<tr>
+<td><strong>与低买高卖的关系</strong></td>
+<td>低持仓成本支持低买高卖，降低买入价格提高卖出盈利空间。</td>
+</tr>
+<tr>
+<td><strong>与投资金额的关系</strong></td>
+<td>大额投资因心理压力大，倾向保守操作，持仓成本控制谨慎；小额投资心理负担小，易通过补仓降低成本，追求高收益。</td>
+</tr>
+</tbody>
+</table>
+<h3>低买高卖与持仓成本控制的定义</h3>
+<table>
+<thead>
+<tr>
+<th>术语</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>低买高卖</strong></td>
+<td>在资产价格低位买入、高位卖出以实现盈利。例如，8元买入基金，涨至10元卖出，盈利25%。是理想的投资策略，需市场判断和纪律。</td>
+</tr>
+<tr>
+<td><strong>持仓成本控制</strong></td>
+<td>通过分批建仓、补仓、调仓等降低平均持仓成本，减少回撤影响，提高收益。例如，10元买入后跌至8元补仓，平均成本降至9元。</td>
+</tr>
+<tr>
+<td><strong>与回撤的关系</strong></td>
+<td>低买高卖减少回撤幅度，加速回撤修复；持仓成本控制降低成本，优化回撤管理。</td>
+</tr>
+<tr>
+<td><strong>与投资金额的关系</strong></td>
+<td>大额投资因心理压力大，易因恐慌错过低买高卖；小额投资心理负担小，易坚持低买高卖，长期收益更高。</td>
+</tr>
+</tbody>
+</table>
+<h3> 低买高卖的实现方式与挑战</h3>
+<table>
+<thead>
+<tr>
+<th>方式/挑战</th>
+<th>描述</th>
+<th>影响</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>市场时机判断</strong></td>
+<td>通过技术分析（如均线、支撑位）或基本面分析（如估值）识别低买高卖点。</td>
+<td>准确判断增加盈利，错误判断导致高买低卖，放大回撤。</td>
+</tr>
+<tr>
+<td><strong>投资纪律</strong></td>
+<td>设定买入（如低估20%）和卖出（如盈利20%）规则，避免情绪化操作。</td>
+<td><strong>纪律性操作减少回撤，加速修复；缺乏纪律易追涨杀跌。</strong></td>
+</tr>
+<tr>
+<td><strong>心理压力</strong></td>
+<td>回撤时恐慌抛售或高位贪婪追买，偏离低买高卖，尤其大额投资压力大。</td>
+<td>心理偏差导致亏损，延长回撤修复时间。</td>
+</tr>
+<tr>
+<td><strong>信息获取</strong></td>
+<td>依赖市场信息或专业建议判断低买高卖时机，信息不对称增加难度。</td>
+<td>准确信息支持低买高卖；错误信息导致操作失误。</td>
+</tr>
+</tbody>
+</table>
+<h3> 持仓成本控制的策略（支持低买高卖）</h3>
+<table>
+<thead>
+<tr>
+<th>策略</th>
+<th>描述</th>
+<th>对回撤与收益的影响</th>
+<th>适用场景</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>分批建仓</strong></td>
+<td>分阶段投入资金（如定投），避免高位一次性买入。</td>
+<td>平均成本，降低高买风险，减少回撤幅度，适合低买。</td>
+<td>小额投资长期持有或市场波动大时。</td>
+</tr>
+<tr>
+<td><strong>补仓</strong></td>
+<td>回撤时低位追加投资，降低平均成本，如10元买入后跌至8元补仓，成本降至9元。</td>
+<td>减少回撤影响，加速回撤修复，增加高卖盈利潜力。</td>
+<td>看好长期价值，适合小额投资或高回撤容忍度者。</td>
+</tr>
+<tr>
+<td><strong>调仓</strong></td>
+<td>卖出高估值资产，买入低估值资产，优化持仓成本。</td>
+<td>降低高买风险，减少回撤，优化收益，适合低买高卖。</td>
+<td>市场环境变化或资产表现分化，适合动态管理。</td>
+</tr>
+<tr>
+<td><strong>保留充足子弹</strong></td>
+<td>持有现金（如10%-20%），在低位补仓或加仓，抓住低买机会。</td>
+<td>提供低买灵活性，减少回撤，加速修复和盈利。</td>
+<td>大额投资心理稳定或小额投资追求长期收益。</td>
+</tr>
+<tr>
+<td><strong>止盈纪律</strong></td>
+<td>设定盈利目标（如20%）高卖，</td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2>长期持有</h2>
+<p><strong>长期持有不等于只买不卖</strong>；别当心，达到止盈目标以及规避较大的回撤风险，巴菲特也会选择卖出（当然，并不是全部卖出）。</p>
+<h3> 低买高卖与长期持有的定义与关系</h3>
+<table>
+<thead>
+<tr>
+<th>方面</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>低买高卖定义</strong></td>
+<td>在资产价格低位买入、高位卖出以实现盈利。例如，8元买入基金，10元卖出，盈利25%。需市场时机判断和纪律。</td>
+</tr>
+<tr>
+<td><strong>长期持有定义</strong></td>
+<td>持续持有资产多年，追求复利收益，较少关注短期波动。例如，持有指数基金10年，享受市场长期上涨。</td>
+</tr>
+<tr>
+<td><strong>是否冲突</strong></td>
+<td>不完全冲突：<br>- <strong>互补性</strong>：低买高卖可用于建仓/卖出时点优化，结合长期持有放大收益。<br>- <strong>矛盾点</strong>：低买高卖需频繁择时，可能打断长期持有的复利效应；长期持有忽略短期波动，可能错过高卖机会。</td>
+</tr>
+<tr>
+<td><strong>与回撤的关系</strong></td>
+<td>低买高卖通过低位建仓降低回撤，长期持有承受短期回撤但追求长期修复。</td>
+</tr>
+<tr>
+<td><strong>与投资金额的关系</strong></td>
+<td>大额投资因心理压力大，倾向低买高卖以快速锁定收益；小额投资心理负担小，适合长期持有，收益潜力高。</td>
+</tr>
+</tbody>
+</table>
+<h3> 低买高卖与长期持有的对比</h3>
+<table>
+<thead>
+<tr>
+<th>方面</th>
+<th>低买高卖</th>
+<th>长期持有</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>核心目标</strong></td>
+<td>短期或中期盈利，抓住价格波动机会。</td>
+<td>长期复利增长，享受资产增值。</td>
+</tr>
+<tr>
+<td><strong>操作频率</strong></td>
+<td>较高，需频繁判断买卖点，可能涉及补仓、调仓、清仓。</td>
+<td>较低，买入后长期持有，减少操作。</td>
+</tr>
+<tr>
+<td><strong>风险与回撤</strong></td>
+<td>降低高买风险，减少回撤，但择时错误可能放大回撤。</td>
+<td>承受短期回撤，依赖长期修复，减少操作失误风险。</td>
+</tr>
+<tr>
+<td><strong>持仓成本控制</strong></td>
+<td>通过分批建仓、补仓降低成本，支持低买，优化高卖盈利。</td>
+<td>成本控制依赖定投或低位建仓，长期摊平波动成本。</td>
+</tr>
+<tr>
+<td><strong>心理需求</strong></td>
+<td><strong>需强择时能力和情绪控制，避免追涨杀跌</strong>。</td>
+<td>需耐心和抗回撤心理，忽略短期波动。</td>
+</tr>
+</tbody>
+</table>
+<h2>投资技术指标参考</h2>
+<p><img src="https://limbopro.com/usr/uploads/2025/07/2834346693.jpg" alt="ETF技术指标.jpg" /></p>
+<p>i&gt; 如图，以<strong>支付宝</strong>举例，<strong>基金</strong>，如图，以 020603（易方达中证红利低波动ETF联接C，自己搜下）举例，下滑找到它的<strong>持仓</strong>，点击相应 ETF名称， 即可进入查看该基金重仓的ETF，以及各类指标；</p>
+<p>i&gt; <strong>支付宝</strong>，<strong>基金</strong> -&gt; <strong>股票</strong>，可以找到 <strong>热门ETF</strong>，相应的ETF页面也会推荐重仓它的ETF联接基金（也就是行话常说的场外基金；直接买卖ETF为场内交易，买ETF联接基金则外场外交易）；</p>
+<blockquote>
+<p>技术指标是投资者用来分析价格走势、判断市场趋势和买卖时机的工具。以下是常见且广泛使用的技术指标，适合参考：</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>分类</th>
+<th>指标名称</th>
+<th>作用与应用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>趋势指标</strong></td>
+<td><strong>移动平均线 (MA)</strong></td>
+<td>平滑价格波动，识别趋势方向。短期 MA 上穿长期 MA（如 50 日上穿 200 日）为买入信号（黄金交叉）。</td>
+</tr>
+<tr>
+<td></td>
+<td><strong>MACD</strong></td>
+<td>判断趋势动能与反转，MACD 线突破信号线向上为买入信号，向下为卖出信号。</td>
+</tr>
+<tr>
+<td></td>
+<td><strong>ADX</strong></td>
+<td>衡量趋势强弱，ADX &gt; 25 表示强趋势，结合 +DI/-DI 判断方向。</td>
+</tr>
+<tr>
+<td><strong>动能指标</strong></td>
+<td><strong>RSI</strong></td>
+<td>判断超买/超卖，RSI &gt; 70 超买，&lt; 30 超卖，超买考虑卖出，超卖考虑买入。</td>
+</tr>
+<tr>
+<td></td>
+<td><strong>随机震荡指标 (KD)</strong></td>
+<td>%K 与 %D 线交叉提示买卖信号，识别超买/超卖。</td>
+</tr>
+<tr>
+<td></td>
+<td><strong>CCI</strong></td>
+<td>测量价格偏离程度，CCI &gt; 100 可能超买，&lt; -100 可能超卖，识别周期性反转。</td>
+</tr>
+<tr>
+<td><strong>成交量指标</strong></td>
+<td><strong>OBV</strong></td>
+<td>通过成交量变化确认趋势，OBV 与价格背离可能预示反转。</td>
+</tr>
+<tr>
+<td></td>
+<td><strong>VWAP</strong></td>
+<td>反映真实交易价格，价格高于 VWAP 看涨，低于看跌，常用于日内交易。</td>
+</tr>
+<tr>
+<td></td>
+<td><strong>A/D Line</strong></td>
+<td>衡量资金流入流出，确认趋势强度。</td>
+</tr>
+<tr>
+<td><strong>波动性指标</strong></td>
+<td><strong>布林带 (Bollinger Bands)</strong></td>
+<td>上轨超买，下轨超卖，带宽收窄预示大波动。</td>
+</tr>
+<tr>
+<td></td>
+<td><strong>ATR</strong></td>
+<td>衡量市场波动幅度，ATR 越高波动越大，适合调整仓位或止损。</td>
+</tr>
+<tr>
+<td><strong>支撑阻力指标</strong></td>
+<td><strong>斐波那契回调</strong></td>
+<td>基于斐波那契比率寻找潜在支撑/阻力位，关键位置可能反转。</td>
+</tr>
+<tr>
+<td></td>
+<td><strong>枢轴点 (Pivot Points)</strong></td>
+<td>通过前日价格计算支撑/阻力位，常用于日内交易进出场参考。</td>
+</tr>
+<tr>
+<td><strong>其他指标</strong></td>
+<td><strong>一目均衡表</strong></td>
+<td>综合趋势、动能、支撑阻力，价格在云带上方看涨，下方看跌。</td>
+</tr>
+<tr>
+<td></td>
+<td><strong>KDJ 指标</strong></td>
+<td>结合趋势与超买超卖信号，J 线信号灵敏，适合短线交易。</td>
+</tr>
+</tbody>
+</table>
+<h3>使用建议</h3>
+<table>
+<thead>
+<tr>
+<th>关键建议</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>结合多指标</strong></td>
+<td>单一指标可能产生误导信号，建议结合趋势、动能和成交量指标（如 MA + RSI + OBV）提高准确性。</td>
+</tr>
+<tr>
+<td><strong>适应市场</strong></td>
+<td>不同市场（如股市、期货、加密货币）适合不同指标，需根据资产特性灵活调整。</td>
+</tr>
+<tr>
+<td><strong>时间框架</strong></td>
+<td>短线交易者关注 1 小时或日线指标，长线投资者关注周线或月线指标。</td>
+</tr>
+<tr>
+<td><strong>警惕滞后性</strong></td>
+<td>许多指标基于历史数据，存在滞后性，需结合市场情绪和基本面分析。</td>
+</tr>
+<tr>
+<td><strong>实践与验证</strong></td>
+<td>通过历史回测或模拟交易验证指标有效性，找到适合自己的指标组合。</td>
+</tr>
+</tbody>
+</table>
+<h2>与投资相关的书单推荐</h2>
+<p>[post cid="34109" cover="https:\/\/limbopro.com\/usr\/uploads\/2021\/03\/117424331.png"/]</p>
+<p>或参阅：<a href="https://t.me/limboprossr/3399">https://t.me/limboprossr/3399</a> 直接下载书单中提及的书籍对应EPUB文件</p>
+<h2>我可以向谁寻求建议？</h2>
+<p>如文初所言，可咨询相关人士，或AI助手，D老师，Germini，Grok，ChatGPT...。支付宝（蚂蚁财富），<strong>腾讯理财通均已接入金融Ai大模型</strong>（拥有最新最原始的数据可供参考，提供实时指数分析），不如尝试问问它们。</p>
+<p>以上，本文仍在完善中。</p>
+]]></content:encoded>
+<slash:comments>0</slash:comments>
+<comments>https://limbopro.com/archives/33857.html#comments</comments>
+<wfw:commentRss>https://limbopro.com/feed/archives/33857.html</wfw:commentRss>
+</item>
+<item>
+<title>Twitter 上含有 Wataa 和 Chudai 文本内容的帖子都是关于什么的？#NSFW</title>
+<link>https://limbopro.com/archives/33835.html</link>
+<guid>https://limbopro.com/archives/33835.html</guid>
+<pubDate>Tue, 01 Jul 2025 09:22:00 +0800</pubDate>
+<dc:creator>毒奶</dc:creator>
+<description><![CDATA[无用的冷知识又要增加了。序@&gt; 如果你在X上关注的福利姬比较多，那么你就很有可能刷到 含有 Wataa 和 Chudai 文本内容的推特。WATAA &amp; CHUDAIi&gt; 在...]]></description>
+<content:encoded xml:lang="zh-CN"><![CDATA[
+<p><img src="https://limbopro.com/usr/uploads/2025/07/1610335779.png" alt="nsfw warning.png" /></p>
+<p>无用的冷知识又要增加了。</p>
+<h2>序</h2>
+<p>@&gt; 如果你在X上关注的福利姬比较多，那么你就很有可能刷到 含有 Wataa 和 Chudai 文本内容的推特。</p>
+<h2>WATAA &amp; CHUDAI</h2>
+<p>i&gt; <strong>在X上搜索 WATAA &amp; CHUDAI</strong>：<br />
+<strong>WATAA</strong> <a href="https://x.com/search?q=WATAA&amp;src=typed_query">https://x.com/search?q=WATAA&amp;src=typed_query</a><br />
+<strong>CHUDAI</strong> <a href="https://x.com/search?q=CHUDAI&amp;src=typed_query">https://x.com/search?q=CHUDAI&amp;src=typed_query</a></p>
+<p>i&gt; <strong>值得关注的</strong>：<br />
+1.X <strong>毒奶博主</strong> <a href="https://x.com/limboprossr">https://x.com/limboprossr</a><br />
+2.TG <strong>电报频道</strong> <a href="https://t.me/+o4UkX972FfExNDhl">春潮频道</a><br><br />
+3.X <strong>用户列表</strong>：<a href="https://x.com/limboprossr/lists">https://x.com/limboprossr/lists</a> (NSFW lists) <br><br />
+推特平台的推荐机制很可能会在上述<strong>用户列表</strong>的信息流中插入不是该列表中用户的内容，届时请注意鉴别，它们的推文内容一般含有低质量内容，广告，大量无必要水印，广告转发，它们并不是属于该<strong>用户列表</strong>本身的内容。<br></p>
+<p>!&gt; 温馨提示：关注一个福利姬，就有千千万万个福利姬出现你的推荐页。<strong>不要关注，也不要给推上的任何福利姬转钱</strong>，绝大多数账号背后都是抠脚大汉，如果转了，请截图投稿沙雕频道🤡为网友提供新一天的笑料。</p>
+<h2>通俗的解释</h2>
+<p>关于 Wataa 及 Chudai 通俗的解释</p>
+<blockquote>
+<p>以<strong>‘WATAA’</strong>为例，这一词源于武术动作中的喊声，它最初并没有明确的意思，但在近年来被用户赋予了表示惊讶和兴奋的含义。类似地，<strong>‘CHUDAI’</strong>作为源自印地语的俚语，具有明显的成人色彩，原意为性交，近年来已被用作指代露骨内容的标签。<br><br />
+<strong>在技术层面上，这些词汇的涌现与社交媒体平台的内容算法密切相关。社交媒体使用者为了规避平台的审查机制，借助模糊或趣味的表达来提升内容的曝光度</strong>。例如，社交媒体平台上的算法倾向于提升那些能引起强烈情感反应的语言使用，而<strong>‘WATAA’</strong>与<strong>‘CHUDAI’</strong>恰好符合这种趋势。它们能快速激发用户的情感，提升互动率，更易引起分享和转发，从而推动内容的传播。</p>
+</blockquote>
+<p>cr <a href="https://www.sohu.com/a/882999516_121924584">如何影响AI内容创作？深度解读‘WATAA’与‘CHUDAI’的语言变迁</a></p>
+]]></content:encoded>
+<slash:comments>0</slash:comments>
+<comments>https://limbopro.com/archives/33835.html#comments</comments>
+<wfw:commentRss>https://limbopro.com/feed/archives/33835.html</wfw:commentRss>
+</item>
+</channel>
+</rss>

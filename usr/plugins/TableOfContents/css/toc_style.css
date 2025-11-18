@@ -1,0 +1,41 @@
+.tox-index {
+    padding: 15px;
+    border: 1px solid #000000;
+    background: #000000;
+    line-height: 160%;
+    color: #ffffff;
+    font-size: 14px;
+    width: 100%;
+    position: relative;
+    z-index: 900;
+    margin: 0 0 0px 0px;
+
+}
+
+.tox-title {
+    margin: 0 0 6px 0;
+    padding: 0;
+    font-size: 130%;
+    font-weight: bold
+}
+
+.tox-toggle {
+    font-size: 9pt
+}
+
+.tox-index ul {
+    padding: 0;
+    margin: 0;
+    font-size: 100%;
+    list-style: none;
+}
+
+.tox-level3 {
+    margin-left: 20px;
+    list-style-type: square;
+}
+
+@media (min-width:768px){
+    .tox-index {
+        max-width: 100%;float: right;
+    }}

@@ -1,0 +1,537 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>匿名留言 - 毒奶 - 欢迎使用代理访问本站。</title>
+    <meta name="description" content="欢迎来到毒奶匿名留言板。在这里，您可以匿名提交问题反馈、改进建议、电影书籍推荐或其他投稿。您的留言将直接发送给博主。">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        textarea,
+        input[type="text"],
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        textarea {
+            resize: vertical;
+        }
+
+        select {
+            background: white;
+            cursor: pointer;
+        }
+
+        input[type="text"]:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: #1a73e8;
+            box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.15);
+        }
+
+        .paste-wrapper {
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            gap: 10px;
+            margin-top: 6px;
+            flex-wrap: wrap;
+        }
+
+        .paste-btn,
+        .clear-btn,
+        .back-btn,
+        .random-nick-btn {
+            background: #1a73e8;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .paste-btn:hover {
+            background: #0d47a1;
+        }
+
+        .clear-btn {
+            background: #f44336;
+        }
+
+        .clear-btn:hover {
+            background: #d32f2f;
+        }
+
+        .back-btn {
+            text-decoration: none;
+            background: #f1f3f4;
+            color: #333;
+            border: 1px solid #ddd;
+            padding: 6px 12px;
+            font-size: 13px;
+        }
+
+        .back-btn:hover {
+            background: #e0e0e0;
+        }
+
+        .random-nick-btn {
+            background: #9c27b0;
+            padding: 6px 10px;
+            font-size: 12px;
+        }
+
+        .random-nick-btn:hover {
+            background: #7b1fa2;
+        }
+
+        .captcha-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .captcha-img {
+            cursor: pointer;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            height: 40px;
+        }
+
+        .captcha-input {
+            width: 100px;
+            padding: 8px;
+            font-size: 16px;
+        }
+
+        .refresh-btn {
+            cursor: pointer;
+            color: #1a73e8;
+            font-size: 14px;
+        }
+
+        .char-counter {
+            font-size: 12px;
+            color: #666;
+            text-align: right;
+            margin-top: 4px;
+        }
+
+        .char-counter.warning {
+            color: #ff9800;
+        }
+
+        .char-counter.danger {
+            color: #f44336;
+        }
+    </style>
+    <script src="../Adguard/Adblock4limbo.function.js" async></script>
+</head>
+
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>匿名留言板</h1>
+            <form id="feedbackForm">
+                <!-- 昵称 + 随机按钮 + 历史下拉 -->
+                <div class="input-group">
+                    <label for="name">昵称</label>
+                    <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                        <input type="text" id="name" name="name" placeholder="如：路人甲" style="flex: 1; min-width: 60%;">
+                        <button type="button" class="random-nick-btn" onclick="generateNickname()">生成随机昵称</button>
+                        <select id="nickHistory" onchange="selectNickname(this.value)"
+                            style="padding: 6px; font-size: 12px; border-radius: 4px; border: 1px solid #ddd;">
+                            <option value="">已用昵称</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- 留言类型 -->
+                <div class="input-group">
+                    <label for="type">留言类型 <span style="color:red">*</span></label>
+                    <select id="type" name="type" required>
+                        <option value="" disabled selected>请选择类型</option>
+                        <optgroup label="反馈类">
+                            <option value="bug">问题反馈</option>
+                            <option value="suggest">改进建议</option>
+                            <option value="other">其他投稿</option>
+                            <option value="whisper">悄悄话</option>
+                        </optgroup>
+                        <optgroup label="推荐类">
+                            <option value="recommend_movie">电影推荐</option>
+                            <option value="recommend_book">书籍推荐</option>
+                            <option value="recommend_software">软件推荐</option>
+                            <option value="recommend_website">网站推荐</option>
+                            <option value="recommend_av">番号推荐</option>
+                            <option value="recommend_other">其他推荐</option>
+                        </optgroup>
+                    </select>
+                </div>
+
+                <!-- 留言内容 + 按钮组 -->
+                <div class="input-group">
+                    <label for="message">留言内容 <span style="color:red">*</span></label>
+                    <textarea id="message" name="message" placeholder="写下你的留言..." rows="4" required
+                        maxlength="512"></textarea>
+                    <div class="char-counter" id="charCounter">已输入 0/512</div>
+                    <div class="paste-wrapper">
+                        <button type="button" class="paste-btn" onclick="pasteToMessage()">粘贴</button>
+                        <button type="button" class="clear-btn" onclick="clearMessage()">清空</button>
+                        <button type="button" class="back-btn" onclick="showHistoryModal()">已提交的留言</button>
+                        <a href="../6.html" target="_blank" class="back-btn">联系博主</a>
+                        <a href="../index.html" target="_blank" class="back-btn">返回博客</a>
+                    </div>
+                </div>
+
+                <!-- 验证码 -->
+                <div class="captcha-group">
+                    <img id="captchaImg" src="index.html%3Fcaptcha=1&amp;t=1763482051" alt="验证码" class="captcha-img" />
+                    <input type="text" name="captcha" class="captcha-input" placeholder="验证码" maxlength="4" required />
+                    <span class="refresh-btn" onclick="refreshCaptcha()">刷新</span>
+                </div>
+
+                <button type="submit" id="submitBtn">发送匿名留言</button>
+                <div id="connectionStatus"
+                    style="margin-top: 10px; padding: 10px; border-radius: 6px; display: none; font-size: 14px;"></div>
+                <div id='status' class="status-container hidden"></div>
+                <div id='connectstatus' class="status-container"></div>
+            </form>
+
+            <!-- 历史记录弹窗 -->
+            <div id="historyModal"
+                style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; justify-content: center; align-items: center;">
+                <div
+                    style="background: white; width: 90%; max-width: 500px; max-height: 70vh; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.2);">
+                    <div
+                        style="padding: 16px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; font-weight: 600;">
+                        <span>已提交的留言（最近10条）</span>
+                        <button onclick="closeHistoryModal()"
+                            style="background:none; border:none; font-size:18px; cursor:pointer; color:#666;">×</button>
+                    </div>
+                    <div id="historyList" style="padding: 16px; max-height: 50vh; overflow-y: auto; font-size: 14px;">
+                    </div>
+                    <div
+                        style="padding: 12px; text-align: center; border-top: 1px solid #eee; color: #999; font-size: 12px;">
+                        仅显示当前浏览器记录
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const MAX_CHARS = 512;
+        const textarea = document.getElementById('message');
+        const counter = document.getElementById('charCounter');
+        const submitBtn = document.getElementById('submitBtn');
+
+        // === 页面加载时恢复昵称 ===
+        window.addEventListener('load', () => {
+            const savedNickname = localStorage.getItem('feedback_nickname');
+            if (savedNickname) {
+                document.getElementById('name').value = savedNickname;
+            }
+            updateCharCount();
+            loadNicknameHistory();
+        });
+
+        // === 输入框变化时同步 localStorage ===
+        document.getElementById('name').addEventListener('input', function () {
+            const value = this.value.trim();
+            if (value === '') {
+                localStorage.removeItem('feedback_nickname');
+            } else {
+                localStorage.setItem('feedback_nickname', value);
+            }
+        });
+
+        // === 历史昵称管理 ===
+        const NICK_HISTORY_KEY = 'feedback_nick_history';
+        const MAX_HISTORY = 10;
+
+        function loadNicknameHistory() {
+            const history = JSON.parse(localStorage.getItem(NICK_HISTORY_KEY) || '[]');
+            const select = document.getElementById('nickHistory');
+            select.innerHTML = '<option value="">已用昵称</option>';
+            history.forEach(nick => {
+                const opt = document.createElement('option');
+                opt.value = nick;
+                opt.textContent = nick;
+                select.appendChild(opt);
+            });
+        }
+
+        function addToNicknameHistory(nickname) {
+            if (!nickname.trim()) return;
+            let history = JSON.parse(localStorage.getItem(NICK_HISTORY_KEY) || '[]');
+            history = history.filter(n => n !== nickname);
+            history.unshift(nickname);
+            if (history.length > MAX_HISTORY) history = history.slice(0, MAX_HISTORY);
+            localStorage.setItem(NICK_HISTORY_KEY, JSON.stringify(history));
+            loadNicknameHistory();
+        }
+
+        function selectNickname(nickname) {
+            if (nickname) {
+                const input = document.getElementById('name');
+                input.value = nickname;
+                localStorage.setItem('feedback_nickname', nickname);
+            }
+        }
+
+        // === 已提交留言历史 ===
+        const MSG_HISTORY_KEY = 'feedback_msg_history';
+        const MAX_MSG_HISTORY = 10;
+
+        function addToMessageHistory(nickname, message) {
+            if (!message.trim()) return;
+            const timestamp = new Date().toLocaleString('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            let history = JSON.parse(localStorage.getItem(MSG_HISTORY_KEY) || '[]');
+            history.unshift({ nickname, message, timestamp });
+            if (history.length > MAX_MSG_HISTORY) history = history.slice(0, MAX_MSG_HISTORY);
+            localStorage.setItem(MSG_HISTORY_KEY, JSON.stringify(history));
+        }
+
+        function showHistoryModal() {
+            const history = JSON.parse(localStorage.getItem(MSG_HISTORY_KEY) || '[]');
+            const list = document.getElementById('historyList');
+            if (history.length === 0) {
+                list.innerHTML = '<div style="text-align:center; color:#999; padding:20px;">暂无记录</div>';
+            } else {
+                list.innerHTML = history.map(item => `
+          <div style="margin-bottom:16px; padding-bottom:12px; border-bottom:1px dashed #eee;">
+            <div style="font-weight:600; color:#1a73e8; margin-bottom:4px;">
+              ${escapeHtml(item.nickname)} <span style="font-weight:normal; color:#999; font-size:12px;">${item.timestamp}</span>
+            </div>
+            <div style="white-space: pre-wrap; word-break: break-word; color:#333;">${escapeHtml(item.message)}</div>
+          </div>
+        `).join('');
+            }
+            document.getElementById('historyModal').style.display = 'flex';
+        }
+
+        function closeHistoryModal() {
+            document.getElementById('historyModal').style.display = 'none';
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function updateCharCount() {
+            const len = textarea.value.length;
+            counter.textContent = `已输入 ${len}/${MAX_CHARS}`;
+            counter.classList.remove('warning', 'danger');
+            if (len > MAX_CHARS * 0.9) counter.classList.add('warning');
+            if (len >= MAX_CHARS) counter.classList.add('danger');
+            submitBtn.disabled = len === 0 || len > MAX_CHARS;
+        }
+
+        textarea.addEventListener('input', updateCharCount);
+
+        async function pasteToMessage() {
+            try {
+                const text = await navigator.clipboard.readText();
+                const current = textarea.value;
+                const combined = current + (current && !current.endsWith('\n') ? '\n' : '') + text;
+                if (combined.length > MAX_CHARS) {
+                    textarea.value = combined.substring(0, MAX_CHARS);
+                    showStatus('内容过长，已自动截断', 'warning');
+                } else {
+                    textarea.value = combined;
+                }
+                updateCharCount();
+                showStatus('已粘贴！', 'success');
+            } catch (err) {
+                showStatus('粘贴失败（需 HTTPS）', 'error');
+            }
+        }
+
+        function clearMessage() {
+            textarea.value = '';
+            updateCharCount();
+            showStatus('已清空！', 'success');
+        }
+
+        function refreshCaptcha() {
+            document.getElementById('captchaImg').src = '?captcha=1&t=' + Date.now();
+        }
+
+        // === 随机昵称生成器 ===
+        async function generateNickname() {
+            try {
+                const res = await fetch('./nicknames.json?t=' + Date.now());
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
+
+                const animal = data.animals[Math.floor(Math.random() * data.animals.length)];
+                const action = data.actions[Math.floor(Math.random() * data.actions.length)];
+                const place = data.places[Math.floor(Math.random() * data.places.length)];
+
+                const nickname = place + action + animal;
+                const input = document.getElementById('name');
+                input.value = nickname;
+
+                localStorage.setItem('feedback_nickname', nickname);
+                addToNicknameHistory(nickname);
+            } catch (err) {
+                console.error('Nickname Error:', err);
+                showStatus('生成失败，请检查文件', 'error');
+            }
+        }
+
+        document.getElementById('feedbackForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+
+            if (!e.target.type.value) {
+                showStatus('请选择留言类型', 'error');
+                return;
+            }
+            if (!e.target.message.value.trim()) {
+                showStatus('请输入留言', 'error');
+                return;
+            }
+            if (e.target.message.value.length > MAX_CHARS) {
+                showStatus('留言不得超过 512 字', 'error');
+                return;
+            }
+            if (!e.target.captcha.value) {
+                showStatus('请输入验证码', 'error');
+                return;
+            }
+
+            showStatus('发送中...', 'loading');
+
+            try {
+                const res = await fetch('', {
+                    method: 'POST',
+                    body: new URLSearchParams(formData)
+                });
+                const data = await res.json();
+
+                showStatus(data.message, data.success ? 'success' : 'error');
+                if (data.success) {
+                    const currentNick = document.getElementById('name').value.trim() || '匿名用户';
+                    const currentMsg = e.target.message.value.trim();
+                    if (currentMsg) {
+                        addToMessageHistory(currentNick, currentMsg);
+                        addToNicknameHistory(currentNick);
+                    }
+
+                    e.target.message.value = '';
+                    e.target.type.value = '';
+                    e.target.captcha.value = '';
+
+                    updateCharCount();
+                    refreshCaptcha();
+                    showStatus('留言已送达！', 'success');
+
+                }
+            } catch {
+                showStatus('网络错误', 'error');
+            }
+        });
+
+        function showStatus(msg, type) {
+            const el = document.getElementById('status');
+            el.classList.remove('hidden')
+            el.textContent = msg;
+            el.className = type;
+            if (window.statusTimeout) clearTimeout(window.statusTimeout);
+            window.statusTimeout = setTimeout(() => {
+                el.textContent = '';
+                el.className = '';
+                document.getElementById('status').classList.add('hidden')
+            }, 2500);
+        }
+
+
+        /** 403 检测
+         * 使用 Fetch API 调用 PHP 接口并更新 HTML 容器
+         */
+        function fetchPostStatus() {
+            // 指向您在步骤 1 中创建的 API 接口文件
+            const apiUrl = 'post_checker.php';
+            const statusDiv = document.getElementById('connectstatus');
+
+            // 1. 调用 Fetch API
+            fetch(apiUrl)
+                .then(response => {
+                    // 检查网络请求是否成功（HTTP 200 OK）
+                    if (!response.ok) {
+                        throw new Error('网络请求失败: ' + response.statusText);
+                    }
+                    // 解析 JSON 响应
+                    return response.json();
+                })
+                .then(data => {
+                    // 2. 从 JSON 数据中获取状态码
+                    const statusCode = data.status;
+                    let outputHTML = '';
+                    let className = '';
+
+                    // 3. 根据状态码生成 HTML 内容
+                    if (statusCode === 200) {
+                        outputHTML = `✅ <b>可正常留言</b>: 服务器返回状态码 ${statusCode}。`;
+                        className = 'success';
+                    } else if (statusCode >= 400 && statusCode < 500) {
+                        outputHTML = `❌ **客户端/权限错误**: 服务器返回状态码 ${statusCode}。`;
+                        className = 'danger';
+                    } else if (statusCode >= 500) {
+                        outputHTML = `🚨 **服务器内部错误**: 服务器返回状态码 ${statusCode}。`;
+                        className = 'danger';
+                    } else if (statusCode === 0) {
+                        outputHTML = `🚨 **cURL/网络错误**: 无法连接到目标服务器。`;
+                        className = 'danger';
+                    } else {
+                        outputHTML = `⚠️ **其他状态**: 服务器返回状态码 ${statusCode}。`;
+                        className = 'warning';
+                    }
+
+                    // 4. 将结果插入到 HTML 容器中
+                    statusDiv.innerHTML = outputHTML;
+                    statusDiv.classList.add(className);
+
+                })
+                .catch(error => {
+                    // 捕获任何网络或解析错误
+                    statusDiv.innerHTML = `⚠️ **错误**: 无法完成状态检测。${error.message}`;
+                    statusDiv.classList.add('danger');
+                    console.error('Fetch Error:', error);
+                });
+        }
+
+        // 页面加载完成后立即调用函数开始检测
+        document.addEventListener('DOMContentLoaded', fetchPostStatus);
+
+
+    </script>
+</body>
+
+</html>

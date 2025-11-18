@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <!-- 新窗口打开页面 -->
+    <base target="_blank">
+    <!-- Disqus ads block -->
+
+    <style>
+        .warm {
+            background: #141d2f !important;
+            color: #f09636 !important;
+        }
+    </style>
+
+    <style iframe [sandbox*="allow" ] {display:none!important;}>
+        .adSense,
+        .adContent,
+        .adBlock,
+        .ad-text {
+            display: none !important;
+        }
+
+        div#disqus_recommendations {
+            margin-bottom: 0px !important;
+            display: none !important;
+        }
+    </style>
+
+    <style>
+        body {
+            background-color: #000000;
+        }
+    </style>
+
+    <!--Ads imgs-->
+    <style>
+        /* 默认：大屏下 50% 宽度 */
+        .responsive-img {
+            width: 50%;
+            height: auto;
+            display: block;
+        }
+
+        /* 小屏：宽度 < 1200px 时，图片占满 100% */
+        @media (max-width: 1199px) {
+            .responsive-img {
+                width: 100%;
+            }
+        }
+    </style>
+
+    <!--搜索记录-->
+    <style>
+        input[autocomplete].hidden {
+            background: url('') !important;
+        }
+
+        .history-area {
+            text-align: left;
+            margin-top: 15px;
+            padding: 8px 0 8px 0;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .history-title {
+            font-size: 1em;
+            color: #555;
+            margin-bottom: 6px;
+        }
+
+        .history-list {
+            flex-direction: row-reverse;
+            justify-content: start;
+            text-align: center;
+            display: flex;
+            flex-wrap: wrap-reverse;
+            gap: 4px;
+        }
+
+
+        .history-item {
+            /*width: 100% !important;*/
+            overflow-x: auto;
+            /*max-height: 120px ;*/
+            /*font-size: small !important;*/
+            /*white-space:nowrap;*/
+            overflow-y: hidden;
+            display: inline-block;
+            padding: 4px 10px;
+            background: #4c4c4c;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.98em;
+            transition: background 0.2s, color 0.2s;
+            /*border: 1px solid #e0e6ea;*/
+            position: relative;
+            user-select: none;
+            /* 防止文本选择 */
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+
+
+        .delete-history-btn {
+            /*z-index: 114154;*/
+            z-index: 1;
+            padding: 0px;
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #cd1313b6;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            font-size: 12px;
+            line-height: 20px;
+            text-align: center;
+            animation: gradientFlow 6s ease infinite;
+            transition: transform 0.3s ease, filter 0.3s ease;
+        }
+
+
+        .gradient-button {
+            color: white;
+            text-align: center;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceff);
+            background-size: 300% 300%;
+            animation: gradientFlow 6s ease infinite;
+            transition: transform 0.3s ease, filter 0.3s ease;
+        }
+
+        .gradient-button:hover {
+            z-index: 114154;
+            transform: scale(1.05);
+            filter: brightness(1.2);
+        }
+
+
+        .gradient-button:hover .delete-history-btn {
+            z-index: 114154;
+            transform: scale(1.5);
+            filter: brightness(1.2);
+            background: #ea3e4f;
+        }
+
+        @keyframes gradientFlow {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        #clearHistoryBtn {
+            margin-top: 5px;
+        }
+
+        /* 遮罩层 */
+        .confirm-mask {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9998;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity .2s, visibility .2s;
+        }
+
+        .confirm-mask.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* 弹窗本体 */
+        .confirm-dialog {
+            background: #fff;
+            border-radius: 8px;
+            width: 320px;
+            max-width: 90vw;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, .2);
+            animation: pop .2s ease-out;
+        }
+
+        @keyframes pop {
+            from {
+                transform: scale(.8);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .confirm-header {
+            padding: 16px 20px 8px;
+            font-weight: 600;
+            font-size: 18px;
+        }
+
+        .confirm-body {
+            padding: 0 20px 16px;
+            color: #555;
+        }
+
+        .confirm-footer {
+            padding: 0 20px 16px;
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        .confirm-footer button {
+            min-width: 72px;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .confirm-footer .cancel {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .confirm-footer .ok {
+            background: #007bff;
+            color: #fff;
+        }
+
+        .confirm-footer .ok:hover {
+            background: #0056b3;
+        }
+
+        .confirm-footer .cancel:hover {
+            background: #e0e0e0;
+        }
+    </style>
+    <!--搜索记录结束-->
+
+    <!-- Google Tag Manager -->
+    <script>(function (w, d, s, l, i) {
+            w[l] = w[l] || []; w[l].push({
+                'gtm.start':
+                    new Date().getTime(), event: 'gtm.js'
+            }); var f = d.getElementsByTagName(s)[0],
+                j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; j.src =
+                    'https://www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', 'GTM-WH2PXGQ');
+    </script>
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-Z3TSZYZ2RZ"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', 'G-Z3TSZYZ2RZ');
+    </script>
+
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com/">
+    <link rel="dns-prefetch" href="https://www.google.com/">
+    <link rel="dns-prefetch" href="https://accounts.google.com/">
+    <link rel="dns-prefetch" href="https://disqus.com/">
+    <link rel="dns-prefetch" href="https://ssl.gstaic.com/">
+
+
+    <!-- End Google Tag Manager -->
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>毒奶搜索 - 毒奶博主的万能搜索引擎。</title>
+    <meta name="title" content="毒奶搜索 - 毒奶博主的万能搜索引擎。">
+    <meta name="description" content="毒奶博客文章搜索,漫画搜索,电子书搜索,番号检索,番号搜索,免费影视搜索" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@limboprossr">
+    <meta name="twitter:creator" content="@limboprossr">
+    <meta name="twitter:title" content="毒奶搜索 - 毒奶博主的万能搜索引擎。">
+    <meta name="twitter:description" content="毒奶博客文章搜索,漫画搜索,电子书搜索,毒奶博客文章搜索,漫画搜索,电子书搜索,番号检索,番号搜索,免费影视搜索">
+    <meta name="twitter:image" content="https://limbopro.com/SearchX.png">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="./search.html">
+    <meta property="og:title" content="毒奶搜索 - 毒奶博主的万能搜索引擎。">
+    <meta property="og:description" content="毒奶博客文章搜索,漫画搜索,电子书搜索,番号检索,番号搜索,免费影视搜索">
+    <meta property="og:image" content="https://limbopro.com/SearchX.png">
+    <link rel="stylesheet" href="bulma.min.css">
+    <script defer src="all.js"></script>
+    <!-- <base target="_blank"> -->
+
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-162070065-1"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', 'UA-162070065-1');
+    </script>
+
+    <script>
+        function AddFavorite() {
+            var title = '毒奶搜索丨番号搜索丨limbopro.com';
+            var url = './search.html';
+            try {
+                window.external.addFavorite(url, title);
+            }
+            catch (e) {
+                try {
+                    window.sidebar.addPanel(title, url, "");
+                }
+                catch (e) {
+                    alert("抱歉，您所使用的浏览器无法完成此操作。\n\n加入收藏失败，请使用Ctrl+D进行添加");
+                }
+            }
+        }
+    </script>
+
+    <style>
+        .black {
+            background-color: rgb(170, 170, 170);
+            color: rgb(70, 70, 70);
+            margin: 0px;
+            padding: 20px;
+        }
+    </style>
+
+    <link rel="stylesheet" href="css/element.min.css">
+    <!-- Google Adsense !-->
+    <!-- <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4573757070775891"
+     crossorigin="anonymous"></script>!-->
+
+</head>
+
+<body>
+
+    <section class="section">
+        <div>
+            <div>
+                <div class="container">
+                    <div class="has-text-centered">
+
+                        <a href="search.html" target='_self'> <img src="SearchX.png" alt="Logo"
+                                width="200px"></a>
+                        <h1 class="title" style="padding:20px;">
+
+                            <!-- 图片地址替换为你自己的 Logo 的地址 -->
+                            毒奶搜索，毒奶博主的万能搜索引擎
+                            <!-- 页面的 Title -->
+                        </h1>
+
+                    </div>
+                </div>
+
+                <div class="container">
+                    <div class="has-text-left">
+                        <div class="white">
+                        </div>
+
+                        <div id="myVue">
+                            <el-tabs type="border-card">
+                                <script>
+                                    (function () {
+                                        // 下方的 cx 的值替换为你的搜索引擎 ID ，可以在搜索引擎-设置-基本设置中获取。
+                                        var cxX = 'c8ba9e10f156f7aff';
+                                        var gcse = document.createElement('script');
+                                        gcse.type = 'text/javascript';
+                                        gcse.async = true;
+                                        gcse.src = 'https://cse.google.com/cse.js?cx=' + cxX;
+                                        var s = document.getElementsByTagName('script')[0];
+                                        s.parentNode.insertBefore(gcse, s);
+                                    })();
+                                </script>
+                                <!-- 搜索引擎的输入框 -->
+                                <gcse:searchbox></gcse:searchbox>
+                                <!-- 搜索引擎结果框 -->
+                                <gcse:searchresults></gcse:searchresults>
+                                </el-tab-pane>
+
+
+                        </div>
+
+                        <!-- 背景说明 -->
+                        <div class="container">
+
+                            <!--搜索记录-->
+                            <!-- 以下是弹窗模板（隐藏在页面中） -->
+                            <div id="confirmMask" class="confirm-mask">
+                                <div class="confirm-dialog">
+                                    <div class="confirm-header">确认操作</div>
+                                    <div class="confirm-body">确定要清除所有搜索记录吗？</div>
+                                    <div class="confirm-footer">
+                                        <button class="cancel">取消</button>
+                                        <button class="ok">确认</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="history" class="history-area">
+                                <div style="font-weight: bolder;" class="history-title"><span>搜索记录：</span></div>
+                                <div id="historyList" class="history-list"></div>
+                                <button id="clearHistoryBtn" class="clear-history-btn">清除记录</button>
+                            </div>
+                            <!--搜索记录结束-->
+
+                            <div class="has-text-left">
+                                <div class="black">
+                                    <p>ℹ️ 本页面提供
+                                        毒奶博客全内容搜索丨电影🎬丨番号🔞丨韩剧📺丨美剧🇺🇸丨英剧🇬🇧丨日剧🗻丨大陆剧🐉丨动漫追番🕷️丨演员🕺丨电子书📚丨电报🎣相关搜索🔍
+                                        <span class="warm">🔞番号搜索</span>╰┈➤👉🏻 <a href='btsearch.html'>点这里🔗；</a>
+                                        *如果上方页面显示为大片空白，可多刷新几次页面以<b><span class="warm">加载搜索框</span></b>（或<a href='archives/19460.html'
+                                            target="_blank">参考本文解决</a>）；<b>完美<span class="warm">🚫🔞去特定网站网页广告</span>，老司机开车没弹窗！╰┈➤👉🏻</b><a
+                                    href='archives/12904.html'
+                                    target="_blank">点这里了解🔗</a>;
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- 背景说明 -->
+
+
+
+                        <br>
+                        <!-- 博客首页 -->
+                        <p><a href='index.html' target="_blank">博客首页</a>丨<a href='daohang/index.html'
+                                target="_blank">毒奶导航</a>丨<a href='btsearch.html' target="_blank">番号搜索</a>丨<a
+                                href='https://t.me/s/limboprossr' target="_blank">电报频道</a>丨<a
+                                href='https://bit.ly/4atT6uh' target="_blank">🏄‍♂️机场推荐（IEPL专线/100GB/¥15/月起）✈️</a>丨<a
+                                href='6.html' target="_blank">联系我们</a>丨<a href="javascript:void(0);"
+                                onclick="AddFavorite()">收藏本页</a>丨<a href='archives/adguard.html'
+                                target="_blank">🈲如何屏蔽网页广告</a>丨<a href='archives/1560.html'
+                                target="_blank">🎄全网视频解析与下载🔍</a>
+                        </p>
+                        <!-- 博客首页 -->
+
+
+                        <!--<script
+                    type="text/javascript">window.$crisp = []; window.CRISP_WEBSITE_ID = "bbcb424b-4784-4987-a89f-91b047f11b5d"; (function () { d = document; s = d.createElement("script"); s.src = "https://client.crisp.chat/l.js"; s.async = 1; d.getElementsByTagName("head")[0].appendChild(s); })();</script> -->
+                    </div>
+
+
+                    <!-- <div style="height:2px;padding:2px;"></div>-->
+
+                    <!-- Ads BEGIN -->
+                    <a href='https://bit.ly/4atT6uh' target="_blank"><img class="responsive-img"
+                            style='display:blcok;padding-top:10px;'
+                            src='https://limbopro.com/usr/uploads/2024/05/893368402.png' alt='2025年好用稳定的科学上网机场推荐'
+                            title='2025年好用稳定的科学上网机场推荐' border='0' width='50%'' /></a>
+                    <!-- Ads END -->
+
+
+                    <div id="disqus_thread"></div>
+                    <script>
+                        /**
+                        *  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+                        *  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables    */
+                        /*
+                        var disqus_config = function () {
+                        this.page.url = PAGE_URL;  // Replace PAGE_URL with your page' s canonical URL variable
+                            this.page.identifier=PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique
+                            identifier variable }; */ (function () { // DON'T EDIT BELOW THIS LINE var d=document,
+                            s = d.createElement('script'); s.src = 'https://http-search-limbopro-xyz.disqus.com/embed.js';
+                            s.setAttribute('data-timestamp', +new Date()); (d.head || d.body).appendChild(s);
+                        })();
+                    </script>
+                        <noscript>Please enable JavaScript to view the <a
+                                href="https://disqus.com/?ref_noscript">comments
+                                powered
+                                by Disqus.</a></noscript>
+
+                        <!-- <script
+                type="text/javascript">window.$crisp = []; window.CRISP_WEBSITE_ID = "bbcb424b-4784-4987-a89f-91b047f11b5d"; (function () { d = document; s = d.createElement("script"); s.src = "https://client.crisp.chat/l.js"; s.async = 1; d.getElementsByTagName("head")[0].appendChild(s); })();</script> -->
+                        <script type="text/javascript" src="js/vue.min.js"></script>
+                        <script src="js/element.min.js"></script>
+                        <script type="text/javascript">
+                            new Vue({
+                                el: '#myVue',
+                                data() {
+                                    return {
+                                        activeName: 'second',
+                                        activeName2: 'first',
+                                        tabPosition: 'top',
+                                        editableTabsValue2: '2',
+                                        editableTabs2: [{
+                                            title: 'Tab 1',
+                                            name: '1',
+                                            content: 'Tab 1 content'
+                                        }, {
+                                            title: 'Tab 2',
+                                            name: '2',
+                                            content: 'Tab 2 content'
+                                        }],
+                                        tabIndex: 2
+                                    }
+                                },
+                                methods: {
+                                    handleClick(tab, event) {
+                                        console.log(tab, event);
+                                    },
+                                    addTab(targetName) {
+                                        let newTabName = ++this.tabIndex + '';
+                                        this.editableTabs2.push({
+                                            title: 'New Tab',
+                                            name: newTabName,
+                                            content: 'New Tab content'
+                                        });
+                                        this.editableTabsValue2 = newTabName;
+                                    },
+                                    removeTab(targetName) {
+                                        let tabs = this.editableTabs2;
+                                        let activeName = this.editableTabsValue2;
+                                        if (activeName === targetName) {
+                                            tabs.forEach((tab, index) => {
+                                                if (tab.name === targetName) {
+                                                    let nextTab = tabs[index + 1] || tabs[index - 1];
+                                                    if (nextTab) {
+                                                        activeName = nextTab.name;
+                                                    }
+                                                }
+                                            });
+                                        }
+
+                                        this.editableTabsValue2 = activeName;
+                                        this.editableTabs2 = tabs.filter(tab => tab.name !== targetName);
+                                    }
+                                }
+                            })
+                        </script>
+
+                        <div style="text-align:center;margin:50px 0; font:normal 14px/24px 'MicroSoft YaHei';">
+                        </div>
+
+                        <!-- <script
+                type="text/javascript">window.$crisp = []; window.CRISP_WEBSITE_ID = "bbcb424b-4784-4987-a89f-91b047f11b5d"; (function () { d = document; s = d.createElement("script"); s.src = "https://client.crisp.chat/l.js"; s.async = 1; d.getElementsByTagName("head")[0].appendChild(s); })();</script>-->
+
+                        <br></br>
+                        <a class="twitter-timeline" data-height="960" data-dnt="true" data-theme="dark"
+                            href="https://twitter.com/limboprossr?ref_src=twsrc%5Etfw">Tweets by limboprossr</a>
+                        <br></br>
+                        <a href="https://twitter.com/limboprossr?ref_src=twsrc%5Etfw" class="twitter-follow-button"
+                            data-show-count="false">Follow @limboprossr</a>
+                        <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+                </div>
+            </div>
+    </section>
+
+    <script>
+
+        // 监控指定元素的变化
+        function monitorElementChanges(targetSelector, callback) {
+            // 获取目标元素
+            const targetNode = document.querySelector(targetSelector);
+
+            if (!targetNode) {
+                console.error(`Element with selector ${targetSelector} not found`);
+                return;
+            }
+
+            // 创建 MutationObserver 实例
+            const observer = new MutationObserver((mutationsList, observer) => {
+                // 当观察到变化时执行回调函数
+                callback(mutationsList, observer);
+            });
+
+            // 配置观察选项
+            const config = {
+                attributes: true, // 监控属性变化
+                childList: true,  // 监控子节点变化
+                subtree: true,    // 监控所有后代节点
+                characterData: true // 监控文本内容变化
+            };
+
+            // 开始观察
+            observer.observe(targetNode, config);
+
+            // 返回 observer 以便在需要时停止监控
+            return observer;
+        }
+
+        // 使用示例：监控 ID 为 'myElement' 的元素
+        const observer = monitorElementChanges('#myVue', openInNewTab);
+
+        // 停止监控示例（可选）
+        // setTimeout(() => {
+        //     observer.disconnect();
+        //     console.log('Stopped monitoring');
+        // }, 10000);
+
+        function openInNewTab(url) {
+            if (document.getElementById('myVue') !== null) {
+                document.getElementById('myVue').querySelectorAll("a[target='_self']").forEach(link => {
+                    link.setAttribute('target', '_blank');
+                });
+            }
+        }
+
+    </script>
+
+    <!--搜索记录-->
+    <script>
+
+        let ysss_historyArr = [];
+        let ysss_historyArrTitle = [];
+
+        ysss_loadHistory();
+        ysss_renderHistory();
+
+        function ysss_customSearchEvent() {
+            ysss_codeHover = document.querySelector('input.gsc-input').value;
+            var ysss_customSearchEventCode = document.querySelector('input.gsc-input').value;
+            if (ysss_historyArr.indexOf(ysss_customSearchEventCode) == -1 && ysss_customSearchEventCode !== "") {
+                ysss_historyArr.push(ysss_customSearchEventCode);
+                ysss_historyArrTitle.push(ysss_customSearchEventCode);
+                ysss_saveHistory();
+                ysss_renderHistory();
+            } else if (ysss_historyArr.indexOf(ysss_customSearchEventCode) !== -1 && ysss_customSearchEventCode !== "") {
+
+                ysss_historyArr = ysss_historyArr.filter(num => num !== ysss_customSearchEventCode);
+                ysss_historyArr.push(ysss_customSearchEventCode);
+
+
+                // 找到第一个包含 ysss_customSearchEventCode 的项
+                const index = ysss_historyArrTitle.findIndex(item =>
+                    typeof item === 'string' && item.includes(ysss_customSearchEventCode)
+                );
+
+                if (index !== -1) {
+                    // 取出该元素
+                    const [matchedItem] = ysss_historyArrTitle.splice(index, 1);
+                    // 重新添加到末尾
+                    ysss_historyArrTitle.push(matchedItem);
+                }
+
+
+                ysss_saveHistory();
+                ysss_renderHistory();
+            } else {
+                console.log("Error: Unable to update history.");
+            }
+            ysss_historyItem_normal(); ////
+            ysss_historyItem_highlights(); ////
+            //// historyItem_paddingtoprebuild();
+            return ysss_customSearchEventCode;
+        }
+
+
+
+        function ysss_addGlobalListener() {
+
+            // 1. 排除的元素
+            const excludeContainer = document.querySelectorAll('div.container')[2];
+            const excludeInputs = document.querySelectorAll('input[autocomplete]');
+
+            // 2. 全局点击
+            document.addEventListener('click', e => {
+                const t = e.target;
+
+                // 3. 任意一个排除区域命中 → 直接返回
+                if (excludeContainer?.contains(t)) return;
+                if (Array.from(excludeInputs).some(el => el.contains(t))) return;
+
+                // 4. 外部点击逻辑
+                console.log('外部点击', t);
+                ysss_customSearchEvent()
+            });
+
+            setTimeout(() => {
+
+                var button = document.querySelector('.gsc-search-button.gsc-search-button-v2');
+                button.addEventListener('click', () => {
+                    setTimeout(() => {
+                        ysss_customSearchEvent();
+                    }, 1000);
+                    console.log('搜索按钮被点击！');
+                });
+
+                const input = document.querySelector('input[autocomplete]');
+                input.addEventListener('keydown', function (event) {
+                    if (event.key === 'Enter' || event.keyCode === 13) {
+                        console.log('带有 autocomplete 属性的输入框中按下回车！');
+                        console.log('输入内容:', input.value);
+                        setTimeout(() => {
+                            ysss_customSearchEvent();
+                        }, 1000);
+                    }
+                });
+
+                // document.querySelector('.container-search').classList.add('hidden');
+            }, 3000);
+        }
+
+        function ysss_saveHistory() {
+            localStorage.setItem('影视搜索记录', JSON.stringify(ysss_historyArr));
+            localStorage.setItem('影视搜索记录名称', JSON.stringify(ysss_historyArrTitle));
+            console.log("ysss_historyArr: " + ysss_historyArr);
+        }
+
+
+        function ysss_renderHistory() {
+            historyList.innerHTML = "";
+
+            ysss_historyArr.forEach((num, index) => {
+                title = ''
+
+                ysss_historyArrTitle.forEach((item) => {
+                    if (item.includes(num)) {
+                        title = item
+                        //// console.log(num + " " + item)
+                    }
+                })
+
+                const span = document.createElement("span");
+                span.className = "history-item";
+                span.style.position = "relative";
+                span.textContent = num;
+                span.title = "点击填入搜索框";
+
+                span.onclick = function (e) {
+
+                    ysss_codeHover = num
+                    console.log('点击填入搜索框： ' + num);
+                    document.querySelector('input').classList.add('hidden') // 隐藏谷歌搜索图标
+                    document.querySelector('input.gsc-input').value = num;
+                    ysss_historyItem_highlights() // 高亮
+                    ysss_historyItem_normal() // 恢复
+                };
+
+                let pressTimer;
+                span.addEventListener('touchstart', function (e) {
+                    pressTimer = setTimeout(() => {
+                        e.preventDefault(); // 长按时阻止默认行为，防止文本选择
+                        if (num !== ysss_codeHover) {
+                            // alert('请先点击选中此番号！');
+                            return;
+                        }
+                        if (favoritesArr.includes(num)) {
+                            alert('此番号已加入收藏！');
+                        } else if (confirm(`是否将番号 ${num} 加入收藏？`)) {
+                            favoritesArr.push(num);
+                            saveFavorites();
+                            renderFavorites();
+                            //// historyItem_paddingtoprebuild();
+                        }
+                    }, 1000);
+                }, { passive: false });
+
+                span.addEventListener('touchend', function () {
+                    clearTimeout(pressTimer);
+                });
+
+                span.addEventListener('touchcancel', function () {
+                    clearTimeout(pressTimer);
+                });
+
+                span.onmousedown = function () {
+                    pressTimer = setTimeout(() => {
+                        if (num !== ysss_codeHover) {
+                            alert('请先点击选中此番号！');
+                            return;
+                        }
+                        if (favoritesArr.includes(num)) {
+                            alert('此番号已加入收藏！');
+                        } else if (confirm(`是否将番号 ${num} 加入收藏？`)) {
+                            favoritesArr.push(num);
+                            saveFavorites();
+                            renderFavorites();
+                            //// historyItem_paddingtoprebuild();
+                        }
+                    }, 1000);
+                };
+
+                span.onmouseup = function () {
+                    clearTimeout(pressTimer);
+                };
+
+                span.onmouseleave = function () {
+                    clearTimeout(pressTimer);
+                };
+
+                const deleteBtn = document.createElement("button");
+                deleteBtn.textContent = "";
+                deleteBtn.className = "delete-history-btn";
+                deleteBtn.title = "删除此记录";
+                deleteBtn.onclick = function (e) {
+                    e.stopPropagation();
+
+                    ysss_historyArr = ysss_historyArr.filter(item => item !== num);
+
+                    for (let i = ysss_historyArrTitle.length - 1; i >= 0; i--) {
+                        if (ysss_historyArrTitle[i].includes(num)) {
+                            ysss_historyArrTitle.splice(i, 1); // 删除当前元素 // 目前正确
+                        }
+                    }
+
+                    ysss_saveHistory();
+                    ysss_renderHistory();
+                    if (searchInput.value === num) {
+                        searchInput.value = "";
+                        document.querySelector('input.gsc-input').value = "";
+                        updateSearchHref();
+                        display.innerHTML = "<br><p class='notranslate'>点击下方按钮</p><span class='notranslate'>随机抽取</span><p class='notranslate'>一个番号</p><br><p class='notranslate'>或者</p><span class='notranslate'>输入番号/关键字</span><p class='notranslate'>进行搜索</p>";
+                    }
+                    //// historyItem_paddingtoprebuild();
+                };
+                span.appendChild(deleteBtn);
+                historyList.appendChild(span);
+            });
+
+            //// historyItem_paddingtoprebuild();
+        }
+
+
+
+        function ysss_loadHistory() {
+
+            try {
+                const saved = localStorage.getItem('影视搜索记录');
+                if (saved) {
+                    ysss_historyArr = JSON.parse(saved);
+                }
+            } catch (e) {
+                ysss_historyArr = [];
+            }
+
+            try {
+                const savedTitle = localStorage.getItem('影视搜索记录名称');
+                if (savedTitle) {
+                    ysss_historyArrTitle = JSON.parse(savedTitle);
+                }
+            } catch (e) {
+                ysss_historyArrTitle = [];
+            }
+
+
+            function ysss_saveHistory() {
+                localStorage.setItem('影视搜索记录', JSON.stringify(ysss_historyArr));
+                localStorage.setItem('影视搜索记录名称', JSON.stringify(ysss_historyArrTitle));
+            }
+
+        }
+
+        function ysss_historyItem_highlights() {
+            document.querySelectorAll('.history-item').forEach(span => {
+                if (span.textContent == ysss_codeHover) { // 完全匹配才高亮
+                    console.log(span.textContent)
+                    span.classList.add('gradient-button');
+                }
+            });
+        }
+
+        function ysss_historyItem_normal() {
+            document.querySelectorAll('.history-item').forEach(span => {
+                console.log(span.textContent.indexOf(ysss_codeHover))
+                if (span.textContent !== ysss_codeHover) {
+                    span.classList.remove('gradient-button');
+                }
+            });
+        }
+
+        window.addEventListener('load', () => {
+
+            console.log('页面所有资源（图片、脚本、样式等）已加载完毕');
+
+            ysss_addGlobalListener();
+            ysss_loadHistory();
+            ysss_renderHistory();
+
+            const searchInput = document.getElementById('searchInput');
+            const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+            clearHistoryBtn.onclick = showConfirm;
+
+            /* ---------- 自定义弹窗逻辑 ---------- */
+            const mask = document.getElementById('confirmMask');
+            const cancel = mask.querySelector('.cancel');
+            const ok = mask.querySelector('.ok');
+
+            let resolvePromise;   // 用于 await 方式（可选）
+
+            function showConfirm() {
+                mask.classList.add('show');
+
+                return new Promise(resolve => {
+                    resolvePromise = resolve;
+
+                    // 点击遮罩关闭（可选）
+                    mask.onclick = e => {
+                        if (e.target === mask) closeConfirm(false);
+                    };
+                    cancel.onclick = () => closeConfirm(false);
+                    ok.onclick = () => closeConfirm(true);
+                });
+            }
+
+            function closeConfirm(result) {
+                mask.classList.remove('show');
+                mask.onclick = cancel.onclick = ok.onclick = null;
+                resolvePromise(result);
+            }
+
+            /* ---------- 确认后执行原逻辑 ---------- */
+            async function doClear() {
+                const confirmed = await showConfirm();
+                if (confirmed) {
+                    ysss_historyArr = [];
+                    // ysss_historyArrTitle = [];
+                    ysss_saveHistory();
+                    ysss_renderHistory();
+                }
+            }
+
+            /* 替换原来的 onclick */
+            clearHistoryBtn.onclick = doClear;
+
+
+            setTimeout(() => {
+                // 自动提取当前页面的 gsc.q 并显示
+                const hashParams = new URLSearchParams(window.location.hash.slice(1));
+                const q = hashParams.get('gsc.q');
+                const searchTerm = q ? decodeURIComponent(q) : '未找到';
+
+                console.log('当前 URL:', window.location.href);
+                console.log('搜索词 (gsc.q):', searchTerm);
+
+                // 可选：弹窗显示
+                console.log('当前搜索: ' + searchTerm);
+
+                if (searchTerm !== '未找到') {
+                    ysss_customSearchEvent();
+                }
+
+            }, 1500)
+
+
+        });
+
+    </script>
+
+
+    <!-- Cloudflare Web Analytics -->
+    <script defer src='https://static.cloudflareinsights.com/beacon.min.js'
+        data-cf-beacon='{"token": "d1fb06c8c738484db4702b74068271b8"}'></script>
+    <!-- End Cloudflare Web Analytics -->
+
+    <script type="text/javascript" src="Adguard/Adblock4limbo.function.js" async></script>
+
+</body>
+
+</html>
