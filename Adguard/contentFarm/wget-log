@@ -1,0 +1,11 @@
+--2023-09-16 13:51:28--  https://raw.githubusercontent.com/cobaltdisco/Google-Chinese-Results-Blocklist/master/GHHbD_perma_ban_list.txt
+正在解析主机 raw.githubusercontent.com (raw.githubusercontent.com)... 2606:50c0:8002::154, 2606:50c0:8001::154, 2606:50c0:8000::154, ...
+正在连接 raw.githubusercontent.com (raw.githubusercontent.com)|2606:50c0:8002::154|:443... 已连接。
+已发出 HTTP 请求，正在等待回应... 200 OK
+长度： 24217 (24K) [text/plain]
+正在保存至: “GHHbD_perma_ban_list.txt”
+
+GHHbD_perma_ban_list.txt                       0%[                                                                                            ]       0  --.-KB/s               GHHbD_perma_ban_list.txt                     100%[===========================================================================================>]  23.65K  --.-KB/s    用时 0s    
+
+2023-09-16 13:51:28 (61.6 MB/s) - 已保存 “GHHbD_perma_ban_list.txt” [24217/24217])
+

@@ -1,0 +1,100 @@
+        "zditect.com",
+        "whatthefuck.wtf"
+        //"csdn.net"
+    ];
+
+    var search_results_css = [
+        "[data-snc]", // google 新样式
+        "li.b_algo", // bing 搜索结果样式
+        ".mnr-c.xpd.O9g5cc.uUPGi", // Google 富文本搜索结果 style
+        "div[data-sokoban-grid]", // 通用
+        "div.Ww4FFb.vt6azd.xpd.EtOod.pkphOe", // 新增 2023.08.27
+        "div.g", // Google PC 搜索结果样式
+        "div[class='g'][data-hveid]", // 这是谷歌PC端搜索结果页的 style
+        "div[class='mnr-c g'][data-hveid]", // 这是谷歌手机端搜索结果页的 style
+        "div[class][data-sokoban-container]"// 最后一个选择器也不需要逗号结尾
+    ]
+
+
+
+    const hideGoogleAds = () => { // 隐藏 Google 广告 
+        const style = document.createElement('style');
+        style.textContent = `
+    #tvcap, #tads {
+      display: none !important;
+    }
+    `;
+        document.head.appendChild(style);
+    };
+
+    // Check if URL includes 'google.com' and execute
+    if (document.head && /google\.com/.test(window.location.hostname)) {
+        hideGoogleAds();
+    }
+
+    var i, x;
+    setTimeout(() => {
+        var huge = document.querySelectorAll(search_results_css);
+        console.log("捕获" + huge.length + "个有效样式！")
+        for (i = 0; i < ads_host.length; i++) {
+            var ads_host_css = "[href*='" + ads_host[i] + "']";
+            for (x = 0; x < huge.length; x++) {
+                if (huge[x].querySelectorAll(ads_host_css).length) {
+                    huge[x].remove();
+                    console.log(huge[x].textContent + " -> 涉及内容农场！已移除！")
+                }
+            }
+        }
+    }, 500);
+
+    timecount += 1;
+    console.log("循环第" + timecount + "次")
+    if (timecount === 1) {
+        clearInterval(id);
+        console.log("循环结束！")
+    }
+}
+
+
+contentFarm_AdsRemove_Auto(); // 首次执行农场内容检测
+var timecount = 0;
+var id = setInterval(contentFarm_AdsRemove_Auto, 1000);
+
+
+// 创建 MutationObserver 实例
+const observer = new MutationObserver((mutationsList, observer) => {
+  for (const mutation of mutationsList) {
+    // 检查是否有新节点被添加到 DOM
+    if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+      // 确认新节点是否包含搜索结果（可以通过类名、ID 或其他特征检查）
+      const newContent = mutation.target.querySelector('[data-async-context] > div'); // 根据实际页面结构调整选择器
+      if (newContent) {
+        console.log('New search results detected!');
+        contentFarm_AdsRemove_Auto(); // 调用目标函数
+      }
+    }
+  }
+});
+
+// 选择要观察的目标容器
+const targetNode = document.querySelector('div[data-async-context]');
+
+// 配置 MutationObserver
+const config = {
+  childList: true, // 监控子节点的变化（如添加或删除节点）
+  subtree: true,   // 监控目标节点及其所有后代节点
+};
+
+// 如果找到目标节点，开始观察
+if (targetNode) {
+  observer.observe(targetNode, config);
+} else {
+  console.warn('Target node div[data-async-context] not found. Please check the selector.');
+}
+
+// 可选：停止观察（如果需要）
+function stopObserving() {
+  observer.disconnect();
+  console.log('MutationObserver stopped.');
+}
+
