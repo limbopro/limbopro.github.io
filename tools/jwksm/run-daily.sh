@@ -1,1 +1,0 @@
-/home/typecho/tools/jwksm/temp/run-daily.sh
