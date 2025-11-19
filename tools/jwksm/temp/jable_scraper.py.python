@@ -1,0 +1,86 @@
+import requests
+import time
+import os
+import sys
+
+# --- 配置 ---
+BASE_URL = 'https://jable.tv/hot/'
+# HTML 文件保存目录 (必须与 run-daily.sh 中的 HTML_DIR 匹配)
+SAVE_DIR = '/home/typecho/tools/jwksm/temp/jable_data'
+START_PAGE = 1
+END_PAGE = 5
+
+# --- 关键修复：添加请求头以伪装成浏览器 ---
+HEADERS = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
+    'Accept-Language': 'zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7',
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+    'Referer': 'https://jable.tv/'
+}
+# ---------------------------------------------
+
+def log(message):
+    """简单的日志记录函数"""
+    print(f"[{time.strftime('%H:%M:%S')}] {message}")
+    sys.stdout.flush()
+
+def ensure_dir_exists():
+    """确保保存目录存在"""
+    if not os.path.exists(SAVE_DIR):
+        os.makedirs(SAVE_DIR)
+        log(f"创建目录: {SAVE_DIR}")
+
+def scrape_page(page_num):
+    """抓取单个页面并保存 HTML 内容"""
+    if page_num == 1:
+        # 第一页使用基础 URL
+        url = BASE_URL
+    else:
+        # 其他页使用分页 URL
+        url = f'{BASE_URL}/page/{page_num}/'
+
+    log(f"正在请求第 {page_num} 页...")
+    
+    try:
+        # 使用添加了 Headers 的请求
+        response = requests.get(url, headers=HEADERS, timeout=15)
+        
+        if response.status_code == 200:
+            file_name = f'jable_page_{page_num}.html'
+            file_path = os.path.join(SAVE_DIR, file_name)
+            
+            # 写入文件
+            with open(file_path, 'w', encoding='utf-8') as f:
+                f.write(response.text)
+            
+            log(f"✅ 第 {page_num} 页成功保存到: {file_name}")
+            return True
+        else:
+            log(f"❌ 请求失败，状态码: {response.status_code}")
+            return False
+            
+    except requests.exceptions.RequestException as e:
+        log(f"❌ 请求发生异常: {e}")
+        return False
+
+def main():
+    """主函数，循环抓取所有页面"""
+    print(f"--- 开始抓取第 {START_PAGE} 页到第 {END_PAGE} 页 ---")
+    ensure_dir_exists()
+    
+    for i in range(START_PAGE, END_PAGE + 1):
+        success = scrape_page(i)
+        
+        # 如果抓取失败，暂停一段时间再试一次，防止被认为是 DDOS
+        if not success:
+            log("等待 5 秒后继续下一页...")
+            time.sleep(5)
+        
+        # 抓取成功后，也暂停 1 秒，保持礼貌
+        else:
+            time.sleep(1)
+
+    print("--- 抓取任务完成 ---")
+
+if __name__ == '__main__':
+    main()
