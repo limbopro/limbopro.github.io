@@ -1,3 +1,13 @@
+
+/* -- 不要文章内头图 --*/
+const style = document.createElement('style');
+    style.textContent = `
+        div.entry-thumbnail .img-responsive {
+           display: none !important;
+        }
+    `;
+document.head.appendChild(style);
+
 /* ---------- 自定义弹窗逻辑 ---------- */
 const mask = document.getElementById('confirmMask');
 const cancel = mask.querySelector('.cancel');

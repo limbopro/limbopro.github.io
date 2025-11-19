@@ -1,0 +1,1 @@
+var chunk = navigator.userAgent;

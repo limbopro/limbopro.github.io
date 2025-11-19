@@ -1,0 +1,373 @@
+var ua = navigator.userAgent;
+console.log(ua);
+if (ua.indexOf("Chrome-Lighthouse") == -1
+    && ua.indexOf("Googlebot") == -1
+    && ua.indexOf("bot") == -1) {
+
+    // 暂时性下架 start 全面屏蔽
+    const varr = {
+        ads_host1: [ // 要屏蔽的链接
+            "https://limbopro.com/archives/bygcloud.html",
+            "https://limbopro.com/archives/v2ray-soCloud.html",
+            "https://limbopro.com/archives/klee_trojan.html"
+        ],
+        ads_host2: [ // 要屏蔽的链接
+            "https://limbopro.com/archives/flyingbird.html",
+            "https://limbopro.com/archives/CatNet.html",
+            "https://limbopro.com/archives/cylink.html",
+            "https://limbopro.com/archives/v2ray-jinkela.html",
+            "https://limbopro.com/archives/n3ro.html",
+            "https://limbopro.com/archives/1423.html",
+            "https://limbopro.com/archives/mdss.html",
+            "https://limbopro.com/archives/x-air-4-v2ray.html",
+            "https://limbopro.com/archives/%E6%9C%BA%E5%9C%BA%E6%8E%A8%E8%8D%90.html",
+        ],
+        search_results_css1: [ // 屏蔽全部
+            "div.panel-small.single-post.box-shadow-wrap-normal",
+            "div.post-inser.post.box-shadow-wrap-normal",
+            "li.list-group-item"
+        ],
+        search_results_css2: [ // 屏蔽部分
+            "div.panel-small.single-post.box-shadow-wrap-normal"
+        ]
+    }
+
+    function ads_Remove(array1, array2) {
+        var i, x;
+        for (i = 0; i < array1.length; i++) {
+            var ads_host_css = "[href*='" + array1[i] + "']";
+            var huge = document.querySelectorAll(array2);
+            for (x = 0; x < huge.length; x++) {
+                if (huge[x].querySelectorAll(ads_host_css).length) {
+                    huge[x].remove();
+                }
+            }
+        }
+    }
+
+    ads_Remove(varr.ads_host1, varr.search_results_css1);
+    ads_Remove(varr.ads_host2, varr.search_results_css2);
+
+    // end
+
+    // Start 为当前页面 Youtube 播放器设置宽度
+    /*
+    function youtube_iframe_auto() {
+
+        if (document.querySelectorAll("iframe[src*='youtube']").length !== 0) { // 查看当前页面是否有 Youtube 播放器 
+            const ele_width = document.querySelector("#post-content.wrapper-lg").clientWidth // 获取文章页面宽度
+            const nodelists = document.querySelectorAll("iframe[src*='youtube']") // 找到当前页面 Youtube 播放器
+            const ele_width_correct = ele_width - 30; // 减去padding后的正确宽度值
+            if (parseInt(ele_width_correct) !== parseInt(nodelists[0].width)) {
+                for (i = 0; i < nodelists.length; i++) {
+                    nodelists[i].width = ele_width_correct;
+                    console.log("正在为Youtube播放器 ▶️ 设置宽度！" + "- 第" + i + "次");
+                }
+            }
+        } else {
+            clearInterval(youtube_iframe_auto_timer);
+            console.log("本页面未发现Youtube播放器▶️");
+            console.log("已清除循环▶️");
+        }
+    }
+    var youtube_iframe_auto_timer = setInterval(youtube_iframe_auto, 1000);
+    */
+    // end
+
+    var style_innerHTML = document.querySelectorAll("style")
+    for (i = 0; i < style_innerHTML.length; i++) {
+        if (style_innerHTML[i].innerHTML.search("grayscale") == -1) {
+            var style = "img.fancybox-image,img.block,iframe,img,.item-thumb-small.lazy,.inner-image.bg,.gsc-search-button,.reaction-item__image {filter: grayscale(0%) !important;";
+            var creatcss = document.createElement("style");
+            creatcss.innerHTML = style;
+            document.getElementsByTagName('head')[0].appendChild(creatcss)
+        }
+    }
+
+    //// 灰度自动变化开始
+    function remainder_change() { // remainder_change() 开始
+        var day = new Date();
+        var timezone = 30;
+        var remainder = day.getMinutes() % timezone;
+        var minutes = day.getMinutes();
+
+        if (minutes < 30) {
+            var values = (100 / timezone) * remainder
+        } // 变暗
+        else {
+            var values = (100 / timezone) * (timezone - remainder)
+        } // 变亮
+
+        var style_innerHTML = document.querySelectorAll("style")
+        for (i = 0; i < style_innerHTML.length; i++) {
+            if (style_innerHTML[i].innerHTML.search("grayscale") >= 0) {
+                var grayscale_x = 1;
+                style_innerHTML[i].innerHTML = "img.fancybox-image,img.block,iframe,img,.item-thumb-small.lazy,.inner-image.bg,.gsc-search-button,.reaction-item__image {filter: grayscale(" + values + "%) !important;"
+            } else {
+                var grayscale_y = 0;
+            }
+        }
+
+        if (typeof grayscale_x == "undefined") {
+            var grayscale_x = 0;
+        }
+
+        var new_grayscale = grayscale_x + grayscale_y;
+        if (new_grayscale === 0) {
+            var style = "img.fancybox-image,img.block,iframe,img,.item-thumb-small.lazy,.inner-image.bg,.gsc-search-button,.reaction-item__image {filter: grayscale(" + values + "%) !important;";
+            var creatcss = document.createElement("style");
+            creatcss.innerHTML = style;
+            document.getElementsByTagName('head')[0].appendChild(creatcss)
+        }
+    } // remainder_change() 结束
+    //// 灰度自动变化结束
+
+    function css_add() { // 彩色模式 css_add () 开始
+        setCookie("Color_Model", "True", "1"); // 设置 Cookie 
+        Color_Model_Choice('True');
+
+        // 改变按钮属性
+        var i;
+        var button_change = document.querySelectorAll("[id*='_add']");
+        for (i = 0; i < button_change.length; i++) {
+            button_change[i].innerHTML = "开启灰度模式";
+            button_change[i].setAttribute("onclick", "css_remove('auto')");
+            button_change[i].setAttribute("id", "css_true_remove");
+        }
+    } // 彩色模式 css_add () 结束
+
+    function css_remove(message) { // 变灰模式 css_remove () 开始
+        switch (message) {
+            case 'auto':
+                setCookie("Color_Model", "False", "1"); // 设置 Cookie 
+                Color_Model_Choice('False');
+
+                // 改变按钮属性
+                var i;
+                var button_change = document.querySelectorAll("[id*='_remove']");
+                for (i = 0; i < button_change.length; i++) {
+                    button_change[i].innerHTML = "开启全彩模式";
+                    button_change[i].setAttribute("onclick", "css_add()");
+                    button_change[i].setAttribute("id", "css_true_add");
+                }
+                break;
+
+            case 'hands':
+                Color_Model_Choice('nsfw');
+                var i;
+                if (document.getElementById("css_true_remove")) {
+                    console.log("改变其ID#css_true_remove_hands，保留原先彩色模式");
+                    document.getElementById("css_true_remove").setAttribute("id", "css_true_remove_hands");
+                } else if (document.getElementById("css_true_add")) {
+                    console.log("改变其ID#css_true_add_hands，保留原先灰度模式");
+                    document.getElementById("css_true_add").setAttribute("id", "css_true_add_hands");
+                } else { console.log("顺其自然吧") }
+                break;
+
+            default:
+                console.log("Hands!")
+        }
+    } // 变灰模式css_remove () 结束
+
+    function add_Switch_button(message) {
+        switch (message) {
+            case 'add': // 首次添加按钮
+                var button = document.createElement("button");
+                button.innerHTML = "开启#NSFW模式";
+                button.setAttribute("onclick", "css_add()");
+                button.setAttribute("id", "css_add");
+                //button_style_values = "position: absolute; right:0px; top:68px; z-index:114154; box-shadow:inset 0px 0px 15px 3px #23395e; background:linear-gradient(to bottom, black 5%, black 100%); background-color:black; border-radius:0px; border:1px solid #292f33; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:15px; padding:6px 13px; text-decoration:none; text-shadow:0px 1px 0px #263666;"
+                button_style_values = "position: absolute; right:0px; padding: 6px 6px 6px 6px; display: inline-block; font-size: 15px; top: 66px; z-index:114154; border-right: 6px solid #38a3fd !important; border-left: #292f33 !important; border-top: #292f33 !important; border-bottom: #292f33 !important; background: black; border-radius: 0px 0px 0px 0px; margin-bottom: 10px; font-weight: 800 !important; text-align: right !important;"
+                button.setAttribute("style", button_style_values);
+                //button.setAttribute("class", "buttoncolor");
+                var _where2add = "header#header";
+                var _here = document.querySelectorAll(_where2add);
+                _here[0].appendChild(button);
+                break;
+
+            case "rewrite": // 重写按钮属性
+                var rewrite = document.querySelectorAll("[id*='css_']");
+                for (i = 0; i < rewrite.length; i++) {
+                    rewrite[i].innerHTML = "开启全彩模式";
+                    rewrite[i].setAttribute("onclick", "css_add()")
+                    rewrite[i].setAttribute("id", "css_add");
+                }
+                break;
+
+            default:
+                console.log("Switch!")
+        }
+    }
+
+    function add_Gray_button(x) {
+        var Graybutton = document.createElement("button");
+        Graybutton.innerHTML = x;
+        Graybutton.setAttribute("onclick", "gray_adxd()");
+        Graybutton.setAttribute("id", "gray_adxd");
+        Graybutton_style_values = "position:absolute; border-color:#292f33 !important; font-size:10px; right:0px;background:#292f33; /*padding: 4px 9px;*/ border-right:2px solid #38a3fd; border-radius: 0px 0px 0px 0px; margin-bottom:10px; font-weight:normal; text-align:right;"
+        Graybutton.setAttribute("style", Graybutton_style_values);
+        var _where2add2 = "header#header";
+        var _here2 = document.querySelectorAll(_where2add2);
+        _here2[0].appendChild(Graybutton);
+    }
+
+    // gray_adxd() 灰度变化
+    function gray_adxd() {
+        //remainder_change()
+        add_Switch_button("rewrite")
+        setCookie("Color_Model", "", ""); // 设置 Cookie 
+    }
+
+    var then = new Date()
+
+    function now(x) {
+        var now = new Date();
+        var convert = parseInt((now - x) / 1000);
+        var getMinutes = parseInt(convert / 60);
+        var getSeconds = convert % 60;
+        var currentTime = "已在本页面停留" + getMinutes + "分钟" + getSeconds + "秒"
+        return currentTime;
+    }
+
+    setInterval(function () {
+        var currentTime = now(then);
+        if (document.getElementById('gray_adxd')) {
+            var xr = document.getElementById('gray_adxd');
+            xr.innerHTML = currentTime;
+        } else {
+            add_Gray_button(currentTime)
+        }
+    }, 1000)
+
+
+    /*首次 if (document.querySelectorAll("button[id*='css_']").length === 0) {
+        add_Switch_button("add")
+    }*/
+
+    /*if (document.querySelectorAll("button[id*='css_true']").length === 0) {
+        remainder_change()
+    }*/
+
+
+    // 判断当前按钮的值
+    function button_values() {
+        if (document.getElementById("css_true_remove_hands")) {
+            console.log("恢复其彩色模式");
+            css_add()
+        } else if (document.getElementById("css_true_add_hands")) {
+            console.log("恢复其灰度模式");
+            css_remove('auto')
+        } else { console.log("保留现有模式即可") }
+    }
+
+    function nsfw() { // 计算 nsfwCategory 的值
+        var Color_Model = getCookie("Color_Model");
+        if (Color_Model === "True" && count > 0) {
+            css_add()
+            //css_remove('hands');
+        } else if (Color_Model === "Fasle") { css_remove("auto") } else {
+
+            var ads_host = [
+                "instagram",
+                "NSFW",
+                "beautyandsex"
+            ];
+
+            var search_results_css = [
+                "li.meta-categories",
+                "ol.page-navigator"
+            ]
+
+            for (i = 0; i < ads_host.length; i++) {
+                var ads_host_css = "[href*='" + ads_host[i] + "']";
+                var huge = document.querySelectorAll(search_results_css);
+
+                for (x = 0; x < huge.length; x++) { // 循环计算到底是否有该分类
+                    if (huge[x].querySelectorAll(ads_host_css).length > 0) {
+                        var Success = 1; // 如果有则计为1
+                    } else {
+                        var Failed = 0; // 如果没有则计为0
+                    }
+                }
+            }
+
+            // 判断
+            var count = Success + Failed
+            if (count > 0) {
+                css_remove('hands');
+                add_Switch_button("add");
+                visibility();
+            } else {
+                button_values();
+            }
+        }
+    }
+
+    nsfw()
+
+    // 监听 visibility change 事件
+    function visibility() {
+        document.addEventListener('visibilitychange', function () {
+            var isHidden = document.hidden;
+            if (isHidden) {
+                nsfw();
+            }
+        })
+    };
+
+    // Set Cookies
+    function setCookie(cname, cvalue, exdays) {
+        var d = new Date();
+        d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
+        var expires = "expires=" + d.toGMTString();
+        document.cookie = cname + "=" + cvalue + "; " + expires;
+    }
+
+    // Get Cookies
+    function getCookie(cname) {
+        var name = cname + "=";
+        var ca = document.cookie.split(';');
+        for (var i = 0; i < ca.length; i++) {
+            var c = ca[i].trim();
+            if (c.indexOf(name) == 0) return c.substring(name.length, c.length);
+        }
+        return "";
+    }
+
+    function Color_Model_Choice(values) {
+        switch (values) {
+            case 'True':
+                var style_innerHTML = document.querySelectorAll("style")
+                for (i = 0; i < style_innerHTML.length; i++) {
+                    if (style_innerHTML[i].innerHTML.search("grayscale") > 1) {
+                        style_innerHTML[i].innerHTML = "img.fancybox-image,img.block,iframe,img,.item-thumb-small.lazy,.inner-image.bg,.gsc-search-button,.reaction-item__image {filter: grayscale(0%) !important;"
+                    }
+                }
+                break;
+
+            case 'False':
+                var style_innerHTML = document.querySelectorAll("style")
+                for (i = 0; i < style_innerHTML.length; i++) {
+                    if (style_innerHTML[i].innerHTML.search("grayscale") > 1) {
+                        style_innerHTML[i].innerHTML = "img.fancybox-image,img.block,iframe,img,.item-thumb-small.lazy,.inner-image.bg,.gsc-search-button,.reaction-item__image {filter: grayscale(100%) !important;"
+                    }
+                }
+                break;
+
+            case 'nsfw':
+                var style_innerHTML = document.querySelectorAll("style")
+                for (i = 0; i < style_innerHTML.length; i++) {
+                    if (style_innerHTML[i].innerHTML.search("grayscale") > 1) {
+                        style_innerHTML[i].innerHTML = "img.fancybox-image,img.block,.item-thumb-small.lazy,.inner-image.bg {filter: grayscale(100%) blur(15px) !important;}"
+                    }
+                }
+                break;
+
+            default:
+                console.log("顺其自然!")
+
+        }
+    }
+}
+
+

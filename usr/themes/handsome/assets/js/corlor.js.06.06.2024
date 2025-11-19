@@ -1,0 +1,516 @@
+function reload() {  // 用以刷新页面 f5
+    var url_Now = window.location.protocol + "//" + window.location.host + "" + window.location.pathname;
+    var url_Then = window.location.href;
+    var myword = confirm("如果当前页面无法正常滑动或阅读，请点击【确定/好】进行重置！");
+    if (myword == true) {
+    //if (window.location.href !== url_Now) {
+        window.location.replace(url_Now)
+        }
+      //  console.log("当前URL存在#")
+    //}
+}
+
+function sidebar_contact() {
+    var myword = confirm("联系博主？");
+    if (myword == true) {
+        window.open('https://bit.ly/3wS5PZU', '_blank');
+    }
+    else {
+
+    }
+}
+
+window.onload = () => { // https://limbopro.com/archives/10713.html 保留彩色模式
+  setTimeout(()=>{
+
+    const url = window.location.href;
+    //const re = new RegExp("10713");
+    if (url.search('10713') !== -1){
+        css_add()
+    }
+
+  },2000)
+};
+
+// 动态创建并引用外部资源 外部样式表 外部脚本
+function thrd_party_file(tagname, url, where) {
+    const ele_New = document.createElement(tagname);
+    // script
+    if (tagname == "script") {
+        ele_New.type = "text/javascript";
+        ele_New.src = url;
+        ele_New.setAttribute('async', '')
+        // link
+    } else if (tagname == "link") {
+        ele_New.rel = "stylesheet";
+        ele_New.type = "text/css";
+        ele_New.href = url;
+    }
+    if (where == "body") {
+        document.body.appendChild(ele_New);
+    } else if (where == "head") {
+        document.head.appendChild(ele_New);
+    }
+}
+
+// 优先追加style元素 以内联样式的方式
+function css_add_x(css, here_write_css_name_you_want) {
+    // css style 创建
+    let body = document.body;
+    var css_name_x = document.createElement('style');
+    css_name_x.id = here_write_css_name_you_want;
+    css_name_x.innerText = css;
+    document.querySelector('html').insertBefore(css_name_x, body);
+}
+
+// Crisp Start
+
+const js_common_fx = {
+    crisp: 'https://limbopro.com/Adguard/crisp.js', // crisp 聊天系统 chat
+    css: "div.crisp-client {pointer-events: none;z-index: -114154;opacity: 0;} .crispActive { z-index:114154 !important; pointer-events:auto !important; opacity:1 !important; }"
+}
+
+function crisp_window_switch() {
+    //console.log("// crisp_window_switch() 于导航页面手动开启Crisp聊天窗口...")
+    let crisp_check = setInterval(() => {
+        if (document.querySelector("span[data-id]")) {
+            document.querySelector("span[data-id]").click();
+            clearInterval(crisp_check);
+        }
+    }, 1000);
+
+    let crisp_visible = setInterval(() => {
+        if (document.querySelectorAll("[data-visible='true']").length > 1) {
+            crisp_window_remove("1");
+            clearInterval(crisp_visible);
+        } else {
+            if (document.querySelectorAll("[data-visible='true']").length == 1) {
+                crisp_window_remove("0");
+                clearInterval(crisp_visible);
+            }
+        }
+    }, 1000);
+}
+
+function crisp_window_remove(x) {
+    if (x == 0) {
+        if (document.querySelector("[data-for-id=new_messages]") !== null && document.querySelector('[aria-live=polite].crisp-client').classList !== null) { // 如果有未读消息则强制显示
+            document.querySelector('[aria-live=polite].crisp-client').classList.add('crispActive');
+            document.querySelector('[aria-live=polite].crisp-client').style = 'z-index:115155!important'; // 避免被网站样式强制覆盖
+            console.log("// crisp_window_remove() 有未读消息，执行显示Crisp成功...")
+        } else {
+            if (document.querySelector('[aria-live=polite].crisp-client') !== null && document.querySelector('[aria-live=polite].crisp-client').classList !== null) {
+                document.querySelector('[aria-live=polite].crisp-client').classList.remove('crispActive');
+                document.querySelector('[aria-live=polite].crisp-client').style = 'z-index:-115155!important'; // 避免被网站样式强制覆盖
+                //console.log("// crisp_window_remove() 执行隐藏Crisp成功...")
+            }
+        }
+    } else if (x == 1) {
+        if (document.querySelector('[aria-live=polite].crisp-client') !== null && document.querySelector('[aria-live=polite].crisp-client').classList !== null) {
+            document.querySelector('[aria-live=polite].crisp-client').classList.add('crispActive');
+            document.querySelector('[aria-live=polite].crisp-client').style = 'z-index:115155!important';
+            console.log("// crisp_window_remove() 手动打开，执行显示Crisp成功...")
+        }
+    }
+}
+
+function crisp_active(x) {
+    if (x == 1) {
+        let crisp_check_2 = setInterval(() => {
+            if (!document.querySelector("script[src*='crisp']")) {
+                //console.log("// crisp_active() 插入 crisp 系统脚本...")
+                thrd_party_file("script", js_common_fx.crisp, "head");
+                crisp_window_remove('1');
+                crisp_window_switch();
+                clearInterval(crisp_check_2);
+            } else {
+                crisp_window_remove('1');
+                crisp_window_switch();
+                clearInterval(crisp_check_2);
+            }
+        }, 1000);
+    }
+}
+
+
+function crisp_auto_hidden() {
+    val = null
+    ////console.log(val === document.querySelector(selector.body_css));
+    if (!document.querySelector("[data-for-id=new_messages]") && val == document.querySelector('.cc-1hqb[data-visible=true]')) {
+        crisp_window_remove('0'); // 隐藏crisp按钮
+        //console.log("// crisp_auto_hidden()执行隐藏Crisp...")
+    } else {
+        if (document.querySelector("[data-for-id=new_messages]")) { // 如果有未读消息则强制显示
+            crisp_window_remove('0');
+            console.log("/ crisp_auto_hidden() 执行显示Crisp...")
+        }
+        console.log("/ crisp_auto_hidden() 没有对应结果...")
+    }
+}
+
+thrd_party_file("script", js_common_fx.crisp, "head");
+css_add_x(js_common_fx.css, 'moduo'); // 在body后面插入 css
+
+let crisp_auto_hiddenX = setInterval(() => {
+    crisp_auto_hidden(); // 默认隐藏 crisp 聊天窗口
+}, 5000)
+
+// Crisp End
+
+var ua = navigator.userAgent;
+console.log(ua);
+if (ua.indexOf("Chrome-Lighthouse") == -1
+    && ua.indexOf("Googlebot") == -1
+    && ua.indexOf("bot") == -1) {
+
+    // 暂时性下架 start 全面屏蔽
+    const varr = {
+        ads_host1: [ // 要屏蔽的链接
+            //"https://limbopro.com/archives/bygcloud.html",
+            "https://limbopro.com/archives/v2ray-soCloud.html",
+            "https://limbopro.com/archives/klee_trojan.html"
+        ],
+        ads_host2: [ // 要屏蔽的链接
+            ///"https://limbopro.com/archives/flyingbird.html",
+            ///"https://limbopro.com/archives/CatNet.html",
+            ///"https://limbopro.com/archives/cylink.html",
+            ///"https://limbopro.com/archives/v2ray-jinkela.html",
+            "https://limbopro.com/archives/unolink.html",
+            //"https://limbopro.com/archives/n3ro.html",
+            ///'https://limbopro.com/archives/27873.html',
+            "https://limbopro.com/archives/1423.html",
+            "https://limbopro.com/archives/mdss.html",
+            "https://limbopro.com/archives/x-air-4-v2ray.html",
+            "https://limbopro.com/archives/%E6%9C%BA%E5%9C%BA%E6%8E%A8%E8%8D%90.html",
+        ],
+        search_results_css1: [ // 屏蔽全部
+            "div.panel-small.single-post.box-shadow-wrap-normal",
+            "div.post-inser.post.box-shadow-wrap-normal",
+            "li.list-group-item"
+        ],
+        search_results_css2: [ // 屏蔽部分
+            "div.panel-small.single-post.box-shadow-wrap-normal"
+        ]
+    }
+
+    function ads_Remove(array1, array2) {
+        var i, x;
+        for (i = 0; i < array1.length; i++) {
+            var ads_host_css = "[href*='" + array1[i] + "']";
+            var huge = document.querySelectorAll(array2);
+            for (x = 0; x < huge.length; x++) {
+                if (huge[x].querySelectorAll(ads_host_css).length) {
+                    huge[x].remove();
+                }
+            }
+        }
+    }
+
+    ads_Remove(varr.ads_host1, varr.search_results_css1);
+    ads_Remove(varr.ads_host2, varr.search_results_css2);
+
+    // end
+
+    function css_add() { // 彩色模式 css_add () 开始
+        setCookie("Color_Model", "True", "1"); // 设置 Cookie 
+        Color_Model_Choice('True');
+
+        // 改变按钮属性
+        var i;
+        var button_change = document.querySelectorAll("[id*='_add']");
+        for (i = 0; i < button_change.length; i++) {
+            button_change[i].innerHTML = "开启#图片模糊模式";
+            button_change[i].setAttribute("onclick", "css_remove('auto')");
+            button_change[i].setAttribute("id", "css_true_remove");
+        }
+    } // 彩色模式 css_add () 结束
+
+    function css_remove(message) { // 变灰模式 css_remove () 开始
+        switch (message) {
+            case 'auto':
+                setCookie("Color_Model", "False", "1"); // 设置 Cookie 
+                Color_Model_Choice('False');
+
+                // 改变按钮属性
+                var i;
+                var button_change = document.querySelectorAll("[id*='_remove']");
+                for (i = 0; i < button_change.length; i++) {
+                    button_change[i].innerHTML = "开启#图片彩色模式";
+                    button_change[i].setAttribute("onclick", "css_add()");
+                    button_change[i].setAttribute("id", "css_true_add");
+                }
+                break;
+
+            case 'hands':
+                Color_Model_Choice('nsfw');
+                var i;
+                if (document.getElementById("css_true_remove")) {
+                    console.log("改变其ID#css_true_remove_hands，保留原先彩色模式");
+                    document.getElementById("css_true_remove").setAttribute("id", "css_true_remove_hands");
+                } else if (document.getElementById("css_true_add")) {
+                    console.log("改变其ID#css_true_add_hands，保留原先模糊模式");
+                    document.getElementById("css_true_add").setAttribute("id", "css_true_add_hands");
+                } else { console.log("顺其自然吧！") }
+                break;
+
+            default:
+                console.log("Hands!")
+        }
+    } // 变灰模式css_remove () 结束
+
+    function add_Switch_button(message) {
+        switch (message) {
+            case 'add': // 首次添加按钮
+                var button = document.createElement("button");
+                button.innerHTML = "开启#图片彩色模式";
+                button.setAttribute("onclick", "css_add()");
+                button.setAttribute("id", "css_add");
+                button_style_values = "position: absolute; right:0px; padding: 6px 6px 6px 6px; display: inline-block; color:coral; font-size: 15px; top: 68px; z-index:114154; border-right: 6px solid #38a3fd !important;  border-top: #292f33 !important; border-bottom: #292f33 !important; background: #1f415e; border-radius: 0px 0px 0px 0px; margin-bottom: 10px; font-weight: 800 !important; text-align: right !important;"
+                button.setAttribute("style", button_style_values);
+                var _where2add = "header#header";
+                var _here = document.querySelectorAll(_where2add);
+                _here[0].appendChild(button);
+                break;
+
+            case 'batch_download': {
+                let mobile_ua = navigator.userAgent;
+                if (mobile_ua.indexOf("Mobile") == -1 && mobile_ua.indexOf("Chrome") > -1) {
+                    var button = document.createElement("button");
+                    button.innerHTML = "下载页内图片";
+                    button.setAttribute("id", "batch_download");
+                    button.setAttribute("onclick", "batch_download('#post-content,.blog-post')");
+                    button_style_values = "position: absolute; right:0px; padding: 6px 6px 6px 6px; display: inline-block; font-size: 15px; top: 98px; z-index:114154; border-right: 6px solid #fd38ad !important;  border-top: #292f33 !important; border-bottom: #292f33 !important; background: black; border-radius: 0px 0px 0px 0px; margin-bottom: 10px; font-weight: 800 !important; text-align: right !important;"
+                    button.setAttribute("style", button_style_values);
+                    var _where2add = "header#header";
+                    var _here = document.querySelectorAll(_where2add);
+                    _here[0].appendChild(button);
+                }
+            }
+                break;
+
+            case "rewrite": // 重写按钮属性
+                var rewrite = document.querySelectorAll("[id*='css_']");
+                for (i = 0; i < rewrite.length; i++) {
+                    rewrite[i].innerHTML = "开启#图片彩色模式";
+                    rewrite[i].setAttribute("onclick", "css_add()")
+                    rewrite[i].setAttribute("id", "css_add");
+                }
+                break;
+
+            default:
+                console.log("Switch!")
+        }
+    }
+
+    function add_Gray_button(x) {
+        var Graybutton = document.createElement("button");
+        Graybutton.innerHTML = x;
+        Graybutton.setAttribute("onclick", "gray_adxd()");
+        Graybutton.setAttribute("id", "gray_adxd");
+        Graybutton_style_values = "position:absolute; border-color:#292f33 !important; font-size:10px; right:0px;background:#292f33; /*padding: 4px 9px;*/ border-right:2px solid #38a3fd; border-radius: 0px 0px 0px 0px; margin-bottom:10px; font-weight:normal; text-align:right;"
+        Graybutton.setAttribute("style", Graybutton_style_values);
+        var _where2add2 = "header#header";
+        //var _where2add2 = ".app-footer";
+        var _here2 = document.querySelectorAll(_where2add2);
+        _here2[0].appendChild(Graybutton);
+    }
+
+    // gray_adxd() 模糊变化
+    function gray_adxd() {
+        //remainder_change()
+        add_Switch_button("rewrite")
+        setCookie("Color_Model", "", ""); // 设置 Cookie 
+    }
+
+    var then = new Date()
+
+    function now(x) {
+        var now = new Date();
+        var convert = parseInt((now - x) / 1000);
+        var getMinutes = parseInt(convert / 60);
+        var getSeconds = convert % 60;
+        var currentTime = "已在本页面停留" + getMinutes + "分钟" + getSeconds + "秒"
+        return currentTime;
+    }
+
+    setInterval(function () {
+        var currentTime = now(then);
+        if (document.getElementById('gray_adxd')) {
+            var xr = document.getElementById('gray_adxd');
+            xr.innerHTML = currentTime;
+        } else {
+            add_Gray_button(currentTime)
+        }
+    }, 1000)
+
+    // 判断当前按钮的值
+    function button_values() {
+        if (document.getElementById("css_true_remove_hands")) {
+            console.log("恢复其彩色模式");
+            css_add()
+        } else if (document.getElementById("css_true_add_hands")) {
+            console.log("恢复其模糊模式");
+            css_remove('auto')
+        } else {
+            console.log("保留现有模式即可")
+        }
+
+    }
+
+    function nsfw() { // 计算 nsfwCategory 的值
+        var Color_Model = getCookie("Color_Model");
+        if (Color_Model === "True" && count > 0) {
+            css_add()
+            //css_remove('hands');
+        } else if (Color_Model === "Fasle") { css_remove("auto") } else {
+
+            var ads_host = [
+                "instagram",
+                "NSFW",
+                "beautyandsex"
+            ];
+
+            var search_results_css = [
+                "li.meta-categories",
+                "ol.page-navigator"
+            ]
+
+            for (i = 0; i < ads_host.length; i++) {
+                var ads_host_css = "[href*='" + ads_host[i] + "']";
+                var huge = document.querySelectorAll(search_results_css);
+
+                for (x = 0; x < huge.length; x++) { // 循环计算到底是否有该分类
+                    if (huge[x].querySelectorAll(ads_host_css).length > 0) {
+                        var Success = 1; // 如果有则计为1
+                    } else {
+                        var Failed = 0; // 如果没有则计为0
+                    }
+                }
+            }
+
+            // 判断
+            var count = Success + Failed
+            if (count > 0) {
+                css_remove('hands');
+                add_Switch_button("add");
+                add_Switch_button("batch_download");
+                visibility();
+            } else {
+                button_values();
+            }
+        }
+    }
+
+    nsfw()
+
+    // 监听 visibility change 事件
+    function visibility() {
+        document.addEventListener('visibilitychange', function () {
+            var isHidden = document.hidden;
+            if (isHidden) {
+                nsfw();
+            }
+        })
+    };
+
+    
+
+    // 开启批量下载
+    function batch_download(x) {
+        const ele = document.querySelectorAll(x)
+        if (ele.length > 0) {
+            var files = [];
+            for (let j = 0; j < ele.length; j++) {
+                const img_nodelist = ele[j].querySelectorAll("img");
+                if (img_nodelist.length > 0) {
+                    for (let i = 0; i < img_nodelist.length; i++) {
+                        if (img_nodelist[i].width > 420) {
+                            files.push(img_nodelist[i].currentSrc);
+                            console.log(img_nodelist[i].currentSrc); // 输出至控制台
+                        }
+                    }
+
+                    files.forEach((url, index) => {
+                        let a = document.createElement('a') // 创建a标签
+                        let e = document.createEvent('MouseEvents') // 创建鼠标事件对象
+                        e.initEvent('click', false, false) // 初始化事件对象
+                        a.href = url // 设置下载地址
+                        a.download = '' // 设置下载文件名
+                        a.dispatchEvent(e)
+                    })
+
+                } else {
+                    console.log("当前页面没有符合可下载的图片。")
+                    alert("当前页面没有符合可下载的大图，请进入文章页面并再次尝试")
+                }
+            }
+        }
+    }
+
+
+    // Set Cookies
+    function setCookie(cname, cvalue, exdays) {
+        var d = new Date();
+        d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
+        var expires = "expires=" + d.toGMTString();
+        document.cookie = cname + "=" + cvalue + "; " + expires;
+    }
+
+    // Get Cookies
+    function getCookie(cname) {
+        var name = cname + "=";
+        var ca = document.cookie.split(';');
+        for (var i = 0; i < ca.length; i++) {
+            var c = ca[i].trim();
+            if (c.indexOf(name) == 0) return c.substring(name.length, c.length);
+        }
+        return "";
+    }
+
+    function Color_Model_Switch(x, y, z) {  // 切换模式设定
+        const ele = document.querySelectorAll(x)
+        if (ele.length > 0) {
+            for (let i = 0; i < ele.length; i++) {
+
+                // 文章列表页
+                const pagelist = ele[i].querySelectorAll(".item-thumb-small");
+                pagelist.forEach((x) => {
+                    x.setAttribute("style", x.getAttribute("style") + ";" + "filter: grayscale(" + y + "%) blur(" + z + "px) !important;")
+                    console.log(x.getAttribute("style"))
+                })
+
+                // 文章内容页
+                const nodelist = ele[i].querySelectorAll("img");
+                nodelist.forEach((x) => {
+                    x.style.cssText = "filter: grayscale(" + y + "%) blur(" + z + "px) !important;"
+                })
+
+            }
+
+            const ico = document.querySelector("img[src*='by-nc-sa']");
+            if (ico) {
+                ico.style.cssText = "filter: grayscale(0%) !important";
+            }
+        }
+    }
+
+    function Color_Model_Choice(values) { // 切换模式执行及判断
+        switch (values) {
+            case 'True':
+                Color_Model_Switch("#md_handsome_origin, #post-panel", 0, 0)
+                break;
+
+            case 'False':
+                Color_Model_Switch("#md_handsome_origin, #post-panel", 100, 4)
+                break;
+
+            case 'nsfw':
+                Color_Model_Switch("#md_handsome_origin, #post-panel", 100, 4)
+                break;
+
+            default:
+                console.log("顺其自然!")
+
+        }
+    }
+}

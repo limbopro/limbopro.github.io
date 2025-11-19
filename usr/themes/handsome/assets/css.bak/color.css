@@ -1,0 +1,23 @@
+#css_true_remove {
+	box-shadow:inset 0px 0px 15px 3px #23395e !important;
+	background:linear-gradient(to bottom, #2e466e 5%, #415989 100%) !important;
+	background-color:#2e466e !important;
+	border-radius:17px !important;
+	border:1px solid #1f2f47 !important;
+	display:inline-block !important;
+	cursor:pointer !important;
+	color:#fea5a5 !important;
+	font-family:Arial !important;
+	font-size:15px !important;
+	padding:6px 13px !important;
+	text-decoration:none !important;
+	text-shadow:0px 1px 0px #263666 !important;
+}
+.myButton:hover {
+	background:linear-gradient(to bottom, #415989 5%, #2e466e 100%);
+	background-color:#415989;
+}
+.myButton:active {
+	position:relative;
+	top:1px;
+}
