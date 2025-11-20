@@ -145,10 +145,17 @@ if (!orbtn) {
     clone.style.top = '321px';
 
     // 更换图标（推荐用代表“状态/监控”的图标）
+
+       
     const icon = clone.querySelector('i');
     if (icon) {
         icon.className = 'glyphicon glyphicon-signal';  // 信号波形图，最合适“状态”
         // 其他备选：glyphicon-stats、glyphicon-dashboard、glyphicon-eye-open
+    }
+
+    // 需要确保 jQuery 和 Bootstrap 已经被加载
+    if (typeof jQuery !== 'undefined' && typeof $().tooltip === 'function') {
+        $('#iSatus').tooltip();
     }
 
     // 关键：点击 #iSatus 按钮 → 执行你指定的确认 + 跳转逻辑
