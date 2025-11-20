@@ -153,10 +153,6 @@ if (!orbtn) {
         // 其他备选：glyphicon-stats、glyphicon-dashboard、glyphicon-eye-open
     }
 
-    // 需要确保 jQuery 和 Bootstrap 已经被加载
-    if (typeof jQuery !== 'undefined' && typeof $().tooltip === 'function') {
-        $('#iSatus').tooltip();
-    }
 
     // 关键：点击 #iSatus 按钮 → 执行你指定的确认 + 跳转逻辑
     clone.addEventListener('click', function(e) {
@@ -184,10 +180,14 @@ if (!orbtn) {
     // 插入到原按钮后面
     orbtn.after(clone);
 
-    // 重新初始化 Bootstrap Tooltip（必须！否则新按钮没提示）
-    if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
-        new bootstrap.Tooltip(clone);
-    }
+    // 重新初始化 Bootstrap Tooltip（必须！）
+if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+    // 兼容 Bootstrap 5+ (原生JS)
+    new bootstrap.Tooltip(clone);
+} else if (typeof jQuery !== 'undefined' && typeof $().tooltip === 'function') {
+    // 兼容 Bootstrap 3/4 (依赖 jQuery)
+    $('#' + clone.id).tooltip(); 
+}
 
     console.log('状态按钮 #iSatus 创建成功！点击将弹出确认框 → 确认后执行 webStatus()');
 }Ï
