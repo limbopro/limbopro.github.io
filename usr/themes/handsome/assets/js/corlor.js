@@ -132,6 +132,59 @@ window.onload = () => { // https://limbopro.com/archives/10713.html 保留彩色
 
     }, 2000)
 
+    const orbtn = document.getElementById('idaohang');
+
+if (!orbtn) {
+    console.error('未找到 id="idaohang" 的按钮');
+} else {
+    const clone = orbtn.cloneNode(true);
+
+    // 修改属性
+    clone.id = 'iSatus';
+    clone.setAttribute('data-original-title', '查看网站状态');
+    clone.style.top = '321px';
+
+    // 更换图标（推荐用代表“状态/监控”的图标）
+    const icon = clone.querySelector('i');
+    if (icon) {
+        icon.className = 'glyphicon glyphicon-signal';  // 信号波形图，最合适“状态”
+        // 其他备选：glyphicon-stats、glyphicon-dashboard、glyphicon-eye-open
+    }
+
+    // 关键：点击 #iSatus 按钮 → 执行你指定的确认 + 跳转逻辑
+    clone.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        // 假设你已经有 confirmndExecute 函数（大多数网站都有这个通用确认弹窗）
+        if (typeof confirmndExecute === 'function') {
+            confirmndExecute('', '即将跳往查看网站状态！', () => {
+                webStatus();   // 确认后执行的函数
+            });
+        } else {
+            // 如果没这个函数，直接降级处理
+            if (confirm('即将跳往查看网站状态！')) {
+                webStatus();
+            }
+        }
+    });
+
+    // 美化：鼠标指针 + 悬停效果
+    clone.style.cursor = 'pointer';
+    clone.addEventListener('mouseenter', () => clone.style.opacity = '0.85');
+    clone.addEventListener('mouseleave', () => clone.style.opacity = '1');
+
+    // 插入到原按钮后面
+    orbtn.after(clone);
+
+    // 重新初始化 Bootstrap Tooltip（必须！否则新按钮没提示）
+    if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+        new bootstrap.Tooltip(clone);
+    }
+
+    console.log('状态按钮 #iSatus 创建成功！点击将弹出确认框 → 确认后执行 webStatus()');
+}Ï
+
 };
 
 // thrd_party_file('script','https://limbopro.com/Adguard/Adblock4limbo.function.js','body')
