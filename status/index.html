@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>网站实时状态检测</title>
+    <style>
+        :root{
+            --cf: #f38020;
+            --gh: #ffc107;
+            --other: #dc3545;
+        }
+        body{
+            font-family: -apple-system,system-ui,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
+            background: linear-gradient(135deg,#667eea,#764ba2);
+            min-height:100vh;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            padding:20px;
+            margin:0;
+            color:#333;
+        }
+        .card{
+            background:#fff;
+            border-radius:18px;
+            box-shadow:0 20px 50px rgba(0,0,0,.22);
+            padding:44px 32px;
+            max-width:560px;
+            width:100%;
+            text-align:center;
+        }
+        h1{
+            font-size:2.7rem;
+            background:linear-gradient(90deg,#667eea,#764ba2);
+            -webkit-background-clip:text;
+            -webkit-text-fill-color:transparent;
+            margin-bottom:20px;
+        }
+        .status{
+            font-size:7rem;
+            line-height:1;
+            margin:10px 0;
+        }
+        .info{
+            margin:24px 0;
+            padding:20px;
+            background:#f8f9fa;
+            border-radius:14px;
+            font-family:Consolas,Monaco,monospace;
+            font-size:1rem;
+            /*line-height:2;*/
+        }
+        .note{
+            margin-top:28px;
+            padding:18px;
+            background:#fff9e6;
+            border-left:4px solid #ffb302;
+            border-radius:0 8px 8px 0;
+            text-align:left;
+            font-size:0.98rem;
+            line-height:1.75;
+            color:#555;
+        }
+        button{
+            margin-top:30px;
+            padding:12px 32px;
+            border:none;
+            border-radius:10px;
+            background:#667eea;
+            color:#fff;
+            font-size:1.05rem;
+            cursor:pointer;
+            transition:all .3s;
+        }
+        button:hover{background:#5a6fd8;transform:translateY(-2px);}
+        @media(max-width:480px){
+            h1{font-size:2.2rem;}
+            .status{font-size:5.2rem;}
+            .info{font-size:0.95rem;}
+        }
+    </style>
+</head>
+<body>
+<div class="card">
+    <h1>网站实时状态</h1>
+    <div class="status" id="icon">⟳</div>
+    <div id="mainText" style="font-size:1.65rem;margin:20px 0;font-weight:600;">检测中...</div>
+
+    <div class="info">
+        <div>您的 IP：<span id="ip" style="font-weight:bold;color:#409eff;">加载中...</span></div>
+        <div>所在地区：<span id="location" style="font-weight:bold;color:#409eff;">加载中...</span> <span id="flag" style="font-size:1.3em;"></span></div>
+        <br>
+        <div>当前博客实际服务器：<span id="provider" style="font-weight:bold;">-</span></div>
+        <div>特征标识：<span id="evidence">-</span></div>
+        <div>检测时间：<span id="time">-</span></div>
+    </div>
+
+    <div class="note">
+        <strong>状态说明：</strong><br>
+        <span style="color:#f38020;">● Cloudflare</span> → <strong>一切正常</strong>（主站加速最佳）<br>
+        <span style="color:#ffb302;">● GitHub Pages</span> → 正在使用 GitHub Pages 镜像站<br>
+        　　　此时 <strong>无法使用需要 POST 的功能</strong>，如：<br>
+        　　　→ <a href="https://limbopro.com/feedback/" target="_blank" style="color:#d4380d;">留言板提交</a>、登录、评论等<br>
+        <span style="color:#dc3545;">● 回源/其他</span> → 可能被干扰或访问异常
+    </div>
+
+    <button onclick="location.reload()">重新检测</button>
+</div>
+
+<script>
+// 获取 IP 和地理位置（使用 ip.api.com，国内也很快，无广告）
+async function getIPLocation() {
+    try {
+        const res = await fetch('https://ip.api.com/json?lang=zh-CN');
+        const data = await res.json();
+        if (data.ip) {
+            return {
+                ip: data.ip,
+                country: data.country || '未知',
+                region: data.regionName || '',
+                city: data.city || '',
+                flag: data.countryCode ? String.fromCodePoint(...[...data.countryCode].map(c => c.charCodeAt(0) + 127397)) : ''
+            };
+        }
+    } catch(e) {}
+    
+    // 备用源（极快但无中文）
+    try {
+        const res = await fetch('https://ipwho.is/');
+        const d = await res.json();
+        return {
+            ip: d.ip,
+            country: d.country,
+            region: d.region || '',
+            city: d.city || '',
+            flag: d.country_code ? String.fromCodePoint(...[...d.country_code].map(c => c.charCodeAt(0) + 127397)) : ''
+        };
+    } catch(e) {
+        return { ip: '获取失败', country: '未知', flag: '' };
+    }
+}
+
+async function detectServer() {
+    document.getElementById('time').textContent = new Date().toLocaleString();
+
+    // 并行获取 IP 位置和服务器信息
+    const [locationData] = await Promise.all([getIPLocation()]);
+
+    // 显示 IP 和位置
+    document.getElementById('ip').textContent = locationData.ip;
+    document.getElementById('location').textContent = 
+        `${locationData.country} ${locationData.region ? ' · ' + locationData.region : ''}${locationData.city ? ' · ' + locationData.city : ''}`.trim();
+    document.getElementById('flag').textContent = locationData.flag;
+
+    // 判断是否 GitHub Pages（优先快速判断）
+    if (location.hostname.includes('github.io')) {
+        showGitHub();
+        return;
+    }
+
+    let res;
+    try {
+        res = await fetch(location.href.split('?')[0], {method:'HEAD', cache:'no-store'});
+    } catch {
+        try { res = await fetch('/favicon.ico?t='+Date.now(), {method:'HEAD'}); } catch {}
+    }
+
+    const h = res ? res.headers : null;
+    const server = (h?.get('server') || '').toLowerCase();
+    const cfRay = h?.get('cf-ray') || h?.get('CF-RAY');
+
+    if (cfRay || server.includes('cloudflare')) {
+        showCloudflare(cfRay || '存在');
+    }
+    else if (server.includes('github') || h?.get('x-github-request-id')) {
+        showGitHub();
+    }
+    else {
+        showOther(server || '未知');
+    }
+}
+
+function showCloudflare(ray) {
+    document.getElementById('icon').textContent = '🟠';
+    document.getElementById('mainText').textContent = '一切正常（Cloudflare 加速）';
+    document.getElementById('mainText').style.color = '#f38020';
+    document.getElementById('provider').textContent = 'Cloudflare';
+    document.getElementById('provider').style.color = '#f38020';
+    document.getElementById('evidence').textContent = `CF-RAY: ${ray}`;
+    document.getElementById('evidence').style.color = '#f38020';
+}
+
+function showGitHub() {
+    document.getElementById('icon').textContent = '⚡';
+    document.getElementById('mainText').textContent = 'GitHub Pages 镜像站';
+    document.getElementById('mainText').style.color = '#ffc107';
+    document.getElementById('provider').textContent = 'GitHub Pages（镜像）';
+    document.getElementById('provider').style.color = '#ffc107';
+    document.getElementById('evidence').textContent = 'github.io 域名或 GitHub 特征头';
+    document.getElementById('evidence').style.color = '#ffc107';
+}
+
+function showOther(server) {
+    document.getElementById('icon').textContent = '❌';
+    document.getElementById('mainText').textContent = '回源或未知服务器';
+    document.getElementById('mainText').style.color = '#dc3545';
+    document.getElementById('provider').textContent = '非 Cloudflare / GitHub';
+    document.getElementById('provider').style.color = '#dc3545';
+    document.getElementById('evidence').textContent = server ? `Server: ${server}` : '无特征信息';
+}
+
+// 立即开始检测
+detectServer();
+</script>
+</body>
+</html>
