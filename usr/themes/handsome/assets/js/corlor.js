@@ -91,14 +91,12 @@ function adjustYT() { // 文章内 iframe 自适应宽度
 }
 
 function sidebar_contact() {
-    //var myword = confirm("联系博主？");
-    //if (myword == true) {
-    // window.open('https://bit.ly/3wS5PZU', '_blank');
     window.open('https://limbopro.com/6.html', '_blank');
-    //}
-    //else {
+}
 
-    //}
+
+function webStatus() {
+    window.open('https://limbopro.com/status/', '_blank');
 }
 
 function sidebar_search() {
