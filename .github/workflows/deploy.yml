@@ -1,0 +1,37 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [ master ]     # 你仓库就是 master 分支
+  workflow_dispatch:         # 允许手动触发
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      # 关键一步：彻底跳过 usr/uploads 里所有图片，checkout 只拉几 MB
+      - name: Checkout（跳过海量图片）
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            !usr/uploads/**
+          sparse-checkout-cone-mode: false
+
+      # 直接把当前仓库根目录所有文件上传为 Pages
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+      # 发布到 GitHub Pages
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
