@@ -1363,7 +1363,7 @@ function historyItem_highlights(x) {
     const el = document.querySelectorAll('.history-item');
     if (x == 'special') {
         el.forEach(span => {
-            if (span.textContent.indexOf(codeHover) !== -1) {
+            if (span.textContent.indexOf(codeHover) !== -1 && codeHover !== '') {
                 console.log("当前高亮的文本是：\n\n" + span.textContent)
                 span.classList.add('gradient-button');
                 //historyItem_normal();
@@ -1371,7 +1371,7 @@ function historyItem_highlights(x) {
         });
     } else {
         el.forEach(span => {
-            if (span.textContent == codeHover) {
+            if (span.textContent == codeHover && codeHover !== '') {
                 console.log("当前高亮的文本是：\n\n" + span.textContent)
                 span.classList.add('gradient-button');
                 historyItem_normal();
