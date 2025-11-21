@@ -1,3 +1,5 @@
+/* 11.22.2025 version */ 
+
 async function fetchCodes() {
 
     var dataList = {};
@@ -1642,135 +1644,106 @@ var temp = 0
 
 
 
-// 对比每日新增数据
+// 对比一周内新增数据
 // Start 
-const STORAGE_KEY = 'daily_data_tracker';
 
-
-/**
- * 辅助函数：创建或覆盖一个包含昨日日期和指定长度的 localStorage 记录。
- * * @param {number} length - 你希望昨天的数组长度是多少。
- * @returns {void}
- */
-function setYesterdayLocalStorage(length) {
-    // 1. 获取昨天的日期
-    const yesterday = new Date();
-    // 将日期设置为昨天
-    yesterday.setDate(yesterday.getDate() - 1);
-    // 格式化日期字符串
-    const yesterdayDateString = yesterday.toLocaleDateString('zh-CN');
-
-    // 2. 构造数据对象
-    const yesterdayData = {
-        date: yesterdayDateString,
-        currentLength: length, // 这个长度会被 checkAndTrackDailyChange 视为 previousLength
-        previousLength: null // 测试场景下这个值不重要
-    };
-
-    // 3. 存储到 localStorage
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(yesterdayData));
-
-    console.log(`✅ 成功设置昨日 localStorage:`);
-    console.log(`日期: ${yesterdayDateString}`);
-    console.log(`记录长度: ${length}`);
-    console.log("现在你可以运行 checkAndTrackDailyChange 函数进行对比测试。");
-}
-
-
-/**
- * 从 localStorage 获取昨天的追踪数据。
- * @returns {object|null}
- */
-function getYesterdayData() {
-    const storedData = localStorage.getItem(STORAGE_KEY);
-    if (storedData) {
-        try {
-            return JSON.parse(storedData);
-        } catch (e) {
-            console.error("解析 localStorage 数据失败:", e);
-            return null;
-        }
-    }
-    return null;
-}
-
-/**
- * 存储今天的追踪数据。
- * @param {number} currentLength - 数组当前的长度。
- * @param {number|null} previousLength - 昨天的长度。
- */
-function setTodayData(currentLength, previousLength = null) {
-    // 使用 'zh-CN' 确保日期格式稳定，如 '2025/11/14'
-    const today = new Date().toLocaleDateString('zh-CN');
-    const dataToStore = {
-        date: today,
-        currentLength: currentLength,
-        previousLength: previousLength
-    };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToStore));
-}
-
-
-/**
- * 每日检查 uniqueByqbflCR 的长度变化并更新 localStorage。
- * @param {Array} uniqueByqbflCR - 您的目标数组。
- */
-function checkAndTrackDailyChange(uniqueByqbflCR) {
-    const today = new Date().toLocaleDateString('zh-CN');
-    const currentLength = uniqueByqbflCR.length;
-    const yesterdayData = getYesterdayData();
-    let changeMessage = "";
-
-    // 底部数据更新
-    // 等所有元素加载完毕后再执行
-
-    setTimeout(() => {
-        document.getElementById('icount').innerText = currentLength;
-    }, 5000);
-
-
-    console.log("--- 🚀 开始每日追踪 ---");
-
-    if (yesterdayData && yesterdayData.date === today) {
-        // A. 仍在同一天：不对比，不更新
-        changeMessage = `[${today}] 数据已追踪。当前长度: ${currentLength}。`;
-
-    } else if (yesterdayData && yesterdayData.date !== today) {
-        // B. 进入新的一天：进行对比
-        const previousLength = yesterdayData.currentLength;
-        const difference = currentLength - previousLength;
-
-        if (difference > 0) {
-            document.getElementById('yesterday').innerText = "，较昨日新增" + difference + "部";
-            changeMessage = `✅ **新增数据!** 昨日: ${previousLength}，今日: ${currentLength}，新增了 ${difference} 条。`;
-        } else if (difference < 0) {
-            document.getElementById('yesterday').innerText = "，较昨日减少" + difference + "部";
-            changeMessage = `⚠️ **数据减少!** 昨日: ${previousLength}，今日: ${currentLength}，减少了 ${Math.abs(difference)} 条。`;
-        } else {
-            changeMessage = `ℹ️ **数据无变化。** 长度均为 ${currentLength}。`;
-        }
-
-        // **更新 localStorage**
-        setTodayData(currentLength, previousLength);
-
-    } else {
-        // C. 第一次运行或 localStorage 中没有数据
-        changeMessage = `✨ **首次追踪。** 记录当前长度 ${currentLength}。`;
-        // 首次运行，不设置 previousLength
-        setTodayData(currentLength);
-    }
-
-    console.log(changeMessage);
-    console.log("--- 🏁 追踪结束 ---");
-    // 返回消息，方便在 UI 上显示
-    return changeMessage;
-}
 
 setTimeout(() => {
-    checkAndTrackDailyChange(uniqueByqbflCR)
+
+    (function () {
+        const VARIABLE_NAME = 'superMax';
+        const BASELINE_KEY = 'superMax_baseline_record';
+        // 一周的毫秒数 (7 天 * 24 小时 * 60 分 * 60 秒 * 1000 毫秒)
+        const WEEK_IN_MS = 7 * 24 * 60 * 60 * 1000;
+
+        const today = new Date();
+        const currentTimestamp = today.getTime();
+
+        // 1. 检查全局变量是否存在
+        if (typeof superMax === 'undefined' || superMax === null || typeof superMax.length === 'undefined') {
+            console.warn(`${VARIABLE_NAME} Length Tracker: 全局变量 ${VARIABLE_NAME} 不存在或没有 length 属性。跳过操作。`);
+            return;
+        }
+
+        const currentLength = superMax.length;
+
+        // 2. 获取存储的基准组数据
+        let baselineData = null;
+        try {
+            const storedData = localStorage.getItem(BASELINE_KEY);
+            if (storedData) {
+                baselineData = JSON.parse(storedData);
+            }
+        } catch (e) {
+            console.error(`${VARIABLE_NAME} Length Tracker: 解析 baseline 数据失败，将重新生成基准组。`, e);
+            // 如果解析失败，baselineData 保持为 null，将触发新基准组的创建
+        }
+
+        let isNewBaselineSet = false;
+        let baseline = baselineData ? baselineData.value : null;
+        let establishedTimestamp = baselineData ? baselineData.establishedTimestamp : 0;
+
+        // 3. 检查基准组是否过期或不存在
+        if (!baselineData || (currentTimestamp - establishedTimestamp >= WEEK_IN_MS)) {
+            // --- 设置新的基准组 ---
+
+            baseline = currentLength;
+            establishedTimestamp = currentTimestamp;
+            isNewBaselineSet = true;
+
+            // 构造新的基准组数据对象
+            baselineData = {
+                value: baseline,
+                establishedTimestamp: establishedTimestamp,
+                establishedDate: today.toLocaleString(),
+            };
+
+            console.log(`
+            --- ${VARIABLE_NAME} Length Tracker ---
+            **基准组已更新/首次设置**
+            新基准组值: ${baseline}
+            设置时间: ${baselineData.establishedDate}
+            在未来一周内，每日记录将与此值进行对比。
+        `);
+
+            // 4. 保存新的基准组数据
+            localStorage.setItem(BASELINE_KEY, JSON.stringify(baselineData));
+
+        } else {
+            // --- 基准组有效，进行对比 ---
+
+            // 计算基准组已生效天数
+            const timeElapsedDays = ((currentTimestamp - establishedTimestamp) / (24 * 60 * 60 * 1000)).toFixed(1);
+
+            let comparisonMessage = `
+            --- ${VARIABLE_NAME} Length 每日对比 ---
+            基准组值 (${baselineData.establishedDate} 设定): ${baseline}
+            当前 ${VARIABLE_NAME}.length (${today.toLocaleString()} 记录): ${currentLength}
+            基准组已生效 ${timeElapsedDays} 天。
+        `;
+
+            // 对比结果判断
+            if (currentLength > baseline) {
+                comparisonMessage += `\n结果: length **新增了** ${currentLength - baseline}。`;
+                document.getElementById('yesterday').innerText = "，较一周前新增" + (currentLength - baseline) + "部"; // 改变说明
+            } else if (currentLength < baseline) {
+                comparisonMessage += `\n结果: length **减少了** ${baseline - currentLength}。`;
+                document.getElementById('yesterday').innerText = "，较昨日减少" + (currentLength - baseline) + "部";  // 改变说明
+            } else {
+                comparisonMessage += `\n结果: length **与基准组值保持一致**。`;
+            }
+
+            console.log(comparisonMessage);
+
+            // 注意：基准组有效时，我们不修改 localStorage，等待它自然过期。
+        }
+
+    })();
+
 }, 5000)
 
-// 对比每日新增数据
+
+// 对比一周内新增数据
 // END
 
 
