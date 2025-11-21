@@ -1654,7 +1654,7 @@ setTimeout(() => {
         const VARIABLE_NAME = 'superMax';
         const BASELINE_KEY = 'superMax_baseline_record';
         // 一周的毫秒数 (7 天 * 24 小时 * 60 分 * 60 秒 * 1000 毫秒)
-        const WEEK_IN_MS = 7 * 24 * 60 * 60 * 1000;
+        const WEEK_IN_MS = 14 * 24 * 60 * 60 * 1000;
 
         const today = new Date();
         const currentTimestamp = today.getTime();
