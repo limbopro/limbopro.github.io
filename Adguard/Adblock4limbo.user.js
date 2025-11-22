@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Adblock4limbo.[github]
 // @namespace    https://github.com/limbopro/Adblock4limbo/raw/main/Adguard/Adblock4limbo.user.js
-// @version      0.2025.11.17
+// @version      0.2025.11.22
 // @license      CC BY-NC-SA 4.0
 // @description  毒奶去网页广告计划用户脚本 For Quantumult X & Surge & Shadowrocket & Loon & Stash & 油猴 ；1.新增页面右下角导航；2.通过 JavaScript 移除特定网站网页广告 —— 搜索引擎（Bing/Google）广告及内容农场结果清除/低端影视/欧乐影院/iyf爱壹帆/哔滴影视/Pornhub/Javbus/Supjav/Jable(支持抓取M3U8链接)/MissAv/91porn(支持视频下载)/hitomi/紳士漫畫/禁漫天堂/等视频&ACG&小说&漫画网站上的弹窗广告&视频广告&Gif图片广告等，保持网页清爽干净无打扰！ P.S. 欢迎提交issue
 // @author       limbopro
@@ -59,12 +59,11 @@
 
 */
 
-// 为避免不必要的麻烦，Adblock4limbo.user.js 只匹配以下 @match 的部分网站；
-// 如需在所有网站应用 “导航功能/划词搜索...”，
-// 请安装 Adblock4limbo——导航及各类功能函数合集.[github]
-// 油猴脚本地址：https://github.com/limbopro/Adblock4limbo/raw/refs/heads/main/Adguard/Adblock4limbo.function.user.js 
+// 为避免不必要的麻烦，Adblock4limbo.user.js 只匹配以下网站；如需在所有网站应用本脚本及其自带“导航功能”，请在下方自行添加 // @match https://*/*
+// 或直接安装 https://github.com/limbopro/Adblock4limbo/raw/refs/heads/main/Adguard/Adblock4limbo.function.user.js （Adblock4limbo——导航及各类功能函数合集.[github]）
+// 博主建议安装 Adblock4limbo.function.user.js
+// 不要在下方 // @match https://*/*
 
-// @match        https://*/*
 // @match        https://m.baidu.com/*
 // @match        https://www.baidu.com/*
 // @match        https://zhidao.baidu.com/*
@@ -1030,7 +1029,7 @@ function adsDomain_switch(x) { // 匹配参数值 执行相应函数
     }
 
     .jable-skip-btn:active {
-      transform: translateY(0) scale(1.02);
+      /*transform: translateY(0) scale(1.02);*/
     }
   `;
                     document.head.appendChild(style);
@@ -1080,7 +1079,7 @@ function adsDomain_switch(x) { // 匹配参数值 执行相应函数
                             }
 
                             const orig = btn.dataset.origText;
-                            btn.textContent = '✓';
+                            /*btn.textContent = '✓';*/
 
                             // 设置新的恢复定时器
                             btn._restoreTimer = setTimeout(() => {
