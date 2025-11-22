@@ -52,7 +52,7 @@ async function fetchCodes() {
         "2021_best_netflav.json",
         "2020_best_netflav.json",
         "2wFav.json",
-        //"3wFav.json"
+        "3wFav.json"
     ];
 
     window.dataBestrated = await loadJsonFiles(iBestratedfiles, "./bestrated/");
@@ -170,7 +170,7 @@ async function fetchCodes() {
     // 对汇集到一起的番号再进行一次去重
     dataList['综合分类破万人收藏🧸ྀི'] = deduplicateByNumberMaxFav(onlyDuplicates, 'no')
     dataList["综合分类破2万人收藏🧸ྀི"] = dataBestrated['2wFav']
-    //dataList["综合分类破3万人收藏🧸ྀི"] = dataBestrated['3wFav']
+    dataList["综合分类破3万人收藏🧸ྀི"] = dataBestrated['3wFav']
     dataList['综合●'] = [
         ...dataMax['friends'],
         ...dataMax['father'],
