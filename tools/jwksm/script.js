@@ -43,7 +43,6 @@ async function fetchCodes() {
 
     // 1. 最佳评级数据
     const iBestratedfiles = [
-        "bestrated_2025_11.json",
         "bestrated_translated.json",
         "2024best.json",
         "2024_best_netflav.json",
@@ -52,7 +51,7 @@ async function fetchCodes() {
         "2021_best_netflav.json",
         "2020_best_netflav.json",
         "2wFav.json",
-        //"3wFav.json"
+        "3wFav.json"
     ];
 
     window.dataBestrated = await loadJsonFiles(iBestratedfiles, "./bestrated/");
