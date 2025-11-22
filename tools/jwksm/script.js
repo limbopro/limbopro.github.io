@@ -51,7 +51,7 @@ async function fetchCodes() {
         "2022_best_netflav.json",
         "2021_best_netflav.json",
         "2020_best_netflav.json",
-        "3wFav.json",
+        //"3wFav.json",
         "2wFav.json",
     ];
 
