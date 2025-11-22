@@ -141,6 +141,8 @@ async function fetchCodes() {
     ]; // 新增 2020 年评价最佳分类
 
     dataList['本月热门🔥🔞'] = dailyBestW['monthly']
+    dataList["综合分类破2万人收藏🧸ྀི"] = dataBestrated['2wFav']
+    dataList["综合分类破3万人收藏🧸ྀི"] = dataBestrated['3wFav']
     //dataList['昨日热门🔥🔞'] = dailyBestW['old']
     dataList['夫妻交换🎎'] = dataMax['fuqijiaohuan'];
     dataList['办公室🤤'] = dataMax['office'];
@@ -169,8 +171,6 @@ async function fetchCodes() {
     const onlyDuplicates = findDuplicates(dataMax['chugui'], dataMax['juru'], dataMax['renqi'], dataMax['yongzhuang'], dataMax['duop'], dataMax['roumangaibian'], dataMax['office'], dataMax['zhifuyouhuo'], dataMostwanted['most_wanted_201511']);
     // 对汇集到一起的番号再进行一次去重
     dataList['综合分类破万人收藏🧸ྀི'] = deduplicateByNumberMaxFav(onlyDuplicates, 'no')
-    dataList["综合分类破2万人收藏🧸ྀི"] = dataBestrated['2wFav']
-    //dataList["综合分类破3万人收藏🧸ྀི"] = dataBestrated['3wFav']
     dataList['综合●'] = [
         ...dataMax['friends'],
         ...dataMax['father'],
