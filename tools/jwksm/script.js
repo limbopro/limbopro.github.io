@@ -43,7 +43,8 @@ async function fetchCodes() {
 
     // 1. 最佳评级数据
     const iBestratedfiles = [
-        "bestrated_translated.json",
+        //"bestrated_2025_11.json",
+        //"bestrated_translated.json",
         "2024best.json",
         "2024_best_netflav.json",
         "2023_best_netflav.json",
