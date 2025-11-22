@@ -547,7 +547,8 @@ function renderHistory() {
         console.log(superMax.find(d => d.番号 === item.toUpperCase()));
         item = superMax.find(d => d.番号 === item.toUpperCase())
         if (item) {
-            historyArrTitle.push(item.番号 + " " + item.名称 + " " + item.演员)
+            //historyArrTitle.push(item.番号 + " " + item.名称 + " " + item.演员)
+            historyArrTitle.push(item.番号 + " " + item.名称 + " " + item.演员 + " 收藏人数 " + item.收藏人数)
             console.log('historyArrTitle 新增番号: ' + item.番号)
             return item;
         }
@@ -755,7 +756,8 @@ function renderFavorites() {
         console.log(superMax.find(d => d.番号 === item.toUpperCase()));
         item = superMax.find(d => d.番号 === item.toUpperCase())
         if (item) {
-            historyArrTitle.push(item.番号 + " " + item.名称 + " " + item.演员)
+            // historyArrTitle.push(item.番号 + " " + item.名称 + " " + item.演员)
+            historyArrTitle.push(item.番号 + " " + item.名称 + " " + item.演员 + " 收藏人数 " + item.收藏人数)
             console.log('已移至黑名单: ' + item.番号)
             return item;
         }
@@ -938,7 +940,8 @@ function renderLaji() {
 
         item = superMax.find(d => d.番号 === item.toUpperCase())
         if (item) {
-            historyArrTitle.push(item.番号 + " " + item.名称 + " " + item.演员)
+            // historyArrTitle.push(item.番号 + " " + item.名称 + " " + item.演员)
+            historyArrTitle.push(item.番号 + " " + item.名称 + " " + item.演员 + " 收藏人数 " + item.收藏人数)
             console.log('historyArrTitle 新增番号: ' + item.番号)
             return item;
         }
@@ -1249,7 +1252,8 @@ function customSearchEvent() {
         console.log("customSearchEvent() 新增番号: " + superMax.find(d => d.番号 === item.toUpperCase()));
         item = superMax.find(d => d.番号 === item.toUpperCase())
         if (item) {
-            historyArrTitle.push(item.番号 + " " + item.名称 + " " + item.演员)
+            // historyArrTitle.push(item.番号 + " " + item.名称 + " " + item.演员)
+            historyArrTitle.push(item.番号 + " " + item.名称 + " " + item.演员 + " 收藏人数 " + item.收藏人数)
             console.log('historyArrTitle 新增番号: ' + item.番号)
             return item;
         }
@@ -1285,7 +1289,8 @@ function customSearchEvent() {
 
         var list = []
         list.push(customSearchEventCode)
-        var temp = dataList['全部分类']
+        //// var temp = dataList['全部分类']
+        var temp = superMax
         // dataList['出轨🍷']
 
         window.list = list;
@@ -1305,7 +1310,7 @@ function customSearchEvent() {
                     matchedTemp.名称,
                     matchedTemp.演员 === "-" ? "" : matchedTemp.演员
                 ].join(" ").trim();
-                historyArrTitle.push(matchedTemp.番号 + " " + matchedTemp.名称 + " " + matchedTemp.演员)
+                historyArrTitle.push(matchedTemp.番号 + " " + matchedTemp.名称 + " " + matchedTemp.演员 + " 收藏人数 " + matchedTemp.收藏人数)
                 return tempKeywords
             } else {
                 historyArrTitle.push(customSearchEventCode); // 问题出在这里
