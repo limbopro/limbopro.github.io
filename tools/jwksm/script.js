@@ -1726,10 +1726,10 @@ setTimeout(() => {
             // 对比结果判断
             if (currentLength > baseline) {
                 comparisonMessage += `\n结果: length **新增了** ${currentLength - baseline}。`;
-                document.getElementById('yesterday').innerText = "；自您首次打开本页面以来（30天内），累计新增" + (currentLength - baseline) + "部"; // 改变说明
+                document.getElementById('yesterday').innerText = "；（30天内）自您首次打开本页面以来，累计新增" + (currentLength - baseline) + "部"; // 改变说明
             } else if (currentLength < baseline) {
                 comparisonMessage += `\n结果: length **减少了** ${baseline - currentLength}。`;
-                document.getElementById('yesterday').innerText = "；自您首次打开本页面以来（30天内），累计减少" + (currentLength - baseline) + "部";  // 改变说明
+                document.getElementById('yesterday').innerText = "；（30天内）自您首次打开本页面以来，累计减少" + (currentLength - baseline) + "部";  // 改变说明
             } else {
                 comparisonMessage += `\n结果: length **与基准组值保持一致**。`;
             }
