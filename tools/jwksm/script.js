@@ -191,7 +191,7 @@ async function fetchCodes() {
 
     window.superMax = [...dataList["全部分类"]].filter((item, index, self) =>
         index === self.findIndex(t => t.番号 === item.番号)
-    );
+    ); // 去重后的 dataList["全部分类"]
 
     var uniqueByqbfl = dataList['全部分类'].filter((item, index, self) =>
         index === self.findIndex(t => t.番号 === item.番号)
@@ -1419,7 +1419,7 @@ function historyItem_percent() {
     const favcountHas = percentAB(uniqueById, favoritesArr, 'cf')
     document.getElementById('favcountHas').textContent = favcountHas
     document.getElementById('selectArrcountFav').textContent = uniqueById.length
-    document.getElementById('icount').textContent = uniqueById.length
+    document.getElementById('icount').textContent = superMax.length
     console.log(`已抽取番号数量: ${matchedCount}`);
     console.log(`匹配比例: ${proportion.toFixed(4)}%`);
     console.log("数组名称: " + "dataList['" + selectedCategory + "']");
