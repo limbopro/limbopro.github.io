@@ -142,7 +142,7 @@ async function fetchCodes() {
 
     dataList['本月热门🔥🔞'] = dailyBestW['monthly']
     dataList["综合分类破2万人收藏🧸ྀི"] = dataBestrated['2wFav']
-    dataList["综合分类破3万人收藏🧸ྀི"] = dataBestrated['3wFav']
+    //dataList["综合分类破3万人收藏🧸ྀི"] = dataBestrated['3wFav']
     //dataList['昨日热门🔥🔞'] = dailyBestW['old']
     dataList['夫妻交换🎎'] = dataMax['fuqijiaohuan'];
     dataList['办公室🤤'] = dataMax['office'];
