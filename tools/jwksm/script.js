@@ -459,7 +459,7 @@ randomBtn.onclick = function () {
 
     if (!historyArr.includes(randomData.番号)) {
         historyArr.push(randomData.番号);
-        historyArrTitle.push(randomData.番号 + " " + randomData.名称 + " " + randomData.演员 + " " + "收藏人数 " + randomData.收藏人数)
+        historyArrTitle.push(randomData.番号 + " " + randomData.名称 + " " + randomData.演员 + " 收藏人数 " + randomData.收藏人数)
         saveHistory();
         renderHistory();
     } else {
