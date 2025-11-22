@@ -168,7 +168,7 @@ async function fetchCodes() {
     const onlyDuplicates = findDuplicates(dataMax['chugui'], dataMax['juru'], dataMax['renqi'], dataMax['yongzhuang'], dataMax['duop'], dataMax['roumangaibian'], dataMax['office'], dataMax['zhifuyouhuo'], dataMostwanted['most_wanted_201511']);
     // 对汇集到一起的番号再进行一次去重
     dataList['综合分类破万收藏🧸ྀི'] = deduplicateByNumberMaxFav(onlyDuplicates, 'no')
-    dataList["单片破2万人收藏🧸ྀི"] = dataBestrated['2wFav']
+    dataList["综合分类破2万人收藏🧸ྀི"] = dataBestrated['2wFav']
     dataList['综合●'] = [
         ...dataMax['friends'],
         ...dataMax['father'],
