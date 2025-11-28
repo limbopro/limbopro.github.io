@@ -103,6 +103,8 @@
 // @include      https://m.nivod*.tv/*
 // @include      https://www.nivod*.tv/*
 // @match        https://www.javbus.com/*
+// @match        https://av.jkforum.net/*
+// @match        https://javdb.com/*
 // @match        https://jav.land/*
 // @match        https://cn1.91short.com/*
 // @match        https://xiaobaotv.net/*
@@ -411,13 +413,15 @@ var imax = {
         javday: "p[style], p > a {display:none !important; pointer-events: none !important;} ",
         xvideos: ".remove-ads-link, .remove-ads, .adsbyexoclick, #ad-header-mobile, .video-ad, #video-right, #ad-footer {display:none !important; pointer-events: none !important;}", // xvideos
         javbus: "div.row iframe,.ad-item,.ad-box {display:none !important}",
+        javdb: "nav.app-desktop-banner,div.moj-content {display:none !important}",
+        jkforum: "",
         javland: "img[src*='.gif'], a[href^=\"https://go.rmhfrtnd.com/\"] {display:none !important; pointer-events: none !important;}",  // jav.land
         _4hu: ".couplet-left, body[ontouchstart] > div[id^='content_'][style='display: block;'], div.row.col2 > dl, #btmBox, img[src*=gif],.col5 > dl#randomBox, script[src$=\"/base.js\"] + #couplet, body[ontouchstart] > #topBox,.wrap + #btmBox,.search + #midBox {opacity:0% !important; pointer-events: none !important; height: 0px !important}",
         // {opacity:0% !important; pointer-events: none !important; height: 0px !important}
         netflav: "iframe[src*=xlv],.ads_video_overlay_mobile, div.widget-container, a[href*=\"register\"][target=\"_blank\"],div.ads_video_close_button,div.ads_video_overlay_mobile,div.footer_root,div.ads_head_banner_container {display:none !important;}",
         supjav: '.video-wrap > div.right,#pop, .div_pop, #pop.div_pop, .movv-ad, #adsbox, div.right, div.movv-ad.ad_3_3, div.movv-ad.ad_3_2, .movv-ad, .adsbyexoclick, #adsbox, .adsbyexoclick  {display:none !important; pointer-events: none !important;}',
         hitomi: ".container > div[class$=\"content\"] > div[class]:has(> script) {display:none !important; pointer-events: none !important;}",
-        hanime1: "span.scaled-exoclick, iframe, #close-mobile-ad-btn, #bottom-ads, div[style*=\"width: 310px; height: 282px;\"] {display:none !important; pointer-events: none !important;}",
+        hanime1: ".comics-banner-ads,span.scaled-exoclick, iframe, #close-mobile-ad-btn, #bottom-ads, div[style*=\"width: 310px; height: 282px;\"] {display:none !important; pointer-events: none !important;}",
         javlibrary: ".menutext.whenmobile {top:90px;z-index:114;} a[href*='redirect'] {display:none!important} #toplogo {height:64px} .videothumblist .videos {min-width:auto;}.titlebox.whenmobile{width:250px} #topmenu.whenmobile {height:70px;} .searchbar.whenmobile{right:2px}  div.videothumblist.whenmobile {overflow:scroll!important;overflow-x:hidden!important;} div#rightcolumn.whenmobile {width:300px} #rightcolumn {right:90px} #leftmenu {width:90px; position:fixed;} div#content {width:auto !important} body.main { min-width: auto; width:auto !important} iframe,img[src*='gif'] , td.advsearch {display:none!important;pointer-events: none !important;}",
         douban: "*{display:none!important}",
         olevod: "#adsbox, .ads-bg {display:none!important}",
@@ -489,6 +493,8 @@ function values() {
         "javday",
         "xvideos",
         "javbus",
+        "javdb",
+        "av.jkforum.net",
         "jav.land",
         "4hu",
         "netflav",
@@ -1686,64 +1692,32 @@ function adsDomain_switch(x) { // 匹配参数值 执行相应函数
             }
 
             javbus()
+            break;
+        case 'javdb':
+
+            css_adsRemove(imax.css.javdb, 0, "javdb");
+            setTimeout(() => {
+                const javCode = document.querySelector('.copy-to-clipboard')?.dataset.clipboardText
+                    || document.querySelector('.panel-block.first-block .value')?.textContent.trim();
+                console.log(javCode); // NTSU-156
+
+                if (javCode !== null) {
+                    tmd_land('h2.title', javCode, '在其他站点播放: ')
+                }
+            }, 1000)
 
             break;
+
+        case 'av.jkforum.net':
+            css_adsRemove(imax.css.jkforum, 0, "jkforum");
+            break;
+
         case 'jav.land': // 444
             css_adsRemove(imax.css.javland, 0, "javland");
 
             function jav() {
                 if (document.querySelectorAll('td[width="80%"]')[1] !== null) {
                     let code = document.querySelectorAll('td[width="80%"]')[1].textContent
-
-
-                    // 在番号详情页追加在线预览链接
-                    function tmd_land(parentsSelector, code, textContent) {
-
-                        function otherSearch() {
-                            // 试试其他搜索：
-
-                            let parentElement = document.querySelectorAll(parentsSelector)[0]
-
-                            let p1 = document.createElement('p')
-                            p1.id = 'p1'
-                            p1.style = 'height:fit-content; margin:10px 0px 0px 0px; border-left:6px solid #38a3fd; font-size:14px; border-radius:  4px !important;box-shadow: rgb(151, 151, 151) 0px 0px 0px 0px inset; /*inset 0px 0px 15px 3px #979797;*/ background:#10141f; color:chocolate; padding:0px 0px 0px 0px;word-break:break-all;border-radius:0px 0px 0px 0px'
-
-                            let p2 = document.createElement('p')
-                            p2.style = 'background:black; padding-left:6px;font-weight:inherit; padding:6px; word-break:break-all;font-size:inherit;border-radius:0px'
-                            p2.id = 'p2'
-
-
-                            p1.appendChild(p2)
-                            parentElement.insertBefore(p1, parentElement.childNodes[2])
-
-                            let span = document.createElement('span')
-                            span.style = 'font-weight:bolder;font-size:medium;color:bisque;'
-                            span.textContent = textContent
-                            p2.appendChild(span)
-
-                            function aAdd2Parent(siteName, url, codeSlect) {
-                                let a = document.createElement('a')
-                                let lable = document.createElement('label')
-                                lable.style = 'font-weight:inherit;display:inline-block;max-width:100%;margin-right:10px;'
-                                a.href = url + codeSlect
-                                a.textContent = siteName
-                                a.target = '_blank'
-                                a.style = 'color:inherit;/*text-decoration:revert !important;*/ font-weight:inherit'
-                                lable.appendChild(a)
-                                p2.appendChild(lable)
-                            }
-
-                            aAdd2Parent('MissAV[720P]', 'https://missav.com/search', '/' + code)
-                            aAdd2Parent('Jable[HD]', 'https://jable.tv/search', '/' + code + '/')
-                            aAdd2Parent('Supjav[ultraHD]', 'https://supjav.com/?s=', code)
-                            aAdd2Parent('番号搜索[聚合]', 'https://limbopro.com/btsearch.html#gsc.tab=0&gsc.q=', code + "&gsc.sort=")
-                            aAdd2Parent('谷歌搜索🔍', 'https://www.google.com/search?q=', code)
-                            aAdd2Parent('Javbus📖', 'https://www.javbus.com/search/', code + '&type=&parent=ce')
-                            console.log('已生成在线预览链接🔗')
-                        }
-                        otherSearch()
-                    }
-
                     setTimeout(() => {
                         tmd_land('.col-md-6.col-sm-12.col-xs-12', code, '在线预览: ');
                     }, 100)
@@ -1859,15 +1833,6 @@ function adsDomain_switch(x) { // 匹配参数值 执行相应函数
                     div[i].style = "display: none !important;";
                 }
             }
-
-            /*
-            let ads = document.querySelectorAll('div.hidden-sm.hidden-md');
-            for (i = 0; i < ads.length; i++) {
-                if (ads[i].querySelectorAll("a[href*='abs']")) {
-                    ads[i].remove();
-                }
-            }
-            */
 
             break;
 
@@ -2511,7 +2476,9 @@ function adsDomain_switch(x) { // 匹配参数值 执行相应函数
     }
 }
 
-adsDomain_switch(values()) // 动手吧
+window.addEventListener('load', function () {
+    adsDomain_switch(values()) // 动手吧
+});
 
 /* Start */
 /*如若需同步至 https://greasyfork.org/zh-CN 则需将本常量删除；
@@ -3139,6 +3106,61 @@ function missAv_playbutton() {
     }
 }
 
+
+// 在番号详情页追加在线预览链接
+function tmd_land(parentSelector, code, titleText) {
+    const formattedCode = code.replace(/-/g, '00');
+
+    function createSearchLinks() {
+        // Creates search links for various platforms
+
+        const parentElement = document.querySelectorAll(parentSelector)[0];
+
+        const container = document.createElement('p'); // 创建容器
+        container.id = 'previewContainer';
+        container.style = 'margin:10px 0px 10px 0px; border-left:6px solid #38a3fd; font-size:14px; border-radius: 4px !important; box-shadow: rgb(151, 151, 151) 0px 0px 0px 0px inset; background:#10141f; color:chocolate; padding:0px 0px 0px 0px; word-break:break-all; border-radius:0px 0px 0px 0px';
+
+        const content = document.createElement('p'); // 创建内容包装器
+        content.style = 'gap:3px; margin-bottom: 0px;display: flex;flex-wrap: wrap;justify-content: flex-start;align-items: center;text-align: left;font-weight: inherit;padding: 6px;word-break: break-all;font-size: inherit;border-radius: 0px;';
+        content.id = 'contentWrapper';
+
+        container.appendChild(content); // 追加内容包装器到容器
+        parentElement.insertAdjacentElement('afterend', container);
+
+        const title = document.createElement('span'); // 创建标题
+        title.style = 'font-weight:bolder; font-size:medium; color:bisque;';
+        title.textContent = titleText;
+        content.appendChild(title);
+
+        function addLinkToContainer(siteName, baseUrl, searchCode) { // 添加链接到容器
+            const link = document.createElement('a');
+            const label = document.createElement('label');
+            label.style = 'font-weight:inherit; display:inline-block; max-width:100%; margin-right:10px;margin-bottom:0px;';
+            link.href = baseUrl + searchCode;
+            link.textContent = siteName;
+            link.target = '_blank';
+            link.style = 'color:inherit; font-weight:inherit';
+            label.appendChild(link);
+            content.appendChild(label);
+        }
+
+        addLinkToContainer('MissAV[720P]', 'https://missav.ws/search', '/' + code); // 添加各个搜索链接
+        addLinkToContainer('Jable[HD]', 'https://jable.tv/search', '/' + code + '/');
+        addLinkToContainer('Supjav[ultraHD]', 'https://supjav.com/?s=', code);
+        addLinkToContainer('番号搜索[聚合]', 'https://limbopro.com/btsearch.html#gsc.tab=0&gsc.q=', code + '&gsc.sort=');
+        addLinkToContainer('谷歌搜索🔍', 'https://www.google.com/search?q=', code);
+        addLinkToContainer('Javbus📖', 'https://www.javbus.com/search/', code + '&type=&parent=ce');
+        addLinkToContainer('DMM🇯🇵', 'https://video.dmm.co.jp/av/list/?key=', formattedCode);
+        addLinkToContainer('🔞今晚看什么呢？', 'https://limbopro.com/tools/jwksm/', '');
+
+        console.log('Online preview links generated 🔗');
+    }
+
+    if (!document.querySelector('#previewContainer')) {
+        console.log('Generating online preview links...');
+        createSearchLinks(); // 调用函数创建搜索链接
+    }
+}
 
 /* 播放 */
 function window_play() {
