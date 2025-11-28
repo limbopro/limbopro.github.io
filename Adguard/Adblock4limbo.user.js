@@ -383,7 +383,8 @@ var imax = {
         manhuapicanone: "li[class*=lindex],.row.alert,.my-insert-flag,[role=alert],img[src*=gif] {display:none !important; pointer-events: none !important;} ", // 嗶咔picacg免費網頁版
         manhuapicaheight: "/*li[class*=lindex],*/.row.alert,.my-insert-flag,[role=alert],img[src*=gif] {height:0px !important} ", // 嗶咔picacg免費網頁版
         dmm: "",
-        missav: "@media (min-width:640px){.sm\\:hidden{margin:6px 0 0;padding:0;display:flex !important}}a[href^='https://theporndude.com'],a[href*='mycomic'],a[href*=myavlive],[href*='bit.ly'],[href*='bit.ly'][target=_blank],a[href*='/vip'],img[src*='.gif'],iframe,#a[href*='//bit.ly/'],div[style*='z-index: 1001'],ul.space-y-2.mb-4.ml-4.list-disc.text-nord14,div.space-y-5.mb-5,div.under_player,div[style=\"width: 300px; height: 250px;\"]{display:none !important;pointer-events:none !important}body{overflow-x:hidden}", //  MissAV
+        /* @media (min-width:640px){.sm\\:hidden{margin:6px 0 0;padding:0;display:flex !important}} */
+        missav: "a[href^='https://theporndude.com'],a[href*='mycomic'],a[href*=myavlive],[href*='bit.ly'],[href*='bit.ly'][target=_blank],a[href*='/vip'],img[src*='.gif'],iframe,#a[href*='//bit.ly/'],div[style*='z-index: 1001'],ul.space-y-2.mb-4.ml-4.list-disc.text-nord14,div.space-y-5.mb-5,div.under_player,div[style=\"width: 300px; height: 250px;\"]{display:none !important;pointer-events:none !important}body{overflow-x:hidden}", //  MissAV
         bigirl: 'div#container + div, h4.adblock_title,div.adblock_subtitle,[class^=\'adblock\'],div[class^=\'ad_\'], .toppage_av {display:none !important; pointer-events: none !important;}', // https://bi-girl.net/
         opgg: ".AdSense,  div[data-ad], tr.ad, #banner-container, section[class*='md:hidden'] {display:none !important; pointer-events: none !important;}",
         btc760: ".ad_img,.ad_img,#ad_headerbanner {display:none !important; pointer-events: none !important;}", // btc760
@@ -951,177 +952,8 @@ function adsDomain_switch(x) { // 匹配参数值 执行相应函数
 
                 // 新增快进快退
 
-                // ==UserScript==
-                // @name         Jable.tv 视频页：单行快进快退（样式分离注入）
-                // @namespace    http://tampermonkey.net/
-                // @version      1.8
-                // @description  样式完全抽离为 <style>，单行平铺面板，插入 section 后，修复连续点击按钮不恢复问题
-                // @author       @limboprossr
-                // @match        https://jable.tv/videos/*/
-                // @match        https://jable.hk/videos/*/
-                // @grant        none
-                // @run-at       document-idle
-                // ==/UserScript==
-
                 (function () {
-                    'use strict';
-
-                    const video = document.querySelector('#player');
-                    if (!video) return;
-
-                    if (document.getElementById('jable-skip-panel')) return;
-
-                    // === 1. 注入全局 CSS 样式 ===
-                    const style = document.createElement('style');
-                    style.id = 'jable-skip-panel-style';
-                    style.textContent = `
-    @media (min-width: 992px) {
-      .pb-e-lg-30 {
-        padding-bottom: 10px !important;
-      }
-    }
-
-    #jable-skip-panel {
-      display: flex;
-      flex-wrap: inherit;
-      justify-content: center;
-      gap: 2px;
-      padding: 10px 0px 10px 0px;
-      /*background: var(--indigo);*/
-      border-radius: 0px 0px 0px 0px;
-      box-shadow: 0px 8px 14px var(--indigo)
-      backdrop-filter: blur(14px);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      user-select: none;
-      max-width: 100%;
-      width: 100%;
-      margin: 0px 0px 10px 0px;
-      text-align: center;
-    }
-
-    .jable-skip-btn {
-      /*padding: 2px 0px;*/
-      font-size: 12.5px;
-      font-weight: inherit;
-      color: #fff;
-      border: 1px solid;
-      border-radius: 4px;
-      cursor: pointer;
-      transition: all 0.22s ease;
-      max-width: 65px;
-      text-align: center;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-      flex: 0 0 auto;
-    }
-
-    .jable-skip-btn.forward {
-      background: rgba(0, 255, 136, 0.28);
-      border-color: #00ff88;
-    }
-
-    .jable-skip-btn.backward {
-      background: rgba(255, 80, 80, 0.28);
-      border-color: #ff6666;
-    }
-
-    .jable-skip-btn:hover {
-      transform: translateY(-2px) scale(1.06);
-      box-shadow: 0 6px 18px rgba(0,0,0,0.5);
-    }
-
-    .jable-skip-btn.forward:hover {
-      background: rgba(0, 255, 136, 0.42);
-      box-shadow: 0 6px 18px rgba(0, 255, 136, 0.5);
-    }
-
-    .jable-skip-btn.backward:hover {
-      background: rgba(255, 80, 80, 0.42);
-      box-shadow: 0 6px 18px rgba(255, 80, 80, 0.5);
-    }
-
-    .jable-skip-btn:active {
-      /*transform: translateY(0) scale(1.02);*/
-    }
-  `;
-                    document.head.appendChild(style);
-
-                    // === 2. 创建面板 HTML ===
-                    const panel = document.createElement('div');
-                    panel.id = 'jable-skip-panel';
-
-                    const actions = [
-                        { sec: -600, label: '<< 10m', key: 'PageDown', class: 'backward' },
-                        { sec: -60, label: '< 1m', key: 'ArrowDown', class: 'backward' },
-                        { sec: -15, label: '< 15s', key: 'ArrowLeft', class: 'backward' },
-                        { sec: 15, label: '15s >', key: 'ArrowRight', class: 'forward' },
-                        { sec: 60, label: '1m >', key: 'ArrowUp', class: 'forward' },
-                        { sec: 600, label: '10m >>', key: 'PageUp', class: 'forward' },
-                    ];
-
-                    actions.forEach(act => {
-                        const btn = document.createElement('button');
-                        btn.className = `jable-skip-btn ${act.class}`;
-                        btn.textContent = act.label;
-                        btn.dataset.sec = act.sec;
-                        btn.dataset.origText = act.label; // 预存原始文本
-                        btn._restoreTimer = null; // 存储恢复定时器
-
-                        // 快捷键提示
-                        if (act.key) {
-                            const keyName = {
-                                ArrowLeft: '←', ArrowRight: '→',
-                                ArrowUp: '↑', ArrowDown: '↓',
-                                PageUp: 'PageUp', PageDown: 'PageDown'
-                            }[act.key];
-                            btn.title = `${act.label}（${keyName}）`;
-                        } else {
-                            btn.title = act.label;
-                        }
-
-                        // 点击事件：带防抖恢复逻辑
-                        btn.onclick = () => {
-                            const delta = parseInt(btn.dataset.sec);
-                            const newTime = Math.max(0, Math.min(video.currentTime + delta, video.duration));
-                            video.currentTime = newTime;
-
-                            // 清除上一个定时器
-                            if (btn._restoreTimer) {
-                                clearTimeout(btn._restoreTimer);
-                            }
-
-                            const orig = btn.dataset.origText;
-                            /*btn.textContent = '✓';*/
-
-                            // 设置新的恢复定时器
-                            btn._restoreTimer = setTimeout(() => {
-                                btn.textContent = orig;
-                                btn._restoreTimer = null;
-                            }, 400);
-                        };
-
-                        // 键盘快捷键（复用 onclick 逻辑）
-                        if (act.key) {
-                            document.addEventListener('keydown', e => {
-                                if (e.key === act.key && !e.ctrlKey && !e.altKey && !e.shiftKey) {
-                                    e.preventDefault();
-                                    btn.click();
-                                }
-                            });
-                        }
-
-                        panel.appendChild(btn);
-                    });
-
-                    // === 3. 插入到目标 section 之后 ===
-                    const targetSection = document.querySelector('section.pb-3.pb-e-lg-30');
-                    if (targetSection && targetSection.parentNode) {
-                        targetSection.parentNode.insertBefore(panel, targetSection.nextSibling);
-                    } else {
-                        console.warn('未找到目标 section，插入 body 末尾');
-                        document.body.appendChild(panel);
-                    }
-
-                    console.log('Jable 单行快进快退面板（v1.8 修复连续点击）已加载');
+                    fastForward('#player', 'section.pb-3.pb-e-lg-30');
                 })();
 
                 // 快进快退结束
@@ -2434,6 +2266,8 @@ function adsDomain_switch(x) { // 匹配参数值 执行相应函数
                             addListenerById("missavP", () => { video_loopPlay('pause') }, 1000);
                         }
 
+                        fastForward('[playsinline][data-poster]', 'div.flex-1.order-first > div[x-init]') // 快进快退
+
                     } else if (ua_missav.indexOf(mobile_missav) > -1 && document.querySelector('#missavFullScreen') === null) {
                         ele_dynamicAppend("div.mt-4", "onclick", "免广告播放", cssText, "video_Play()", "missavX", 0, "button");
                         ele_dynamicAppend("div.mt-4", "onclick", "进入全屏", cssText, "fullscreen()", "missavFullScreen", 2, "button");
@@ -3104,6 +2938,194 @@ function missAv_playbutton() {
         //ele_catch[1].play();
         //console.log("视频已开启循环播放；")
     }
+}
+
+// 快进快退 fastForward
+
+// ==UserScript==
+// @name         Jable.tv 视频页：单行快进快退（样式分离注入）
+// @namespace    http://tampermonkey.net/
+// @version      1.8
+// @description  样式完全抽离为 <style>，单行平铺面板，插入 section 后，修复连续点击按钮不恢复问题
+// @author       @limboprossr
+// @match        https://jable.tv/videos/*/
+// @match        https://jable.hk/videos/*/
+// @grant        none
+// @run-at       document-idle
+// ==/UserScript==
+
+function fastForward(videowrap, section) { // fastForward()
+
+    'use strict';
+
+    const video = document.querySelector(videowrap);
+    if (!video) return;
+
+    if (document.getElementById('jable-skip-panel')) return;
+
+    // === 1. 注入全局 CSS 样式 ===
+    const style = document.createElement('style');
+    style.id = 'jable-skip-panel-style';
+    style.textContent = `
+    @media (min-width: 992px) {
+      .pb-e-lg-30 {
+        padding-bottom: 10px !important;
+      }
+    }
+
+    #jable-skip-panel {
+    touch-action: pan-up pan-down pan-x pan-y manipulation;
+    /* 或者直接写死： */
+    touch-action: manipulation;     
+    /* 允许点击+滚动，但彻底禁用双击放大和双指缩放 */
+    -webkit-tap-highlight-color: transparent;
+      display: flex;
+      z-index:114154;
+      flex-wrap: inherit;
+      justify-content: center;
+      gap: 2px;
+      padding: 10px 0px 10px 0px;
+      /*background: var(--indigo);*/
+      border-radius: 0px 0px 0px 0px;
+      box-shadow: 0px 8px 14px var(--indigo)
+      backdrop-filter: blur(14px);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      user-select: none;
+      max-width: 100%;
+      width: 100%;
+      margin: 0px 0px 10px 0px;
+      text-align: center;
+    }
+
+    .jable-skip-btn {
+    padding:8px 8px 8px 12px;
+    font-size:0.75rem;
+      /*padding: 2px 0px;*/
+      /*font-size: 12.5px;*/
+      font-weight: inherit;
+      color: #fff;
+      border: 1px solid;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.22s ease;
+      /*width: 60px;*/
+      /*height: 25px;*/
+      text-align: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      flex: 0 0 auto;
+    }
+
+    .jable-skip-btn.forward {
+      background: rgba(0, 255, 136, 0.28);
+      border-color: #00ff88;
+    }
+
+    .jable-skip-btn.backward {
+      background: rgba(255, 80, 80, 0.28);
+      border-color: #ff6666;
+    }
+
+    .jable-skip-btn:hover {
+      transform: translateY(-2px) scale(1.06);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.5);
+    }
+
+    .jable-skip-btn.forward:hover {
+      background: rgba(0, 255, 136, 0.42);
+      box-shadow: 0 6px 18px rgba(0, 255, 136, 0.5);
+    }
+
+    .jable-skip-btn.backward:hover {
+      background: rgba(255, 80, 80, 0.42);
+      box-shadow: 0 6px 18px rgba(255, 80, 80, 0.5);
+    }
+
+    .jable-skip-btn:active {
+      /*transform: translateY(0) scale(1.02);*/
+    }
+  `;
+    document.head.appendChild(style);
+
+    // === 2. 创建面板 HTML ===
+    const panel = document.createElement('div');
+    panel.id = 'jable-skip-panel';
+
+    const actions = [
+        { sec: -600, label: '<< 10m', key: 'PageDown', class: 'backward' },
+        { sec: -60, label: '< 1m', key: 'ArrowDown', class: 'backward' },
+        { sec: -15, label: '< 15s', key: 'ArrowLeft', class: 'backward' },
+        { sec: 15, label: '15s >', key: 'ArrowRight', class: 'forward' },
+        { sec: 60, label: '1m >', key: 'ArrowUp', class: 'forward' },
+        { sec: 600, label: '10m >>', key: 'PageUp', class: 'forward' },
+    ];
+
+    actions.forEach(act => {
+        const btn = document.createElement('button');
+        btn.className = `jable-skip-btn ${act.class}`;
+        btn.textContent = act.label;
+        btn.dataset.sec = act.sec;
+        btn.dataset.origText = act.label; // 预存原始文本
+        btn._restoreTimer = null; // 存储恢复定时器
+
+        // 快捷键提示
+        if (act.key) {
+            const keyName = {
+                ArrowLeft: '←', ArrowRight: '→',
+                ArrowUp: '↑', ArrowDown: '↓',
+                PageUp: 'PageUp', PageDown: 'PageDown'
+            }[act.key];
+            btn.title = `${act.label}（${keyName}）`;
+        } else {
+            btn.title = act.label;
+        }
+
+        // 点击事件：带防抖恢复逻辑
+        btn.onclick = function (e) {
+            // 阻止任何可能的冒泡
+            e.stopPropagation();
+            const delta = parseInt(btn.dataset.sec);
+            const newTime = Math.max(0, Math.min(video.currentTime + delta, video.duration));
+            video.currentTime = newTime;
+
+            // 清除上一个定时器
+            if (btn._restoreTimer) {
+                clearTimeout(btn._restoreTimer);
+            }
+
+            const orig = btn.dataset.origText;
+            /*btn.textContent = '✓';*/
+
+            // 设置新的恢复定时器
+            btn._restoreTimer = setTimeout(() => {
+                btn.textContent = orig;
+                btn._restoreTimer = null;
+            }, 400);
+        };
+
+        // 键盘快捷键（复用 onclick 逻辑）
+        if (act.key) {
+            document.addEventListener('keydown', e => {
+                if (e.key === act.key && !e.ctrlKey && !e.altKey && !e.shiftKey) {
+                    e.preventDefault();
+                    btn.click();
+                }
+            });
+        }
+
+        panel.appendChild(btn);
+    });
+
+    // === 3. 插入到目标 section 之后 ===
+    const targetSection = document.querySelector(section);
+    if (targetSection && targetSection.parentNode) {
+        targetSection.parentNode.insertBefore(panel, targetSection.nextSibling);
+    } else {
+        console.warn('未找到目标 section，插入 body 末尾');
+        document.body.appendChild(panel);
+    }
+
+    console.log('Jable 单行快进快退面板（v1.8 修复连续点击）已加载');
+
 }
 
 
