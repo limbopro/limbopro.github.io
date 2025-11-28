@@ -2462,6 +2462,7 @@ function adsDomain_switch(x) { // 匹配参数值 执行相应函数
             });
 
             break;
+
         default:
             // 修正 case 中 default 的匹配规则  10.25.203
             if (/\b(netflav|missav|jable)\b/i.test(window.location.href.toLowerCase())) {
@@ -2476,9 +2477,8 @@ function adsDomain_switch(x) { // 匹配参数值 执行相应函数
     }
 }
 
-window.addEventListener('load', function () {
-    adsDomain_switch(values()) // 动手吧
-});
+adsDomain_switch(values()) // 动手吧
+
 
 /* Start */
 /*如若需同步至 https://greasyfork.org/zh-CN 则需将本常量删除；
