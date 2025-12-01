@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Adblock4limbo——导航及各类功能函数合集.[github]
 // @namespace    https://limbopro.com/Adguard/Adblock4limbo.function.js
-// @version      0.2025.11.29
+// @version      0.2025.12.01
 // @license      CC BY-NC-SA 4.0
 // @description  实用网站导航 —— 免费在线影视/前端学习/开发者社区/新闻/建站/下载工具/格式转换工具/电子书/新闻/写作/免费漫画等；
 // @author       limbopro
@@ -105,19 +105,34 @@ function cookiesRemove() {
 
 }
 
-/* 连续点击3次空白处起导航🧭页面 */
-function tripleClick() {
 
+
+/* 连续点击4次空白处起导航🧭页面 */
+function tripleClick() {
     var startTime = '';
     var number = 0;
     const htmlbody = document.querySelectorAll('body')[0]
 
+    /*
     htmlbody.addEventListener('touchstart', function () {
         startTime = +new Date()
         number += 1;
         console.log(number)
         tripleClick_check(number)
     })
+    */
+
+    htmlbody.addEventListener('click', function (e) {
+        // 如果点击目标是 button 或 button 的后代元素，直接 return
+        if (e.target.closest('button, a, [role="button"], .btn, label, input, select')) {
+            return;
+        } else {
+            startTime = +new Date()
+            number += 1;
+            console.log(number)
+            tripleClick_check(number)
+        }
+    });
 
     function tripleClick_check(x) {
         setTimeout(() => {
@@ -130,6 +145,7 @@ function tripleClick() {
             }
         }, 850)
     }
+
 }
 
 tripleClick();
@@ -3343,7 +3359,7 @@ var dataListbak = {
             "name": "低端影视",
             "url": "https://ddys.pro/",
             "target": "_blank",
-            "level": "special"
+            "level": "special del"
         },
         {
             "name": "小宝影视",
