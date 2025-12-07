@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Adblock4limbo.[github]
 // @namespace    https://github.com/limbopro/Adblock4limbo/raw/main/Adguard/Adblock4limbo.user.js
-// @version      0.2025.12.07
+// @version      0.2025.12.08 
 // @license      CC BY-NC-SA 4.0
 // @description  毒奶去网页广告计划用户脚本 For Quantumult X & Surge & Shadowrocket & Loon & Stash & 油猴 ；1.新增页面右下角导航；2.通过 JavaScript 移除特定网站网页广告 —— 搜索引擎（Bing/Google）广告及内容农场结果清除/低端影视/欧乐影院/iyf爱壹帆/哔滴影视/Pornhub/Javbus/Supjav/Jable(支持抓取M3U8链接)/MissAv/91porn(支持视频下载)/hitomi/紳士漫畫/禁漫天堂/等视频&ACG&小说&漫画网站上的弹窗广告&视频广告&Gif图片广告等，保持网页清爽干净无打扰！ P.S. 欢迎提交issue
 // @author       limbopro
@@ -2276,15 +2276,17 @@ function adsDomain_switch(x) { // 匹配参数值 执行相应函数
                         for (let video of videos) {
                             if (video.src && video.src.includes('.m3u8')) {
                                 console.log('直接 src 是 m3u8:', video.src);
-                                alert(video.src);
-                                return video.src;
+                                //alert(video.src); 
+                               
+window.m3u8SRC = video.src // 获取src
+return video.src; //
                             }
 
                             // hls.js / video.js / 大部分播放器都会把实例挂在 video.hls 或 video.player 上
                             if (video.hls && video.hls.url) {
                                 console.log('hls.js url:', video.hls.url);
-                                alert(video.hls.url);
-                                mp4URL = video.hls.url
+                                //alert(video.hls.url);
+                                //mp4URL = video.hls.url
                                 return video.hls.url;
                             }
                             if (video.hls && typeof video.hls.currentLevel === 'object') {
@@ -2302,22 +2304,27 @@ function adsDomain_switch(x) { // 匹配参数值 执行相应函数
                     })();
 
                     var button_download = document.createElement('button')
-                    button_download.style = "margin-left: 5px; margin-top: 5px; position: static; font-size: smaller !important; background: #2563eb !important; margin-right: 5px; padding: 6px 6px 6px 6px; display: inline-block; color: white; border-right: 6px solid #38a3fd; border-left: #292f33 !important; border-top: #292f33 !important; border-bottom: #292f33 !important; background: #2563eb; border-radius: 0px 0px 0px 0px; font-weight: 800 !important; text-align: right !important;"
+                    button_download.style = "margin-left: 0px; margin-top: 5px; position: static; font-size: smaller !important; background: #2563eb !important; margin-right: 5px; padding: 6px 6px 6px 6px; display: inline-block; color: white; border-right: 6px solid #38a3fd; border-left: #292f33 !important; border-top: #292f33 !important; border-bottom: #292f33 !important; background: #2563eb; border-radius: 0px 0px 0px 0px; font-weight: 800 !important; text-align: right !important;"
 
-                    if (hls.url.indexOf('.mp4') !== -1) {
+                    /*if (hls.url.indexOf('.mp4') !== -1) {
                         button_download.textContent = '复制视频下载地址'
                     } else {
                         button_download.textContent = '复制M3U8文件地址'
                     }
 
-                    button_download.id = 'copyURL'
+*/                    
+button_download.textContent = '复制M3U8文件地址'
+
+button_download.id = 'copyURL'
 
                     button_download.addEventListener('click', (() => {
-                        if (hls.url) {
+
+//alert('wtf')
+                        if (window.m3u8SRC) {
                             const textarea = document.createElement('textarea') // 创建 textarea 元素 并将选中内容填充进去
                             textarea.id = 'fuck91porn'
                             document.querySelector('#copyURL').appendChild(textarea)
-                            textarea.value = hls.url
+                            textarea.value = window.m3u8SRC
                             textarea.select();
                             document.execCommand('copy', true); // 执行复制
                             document.querySelector('#copyURL').classList.add('copysuccess')  // 复制成功提醒
@@ -2336,10 +2343,11 @@ function adsDomain_switch(x) { // 匹配参数值 执行相应函数
                         }
                     }))
 
-                    let cssText = "font-size: smaller !important; background: #2563eb !important; left: 0px; top: 110px; margin-right: 5px; margin-top: 5px;" + "padding: 6px 6px 6px 6px; display: inline-block; color: white;z-index: 114154 !important; border-right: 6px solid #38a3fd; border-left: #292f33 !important; border-top: #292f33 !important; border-bottom: #292f33 !important; background: #2563eb; border-radius: 0px 0px 0px 0px; font-weight: 800 !important; text-align: right !important;"
-                    if (ua_missav.indexOf(mobile_missav) === -1) {
+let cssText = "font-size: smaller !important; background: #2563eb !important; left: 0px; top: 110px; margin-right: 5px; margin-top: 5px;" + "padding: 6px 6px 6px 6px; display: inline-block; color: white;z-index: 114154 !important; border-right: 6px solid #38a3fd; border-left: #292f33 !important; border-top: #292f33 !important; border-bottom: #292f33 !important; background: #2563eb; border-radius: 0px 0px 0px 0px; font-weight: 800 !important; text-align: right !important;"
+                    
+if (ua_missav.indexOf(mobile_missav) === -1) {
 
-                        if (document.querySelector('div.mt-4') !== null && document.querySelector('div.mt-4').querySelector('h1') !== null && document.querySelector('#how') === null) {
+if (document.querySelector('div.mt-4') !== null && document.querySelector('div.mt-4').querySelector('h1') !== null && document.querySelector('#how') === null) {
                             ele_dynamicAppend("div.mt-4", "onclick", "离开页面视频继续播放", cssText, "", "missavX", 2, "button");
                             ele_dynamicAppend("div.mt-4", "onclick", "暂停", cssText, "", "missavP", 3, "button");
                             document.querySelector('div.mt-4').insertBefore(button_download, document.querySelector('div.mt-4').children[3])
@@ -2367,8 +2375,8 @@ function adsDomain_switch(x) { // 匹配参数值 执行相应函数
                         ele_dynamicAppend("div.mt-4", "onclick", "免广告播放", cssText, "video_Play()", "missavX", 0, "button");
                         ele_dynamicAppend("div.mt-4", "onclick", "进入全屏", cssText, "fullscreen()", "missavFullScreen", 2, "button");
                         ele_dynamicAppend("div.mt-4", "onclick", "暂停", cssText, "video_pause()", "missavPause", 1, "button");
-                        ele_dynamicAppend("div.mt-4", "href", "如何下载本视频？", cssText, "https://limbopro.com/archives/M3U8-Downloader.html", "how", 3, "a");
-                        document.querySelector('div.mt-4').insertBefore(button_download, document.querySelector('div.mt-4').children[4])
+                        ele_dynamicAppend("div.mt-4", "href", "如何下载本视频？", cssText, "https://limbopro.com/archives/M3U8-Downloader.html", "how", 4, "a");
+                        document.querySelector('div.mt-4').insertBefore(button_download, document.querySelector('div.mt-4').children[3])
                         // 添加监听器
 
                         if (document.getElementById("how") !== null) {
