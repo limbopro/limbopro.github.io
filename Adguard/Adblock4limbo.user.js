@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Adblock4limbo.[github]
 // @namespace    https://github.com/limbopro/Adblock4limbo/raw/main/Adguard/Adblock4limbo.user.js
-// @version      0.2025.11.29
+// @version      0.2025.12.07
 // @license      CC BY-NC-SA 4.0
 // @description  毒奶去网页广告计划用户脚本 For Quantumult X & Surge & Shadowrocket & Loon & Stash & 油猴 ；1.新增页面右下角导航；2.通过 JavaScript 移除特定网站网页广告 —— 搜索引擎（Bing/Google）广告及内容农场结果清除/低端影视/欧乐影院/iyf爱壹帆/哔滴影视/Pornhub/Javbus/Supjav/Jable(支持抓取M3U8链接)/MissAv/91porn(支持视频下载)/hitomi/紳士漫畫/禁漫天堂/等视频&ACG&小说&漫画网站上的弹窗广告&视频广告&Gif图片广告等，保持网页清爽干净无打扰！ P.S. 欢迎提交issue
 // @author       limbopro
@@ -9,41 +9,60 @@
 // @match        https://m.baidu.com/*
 // @match        https://www.baidu.com/*
 // @match        https://zhidao.baidu.com/*
+// @match        https://www.google.com/search*
+// @match        https://www.google.com.hk/search*
+// @match        https://www.bing.com/search?q=*
+// @match        https://cn.bing.com/search?q=*
+// @match        https://www.btbdys.com/*
+// @match        https://www.bdys01.com/*
+// @match        https://www.bdys*.com/*
+// @match        https://www.52bdys.com/*
 // @match        https://ddrk.me/*
 // @match        https://ddys.tv/*
 // @match        https://ddys.pro/*
 // @match        https://ddys.art/*
 // @match        https://ddys2.me/*
 // @match        https://ddys.mov/*
-// @match        https://jable.tv/*
+// @match        https://gimy.ai/*
+// @match        https://xiaobaotv.net/*
+// @match        https://xiaobaotv.com/*
+// @match        https://xiaoxintv.net/*
+// @match        https://xiaoxintv.com/*
+// @match        https://www.olevod.tv/*
+// @match        https://www.olevod.com/*
+// @match        https://www.olevod.one/*
+// @match        https://m.iyf.tv/*
+// @match        https://www.iyf.tv/*
+// @match        https://play.huaren.live/*
+// @match        https://huaren.live/*
 // @match        https://cupfoxapp.tv/*
 // @match        https://www.dmmiku.com/*
 // @match        https://bf.bfdm.xyz/*
 // @match        https://cnys.tv/*
-// @match        https://m.iyf.tv/*
-// @match        https://www.iyf.tv/*
+// @match        https://bi-girl.net/*
+// @match        https://jable.tv/*
 // @match        https://en.jable.tv/*
 // @match        https://*.jable.tv/*
-// @match        https://www.btbdys.com/*
-// @match        https://www.bdys01.com/*
-// @match        https://www.bdys02.com/*
-// @match        https://www.bdys03.com/*
-// @match        https://www.bdys10.com/*
-// @match        https://www.52bdys.com/*
-// @match        https://cn.pornhub.com/*
-// @match        https://www.pornhub.com/*
-// @match        https://t66y.com/*
-// @match        https://www.dmm.co.jp/*
-// @match        https://*.dmm.co.jp/*
 // @match        https://missav.com/*
 // @match        https://missav.ai/*
 // @match        https://missav.ws/*
-// @match        https://bi-girl.net/*
-// @match        https://op.gg/*
-// @match        https://t1229.btc760.com/*
-// @match        https://d1skbu98kuldnf.cloudfront.net/*
-// @match        https://dnt92ffcqr0xu.cloudfront.net/*
-// @match        https://91porn.com/*
+// @match        https://supjav.com/*
+// @match        https://www.javbus.com/*
+// @match        https://av.jkforum.net/*
+// @match        https://javdb.com/*
+// @match        https://jav.land/*
+// @match        https://cn1.91short.com/*
+// @match        https://javday.tv/*
+// @match        https://www.xvideos.com/*
+// @match        https://4hu.tv/*
+// @match        https://www.4hu.tv/*
+// @match        https://netflav.com/*
+// @match        https://t66y.com/*
+// @match        https://xchina.co/*
+// @match        https://www.dmm.co.jp/*
+// @match        https://*.dmm.co.jp/*
+// @match        https://cn.pornhub.com/*
+// @match        https://www.pornhub.com/*
 // @match        https://91porn.com/*
 // @match        https://91porna.com/*
 // @match        https://91porny.com/*
@@ -51,23 +70,14 @@
 // @match        https://avple.tv/*
 // @match        https://18comic.org/*
 // @match        https://18comic.vip/*
-// @match        https://www.5dy5.cc/*
-// @match        https://www.5dy6.cc/*
-// @match        https://www.5dy7.cc/*
-// @match        https://www.5dy8.cc/*
-// @match        https://www.o8tv.com/*
-// @match        https://www.555dd5.com/*
-// @match        https://www.555dd6.com/*
-// @match        https://www.555dd7.com/*
-// @match        https://www.555dd8.com/*
-// @match        https://555dyx1.com/*
-// @match        https://555dyx3.com/*
-// @match        https://555dyx4.com/*
-// @match        https://555dyx5.com/*
-// @match        https://o8tv.com/*
+// @match        https://hitomi.la/*
 // @match        https://www.wnacg.com/*
 // @match        https://www.wnacg.org/*
+// @match        https://hanime1.me/*
+// @match        https://rouman5.com/*
+// @match        https://rou.video/*
 // @match        https://manhuapica.com/*
+// @match        https://op.gg/*
 // @match        https://w.duboku.io/*
 // @match        https://www.duboku.tv/*
 // @match        https://www.libvio.com/*
@@ -78,10 +88,6 @@
 // @match        https://www.tvn.cc/*
 // @match        https://m.tvn.cc/*
 // @match        https://wap.tvn.cc/*
-// @match        https://www.google.com/search*
-// @match        https://www.google.com.hk/search*
-// @match        https://www.bing.com/search?q=*
-// @match        https://cn.bing.com/search?q=*
 // @match        https://zhuanlan.zhihu.com/*
 // @match        https://www.zhihu.com/*
 // @match        https://www.instagram.com/*
@@ -102,20 +108,6 @@
 // @match        https://m.nivod9.tv/*
 // @include      https://m.nivod*.tv/*
 // @include      https://www.nivod*.tv/*
-// @match        https://www.javbus.com/*
-// @match        https://av.jkforum.net/*
-// @match        https://javdb.com/*
-// @match        https://jav.land/*
-// @match        https://cn1.91short.com/*
-// @match        https://xiaobaotv.net/*
-// @match        https://xiaobaotv.com/*
-// @match        https://xiaoxintv.net/*
-// @match        https://xiaoxintv.com/*
-// @match        https://javday.tv/*
-// @match        https://www.xvideos.com/*
-// @match        https://4hu.tv/*
-// @match        https://www.4hu.tv/*
-// @match        https://netflav.com/*
 // @match        https://javplayer.me/*
 // @match        https://netflav5.com/*
 // @match        https://filemoon.sx/*
@@ -135,24 +127,18 @@
 // @match        https://embedrise.com/*
 // @match        https://mmfl02.com/*
 // @match        https://netflavns2.com/*
-// @match        https://supjav.com/*
-// @match        https://hanime1.me/*
 // @match        https://wangdoc.com/*
 // @match        https://developer.mozilla.org/*
 // @match        https://zh.javascript.info/*
 // @match        https://deerchao.cn/*
-// @match        https://gimy.ai/*
-// @match        https://www.olevod.tv/*
-// @match        https://www.olevod.com/*
-// @match        https://www.olevod.one/*
 // @match        https://t.me/*
-// @match        https://hitomi.la/*
 // @match        https://tameikegoro.jp/*
 // @match        https://njav.tv/*
 // @match        https://www.ntdm9.com/*
 // @match        https://www.novel543.com/*
 // @match        https://www.hltv.org/*
 // @match        https://m.diyibanzhu.me/*
+// @match        https://www.alicesw.com/*
 // @match        https://www.javlibrary.com/cn/*
 // @match        https://www.javlibrary.com/tw/*
 // @match        https://www.javlibrary.com/ja/*
@@ -162,10 +148,9 @@
 // @exclude      https://www.javlibrary.com/ja/
 // @exclude      https://www.javlibrary.com/en/
 // @exclude      https://www.javlibrary.com/
-// @match        https://play.huaren.live/*
-// @match        https://huaren.live/*
-// @match        https://rouman5.com/*
-// @match        https://rou.video/*
+// @match        https://t1229.btc760.com/*
+// @match        https://d1skbu98kuldnf.cloudfront.net/*
+// @match        https://dnt92ffcqr0xu.cloudfront.net/*
 // @exclude      https://x.com/*
 // @exclude      https://pan.baidu.com/*
 // @exclude      https://twitter.com/*
@@ -352,7 +337,7 @@ var css_common = {
 
 /* End */
 
-var imax = {
+var adsMax = {
     js: {
         //functionx: "https://greasyfork.org/scripts/477474-functionx4limbo-x/code/functionx4limboX.user.js",
         functionx: "https://limbopro.com/Adguard/Adblock4limbo.function.js", // 全局js
@@ -394,7 +379,8 @@ var imax = {
         porn91: ".copysuccess {background:green !important;color:white !important;} br, .ad_img,.preroll-blocker, img[href*='.gif'] {display:none !important; pointer-events: none !important;}", // 91porn
         zhihuAds: "div.css-1izy64v,[class='Card AppBanner'],.Footer,.Banner-link,div.Pc-word {display:none !important; pointer-events: none !important;}",
         pornhubx: ".clearfix.watchpageAd,ins.adsbytrafficjunky,ins.adsbytrafficjunky~.tjLinksWrapper{display:none!important}  div.y20lkk9odsf6bxapqkvaa.clearfix > ins.adsbytrafficjunky[data-spot-id=\"981\"][data-site-id=\"23\"][data-height=\"99px\"][data-width=\"305px\"],.topAdContainter, a[href*='ads'], div.adContainer.clearfix.noBottom, .adContainer.clearfix.middleVideoAdContainer, div.adContainer.clearfix.noBottom, a[href*='fuck'][target='_blank'], [data-href][target='_blank'],iframe, a.ad#link, #header.hasAdAlert {grid-template-rows:60px 40px 0px !important} div.hd.clear, div > img[data-title][srcset], #js-networkBar,div#abAlert, .adsbytrafficjunky, #pb_template, .sponsor-text, #adsbox, .abAlertShown, .abAlertInner, #main-container > .abovePlayer, [rel*='noopener nofollow'],a[href^=\"http://ads.trafficjunky.net/\"], .topAdContainter,.adsbytrafficjunky,.ad-link  {height:0px !important; display:none !important; pointer-events:none;}", // pornhub
-        t66y: "div.tips[style*='auto'],div[class*=ftad-item] {height:0px !important; display:none !important; pointer-events:none;}", // pornhub
+        t66y: "div.content-box > div.static-container-4,div.tips[style*='auto'],div[class*=ftad-item] {height:0px !important; display:none !important; pointer-events:none;}", // pornhub
+        xchina: "div.block-overlay,a[target='_blank'],.push-slider,.push-top-container,.push-bottom {display:none !important; pointer-events: none !important;}",
         instagram: "div._aagw {display:none !important}", // 网页版Instagram不能复制图片的问题
         ttsp: "div#playad1,a[href*=\"8616.tech\"],.play_list_adbox,#adsbox,.ads_all > .ads_w,.ads_box,.right_ads {display:none !important}",
         tz659: "figure, img[src*='mt2.jpg'],img[src*='pf.gif'],[src*='.gif'], iframe {display:none !important}",
@@ -433,6 +419,7 @@ var imax = {
         rouman: "div[role='dialog'] {display:none !important; pointer-events: none !important;}",
         rouvideo: "div[style*='pointer-events: none'],.flex.items-center.justify-center.my-2,ins > iframe,a.vast-blocker,.p-2.rounded.text-center,.text-xl.mb-1,[class*='hover:underline'],[style*='overflow: hidden'],[data-advadstrackid] {display:none !important; pointer-events: none !important;}",
         diyibanzhu: "img, #adsbox, .slide-ad {height:0px; display:none !important; pointer-events: none !important;}",
+        alicesw: "a[target='_blank'] {height:0px; display:none !important; pointer-events: none !important;}",
         novel543: "iframe, div#adfoot, div.px-3.py-3, #adfoot, .gadBlock {height:0px; display:none !important; pointer-events: none !important;}"
         //button_common: "padding: 6px 6px 6px 6px; display: inline-block; color: white;z-index: 114154 !important; border-right: 6px solid #38a3fd; border-left: #292f33 !important; border-top: #292f33 !important; border-bottom: #292f33 !important; background: #2563eb; border-radius: 0px 0px 0px 0px; font-weight: 800 !important; text-align: right !important;" // 按钮/输入框通用样式
     },
@@ -440,12 +427,17 @@ var imax = {
     }
 }
 
-css_adsRemove(imax.css.othercss, 0, 'othercss') // 引用全局样式
+loadCSS(adsMax.css.globalcss, () => {
+    console.log('CSS 已生效');
+})
+
+css_adsRemove(adsMax.css.othercss, 0, 'othercss') // 引用全局样式
 
 function values() {
     var adsDomain = [
         "pornhub",
         "t66y",
+        "xchina.co",
         'dmm.co.jp',
         "missav",
         "bi-girl",
@@ -453,9 +445,9 @@ function values() {
         "t1229.btc760.com",
         "d1skbu98kuldnf.cloudfront.net",
         "dnt92ffcqr0xu.cloudfront.net",
-        "91porna",
-        "91porny",
-        "91porn.",
+        "91porna.com",
+        "91porny.com",
+        "91porn.com",
         "avple",
         "18comic",
         "wnacg",
@@ -532,6 +524,7 @@ function values() {
         'rou.video',
         'novel543',
         'diyibanzhu',
+        'alicesw',
         'hltv',
         "zhihu"
     ]
@@ -548,6 +541,8 @@ function values() {
     return values;
 }
 
+
+
 function adsDomain_switch(x) { // 匹配参数值 执行相应函数
     switch (x) {
         case 'pornhub':
@@ -557,7 +552,7 @@ function adsDomain_switch(x) { // 匹配参数值 执行相应函数
                 pornhub_interstitialPass();
                 //tag_adsRemove("script", "ads_batch");
                 const custom_style_values_pb = "right: 0px !important; padding: 0 !important; position: relative !important;"
-                css_adsRemove(imax.css.pornhubx, 500, "pornhubX");
+                css_adsRemove(adsMax.css.pornhubx, 500, "pornhubX");
 
                 // 页面加载完成后执行
                 // 精准选中所有 TJ 广告容器
@@ -598,12 +593,39 @@ function adsDomain_switch(x) { // 匹配参数值 执行相应函数
             break;
 
         case 't66y':
-            css_adsRemove(imax.css.t66y);
+            css_adsRemove(adsMax.css.t66y);
             break;
 
-        case '91porna':
+        case 'xchina.co':
+            css_adsRemove(adsMax.css.xchina);
+            window.addEventListener('load', function () {
+                // 小说页面广告
+
+                if (document.querySelectorAll('div.fiction-banner')) {
+                    document.querySelectorAll('div.fiction-banner').forEach(box => {
+                        if (box.querySelector('iframe[src*="magsrv.com"]')) {
+                            box.remove();
+                        }
+                    })
+                }
+
+                // 包含 static-container-4 或包含 magsrv.com iframe 的 content-box 都删掉
+                if (document.querySelectorAll('.content-box')) {
+                    document.querySelectorAll('.content-box').forEach(box => {
+                        if (box.querySelector('.static-container-4')) {
+                            box.remove();
+                        }
+                    })
+                }
+
+                xchinadl();
+            });
+
+            break;
+
+        case '91porna.com':
             //cloudflare_captchaBypass();
-            css_adsRemove(imax.css.porna91);
+            css_adsRemove(adsMax.css.porna91);
             //_91porn_videoplay_ads();
 
             // 播放页空白
@@ -616,10 +638,10 @@ function adsDomain_switch(x) { // 匹配参数值 执行相应函数
 
             break;
 
-        case '91porny':
+        case '91porny.com':
 
             //cloudflare_captchaBypass();
-            css_adsRemove(imax.css.porny91);
+            css_adsRemove(adsMax.css.porny91);
             //_91porn_videoplay_ads();
 
 
@@ -752,7 +774,7 @@ function adsDomain_switch(x) { // 匹配参数值 执行相应函数
             break;
 
         case 't1229.btc760.com':
-            css_adsRemove(imax.css.btc760);
+            css_adsRemove(adsMax.css.btc760);
             break;
 
 
@@ -761,15 +783,15 @@ function adsDomain_switch(x) { // 匹配参数值 执行相应函数
 
             window.addEventListener('load', function () {
                 this.setTimeout(() => {
-                    css_adsRemove(imax.css.dnfcloudfront);
+                    css_adsRemove(adsMax.css.dnfcloudfront);
                 });
             }, 2000);
 
             break;
 
-        case '91porn.':
+        case '91porn.com':
             //cloudflare_captchaBypass();
-            css_adsRemove(imax.css.porn91);
+            css_adsRemove(adsMax.css.porn91);
 
             let url91 = document.location.href;
             if (url91.indexOf('view_') !== -1) {
@@ -786,7 +808,7 @@ function adsDomain_switch(x) { // 匹配参数值 执行相应函数
                 _91porn_dl()
             }, 2500)
 
-            //css_adsRemove(imax.css.porna91);
+            //css_adsRemove(adsMax.css.porna91);
             //_91porn_videoplay_ads();
 
             // 播放页空白
@@ -801,11 +823,11 @@ function adsDomain_switch(x) { // 匹配参数值 执行相应函数
             break;
         case 'avple':
             //cloudflare_captchaBypass();
-            css_adsRemove(imax.css.avple);
-            third_party_fileX("script", imax.js.avple, "body")
+            css_adsRemove(adsMax.css.avple);
+            third_party_fileX("script", adsMax.js.avple, "body")
             break;
         case '18comic':
-            css_adsRemove(imax.css.comic_18);
+            css_adsRemove(adsMax.css.comic_18);
             button_dynamicRemove("#chk_cover", 200);
             _18comic_adsRemove();
             break;
@@ -834,17 +856,17 @@ function adsDomain_switch(x) { // 匹配参数值 执行相应函数
             }, 1000)
 
             document.querySelectorAll('div.module').forEach((x) => { x.style.zIndex = 1 });
-            css_adsRemove(imax.css.dy555, 0, "555dy")
+            css_adsRemove(adsMax.css.dy555, 0, "555dy")
             document.querySelectorAll('.popup-btn.close-pop')[0].click(); //模拟点击
             break;
         case 'wnacg':
-            css_adsRemove(imax.css.wnacg);
+            css_adsRemove(adsMax.css.wnacg);
             break;
         case 'manhuapica':
 
 
             if (window.location.href.replace('https://manhuapica.com/') == 'undefined' || window.location.href.replace('https://manhuapica.com/#') == 'undefined' || window.location.href.replace('https://manhuapica.com/?vflush') !== window.location.href) {
-                css_adsRemove(imax.css.manhuapicanone);
+                css_adsRemove(adsMax.css.manhuapicanone);
 
                 setTimeout(() => {
                     if (document.querySelector('.btn.btn-outline-primary')) {
@@ -853,7 +875,7 @@ function adsDomain_switch(x) { // 匹配参数值 执行相应函数
                 }, 3000)
 
             } else {
-                css_adsRemove(imax.css.manhuapicaheight);
+                css_adsRemove(adsMax.css.manhuapicaheight);
             }
 
             setTimeout(() => {
@@ -871,9 +893,9 @@ function adsDomain_switch(x) { // 匹配参数值 执行相应函数
             break;
         case 'zhidao.baidu.com':
             console.log('it\'s zhidao.baidu.com')
-            css_adsRemove(imax.css.baidu_zhidao, 500, 'fuckbaidu')
+            css_adsRemove(adsMax.css.baidu_zhidao, 500, 'fuckbaidu')
             setTimeout(() => {
-                css_adsRemove(imax.css.baidu_zhidao, 500, 'fuckbaidu')
+                css_adsRemove(adsMax.css.baidu_zhidao, 500, 'fuckbaidu')
             }, 1500)
             break;
         case 'www.baidu.com':
@@ -882,18 +904,18 @@ function adsDomain_switch(x) { // 匹配参数值 执行相应函数
                 let regex = /https?:\/\/(www|m)\.baidu\.com\/(from=|s\?)/gi
                 window.location.href.search(regex) !== -1
                 if (window.location.href.search(regex) !== -1) {
-                    css_adsRemove(imax.css.baidu_search);
+                    css_adsRemove(adsMax.css.baidu_search);
                     console.log('移除搜索结果广告🪧...')
                 } else {
                     adsDomain_switch("zhidao")
-                    css_adsRemove(imax.css.baidu_index);
+                    css_adsRemove(adsMax.css.baidu_index);
                     console.log('移首页广告🪧...')
                 }
             });
             break;
         case 'ddys':
-            //css_adsRemove(imax.css.ddrk);
-            css_adsRemove(imax.css.ddrk2);
+            //css_adsRemove(adsMax.css.ddrk);
+            css_adsRemove(adsMax.css.ddrk2);
 
             //selector_adsRemove("#sajdhfbjwhe,#kasjbgih,#fkasjgf,img[src*='bcebos']", 0)
 
@@ -909,16 +931,16 @@ function adsDomain_switch(x) { // 匹配参数值 执行相应函数
 
             break;
         case 'duboku':
-            third_party_fileX("script", imax.js.duboku, "body")
+            third_party_fileX("script", adsMax.js.duboku, "body")
             break;
         case 'libvio':
-            css_adsRemove(imax.css.libvio)
+            css_adsRemove(adsMax.css.libvio)
             break;
         case 'nbys':
-            css_adsRemove(imax.css.nivod);
+            css_adsRemove(adsMax.css.nivod);
             break;
         case 'ntdm9':
-            css_adsRemove(imax.css.ntdm9);
+            css_adsRemove(adsMax.css.ntdm9);
             const a = document.getElementsByClassName("yammohxz_b");
             addEventListener_defuser("touchend"); // 打断监听器
 
@@ -928,7 +950,7 @@ function adsDomain_switch(x) { // 匹配参数值 执行相应函数
 
             break;
         case 'tvn':
-            css_adsRemove(imax.css.tvn)
+            css_adsRemove(adsMax.css.tvn)
             break;
         case 'jable': // 2333
             console.log("IT'S JABLE");
@@ -1002,7 +1024,7 @@ function adsDomain_switch(x) { // 匹配参数值 执行相应函数
             }
 
             //cloudflare_captchaBypass();
-            css_adsRemove(imax.css.jable);
+            css_adsRemove(adsMax.css.jable);
             jable_adsRemove();
             const url_jable = document.location.href;
             const reg_videos = /^https:\/\/jable\.tv.*\/videos/gi;
@@ -1249,8 +1271,8 @@ function adsDomain_switch(x) { // 匹配参数值 执行相应函数
 
             break;
         case 'bdys':
-            css_adsRemove(imax.css.btbdys, 0, "siwtch_button");
-            css_adsRemove(imax.css.switch, 0, "switch_class")
+            css_adsRemove(adsMax.css.btbdys, 0, "siwtch_button");
+            css_adsRemove(adsMax.css.switch, 0, "switch_class")
             //videoAds_accelerateSkip(0.1); // 视频广告加速
             //setConstant(); // 视频广告加速
             hrefAttribute_set();
@@ -1272,34 +1294,34 @@ function adsDomain_switch(x) { // 匹配参数值 执行相应函数
             break;
         case 'instagram':
             // 解除 Instagram 桌面浏览器版禁用右键复制图片
-            css_adsRemove(imax.css.instagram);
+            css_adsRemove(adsMax.css.instagram);
             break;
         case 'ttsp':
-            css_adsRemove(imax.css.ttsp);
+            css_adsRemove(adsMax.css.ttsp);
             break;
         case 'tz659':
-            css_adsRemove(imax.css.tz659);
+            css_adsRemove(adsMax.css.tz659);
             //tag_ads_traversal("body", 0)
             break;
         case 'anime1':
-            css_adsRemove(imax.css.anime);
+            css_adsRemove(adsMax.css.anime);
             break;
         case 'yhdmp':
-            css_adsRemove(imax.css.yhdmp);
+            css_adsRemove(adsMax.css.yhdmp);
             break;
         case 'yhpdm':
-            css_adsRemove(imax.css.yhdmp);
+            css_adsRemove(adsMax.css.yhdmp);
             break;
         case 'google':
 
             window.addEventListener('load', function () {
-                css_adsRemove(imax.css.google);
+                css_adsRemove(adsMax.css.google);
                 var userAgent = navigator.userAgent.toLowerCase();
                 if (/\b(mobile)\b/i.test(userAgent)) {
-                    js_adsRemove(imax.js.contentFarm);
+                    js_adsRemove(adsMax.js.contentFarm);
                     console.log("getYou") // 手机用户 特别是苹果用户会正常加载内容农场脚本
                 } else {
-                    js_adsRemove(imax.js.contentFarm);
+                    js_adsRemove(adsMax.js.contentFarm);
                     console.log("PC端") // 啥也不做
                 }
             });
@@ -1309,20 +1331,20 @@ function adsDomain_switch(x) { // 匹配参数值 执行相应函数
 
             break;
         case 'bing':
-            js_adsRemove(imax.js.contentFarm);
+            js_adsRemove(adsMax.js.contentFarm);
             break;
 
         case 'hltv':
-            css_adsRemove(imax.css.hltv);
+            css_adsRemove(adsMax.css.hltv);
             noWindowOpenIf(); // no-window-open-if
             break;
 
         case 'nivod': // nbys 泥巴影视
-            css_adsRemove(imax.css.nivod);
+            css_adsRemove(adsMax.css.nivod);
             hrefAttribute_set();
             setConstant('detailParams.is_ad_play', 'false'); // 泥巴影视PC版播放页视频广告加速
             evaldataPrune(); // 泥巴影视移动版播放页视频广告加速
-            css_adsRemove(imax.css.nbys); // 网页图片广告
+            css_adsRemove(adsMax.css.nbys); // 网页图片广告
             setInterval(() => {
                 remove_parentElement_by_child('view.nut-swiper-item.slider-item', "img[src*='1a732eeb1adb']");
                 remove_parentElement_by_child('view.nut-swiper-item.slider-item', "img[src*='49e8abd32d13']");
@@ -1332,7 +1354,7 @@ function adsDomain_switch(x) { // 匹配参数值 执行相应函数
             }, 2000)
             break;
         case '91short':
-            css_adsRemove(imax.css._91short);
+            css_adsRemove(adsMax.css._91short);
 
             // 播放页GIF动图广告
             const player_info = document.querySelectorAll("div.player-info,li.nav-menu-item")
@@ -1352,19 +1374,19 @@ function adsDomain_switch(x) { // 匹配参数值 执行相应函数
             // nothing to do.
             break;
         case 'cupfoxapp':
-            css_adsRemove(imax.css.cupfoxapp, 100, 'fuckcupfoxapp');
+            css_adsRemove(adsMax.css.cupfoxapp, 100, 'fuckcupfoxapp');
             break;
         case 'dmmiku':
-            css_adsRemove(imax.css.dmmiku, 100, 'fuckdmmiku');
+            css_adsRemove(adsMax.css.dmmiku, 100, 'fuckdmmiku');
             window_open_defuser();
             //addEventListener_defuser();
             break;
         case 'bfdm':
-            css_adsRemove(imax.css.bfdm, 100, 'fuckdmmiku');
+            css_adsRemove(adsMax.css.bfdm, 100, 'fuckdmmiku');
             break;
         case 'iyf':
 
-            css_adsRemove(imax.css.iyf, 100, 'fuckiyf');
+            css_adsRemove(adsMax.css.iyf, 100, 'fuckiyf');
             function iyf_css() {
                 setTimeout(() => {
                     let iyf_css = "div.ad, .ad, .ad_tag, .dabf > .ng-star-inserted,vg-pause-f, .pggf > .ng-star-inserted"
@@ -1455,7 +1477,7 @@ function adsDomain_switch(x) { // 匹配参数值 执行相应函数
             // nothing to do.
             //videoAds_accelerateSkip(0.1); // 视频广告加速
             //setConstant(); // 视频广告加速
-            css_adsRemove(imax.css.cnys, 0, 'cnys')
+            css_adsRemove(adsMax.css.cnys, 0, 'cnys')
 
             if (document.querySelectorAll('iframe')[2] !== null && document.querySelectorAll('iframe')[2] !== undefined) {
                 document.querySelectorAll('iframe')[2].style = 'opacity:0% !important; pointer-events: none !important;';
@@ -1489,13 +1511,13 @@ function adsDomain_switch(x) { // 匹配参数值 执行相应函数
 
         case 'javday':
             // nothing to do.
-            css_adsRemove(imax.css.javday, 0, 'javday')
+            css_adsRemove(adsMax.css.javday, 0, 'javday')
             break;
         case 'xvideos':
 
             setInterval(() => {
                 if (!document.getElementById('xvideos_t')) {
-                    css_adsRemove(imax.css.xvideos, 100, "xvideos_t");
+                    css_adsRemove(adsMax.css.xvideos, 100, "xvideos_t");
                     noWindowOpenIf();
                 } else {
                     noWindowOpenIf();
@@ -1504,7 +1526,7 @@ function adsDomain_switch(x) { // 匹配参数值 执行相应函数
 
             break;
         case 'javbus':
-            css_adsRemove(imax.css.javbus, 0, "javbus");
+            css_adsRemove(adsMax.css.javbus, 0, "javbus");
 
             function javbus() { // 在番号详情页追加在线预览链接
                 setTimeout(() => {
@@ -1527,7 +1549,7 @@ function adsDomain_switch(x) { // 匹配参数值 执行相应函数
             break;
         case 'javdb':
 
-            css_adsRemove(imax.css.javdb, 0, "javdb");
+            css_adsRemove(adsMax.css.javdb, 0, "javdb");
             setTimeout(() => {
                 const javCode = document.querySelector('.copy-to-clipboard')?.dataset.clipboardText
                     || document.querySelector('.panel-block.first-block .value')?.textContent.trim();
@@ -1541,11 +1563,11 @@ function adsDomain_switch(x) { // 匹配参数值 执行相应函数
             break;
 
         case 'av.jkforum.net':
-            css_adsRemove(imax.css.jkforum, 0, "jkforum");
+            css_adsRemove(adsMax.css.jkforum, 0, "jkforum");
             break;
 
         case 'jav.land': // 444
-            css_adsRemove(imax.css.javland, 0, "javland");
+            css_adsRemove(adsMax.css.javland, 0, "javland");
 
             function jav() {
                 if (document.querySelectorAll('td[width="80%"]')[1] !== null) {
@@ -1560,12 +1582,12 @@ function adsDomain_switch(x) { // 匹配参数值 执行相应函数
 
             break;
         case "4hu":
-            css_adsRemove(imax.css._4hu);
+            css_adsRemove(adsMax.css._4hu);
             hrefAttribute_set();
             break;
         case "netflav":
             window_open_defuser(); // 打断 window.open 施法
-            css_adsRemove(imax.css.netflav, 0, "4hu");
+            css_adsRemove(adsMax.css.netflav, 0, "4hu");
             break;
         case "filemoon":
             window_open_defuser(); // 打断 window.open 施法
@@ -1584,7 +1606,7 @@ function adsDomain_switch(x) { // 匹配参数值 执行相应函数
             break;
         case "netflavns1":
             window_open_defuser(); // 打断 window.open 施法
-            css_adsRemove(imax.css.js_common, 50, 'common');
+            css_adsRemove(adsMax.css.js_common, 50, 'common');
             break;
         case "netflavns2":
             window_open_defuser(); // 打断 window.open 施法
@@ -1606,7 +1628,7 @@ function adsDomain_switch(x) { // 匹配参数值 执行相应函数
             adsDomain_switch("fc2stream")
             break;
         case "supjav":
-            css_adsRemove(imax.css.supjav, 0, "superjav");
+            css_adsRemove(adsMax.css.supjav, 0, "superjav");
 
             window.onload = function () {
                 if (document.location.href.search('/?s\=') !== -1) {
@@ -1639,7 +1661,7 @@ function adsDomain_switch(x) { // 匹配参数值 执行相应函数
 
             break;
         case "njav":
-            css_adsRemove(imax.css.njav, 0, 'njav');
+            css_adsRemove(adsMax.css.njav, 0, 'njav');
             js_adsRemove(uBlockOrigin.setconstant);
             js_adsRemove(uBlockOrigin.nowindowopenif);
             noWindowOpenIf('window.open')
@@ -1648,7 +1670,7 @@ function adsDomain_switch(x) { // 匹配参数值 执行相应函数
             break;
 
         case "hitomi":
-            css_adsRemove(imax.css.hitomi);
+            css_adsRemove(adsMax.css.hitomi);
             window_open_defuser();
             abort_on_property_read();
             js_adsRemove(uBlockOrigin.addEventListenerdefuser);
@@ -1657,7 +1679,7 @@ function adsDomain_switch(x) { // 匹配参数值 执行相应函数
             break;
 
         case "hanime1":
-            css_adsRemove(imax.css.hanime1);
+            css_adsRemove(adsMax.css.hanime1);
             const div = document.querySelectorAll('div.hidden-xs.hidden-sm')
             // PC 端div元素广告移除
             for (i = 0; i < div.length; i++) {
@@ -1678,7 +1700,7 @@ function adsDomain_switch(x) { // 匹配参数值 执行相应函数
                     console.log('网页所有元素已加载完毕');
                     // 在此执行你的代码
 
-                    css_adsRemove(imax.css.javlibrary)
+                    css_adsRemove(adsMax.css.javlibrary)
                     window_open_defuser(); // 打断 window.open 施法
                     abort_on_property_read();
                     js_adsRemove(uBlockOrigin.addEventListenerdefuser);
@@ -1693,7 +1715,7 @@ function adsDomain_switch(x) { // 匹配参数值 执行相应函数
 
                     function javlibrary() {
                         // '#topmenu', 'div.menutext', '.searchbar',
-                        css_adsRemove(imax.css.javlibrary);
+                        css_adsRemove(adsMax.css.javlibrary);
                         var target_ = ['#rightcolumn', '.videothumblist', '.titlebox', '.menutext']
 
                         if (window.innerWidth < 650) {
@@ -1812,12 +1834,12 @@ function adsDomain_switch(x) { // 匹配参数值 执行相应函数
         case 'zhihu':
             var zhihu_id = "zhihux"
             button_dynamicRemove("[class='Button Modal-closeButton Button--plain']", 10);
-            css_adsRemove(imax.css.zhihuAds, 100, "hloyx");
+            css_adsRemove(adsMax.css.zhihuAds, 100, "hloyx");
             indexLogin();
             addListener("div.TopNavBar-tab-d8yaD", () => { indexLogin() });
             break;
         case 'olevod':
-            css_adsRemove(imax.css.olevod, 0, 'fuckolevod');
+            css_adsRemove(adsMax.css.olevod, 0, 'fuckolevod');
             setTimeout(() => {
                 onAdsHide()
             }, 500)
@@ -1826,18 +1848,18 @@ function adsDomain_switch(x) { // 匹配参数值 执行相应函数
         case 'play.huaren.live':
 
             //setConstant('ConFig.config.ads', '{}'); // huaren影视PC版播放页视频广告加速
-            css_adsRemove(imax.css.huaren_live, 200, 'huaren');
+            css_adsRemove(adsMax.css.huaren_live, 200, 'huaren');
             ConFig.config.ads = {};
 
             break;
 
         case 'huaren.live':
-            css_adsRemove(imax.css.huaren_live, 200, 'huaren');
+            css_adsRemove(adsMax.css.huaren_live, 200, 'huaren');
             //noWindowOpenIf();
             break;
 
         case 'rouman':
-            css_adsRemove(imax.css.rouman, 100, 'roumanx');
+            css_adsRemove(adsMax.css.rouman, 100, 'roumanx');
 
             setTimeout(() => {
                 document.querySelectorAll("div[class*='modalCloseButton']")[0].click()
@@ -1845,8 +1867,8 @@ function adsDomain_switch(x) { // 匹配参数值 执行相应函数
             break;
 
         case 'rou.video':
-            css_adsRemove(imax.css.rouvideo, 100, 'roumanx');
-            css_adsRemove(imax.css.rouvideo, 500, 'roumanx');
+            css_adsRemove(adsMax.css.rouvideo, 100, 'roumanx');
+            css_adsRemove(adsMax.css.rouvideo, 500, 'roumanx');
             window_open_defuser(); // 打断 window.open 施法
 
             try {
@@ -1876,21 +1898,24 @@ function adsDomain_switch(x) { // 匹配参数值 执行相应函数
             break;
 
         case 'novel543':
-            css_adsRemove(imax.css.novel543, 100, 'novel543x');
+            css_adsRemove(adsMax.css.novel543, 100, 'novel543x');
             break;
 
         case 'diyibanzhu':
-            css_adsRemove(imax.css.diyibanzhu, 100, 'novel543x');
+            css_adsRemove(adsMax.css.diyibanzhu, 100, 'diyibanzhu');
             window_open_defuser(); // 打断 window.open 施法
             break;
 
+        case 'alicesw':
+            css_adsRemove(adsMax.css.alicesw, 100, 'alicesw');
+            break;
         case 'bi-girl': // bigirl
-            css_adsRemove(imax.css.bigirl, 500, 'bigirl')
+            css_adsRemove(adsMax.css.bigirl, 500, 'bigirl')
             js_adsRemove(uBlockOrigin.noevalif);
             break;
 
         case 'op.gg': // op.gg
-            css_adsRemove(imax.css.opgg, 500, 'bigirl')
+            css_adsRemove(adsMax.css.opgg, 500, 'bigirl')
             js_adsRemove(uBlockOrigin.noevalif);
             break;
 
@@ -2236,7 +2261,7 @@ function adsDomain_switch(x) { // 匹配参数值 执行相应函数
 
                 }()
 
-                css_adsRemove(imax.css.missav, 100, 'missavx');
+                css_adsRemove(adsMax.css.missav, 100, 'missavx');
                 window_open_defuser(); // 打断 window.open 施法
                 var ua_missav = navigator.userAgent.toLowerCase();
                 var mobile_missav = "mobile";
@@ -2380,7 +2405,7 @@ function daohang_build() { // 如果导航按钮不存在，则引入外部脚�
         } else {
             let daohang = setInterval(() => {
                 if (!((document.querySelector("button#x4Home")) && (document.querySelector("script[src*='Adblock4limbo.function.js']")))) {
-                    third_party_fileX("script", imax.js.functionx, "body"); // js 外部引用 标签 <script>
+                    third_party_fileX("script", adsMax.js.functionx, "body"); // js 外部引用 标签 <script>
                     console.log('functionx.js 首次引用成功，等待生效...')
                     clearInterval(daohang);
                 } else if (document.querySelectorAll("button#x4Home").length >= 1) {
@@ -2650,9 +2675,10 @@ function _91porny_dl() {
                     }
                 }))
 
-                document.querySelectorAll('h4.container-title')[0].parentNode.insertBefore(button_download, document.querySelectorAll('h4.container-title')[0])
-                document.querySelectorAll('h4.container-title')[0].parentNode.insertBefore(button_downloadOnline, document.querySelectorAll('h4.container-title')[0])
-                document.querySelectorAll('h4.container-title')[0].parentNode.insertBefore(button_alert, document.querySelectorAll('h4.container-title')[0])
+                const container_el = document.querySelectorAll('h4.container-title')[0]
+                container_el.parentNode.insertBefore(button_download, container_el)
+                container_el.parentNode.insertBefore(button_downloadOnline, container_el)
+                container_el.parentNode.insertBefore(button_alert, container_el)
             }
 
 
@@ -2847,6 +2873,94 @@ function _91porny_dl() {
 }
 
 
+function xchinadl() { // 小黄书下载m3u8视频
+
+    if (window.location.href.match('video')) {
+
+        var css = document.createElement('style')
+        css.innerHTML = '.copysuccess {background:green !important;color:white !important;}'
+        css.id = 'xchina'
+        document.body.appendChild(css)
+
+        if (document.getElementById('mp4Download') == null) {
+            var mp4URL = document.querySelectorAll('source')[0].src
+            var mp4Download = document.createElement('a')
+            mp4Download.download = document.title.toString()
+            mp4Download.target = '_blank'
+            mp4Download.id = 'mp4Download'
+            mp4Download.href = mp4URL
+
+            if ((/\b(android|iphone|ipad|ipod)\b/i.test(navigator.userAgent.toLowerCase()))) {
+                mp4Download.textContent = '无广播放'
+            } else {
+                mp4Download.textContent = '下载视频'
+            }
+
+            var button_download = document.createElement('button')
+            button_download.style = 'z-index:114154; padding:12px; position:fixed;right:0px;top:45%;border:0px; background:yellowgreen;color:white;font-weight:bolder;width:60px;'
+
+            if (mp4URL.indexOf('.mp4')) {
+                button_download.textContent = '复制视频下载地址'
+            } else {
+                button_download.textContent = '复制本视频的M3U8文件地址复制本视频'
+            }
+
+            button_download.id = 'copyURL'
+
+            var button_alert = document.createElement('button')
+            button_alert.style = 'z-index:114154; padding:12px; position:fixed;right:0px;top:60%;border:0px; background:yellowgreen;color:white;font-weight:bolder;width:60px;'
+            button_alert.textContent = '如何下载本视频？'
+            button_alert.id = 'alertDownload'
+
+            if (mp4URL.indexOf('.mp4')) {
+
+                button_alert.addEventListener('click', (() => {
+                    //alert(' 1.复制视频下载地址；2.iOS用户推荐使用名叫 "Documents" 的 app 下载视频，打开 Documents app -> 浏览器 - 粘贴视频下载地址；Android 暂无建议；桌面浏览器用户在新的标签页打开下载地址，然后右键另存为即可；')
+                    confirmndExecute('1.复制视频下载地址；2.iOS用户推荐使用名叫 "Documents" 的 app 下载视频，打开 Documents app -> 浏览器 - 粘贴视频下载地址；Android 暂无建议；桌面浏览器用户在新的标签页打开下载地址，然后右键另存为即可；', (() => {
+
+                    }));
+                }))
+
+            } else {
+                button_alert.onclick = function () {
+                    window.open('https://limbopro.com/archives/M3U8-Downloader.html', '_blank');
+                }
+            }
+
+
+            button_download.addEventListener('click', (() => {
+                if (document.querySelectorAll('source')[0].src.match('\.mp4') !== null) {
+                    const textarea = document.createElement('textarea') // 创建 textarea 元素 并将选中内容填充进去
+                    textarea.id = 'fuck91porn'
+                    document.querySelector('#copyURL').appendChild(textarea)
+                    textarea.value = mp4URL
+                    textarea.select();
+                    document.execCommand('copy', true); // 执行复制
+                    document.querySelector('#copyURL').classList.add('copysuccess')  // 复制成功提醒
+                    document.querySelector('#copyURL').textContent = '复制成功'
+
+                    setTimeout(() => { // ↩️按钮恢复原状
+                        document.querySelector('#copyURL').classList.remove('copysuccess')
+                        document.querySelector('#copyURL').textContent = '复制视频下载地址'
+                    }, 2500)
+
+                    if (document.getElementById('fuck91porn')) { // 删除刚刚创建的 textarea 元素
+                        document.getElementById('ffuck91porn').remove()
+                    }
+                } else {
+                    alert('未找到视频下载地址！')
+                }
+            }))
+
+            mp4Download.style = 'z-index:114154; padding:12px; position:fixed;right:0px;top:150px;background:yellowgreen;color:white;font-weight:bolder;width:60px;'
+            const ele_parent = document.querySelectorAll('div.content-box.player-container')[0]
+            ele_parent.parentNode.insertBefore(button_alert, ele_parent)
+            ele_parent.parentNode.insertBefore(button_download, ele_parent)
+            ele_parent.parentNode.insertBefore(mp4Download, ele_parent)
+        }
+    }
+}
+
 function _91porn_dl() { // 下载视频
 
     if (window.location.href.match('view_video')) {
@@ -2881,7 +2995,9 @@ function _91porn_dl() { // 下载视频
             button_alert.id = 'alertDownload'
 
             button_alert.addEventListener('click', (() => {
-                alert(' 1.复制视频下载地址；2.iOS用户推荐使用名叫 "Documents" 的 app 下载视频，打开 Documents app -> 浏览器 - 粘贴视频下载地址；Android 暂无建议；')
+                //alert(' 1.复制视频下载地址；2.iOS用户推荐使用名叫 "Documents" 的 app 下载视频，打开 Documents app -> 浏览器 - 粘贴视频下载地址；Android 暂无建议；桌面浏览器用户在新的标签页打开下载地址，然后右键另存为即可；')
+                confirmndExecute('1.复制视频下载地址；2.iOS用户推荐使用名叫 "Documents" 的 app 下载视频，打开 Documents app -> 浏览器 - 粘贴视频下载地址；Android 暂无建议；桌面浏览器用户在新的标签页打开下载地址，然后右键另存为即可；', (() => {
+                }));
             }))
 
             button_download.addEventListener('click', (() => {
@@ -3188,6 +3304,76 @@ function tmd_land(parentSelector, code, titleText) {
     }
 }
 
+/* 悬浮窗  Start*/
+
+const mask_cre = document.createElement('div');
+mask_cre.id = 'confirmMask';
+mask_cre.className = 'confirm-mask';
+mask_cre.innerHTML = `
+    <div class="confirm-dialog">
+      <div class="confirm-header">确认操作</div>
+      <div class="confirm-body">?</div>
+      <div class="confirm-footer">
+        <button class="cancel">取消</button>
+        <button class="ok">确认</button>
+      </div>
+    </div>
+  `;
+
+document.body.appendChild(mask_cre);
+
+/* ---------- 自定义弹窗逻辑 ---------- */
+const mask = document.getElementById('confirmMask');
+const cancel = mask.querySelector('.cancel');
+const ok = mask.querySelector('.ok');
+const maskText = document.querySelector('div.confirm-body');
+
+let resolvePromise;   // 用于 await 方式（可选）
+
+function showConfirm() {
+    mask.classList.add('show');
+
+    return new Promise(resolve => {
+        resolvePromise = resolve;
+
+        // 点击遮罩关闭（可选）
+        mask.onclick = e => {
+            if (e.target === mask) closeConfirm(false);
+        };
+        cancel.onclick = () => closeConfirm(false);
+        ok.onclick = () => closeConfirm(true);
+    });
+}
+
+function closeConfirm(result) {
+    mask.classList.remove('show');
+    mask.onclick = cancel.onclick = ok.onclick = null;
+    resolvePromise(result);
+}
+
+/* ---------- 确认后执行原逻辑 ---------- */
+async function confirmndExecute(itext = '', fun) {
+    // 更新提示文字
+    if (itext !== '') {
+        maskText.textContent = itext;
+    }
+
+    // 弹出确认框
+    const confirmed = await showConfirm();
+    if (!confirmed) return;   // 用户取消，直接退出
+
+    // 执行传入的回调（若有）
+    if (typeof fun === 'function') {
+        try {
+            await fun();   // 支持同步或异步回调
+        } catch (err) {
+            console.error('confirmndExecute callback error:', err);
+        }
+    }
+}
+
+// End
+
 /* 播放 */
 function window_play() {
     window.player.play()
@@ -3296,9 +3482,9 @@ function setAttribute_after(x, y) {
 /* 低端影视是否显示图像 */
 function cheat() {
     var ele = document.getElementById("holyx");
-    ele.innerHTML = imax.css.ddrk_cheat;
+    ele.innerHTML = adsMax.css.ddrk_cheat;
     setTimeout(() => {
-        ele.innerHTML = imax.css.ddrk_hidden;
+        ele.innerHTML = adsMax.css.ddrk_hidden;
         console.log("正在切换剧集；")
     }, 150);
 }
@@ -3359,6 +3545,43 @@ function js_adsRemove(url) {
     console.log("JavaScript脚本新增完毕！");
 }
 
+
+
+function loadCSS(url, callback) {
+    // 避免重复加载
+    if (document.querySelector(`link[href="${url}"]`)) {
+        callback && callback();
+        return;
+    }
+
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = url;
+    link.type = 'text/css';
+
+    // 可选：添加跨域属性（如果需要）
+    // link.crossOrigin = 'anonymous';
+
+    // 加载成功回调
+    link.onload = () => {
+        console.log('Adblock4limbo CSS 加载成功');
+        callback && callback();
+    };
+
+    // 加载失败处理
+    link.onerror = () => {
+        console.error('Adblock4limbo CSS 加载失败:', url);
+    };
+
+    document.head.appendChild(link);
+}
+
+// 使用
+/*
+loadCSS('https://limbopro.com/CSS/Adblock4limbo.user.css', () => {
+    console.log('CSS 已生效');
+});
+*/
 
 // 动态创建并引用外部资源 外部样式表 外部脚本
 function third_party_fileX(tagname, url, where) {
