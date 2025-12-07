@@ -380,7 +380,7 @@ var adsMax = {
         zhihuAds: "div.css-1izy64v,[class='Card AppBanner'],.Footer,.Banner-link,div.Pc-word {display:none !important; pointer-events: none !important;}",
         pornhubx: ".clearfix.watchpageAd,ins.adsbytrafficjunky,ins.adsbytrafficjunky~.tjLinksWrapper{display:none!important}  div.y20lkk9odsf6bxapqkvaa.clearfix > ins.adsbytrafficjunky[data-spot-id=\"981\"][data-site-id=\"23\"][data-height=\"99px\"][data-width=\"305px\"],.topAdContainter, a[href*='ads'], div.adContainer.clearfix.noBottom, .adContainer.clearfix.middleVideoAdContainer, div.adContainer.clearfix.noBottom, a[href*='fuck'][target='_blank'], [data-href][target='_blank'],iframe, a.ad#link, #header.hasAdAlert {grid-template-rows:60px 40px 0px !important} div.hd.clear, div > img[data-title][srcset], #js-networkBar,div#abAlert, .adsbytrafficjunky, #pb_template, .sponsor-text, #adsbox, .abAlertShown, .abAlertInner, #main-container > .abovePlayer, [rel*='noopener nofollow'],a[href^=\"http://ads.trafficjunky.net/\"], .topAdContainter,.adsbytrafficjunky,.ad-link  {height:0px !important; display:none !important; pointer-events:none;}", // pornhub
         t66y: "div.content-box > div.static-container-4,div.tips[style*='auto'],div[class*=ftad-item] {height:0px !important; display:none !important; pointer-events:none;}", // pornhub
-        xchina: "div.block-overlay,a[target='_blank'],.push-slider,.push-top-container,.push-bottom {display:none !important; pointer-events: none !important;}",
+        xchina: "a[target='_blank']:not([href*='limbopro' i]):not(.echo *):not(:has(+ .echo)),a[href*='pre'],div.static-container-5,div.static-container-8,div.block-overlay,.push-slider,.push-top-container,.push-bottom {display:none !important; pointer-events: none !important;}",
         instagram: "div._aagw {display:none !important}", // 网页版Instagram不能复制图片的问题
         ttsp: "div#playad1,a[href*=\"8616.tech\"],.play_list_adbox,#adsbox,.ads_all > .ads_w,.ads_box,.right_ads {display:none !important}",
         tz659: "figure, img[src*='mt2.jpg'],img[src*='pf.gif'],[src*='.gif'], iframe {display:none !important}",
@@ -619,6 +619,7 @@ function adsDomain_switch(x) { // 匹配参数值 执行相应函数
                 }
 
                 xchinadl();
+
             });
 
             break;
@@ -2883,7 +2884,34 @@ function xchinadl() { // 小黄书下载m3u8视频
         document.body.appendChild(css)
 
         if (document.getElementById('mp4Download') == null) {
-            var mp4URL = document.querySelectorAll('source')[0].src
+
+            // 一键把 m3u8 地址保存到 mp4URL，绝不干扰后续代码
+            window.mp4URL = null;
+
+            (() => {
+                const patterns = [
+                    /src\s*[:=]\s*['"](https?:\/\/[^'"]*\.m3u8[^'"]*)['"]/i,
+                    /url\s*[:=]\s*['"](https?:\/\/[^'"]*\.m3u8[^'"]*)['"]/i,
+                    /loadSource\s*\(\s*['"](https?:\/\/[^'"]*\.m3u8[^'"]*)['"]/i,
+                    /(https?:\/\/[^\s'"]*\.m3u8[^\s'"]*)/g
+                ];
+
+                for (const s of document.scripts) {
+                    if (s.src) continue;
+                    const text = s.textContent;
+                    for (const reg of patterns) {
+                        const match = text.match(reg);
+                        if (match) {
+                            window.mp4URL = match[1] || match[0];
+                            console.log('m3u8 已成功保存 → mp4URL');
+                            console.log(window.mp4URL);
+                            return; // 这里只是退出函数，不会影响外面
+                        }
+                    }
+                }
+                console.log('未找到 m3u8，mp4URL 仍是 null');
+            })();
+
             var mp4Download = document.createElement('a')
             mp4Download.download = document.title.toString()
             mp4Download.target = '_blank'
@@ -2896,23 +2924,30 @@ function xchinadl() { // 小黄书下载m3u8视频
                 mp4Download.textContent = '下载视频'
             }
 
-            var button_download = document.createElement('button')
-            button_download.style = 'z-index:114154; padding:12px; position:fixed;right:0px;top:45%;border:0px; background:yellowgreen;color:white;font-weight:bolder;width:60px;'
+            // 创建 div 元素
+            const myContainer = document.createElement('div');
 
-            if (mp4URL.indexOf('.mp4')) {
+            // 可选：给 div 添加 id、class、内容等
+            myContainer.id = 'myContainer';
+            myContainer.style = "position:fixed;right:0px;z-index:114154;display:grid;top:55%;"
+
+            var button_download = document.createElement('button')
+            button_download.style = 'padding:12px; border:0px; background:#22c55e;color:white;font-weight:bolder;width:60px;'
+
+            if (mp4URL.indexOf('.mp4') !== -1) {
                 button_download.textContent = '复制视频下载地址'
             } else {
-                button_download.textContent = '复制本视频的M3U8文件地址复制本视频'
+                button_download.textContent = '复制M3U8文件地址'
             }
 
             button_download.id = 'copyURL'
 
             var button_alert = document.createElement('button')
-            button_alert.style = 'z-index:114154; padding:12px; position:fixed;right:0px;top:60%;border:0px; background:yellowgreen;color:white;font-weight:bolder;width:60px;'
+            button_alert.style = 'padding:12px; border:0px; background:yellowgreen;color:white;font-weight:bolder;width:60px;'
             button_alert.textContent = '如何下载本视频？'
             button_alert.id = 'alertDownload'
 
-            if (mp4URL.indexOf('.mp4')) {
+            if (mp4URL.indexOf('.mp4') !== -1) {
 
                 button_alert.addEventListener('click', (() => {
                     //alert(' 1.复制视频下载地址；2.iOS用户推荐使用名叫 "Documents" 的 app 下载视频，打开 Documents app -> 浏览器 - 粘贴视频下载地址；Android 暂无建议；桌面浏览器用户在新的标签页打开下载地址，然后右键另存为即可；')
@@ -2941,7 +2976,7 @@ function xchinadl() { // 小黄书下载m3u8视频
 
                     setTimeout(() => { // ↩️按钮恢复原状
                         document.querySelector('#copyURL').classList.remove('copysuccess')
-                        document.querySelector('#copyURL').textContent = '复制视频下载地址'
+                        document.querySelector('#copyURL').textContent = '复制M3U8文件地址'
                     }, 2500)
 
                     if (document.getElementById('fuck91porn')) { // 删除刚刚创建的 textarea 元素
@@ -2952,11 +2987,15 @@ function xchinadl() { // 小黄书下载m3u8视频
                 }
             }))
 
-            mp4Download.style = 'z-index:114154; padding:12px; position:fixed;right:0px;top:150px;background:yellowgreen;color:white;font-weight:bolder;width:60px;'
+            mp4Download.style = 'padding:12px;background:yellowgreen;color:white;font-weight:bolder;width:60px;'
             const ele_parent = document.querySelectorAll('div.content-box.player-container')[0]
-            ele_parent.parentNode.insertBefore(button_alert, ele_parent)
-            ele_parent.parentNode.insertBefore(button_download, ele_parent)
-            ele_parent.parentNode.insertBefore(mp4Download, ele_parent)
+
+            myContainer.appendChild(button_download)
+            myContainer.appendChild(button_alert)
+            //myContainer.appendChild(mp4Download)
+            ele_parent.parentNode.insertBefore(myContainer, ele_parent)
+            //ele_parent.parentNode.insertBefore(button_download, ele_parent)
+            //ele_parent.parentNode.insertBefore(mp4Download, ele_parent)
         }
     }
 }
