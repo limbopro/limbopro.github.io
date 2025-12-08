@@ -142,18 +142,7 @@ function tripleClick() {
             } else {
                 number = 0;
                 console.log("number被重设为0");
-
-                const iframeEl = document.querySelector('div.skiptranslate')
-                const translateEl = document.getElementById('google_translate_element');
-
-                if (iframeEl && translateEl) {
-                    translateEl.classList.add('translate-hidden');
-                    iframeEl.classList.add('translate-hidden');
-                    setTimeout(() => {
-                        translateEl.classList.remove('translate-hidden')
-                        iframeEl.classList.remove('translate-hidden');
-                    }, 5000);
-                }
+                hiddencjsfy();
             }
 
         }, 850)
@@ -2402,6 +2391,8 @@ function initLimoProSearch() {
         const now = Date.now();
         if (now - lastScroll > 300 && !window.getSelection().toString().trim()) hide();
         lastScroll = now;
+        // 沉浸式翻译隐藏起来 cjsfy
+        console.log('页面滚动中...')
     });
 
     document.addEventListener('keydown', e => {
@@ -2415,6 +2406,21 @@ function initLimoProSearch() {
 // 划词搜索 End
 
 // 沉浸式翻译 Start
+
+
+function hiddencjsfy() {
+    const iframeEl = document.querySelector('div.skiptranslate')
+    const translateEl = document.getElementById('google_translate_element');
+
+    if (iframeEl && translateEl) {
+        translateEl.classList.add('translate-hidden');
+        iframeEl.classList.add('translate-hidden');
+        setTimeout(() => {
+            translateEl.classList.remove('translate-hidden')
+            iframeEl.classList.remove('translate-hidden');
+        }, 5000);
+    }
+}
 
 // 沉浸式翻译
 // 切换按钮
@@ -2443,6 +2449,16 @@ function applyState(targetState) {
         cjsfybtn.style.background = 'green';
 
         cjsfybtn.setAttribute('data-state', 'on');
+
+        let lastScroll = 0;
+        window.addEventListener('scroll', () => {
+            const now = Date.now();
+            if (now - lastScroll > 300 && !window.getSelection().toString().trim()) hide();
+            lastScroll = now;
+            // 沉浸式翻译隐藏起来 cjsfy
+            console.log('页面滚动中...')
+            hiddencjsfy(); // 
+        });
 
     } else {
         // --- 去激活 (OFF) 逻辑 ---
@@ -2488,6 +2504,8 @@ if (cjsfybtn) {
         applyState(nextState);
     });
 }
+
+
 
 // 沉浸式翻译 End
 
