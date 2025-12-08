@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Adblock4limbo——导航及各类功能函数合集.[github]
 // @namespace    https://limbopro.com/Adguard/Adblock4limbo.function.js
-// @version      0.2025.12.01
+// @version      0.2025.12.08.v2
 // @license      CC BY-NC-SA 4.0
 // @description  实用网站导航 —— 免费在线影视/前端学习/开发者社区/新闻/建站/下载工具/格式转换工具/电子书/新闻/写作/免费漫画等；
 // @author       limbopro
@@ -141,8 +141,21 @@ function tripleClick() {
                 body_build('true')  // 如果按钮出现，且其他如搜索不存在则可唤出导航页面
             } else {
                 number = 0;
-                console.log("number被重设为0")
+                console.log("number被重设为0");
+
+                const iframeEl = document.querySelector('div.skiptranslate')
+                const translateEl = document.getElementById('google_translate_element');
+
+                if (iframeEl && translateEl) {
+                    translateEl.classList.add('translate-hidden');
+                    iframeEl.classList.add('translate-hidden');
+                    setTimeout(() => {
+                        translateEl.classList.remove('translate-hidden')
+                        iframeEl.classList.remove('translate-hidden');
+                    }, 5000);
+                }
             }
+
         }, 850)
     }
 
@@ -502,7 +515,7 @@ function initNavigationContainer() { // 初始化导航容器
     // 1. 创建容器（只创建一次）
     const container = Object.assign(document.createElement('div'), {
         id: 'dh_pageContainer',
-        className: 'dh_pageContainer_css notranslate'
+        className: 'dh_pageContainer_css'
     });
 
     // 2. 使用模板字符串（保持可读性） + 文档片段（避免多次 innerHTML 导致的重排）
@@ -555,6 +568,7 @@ function getNavigationHTML() {
             <li class="li_global"><a class="a_global" id="ifeedback" href="https://limbopro.com/feedback/" target="_blank">匿名留言</a></li>
       <li class="li_global"><button class="crbhms" id="hidedaohang">导航按钮(OFF)</button></li>
       <li class="li_global"><button class="crbhms" id="huacisousuo" data-state="off" style="background-color:red">划词搜索(OFF)</button></li>
+      <li class="li_global"><button class="crbhms" id="cjsfy" data-state="off" style="background-color:red">沉浸式翻译(OFF)</button></li>
       <li class="li_global">
     <button style="background: black;"class="crbhms" id="resetSort">重置排序</button></li>
       <li class="li_global"><button class="crbhms" id="nsfwmode_switch">WTF!</button></li>
@@ -743,6 +757,9 @@ var file = {
         ".li_global {display:flex; min-height:31px; font-size:medium; list-style:none; width:112px;}",
         ".ul_global {padding:0px; font-size:15px !important; height:258px; margin:0px; overflow:auto; width:auto;}",
         ".title_global {font-weight:bolder !important; padding-left:2px; display:table-cell; vertical-align:bottom; width:106px; height:50px; text-align:center; font-size:initial; margin-bottom:5px; font-weight:lighter; color:black !important; padding-bottom:4px;}",
+
+        /* 隐藏谷歌翻译框 */
+        ".translate-hidden { opacity: 0 !important; pointer-events: none !important;transition: opacity 0.3s ease !important;}",
 
         /* 主容器背景与动画 */
         "#dh_pageContainer {overflow-y:overlay; overflow-x:hidden; background-image:url('https://raw.githubusercontent.com/limbopro/Adblock4limbo/main/Adguard/Adblock4limbo_bgp.jpg'); background-size:100% !important; background-repeat:round; margin:auto; width:200px; height:200px; z-index:-114154; opacity:0; background-color:transparent; position:fixed; top:50%;}",
@@ -1625,9 +1642,6 @@ function toggleSearchState(x) {
             //// body_build('false')
         }, 1500)
     }
-
-
-
 }
 
 // 点击事件
@@ -2398,6 +2412,84 @@ function initLimoProSearch() {
     console.log('划词搜索（终极优化版 + 设置按钮）已加载');
 }
 
+// 划词搜索 End
+
+// 沉浸式翻译 Start
+
+// 沉浸式翻译
+// 切换按钮
+const cjsfybtn = document.getElementById('cjsfy');
+const STORAGE_KEY = 'cjsfy_translation_state'; // 用于 localStorage 的键名
+
+// 这是一个统一的函数，用于根据目标状态更新 UI、执行功能并保存状态
+function applyState(targetState) {
+    if (!cjsfybtn) return;
+
+    // 1. 执行功能和 UI 逻辑
+    if (targetState === 'on') {
+        // --- 激活 (ON) 逻辑 ---
+
+        // A. 运行您的翻译启动代码
+        // 动态加载谷歌翻译脚本
+        const scriptUrl = '//limbopro.com/Adguard/Adblock4limbo.immersiveTranslation.user.js';
+        const script = document.createElement('script');
+        script.type = 'text/javascript';
+        script.src = scriptUrl;
+        document.head.appendChild(script);
+        body_build('false');
+
+        // B. 更新 UI
+        cjsfybtn.textContent = '沉浸式翻译(ON)';
+        cjsfybtn.style.background = 'green';
+
+        cjsfybtn.setAttribute('data-state', 'on');
+
+    } else {
+        // --- 去激活 (OFF) 逻辑 ---
+
+        // A. 在这里添加关闭/去激活翻译功能的代码
+        console.log("执行去激活功能 (Placeholder)...");
+
+        // B. 更新 UI
+        cjsfybtn.textContent = '沉浸式翻译(OFF)';
+        cjsfybtn.style.background = 'red';
+        cjsfybtn.setAttribute('data-state', 'off');
+    }
+
+    // 2. 保存状态到本地存储
+    localStorage.setItem(STORAGE_KEY, targetState);
+}
+
+
+if (cjsfybtn) {
+    // ===========================================
+    // 步骤 1: 页面加载时，从 localStorage 恢复状态
+    // ===========================================
+    const savedState = localStorage.getItem(STORAGE_KEY);
+
+    // 如果本地存储中有保存的状态，并且状态是 'on'，则恢复它。
+    if (savedState === 'on') {
+        // 恢复 ON 状态 (会设置 UI 和运行功能代码)
+        applyState('on');
+    } else if (savedState === 'off') {
+    }
+
+    // 如果 savedState 是 'off' 或不存在 (null)，则保持按钮的默认 HTML 状态，不执行任何操作。
+
+    // ===========================================
+    // 步骤 2: 添加点击事件监听器 (用于切换)
+    // ===========================================
+    cjsfybtn.addEventListener('click', () => {
+        const currentState = cjsfybtn.getAttribute('data-state');
+        // 根据当前状态，确定下一个目标状态
+        const nextState = currentState === 'off' ? 'on' : 'off';
+
+        // 切换到下一个状态
+        applyState(nextState);
+    });
+}
+
+// 沉浸式翻译 End
 
 
 // 备份数据列表
@@ -2863,6 +2955,11 @@ var dataListbak = {
         {
             "name": "Javday",
             "url": "https://javday.tv/",
+            "target": "_blank",
+            "level": "better"
+        }, {
+            "name": "小黄书",
+            "url": "https://xchina.co/",
             "target": "_blank",
             "level": "better"
         },

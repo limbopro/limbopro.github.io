@@ -141,8 +141,10 @@ function tripleClick() {
                 body_build('true')  // 如果按钮出现，且其他如搜索不存在则可唤出导航页面
             } else {
                 number = 0;
-                console.log("number被重设为0")
+                console.log("number被重设为0");
+                hiddencjsfy();
             }
+
         }, 850)
     }
 
@@ -502,7 +504,7 @@ function initNavigationContainer() { // 初始化导航容器
     // 1. 创建容器（只创建一次）
     const container = Object.assign(document.createElement('div'), {
         id: 'dh_pageContainer',
-        className: 'dh_pageContainer_css notranslate'
+        className: 'dh_pageContainer_css'
     });
 
     // 2. 使用模板字符串（保持可读性） + 文档片段（避免多次 innerHTML 导致的重排）
@@ -744,6 +746,9 @@ var file = {
         ".li_global {display:flex; min-height:31px; font-size:medium; list-style:none; width:112px;}",
         ".ul_global {padding:0px; font-size:15px !important; height:258px; margin:0px; overflow:auto; width:auto;}",
         ".title_global {font-weight:bolder !important; padding-left:2px; display:table-cell; vertical-align:bottom; width:106px; height:50px; text-align:center; font-size:initial; margin-bottom:5px; font-weight:lighter; color:black !important; padding-bottom:4px;}",
+
+        /* 隐藏谷歌翻译框 */
+        ".translate-hidden { opacity: 0 !important; pointer-events: none !important;transition: opacity 0.3s ease !important;}",
 
         /* 主容器背景与动画 */
         "#dh_pageContainer {overflow-y:overlay; overflow-x:hidden; background-image:url('https://raw.githubusercontent.com/limbopro/Adblock4limbo/main/Adguard/Adblock4limbo_bgp.jpg'); background-size:100% !important; background-repeat:round; margin:auto; width:200px; height:200px; z-index:-114154; opacity:0; background-color:transparent; position:fixed; top:50%;}",
@@ -2386,6 +2391,8 @@ function initLimoProSearch() {
         const now = Date.now();
         if (now - lastScroll > 300 && !window.getSelection().toString().trim()) hide();
         lastScroll = now;
+        // 沉浸式翻译隐藏起来 cjsfy
+        console.log('页面滚动中...')
     });
 
     document.addEventListener('keydown', e => {
@@ -2398,420 +2405,22 @@ function initLimoProSearch() {
 
 // 划词搜索 End
 
-
 // 沉浸式翻译 Start
-// ==UserScript==
-// @name         沉浸式翻译（Google Translate & 原文保护）
-// @namespace    http://tampermonkey.net/
-// @version      2025-12-08_Final_V11
-// @description  通过自定义逻辑加载谷歌翻译，并创建原文副本以实现双语对照（沉浸式翻译），支持一键切换原文/双语状态和动态加载内容，并记住上次状态。
-// @author       limbopro
-// @match        https://*/*
-// @icon         https://www.google.com/s2/favicons?sz=64&domain=johnnydecimal.com
-// @grant        none
-// ==/UserScript==
-
-// --- I. 谷歌翻译加载与配置 ---
-
-// 定义 localStorage key
-const TRANSLATION_STATE_KEY = 'immersiveTranslationState';
-
-/**
- * @function loadGoogleTranslateUI
- * @description 动态加载谷歌翻译组件，限制语言范围，并设置UI容器样式。
- * 容器被标记为 'notranslate' 以防自身被翻译。
- */
-function loadGoogleTranslateUI() {
-    if (document.getElementById('google_translate_element')) return;
-
-    // 1. 定义谷歌翻译初始化函数
-    window.google = window.google || {};
-    window.google.translate = window.translate || {};
-    window.google.translate.TranslateElementInit = function () {
-        new google.translate.TranslateElement({
-            includedLanguages: 'zh-CN,en',
-            layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
-            autoDisplay: false
-        }, 'google_translate_element');
-    };
-
-    // 2. 创建并美化 UI 容器元素
-    const uiContainerId = 'google_translate_element';
-    let uiContainer = document.getElementById(uiContainerId);
-
-    if (!uiContainer) {
-        uiContainer = document.createElement('div');
-        uiContainer.id = uiContainerId;
-        document.body.appendChild(uiContainer);
-
-        // 设置容器浮动样式和 notranslate 标记
-        uiContainer.classList.add('notranslate');
-        uiContainer.style.position = 'fixed';
-        uiContainer.style.top = '40px';
-        uiContainer.style.right = '30px';
-        uiContainer.style.zIndex = '9999';
-        uiContainer.style.backgroundColor = '#f8f8f8';
-        uiContainer.style.padding = '8px 12px';
-        uiContainer.style.borderRadius = '25px';
-        uiContainer.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
-        uiContainer.style.border = '1px solid #ddd';
-        uiContainer.style.transition = 'box-shadow 0.3s ease-in-out';
-        uiContainer.style.lineHeight = '0'; // 优化内联布局
-    }
-
-    // 3. 动态加载谷歌翻译脚本
-    const scriptUrl = '//translate.google.com/translate_a/element.js?cb=google.translate.TranslateElementInit';
-    const script = document.createElement('script');
-    script.type = 'text/javascript';
-    script.src = scriptUrl;
-    document.head.appendChild(script);
-}
-
-// --- II. 原文保护与双语复制逻辑 ---
-
-/**
- * @function applyNotranslateProtection
- * @description 核心函数。遍历DOM识别正文块级元素，创建带有 'notranslate' 类的副本作为原文，
- * 并标记原元素（'.thatcloned'）以防止重复复制。
- */
-function applyNotranslateProtection() {
-    (() => {
-        const textBlocksToClone = new Set();
-        // 排除：不可见、结构性或特定 UI 元素。
-        const excludedAncestors = '#contentWrapper, div.echo, pre, script, style, noscript';
-
-        // 性能优化：将正则表达式定义在 IIFE 顶部。
-        // 匹配：数字, 空白, 逗号, 点号, 斜杠, 冒号, 短横线 (用于排除日期/数据块)
-        const pureDataRegex = /^[0-9\s,./:\-]+$/; 
-
-        // 1. TreeWalker 找出所有需要处理的真实文本节点
-        const walker = document.createTreeWalker(
-            document.body,
-            NodeFilter.SHOW_TEXT,
-            {
-                acceptNode(node) {
-                    const parent = node.parentElement;
-                    if (!node.nodeValue?.trim() || parent?.closest(excludedAncestors)) {
-                        return NodeFilter.FILTER_REJECT;
-                    }
-
-                    // 优化：跳过位于已标记（包括 protectPreTags 标记的）元素内部的文本。
-                    if (parent?.closest('.notranslate') || parent?.closest('.thatcloned')) {
-                        return NodeFilter.FILTER_REJECT;
-                    }
-
-                    return NodeFilter.FILTER_ACCEPT;
-                }
-            }
-        );
-
-        let node;
-        while (node = walker.nextNode()) {
-            const textContent = node.nodeValue.trim();
-            // 过滤极短或纯数字的文本节点
-            if (textContent.length < 2 || (/^\d+$/.test(textContent) && textContent.length <= 2)) {
-                continue;
-            }
-
-            let currentElement = node.parentElement;
-            while (currentElement && currentElement !== document.body) {
-                if (currentElement.closest(excludedAncestors)) break; // 向上查找遇到排除元素则停止
-
-                // 判断是否为块级元素
-                const displayStyle = getComputedStyle(currentElement).display;
-                const isBlock = /^(block|flex|grid|table|list-item)$/.test(displayStyle) ||
-                    /table-/.test(displayStyle) ||
-                    /^(H[1-6]|P|DIV|LI|ARTICLE|SECTION|MAIN|UL|OL|BLOCKQUOTE|FIGURE|DETAILS)$/.test(currentElement.tagName);
-
-                if (isBlock) {
-                    
-                    // 检查 0: 排除复杂的 UI 容器（产品卡片、列表项等）
-                    const tagName = currentElement.tagName;
-                    
-                    // 仅对通用容器（DIV, LI）或文章/分段容器（ARTICLE）进行检查
-                    if (['DIV', 'LI', 'ARTICLE'].includes(tagName)) {
-                        
-                        // 如果子元素数量超过阈值 4，则认为它是复杂的 UI 容器，立即跳出
-                        if (currentElement.children.length > 4) { 
-                            break; 
-                        }
-                    }
-                    
-                    // 检查 1: 跳过已处理过的原始元素（防止重复复制）
-                    if (currentElement.classList.contains('thatcloned')) break;
-
-                    // 检查 2: 跳过已手动标记为不翻译的元素
-                    if (currentElement.classList.contains('notranslate')) break;
-
-                    // 检查 3: 过滤极短和纯数据文本块
-                    const fullText = currentElement.textContent.trim();
-                    if (fullText.length >= 2 && !pureDataRegex.test(fullText)) {
-                        textBlocksToClone.add(currentElement);
-                    }
-                    
-                    // 复制逻辑执行完毕或检查完毕后，跳出 while 循环
-                    break;
-                }
-                currentElement = currentElement.parentElement;
-            }
-        }
-
-        if (textBlocksToClone.size === 0) {
-            console.log('%c [Immersive Translate] 没有发现符合要求的正文块级元素。', 'color:#fff;background:#e74c3c;padding:2px 4px;border-radius:4px;');
-            return;
-        }
-
-        // 2. 复制并插入 'notranslate' 副本，并标记原始元素
-        Array.from(textBlocksToClone).reverse().forEach(originalElement => {
-            // 最终防御性检查
-            if (originalElement.classList.contains('thatcloned') || originalElement.classList.contains('notranslate')) {
-                return;
-            }
-
-            const clone = originalElement.cloneNode(true);
-            clone.classList.add('notranslate');
-            originalElement.parentNode.insertBefore(clone, originalElement);
-            originalElement.classList.add('thatcloned');
-        });
-
-        // 3. 完成提示
-        console.log(`%c [Immersive Translate] 成功处理 ${textBlocksToClone.size} 个正文块级元素。`,
-            'color:#fff;background:#0d6efd;font-weight:bold;padding:2px 4px;border-radius:4px;font-size:12px;');
-    })();
-}
-
-/**
- * @function protectPreTags
- * @description 预先为代码块、表格、按钮、输入元素和常见的元数据容器添加 'notranslate' 类。
- */
-function protectPreTags() {
-    // 保护范围：div.house, button, input, label, table, pre, td
-    // 注意：h4, h5, h6 已移除，交由动态复制逻辑处理。
-    document.querySelectorAll('div.house,button,input,label,table,pre,td').forEach((element) => {
-        element.classList.add('notranslate');
-    });
-}
-
-// --- III. 流程控制与用户交互 ---
-
-let domObserver = null; // 用于存储 MutationObserver 实例
-
-/**
- * @function removeClonedElements
- * @description 移除页面上所有已复制的（双语）元素，并清理标记，恢复到原始页面状态。
- */
-function removeClonedElements() {
-    console.log("[Immersive Translate] 正在恢复原始页面状态...");
-
-    // 1. 移除所有复制的元素（即带有 .notranslate 的副本）
-    document.querySelectorAll('.notranslate:not(#google_translate_element)').forEach(clone => {
-        if (clone.id !== 'google_translate_element') {
-            clone.remove();
-        }
-    });
-
-    // 2. 清理所有原始元素上的标记（移除 .thatcloned 类）
-    document.querySelectorAll('.thatcloned').forEach(originalElement => {
-        originalElement.classList.remove('thatcloned');
-    });
-
-    // 3. 移除谷歌翻译的iframe和痕迹（可选，如果需要完全复原）
-    const googleBar = document.querySelector('.goog-te-banner-frame');
-    if (googleBar) {
-        googleBar.remove();
-    }
-    
-    // 4. 清理谷歌翻译的cookie，以确保翻译状态被重置
-    document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-    document.cookie = 'googtrans=/; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-    
-    // 5. 清除 localStorage 状态
-    localStorage.removeItem(TRANSLATION_STATE_KEY);
-
-    // 6. 停止 DOM 监控
-    if (domObserver) {
-        domObserver.disconnect();
-        domObserver = null;
-    }
-    
-    // ✨ 7. 修复：更新按钮状态，显示“译”
-    const button = document.getElementById('translation-button');
-    if (button) {
-        button.textContent = '译'; // 恢复为“译”
-        button.classList.remove('translated'); // 移除红色状态
-    }
-
-    console.log("[Immersive Translate] 页面已恢复为仅显示原文状态。");
-}
-
-/**
- * @function observeDOMChanges
- * @description 使用 MutationObserver 监控 DOM 变化，适配 SPA/AJAX 网站。
- */
-function observeDOMChanges() {
-    // 确保只启动一个观察者
-    if (domObserver) {
-        domObserver.disconnect();
-    }
-
-    // 只有在用户已点击“译”并处于双语状态时才监控
-    if (!document.querySelector('.thatcloned')) {
-        return;
-    }
-
-    // 排除目标，防止过度触发
-    const excludedSelectors = '#google_translate_element, .notranslate, .thatcloned, iframe, script, style';
-
-    domObserver = new MutationObserver((mutationsList, observer) => {
-        let largeChangeDetected = false;
-
-        for (const mutation of mutationsList) {
-            if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
-                mutation.addedNodes.forEach(node => {
-                    // 过滤掉文本节点或小的变化，只关注offsetHeight大于100px的块级元素的添加
-                    if (node.nodeType === 1 && node.offsetHeight > 100) { 
-                        if (!node.matches(excludedSelectors)) {
-                            largeChangeDetected = true;
-                        }
-                    }
-                });
-            }
-        }
-
-        if (largeChangeDetected) {
-            // 找到浮动按钮
-            const button = document.getElementById('translation-button');
-            if (button && button.classList.contains('translated')) {
-                // 发现大块新内容，重新执行复制和标记逻辑
-                console.log("[Immersive Translate] 检测到新内容加载，重新执行复制流程。");
-                protectPreTags();
-                applyNotranslateProtection(); 
-            }
-        }
-    });
-
-    // 配置观察选项：观察子节点和子树
-    const config = { childList: true, subtree: true };
-
-    // 针对整个 body 开始观察
-    domObserver.observe(document.body, config);
-    console.log("[Immersive Translate] DOM 变化监控已启动。");
-}
 
 
-/**
- * @function initiateTranslationFlow
- * @description 按照预定顺序执行所有初始化和翻译保护函数。
- */
-function initiateTranslationFlow(isAutoStart = false) {
-    console.log("[Immersive Translate] 翻译流程开始...");
-    
-    // 步骤 1: 静态保护 UI 元素
-    protectPreTags(); 
-    // 步骤 2: 加载 Google 翻译 UI
-    loadGoogleTranslateUI();
-    // 步骤 3: 复制和标记原文块
-    applyNotranslateProtection();
-    
-    // 步骤 4: 启动 DOM 变化监控
-    observeDOMChanges(); 
+function hiddencjsfy() {
+    const iframeEl = document.querySelector('div.skiptranslate')
+    const translateEl = document.getElementById('google_translate_element');
 
-    // 步骤 5: 如果是用户手动点击启动，则存储状态
-    if (!isAutoStart) {
-        localStorage.setItem(TRANSLATION_STATE_KEY, 'translated');
-    }
-
-    // 确保按钮显示正确状态 (仅在 DOM 元素存在时)
-    const button = document.getElementById('translation-button');
-    if (button) {
-        button.textContent = '原'; 
-        button.classList.add('translated');
-    }
-
-    console.log("[Immersive Translate] 翻译流程执行完毕。");
-}
-
-
-/**
- * @function createFloatingButton
- * @description 创建并配置右下角的浮动“译/原”按钮，作为用户触发点。
- */
-function createFloatingButton() {
-    // 检查点：如果按钮已存在，则立即退出，避免重复生成
-    if (document.getElementById('translation-button')) {
-        return;
-    }
-    
-    // 1. 预设 Google Translate cookie，目标为 /auto/zh-CN
-    document.cookie = "googtrans=/auto/zh-CN; path=/";
-
-    // 2. 注入 CSS 样式
-    const css = `
-        #translation-button {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            z-index: 10000;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background-color: #4A90E2;
-            color: white;
-            font-size: 18px;
-            font-weight: bold;
-            text-align: center;
-            line-height: 50px;
-            cursor: pointer;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            transition: all 0.3s ease;
-            border: none;
-            user-select: none;
-        }
-        #translation-button:hover { background-color: #357ABD; box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3); transform: scale(1.05); }
-        #translation-button:active { transform: scale(0.98); background-color: #285A90; }
-
-        /* 翻译状态下的样式变化，提供视觉反馈 */
-        #translation-button.translated {
-            background-color: #E74C3C;
-        }
-    `;
-    const style = document.createElement('style');
-    style.textContent = css;
-    document.head.appendChild(style);
-
-    // 3. 创建 HTML DOM 结构
-    const button = document.createElement('div');
-    button.id = 'translation-button';
-    button.textContent = '译';
-
-    // 4. 添加点击事件监听器，实现状态切换逻辑
-    button.addEventListener('click', () => {
-        // 通过检查 .thatcloned 元素是否存在来判断当前是否处于双语状态
-        const isTranslated = document.querySelector('.thatcloned');
-        
-        if (isTranslated) {
-            // 如果是双语状态，点击后恢复原文
-            removeClonedElements();
-        } else {
-            // 如果是原文状态，点击后启动翻译，并标记为手动启动 (isAutoStart=false)
-            initiateTranslationFlow(false); 
-        }
-    });
-
-    // 5. 将按钮添加到页面的 body 中
-    document.body.appendChild(button);
-    
-    // 6. 自动启动逻辑
-    const savedState = localStorage.getItem(TRANSLATION_STATE_KEY);
-    if (savedState === 'translated') {
-        // 如果状态为“翻译”，则自动启动翻译，并标记为自动启动 (isAutoStart=true)
-        initiateTranslationFlow(true); 
+    if (iframeEl && translateEl) {
+        translateEl.classList.add('translate-hidden');
+        iframeEl.classList.add('translate-hidden');
+        setTimeout(() => {
+            translateEl.classList.remove('translate-hidden')
+            iframeEl.classList.remove('translate-hidden');
+        }, 5000);
     }
 }
-
-
-// --- VI. 脚本入口点 ---
-//// createFloatingButton();
 
 // 沉浸式翻译
 // 切换按钮
@@ -2827,20 +2436,29 @@ function applyState(targetState) {
         // --- 激活 (ON) 逻辑 ---
 
         // A. 运行您的翻译启动代码
-        createFloatingButton();
+        // 动态加载谷歌翻译脚本
+        const scriptUrl = '//limbopro.com/Adguard/Adblock4limbo.immersiveTranslation.user.js';
+        const script = document.createElement('script');
+        script.type = 'text/javascript';
+        script.src = scriptUrl;
+        document.head.appendChild(script);
         body_build('false');
-        
-        /*setTimeout(() => {
-            if (document.getElementById('translation-button')) {
-                document.getElementById('translation-button').click();
-            }
-        }, 1500);
-        */
 
         // B. 更新 UI
         cjsfybtn.textContent = '沉浸式翻译(ON)';
         cjsfybtn.style.background = 'green';
+
         cjsfybtn.setAttribute('data-state', 'on');
+
+        let lastScroll = 0;
+        window.addEventListener('scroll', () => {
+            const now = Date.now();
+            if (now - lastScroll > 300 && !window.getSelection().toString().trim()) hide();
+            lastScroll = now;
+            // 沉浸式翻译隐藏起来 cjsfy
+            console.log('页面滚动中...')
+            hiddencjsfy(); // 
+        });
 
     } else {
         // --- 去激活 (OFF) 逻辑 ---
@@ -2869,7 +2487,9 @@ if (cjsfybtn) {
     if (savedState === 'on') {
         // 恢复 ON 状态 (会设置 UI 和运行功能代码)
         applyState('on');
+    } else if (savedState === 'off') {
     }
+
     // 如果 savedState 是 'off' 或不存在 (null)，则保持按钮的默认 HTML 状态，不执行任何操作。
 
     // ===========================================
@@ -2885,8 +2505,8 @@ if (cjsfybtn) {
     });
 }
 
-// --- IV. 脚本入口点 ---
-// createFloatingButton();
+
+
 // 沉浸式翻译 End
 
 
