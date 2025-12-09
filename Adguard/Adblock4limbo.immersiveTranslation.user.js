@@ -1,12 +1,12 @@
 // ==UserScript==
-// @name         沉浸式双语翻译 (Google Translate & Dual Wrapper) - 简洁滚动控制 - 纯JS版本
-// @namespace    http://tampermonkey.net/
-// @version      2025-12-09_Final_V14_ScrollSimple
-// @description  基于 Google Translate，采用双包裹体结构实现沉浸式双语对照翻译。优化了切换逻辑，并简化了滚动时隐藏 UI 元素的控制。
-// @author       limbopro
-// @match        https://*/*
-// @icon         https://www.google.com/s2/favicons?sz=64&domain=translate.google.com/
-// @grant        none
+// @name         沉浸式双语翻译 (Google Translate & Dual Wrapper) - 简洁滚动控制 - 纯JS版本
+// @namespace    http://tampermonkey.net/
+// @version      2025-12-09_Final_V14_ScrollSimple_CloseButton_Stable
+// @description  基于 Google Translate，采用双包裹体结构实现沉浸式双语对照翻译。修复了点击“双语”按钮后关闭按钮丢失的问题，并在切换模式时加入了关闭按钮的防御性检查和重建。
+// @author       limbopro
+// @match        https://*/*
+// @icon         https://www.google.com/s2/favicons?sz=64&domain=translate.google.com/
+// @grant        none
 // ==/UserScript==
 
 // --- I. 谷歌翻译加载与配置 ---
@@ -181,9 +181,11 @@ function applyDualWrapperProtection() {
                 const translatedWrapper = el.querySelector('.cjsfy-translated');
                 const originalWrapper = el.querySelector('.cjsfy-original');
                 const separator = el.querySelector('.jiange');
+                const hiddenOriginal = el.querySelector('.hiddenOriginal.ori');
 
                 originalWrapper?.remove();
                 separator?.remove();
+                hiddenOriginal?.remove();
 
                 if (translatedWrapper) {
                     while (translatedWrapper.firstChild) {
@@ -259,13 +261,15 @@ function createFloatingButton() {
     /* 滚动隐藏/显示所需的样式 */
     #translation-button, #google_translate_element {
         /* 添加过渡效果，让隐藏和显示更平滑 */
-        transition: opacity 0.5s ease-in-out !important; 
+        transition: opacity 0.5s ease-in-out !important, visibility 0.5s ease-in-out !important; 
         pointer-events: auto; /* 确保默认可点击 */
+        visibility: visible;
     }
 
     /* 滚动隐藏时的类 */
     .scroll-hidden {
         opacity: 0 !important;
+        visibility: hidden !important; /* 新增 visibility 确保元素不占用空间或阻止交互 */
         /* 使用 pointer-events: none 确保隐藏时无法被点击 */
         pointer-events: none !important; 
     }
@@ -276,27 +280,27 @@ function createFloatingButton() {
         right: 2px;
         left: auto;
         bottom: 30% !important;              
-        height: auto;                   
+        height: auto;                       
         z-index: 10000;
-    width: 45px;
-    height: 45px;
-    border-radius: 5px 5px 5px 5px;
-    background-color:#fff;
-    color:#1a73e8;
-    font-size: 18px;
-    font-weight: bold;
-    text-align: center;
-    line-height: 45px; 
-    user-select: none;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
+        width: 45px;
+        height: 45px;
+        border-radius: 5px 5px 5px 5px;
+        background-color:#fff;
+        color:#1a73e8;
+        font-size: 18px;
+        font-weight: bold;
+        text-align: center;
+        line-height: 45px; 
+        user-select: none;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        /* 保持 fixed 定位 */
+    }
 
-/* 交互效果 */
+    /* 交互效果 */
         #translation-button:hover {
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15) !important;
         }
             
-        #translation-button:hover { box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);}
         #translation-button:active {  transform: scale(0.98); }
 
         #translation-button.translated {
@@ -304,6 +308,33 @@ function createFloatingButton() {
             background-color: #34a853;
             color: #fff;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        /* 新增：关闭按钮样式 */
+        #translation-close-btn {
+            position: absolute;
+            top: -8px; /* 调整位置 */
+            right: -8px; /* 调整位置 */
+            width: 18px;
+            height: 18px;
+            line-height: 16px;
+            font-size: 12px;
+            background-color: #f44336; /* 红色背景 */
+            color: white;
+            border: 1px solid white;
+            border-radius: 50%; /* 圆形 */
+            cursor: pointer;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            z-index: 10001; /* 确保在主按钮之上 */
+            font-weight: normal;
+            transition: all 0.2s;
+            opacity: 0.9;
+        }
+
+        #translation-close-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
         }
     `;
     const style = document.createElement('style');
@@ -316,6 +347,49 @@ function createFloatingButton() {
     button.textContent = '双语';
     document.body.appendChild(button);
 
+    // 保护主按钮不被双包裹逻辑处理
+    button.setAttribute('data-_textDuplicated', 'true');
+
+    // =======================================================
+    // 新增：创建关闭按钮的函数，以便在需要时调用
+    // =======================================================
+    const createCloseButton = () => {
+        let closeButton = document.getElementById('translation-close-btn');
+
+        if (!closeButton) {
+            closeButton = document.createElement('div');
+            closeButton.id = 'translation-close-btn';
+            closeButton.textContent = '×';
+            closeButton.className = 'notranslate';
+            // 确保按钮被添加到主按钮中
+            document.getElementById('translation-button')?.appendChild(closeButton);
+
+            // 重新绑定事件监听器
+            closeButton.addEventListener('click', (event) => {
+                event.stopPropagation();
+                const buttonEl = document.getElementById('translation-button');
+
+                if (buttonEl) {
+                    buttonEl.classList.add('scroll-hidden');
+                    console.log("[UI Control] 浮动按钮及关闭按钮已隐藏。");
+                }
+
+                window.SHOW_TRANSLATION_BUTTON = () => {
+                    document.getElementById('translation-button')?.classList.remove('scroll-hidden');
+                    console.log("[UI Control] 浮动按钮已重新显示。");
+                };
+                console.log('%c如需重新显示浮动按钮，请在控制台执行：SHOW_TRANSLATION_BUTTON()', 'background:#2196F3;color:#fff;padding:6px 12px;border-radius:4px;');
+            });
+            console.log("✅ 关闭按钮已重建并重新绑定事件。");
+            return true;
+        }
+        return false;
+    };
+    // =======================================================
+
+    // 1. 初始创建关闭按钮
+    createCloseButton();
+
     // 4. 点击事件监听器 (V12 修正逻辑)
     button.addEventListener('click', () => {
         const ori = document.querySelectorAll('.notranslate.ori');
@@ -327,6 +401,7 @@ function createFloatingButton() {
         const isTranslatedHidden = translatedElements.length > 0 && translatedElements[0].classList.contains('dual-wrapper-hidden');
 
         if (isWrapped && !isTranslatedHidden) {
+
             button.textContent = '双语';
             button.classList.remove('translated');
 
@@ -340,19 +415,27 @@ function createFloatingButton() {
 
             console.log('切换成原文模式...')
 
+            // *** 增强：切换到原文模式时，检查并重建关闭按钮 ***
+            if (!document.getElementById('translation-close-btn')) {
+                createCloseButton();
+            }
+
+
         } else {
 
             if (!isWrapped) {
                 initiateTranslationFlow();
+                // 首次调用 initiateTranslationFlow() 后，延迟检查一次，以防 DOM 重构
+                setTimeout(createCloseButton, 500);
             }
+
+
 
             button.textContent = '原';
             button.classList.add('translated');
 
             translatedElements.forEach((e) => { e.classList.remove('dual-wrapper-hidden') });
             console.log('切换成双语模式...')
-
-
         }
     });
 
@@ -360,51 +443,35 @@ function createFloatingButton() {
     // 5. 滚动隐藏与延时显示逻辑 (严格按需简化)
     // =======================================================
     let scrollTimer;
-    const hideDelay = 86400; // 10 秒
-
-    // 1. 定义要控制的元素
-    const elementsToControl = [
-        document.getElementById('translation-button'),
-        document.getElementById('google_translate_element') // 注意：这个元素可能在 loadGoogleTranslateUI 运行后才存在
-    ].filter(el => el); // 过滤掉此时可能还不存在的元素
+    const hideDelay = 86400; // 10 秒 (使用超长延迟相当于关闭滚动隐藏功能)
 
     const hideElements = () => {
-        // 尝试获取 Google 翻译 UI 元素，如果存在则隐藏
         const googleEl = document.getElementById('google_translate_element');
         if (googleEl) {
             googleEl.classList.add('scroll-hidden');
         }
-        // 隐藏浮动按钮
-        //document.getElementById('translation-button')?.classList.add('scroll-hidden');
         document.querySelector('.skiptranslate')?.classList.add('scroll-hidden');
     };
 
     const showElements = () => {
-        // 显示 Google 翻译 UI 元素
         const googleEl = document.getElementById('google_translate_element');
         if (googleEl) {
             googleEl.classList.remove('scroll-hidden');
         }
-        // 显示浮动按钮
-        //document.getElementById('translation-button')?.classList.remove('scroll-hidden');
+        document.getElementById('translation-button')?.classList.remove('scroll-hidden');
         document.querySelector('.skiptranslate')?.classList.remove('scroll-hidden');
     };
 
     const handleScroll = () => {
-        // 立即隐藏元素
         hideElements();
-
-        // 清除任何现有的定时器
         clearTimeout(scrollTimer);
 
-        // 重新设置定时器：10秒后显示
         scrollTimer = setTimeout(() => {
             console.log(`%c[UI Control] 停止滚动 ${hideDelay / 1000} 秒，重新显示 UI 元素。`, 'color: #17A2B8;');
             showElements();
         }, hideDelay);
     };
 
-    // 监听全局滚动事件
     window.addEventListener('scroll', handleScroll, { passive: true });
 }
 
