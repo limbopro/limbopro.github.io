@@ -33,6 +33,8 @@
 
 // 获取M3U8文件资源链接
 
+
+
 var repeat_regex = ["https:?\/\/.*?hls.*?\.m3u8", "https:?\/\/.*?phncdn.*?hls.*?\.m3u8", "https:?\/\/.*?mushroomtrack.*?\.m3u8"]
 
 function m3u8_tempt(x) {
@@ -113,15 +115,6 @@ function tripleClick() {
     var number = 0;
     const htmlbody = document.querySelectorAll('body')[0]
 
-    /*
-    htmlbody.addEventListener('touchstart', function () {
-        startTime = +new Date()
-        number += 1;
-        console.log(number)
-        tripleClick_check(number)
-    })
-    */
-
     htmlbody.addEventListener('click', function (e) {
         // 如果点击目标是 button 或 button 的后代元素，直接 return
         if (e.target.closest('button, a, [role="button"], .btn, label, input, select')) {
@@ -142,7 +135,8 @@ function tripleClick() {
             } else {
                 number = 0;
                 console.log("number被重设为0");
-                hiddencjsfy();
+                //hiddencjsfy()
+                showcjsfy()
             }
 
         }, 850)
@@ -748,7 +742,7 @@ var file = {
         ".title_global {font-weight:bolder !important; padding-left:2px; display:table-cell; vertical-align:bottom; width:106px; height:50px; text-align:center; font-size:initial; margin-bottom:5px; font-weight:lighter; color:black !important; padding-bottom:4px;}",
 
         /* 隐藏谷歌翻译框 */
-        ".translate-hidden { opacity: 0 !important; pointer-events: none !important;transition: opacity 0.3s ease !important;}",
+        ".translate-hidden { height:0px; opacity: 0 !important; pointer-events: none !important;transition: opacity 0.3s ease !important;}",
 
         /* 主容器背景与动画 */
         "#dh_pageContainer {overflow-y:overlay; overflow-x:hidden; background-image:url('https://raw.githubusercontent.com/limbopro/Adblock4limbo/main/Adguard/Adblock4limbo_bgp.jpg'); background-size:100% !important; background-repeat:round; margin:auto; width:200px; height:200px; z-index:-114154; opacity:0; background-color:transparent; position:fixed; top:50%;}",
@@ -2411,15 +2405,23 @@ function initLimoProSearch() {
 function hiddencjsfy() {
     const iframeEl = document.querySelector('div.skiptranslate')
     const translateEl = document.getElementById('google_translate_element');
-
     if (iframeEl && translateEl) {
         translateEl.classList.add('translate-hidden');
         iframeEl.classList.add('translate-hidden');
-        setTimeout(() => {
-            translateEl.classList.remove('translate-hidden')
-            iframeEl.classList.remove('translate-hidden');
-        }, 5000);
     }
+}
+
+
+function showcjsfy() {
+    const iframeEl = document.querySelector('div.skiptranslate')
+    const translateEl = document.getElementById('google_translate_element');
+    if (iframeEl && translateEl) {
+        translateEl.classList.remove('translate-hidden');
+        iframeEl.classList.remove('translate-hidden');
+    }
+
+    setTimeout(() => { hiddencjsfy() }, 5000)
+
 }
 
 // 沉浸式翻译
@@ -2453,11 +2455,11 @@ function applyState(targetState) {
         let lastScroll = 0;
         window.addEventListener('scroll', () => {
             const now = Date.now();
-            if (now - lastScroll > 300 && !window.getSelection().toString().trim()) hide();
+            if (now - lastScroll > 300 && !window.getSelection().toString().trim());
             lastScroll = now;
             // 沉浸式翻译隐藏起来 cjsfy
             console.log('页面滚动中...')
-            hiddencjsfy(); // 
+            hiddencjsfy();
         });
 
     } else {
@@ -2470,6 +2472,15 @@ function applyState(targetState) {
         cjsfybtn.textContent = '沉浸式翻译(OFF)';
         cjsfybtn.style.background = 'red';
         cjsfybtn.setAttribute('data-state', 'off');
+
+        setTimeout(() => {
+            body_build('false')
+            const translationButton = document.getElementById('translation-button');
+            if (translationButton) {
+                document.getElementById('translation-button').classList.add('translate-hidden')  // 23333
+            }
+        }, 1000)
+
     }
 
     // 2. 保存状态到本地存储

@@ -52,7 +52,7 @@ function loadGoogleTranslateUI() {
     script.src = scriptUrl;
     document.head.appendChild(script);
 
-    const checkDelay = 5000;
+    const checkDelay = 30000;
     const successSelector = '.skiptranslate.goog-te-gadget';
 
     setTimeout(() => {
@@ -63,7 +63,7 @@ function loadGoogleTranslateUI() {
                 'color: #FF9800; font-weight: bold; background: #fff3e0; padding: 4px 8px; border-radius: 4px;');
 
             const userAction = confirm(
-                '⚠️ 提示：谷歌翻译组件在 5 秒内未加载成功，翻译功能可能无法正常使用。\n\n是否移除 UI 元素？'
+                '⚠️ 提示：谷歌翻译组件在 30 秒内未加载成功，翻译功能可能无法正常使用。\n\n是否移除 UI 元素？'
             );
 
             if (userAction) {
@@ -271,32 +271,39 @@ function createFloatingButton() {
     }
 
         #translation-button {
+        border:1px solid #1a73e8;
         position: fixed;
-    right: 0px;
-    left: auto;
-    bottom: 30% !important;              
-    height: auto;                   
-
-    z-index: 10000;
+        right: 2px;
+        left: auto;
+        bottom: 30% !important;              
+        height: auto;                   
+        z-index: 10000;
     width: 45px;
     height: 45px;
-    border-radius: 5px 0 0 5px;
-    background-color: #4A90E2;
-    color: white;
+    border-radius: 5px 5px 5px 5px;
+    background-color:#fff;
+    color:#1a73e8;
     font-size: 18px;
     font-weight: bold;
     text-align: center;
     line-height: 45px; 
     user-select: none;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    border: none;
 }
+
+/* 交互效果 */
+        #translation-button:hover {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15) !important;
+        }
             
-        #translation-button:hover { background-color: #357ABD; box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3); transform: scale(1.05); }
-        #translation-button:active { transform: scale(0.98); background-color: #285A90; }
+        #translation-button:hover { box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);}
+        #translation-button:active {  transform: scale(0.98); }
 
         #translation-button.translated {
-            background-color: #E74C3C; 
+            border: 1px solid #34a853; /* 绿色，代表完成 */
+            background-color: #34a853;
+            color: #fff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
     `;
     const style = document.createElement('style');
@@ -344,7 +351,7 @@ function createFloatingButton() {
 
             translatedElements.forEach((e) => { e.classList.remove('dual-wrapper-hidden') });
             console.log('切换成双语模式...')
-            
+
 
         }
     });
