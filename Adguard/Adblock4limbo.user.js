@@ -1675,7 +1675,7 @@ function adsDomain_switch(x) { // 匹配参数值 执行相应函数
             window_open_defuser();
             abort_on_property_read();
             js_adsRemove(uBlockOrigin.addEventListenerdefuser);
-            addEventListener_defuser();
+            //addEventListener_defuser();
             js_adsRemove(uBlockOrigin.noevalif);
             break;
 

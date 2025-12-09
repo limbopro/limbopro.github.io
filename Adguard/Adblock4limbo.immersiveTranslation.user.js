@@ -217,6 +217,12 @@ function createFloatingButton() {
 
     // 2. 注入 CSS 样式
     const css = `
+    .translate-hidden {
+    height:0px;
+    opacity:0 !important;
+    pointer-events:none !important;
+    transition:opacity 0.3s ease !important;
+    }
         #translation-button {
             position: fixed;
             bottom: 30px;
@@ -237,6 +243,7 @@ function createFloatingButton() {
             border: none;
             user-select: none;
         }
+            
         #translation-button:hover { background-color: #357ABD; box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3); transform: scale(1.05); }
         #translation-button:active { transform: scale(0.98); background-color: #285A90; }
 
