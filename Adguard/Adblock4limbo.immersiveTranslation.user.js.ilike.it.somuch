@@ -1,11 +1,11 @@
 // ==UserScript==
-// @name         沉浸式双语翻译 (Google Translate & Dual Wrapper) - 简洁滚动控制 - 纯JS版本
+// @name         沉浸式翻译（Google Translate & 双包裹体 - 简化滚动）
 // @namespace    http://tampermonkey.net/
 // @version      2025-12-09_Final_V14_ScrollSimple
-// @description  基于 Google Translate，采用双包裹体结构实现沉浸式双语对照翻译。优化了切换逻辑，并简化了滚动时隐藏 UI 元素的控制。
+// @description  修正了切换逻辑，并严格简化了滚动时隐藏翻译 UI 元素的逻辑。
 // @author       limbopro
 // @match        https://*/*
-// @icon         https://www.google.com/s2/favicons?sz=64&domain=translate.google.com/
+// @icon         https://www.google.com/s2/favicons?sz=64&domain=johnnydecimal.com
 // @grant        none
 // ==/UserScript==
 
