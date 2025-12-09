@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         沉浸式翻译（Google Translate & 原文保护）
 // @namespace    http://tampermonkey.net/
-// @version      2025-12-08_Final_V7
+// @version      2025-12-09_Final_V8
 // @description  通过自定义逻辑加载谷歌翻译，并创建原文副本以实现双语对照（沉浸式翻译），支持一键切换原文/双语状态。
 // @author       limbopro
 // @match        https://*/*
@@ -60,6 +60,68 @@ function loadGoogleTranslateUI() {
     script.type = 'text/javascript';
     script.src = scriptUrl;
     document.head.appendChild(script);
+
+    // =======================================================
+    // 4. 新增：延时 5 秒检查加载结果
+    // =======================================================
+    const checkDelay = 30000; // 5000 毫秒 = 5 秒
+    const successSelector = '.skiptranslate.goog-te-gadget';
+    // 假设 uiContainer 在此作用域内仍然可用
+
+    setTimeout(() => {
+        const isLoaded = document.querySelector(successSelector);
+
+        if (isLoaded) {
+            console.log(`%c[Google Translate] 脚本加载成功！目标元素已找到: ${successSelector}`,
+                'color: #4CAF50; font-weight: bold; background: #e8f5e9; padding: 4px 8px; border-radius: 4px;');
+
+        } else {
+            console.warn(`%c[Google Translate] 警告：脚本可能加载失败或超时 (${checkDelay / 1000} 秒)。未找到元素: ${successSelector}`,
+                'color: #FF9800; font-weight: bold; background: #fff3e0; padding: 4px 8px; border-radius: 4px;');
+
+            // ⚠️ 使用 confirm 替代 alert
+            const userAction = confirm(
+                '⚠️ 提示：谷歌翻译组件在 5 秒内未加载成功，可能是跨站脚本加载受限。翻译功能可能无法正常使用。\n\n或稍后刷新页面重试；'
+            );
+
+            // 如果用户点击“确定” (userAction 为 true)，则移除 UI 容器
+            if (userAction) {
+                // 如果加载失败，移除 UI 容器以避免干扰
+            } else {
+                // 如果用户点击“取消” (userAction 为 false)，则保留 UI 容器
+                console.log("[Google Translate] UI 容器保留在页面上。");
+            }
+
+            // 1. 选择所有具有特定类的 font 元素
+            const fontElements = document.querySelectorAll('font.notranslate.cjsfy');
+
+            // 2. 遍历这些元素
+            fontElements.forEach(fontEl => {
+                // 3. 获取该元素的紧邻下一个兄弟节点
+                const nextSibling = fontEl.nextSibling;
+
+                // 4. 检查下一个兄弟节点是否存在，并且确认它是一个 <br> 元素
+                // nodeType === 1 表示元素节点 (Element)
+                // nodeName === 'BR' (或 tagName) 表示它是 <br> 标签
+                if (nextSibling && nextSibling.nodeType === 1 && nextSibling.nodeName === 'BR') {
+                    // 5. 如果是，则从其父元素中移除该 <br> 标签
+                    nextSibling.remove();
+                    //console.log("成功移除了一个紧邻 <br> 标签:", nextSibling);
+                }
+            });
+
+            document.querySelectorAll('font.notranslate.cjsfy').forEach((e) => {
+                e.remove()
+            })
+
+            document.getElementById('translation-button').remove()
+            document.getElementById('google_translate_element').remove()
+
+        }
+    }, checkDelay);
+    // 请注意，这个 } 是 loadGoogleTranslateUI 函数的结尾，请确保它被正确放置。
+
+
 }
 
 // --- II. 原文保护与双语复制逻辑 ---
@@ -71,107 +133,140 @@ function loadGoogleTranslateUI() {
  */
 function applyNotranslateProtection() {
     (() => {
-        const textBlocksToClone = new Set();
-        // 排除：不可见、结构性或特定 UI 元素。
-        const excludedAncestors = 'pre, script, style, noscript';
+        console.clear();
+        const targetsToProcess = [];
+        const fontElement = document.createElement('font');
+        // 设置 font 元素的类名和初始属性
+        fontElement.className = 'notranslate cjsfy';
 
-        // 性能优化：将正则表达式定义在 IIFE 顶部。
-        // 匹配：数字, 空白, 逗号, 点号, 斜杠, 冒号, 短横线 (用于排除日期/数据块)
-        const pureDataRegex = /^[0-9\s,./:\-]+$/;
-
-        // 1. TreeWalker 找出所有需要处理的真实文本节点
         const walker = document.createTreeWalker(
             document.body,
             NodeFilter.SHOW_TEXT,
             {
-                acceptNode(node) {
+                acceptNode: node => {
+                    // 1. 排除空文本
+                    if (!node.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+
                     const parent = node.parentElement;
-                    if (!node.nodeValue?.trim() || parent?.closest(excludedAncestors)) {
+
+                    // 2. 排除没有父元素的节点
+                    if (!parent) return NodeFilter.FILTER_REJECT;
+
+                    // 3. 排除脚本、样式表等标签内的文本
+                    const excludedTags = 'script, style, noscript, textarea';
+                    if (parent.closest(excludedTags)) {
                         return NodeFilter.FILTER_REJECT;
                     }
 
-                    // 优化：跳过位于已标记（包括 protectPreTags 标记的）元素内部的文本。
-                    if (parent?.closest('.notranslate') || parent?.closest('.thatcloned')) {
+                    // 4. 新增排除条件: 排除具有 "notranslate" 或 "cjsfy" 类的元素及其子元素
+                    //    由于类是附加在 <font> 上的，我们使用 .closest() 检查祖先
+                    if (parent.closest('.notranslate, .cjsfy,font[dir],svg,video')) {
                         return NodeFilter.FILTER_REJECT;
                     }
+
+                    // 5. 确保只处理父元素的第一个有效文本节点 (通过 dataset 标记)
+                    if (parent.dataset._textDuplicated) return NodeFilter.FILTER_REJECT;
+
+                    // 6. 过滤掉太短的文本
+                    if (node.nodeValue.trim().length < 2) return NodeFilter.FILTER_REJECT;
 
                     return NodeFilter.FILTER_ACCEPT;
                 }
             }
         );
 
-        let node;
-        while (node = walker.nextNode()) {
-            const textContent = node.nodeValue.trim();
-            // 过滤极短或纯数字的文本节点
-            if (textContent.length < 2 || (/^\d+$/.test(textContent) && textContent.length <= 2)) {
-                continue;
-            }
+        let textNode;
+        while (textNode = walker.nextNode()) {
+            const target = textNode.parentElement;
+            target.dataset._textDuplicated = 'pending'; // 临时标记
 
-            let currentElement = node.parentElement;
-            while (currentElement && currentElement !== document.body) {
-                if (currentElement.closest(excludedAncestors)) break; // 向上查找遇到排除元素则停止
-
-                // 判断是否为块级元素
-                const displayStyle = getComputedStyle(currentElement).display;
-                const isBlock = /^(block|flex|grid|table|list-item)$/.test(displayStyle) ||
-                    /table-/.test(displayStyle) ||
-                    /^(H[1-6]|P|DIV|LI|ARTICLE|SECTION|MAIN|UL|OL|BLOCKQUOTE|FIGURE|DETAILS)$/.test(currentElement.tagName);
-
-                if (isBlock) {
-
-                    // ✨ 检查 0: 排除复杂的 UI 容器（产品卡片、列表项等）
-                    const tagName = currentElement.tagName;
-
-                    // 仅对通用容器（DIV, LI）或文章/分段容器（ARTICLE）进行检查
-                    if (['DIV', 'LI', 'ARTICLE'].includes(tagName)) {
-
-                        // 如果子元素数量超过阈值 3，则认为它是复杂的 UI 容器，立即跳出
-                        if (currentElement.children.length > 5) {
-                            break;
-                        }
-                    }
-
-                    // 检查 1: 跳过已处理过的原始元素（防止重复复制）
-                    if (currentElement.classList.contains('thatcloned')) break;
-
-                    // 检查 2: 跳过已手动标记为不翻译的元素
-                    if (currentElement.classList.contains('notranslate')) break;
-
-                    // 检查 3: 过滤极短和纯数据文本块
-                    const fullText = currentElement.textContent.trim();
-                    if (fullText.length >= 2 && !pureDataRegex.test(fullText)) {
-                        textBlocksToClone.add(currentElement);
-                    }
-
-                    // 复制逻辑执行完毕或检查完毕后，跳出 while 循环
-                    break;
-                }
-                currentElement = currentElement.parentElement;
-            }
+            // 收集原始文本和目标元素（此时 innerText 是干净的）
+            targetsToProcess.push({
+                originalText: target.innerText,
+                target: target
+            });
         }
 
-        if (textBlocksToClone.size === 0) {
-            console.log('%c [Immersive Translate] 没有发现符合要求的正文块级元素。', 'color:#fff;background:#e74c3c;padding:2px 4px;border-radius:4px;');
-            return;
-        }
+        // =======================================================
+        // 2. 统一处理（修改 DOM Phase: 插入到最前面）
+        // =======================================================
+        const results = [];
+        targetsToProcess.forEach(({ originalText, target }, i) => {
+            // 创建要追加的节点
+            const clonedfontElement = fontElement.cloneNode(true);
+            clonedfontElement.textContent = originalText;
 
-        // 2. 复制并插入 'notranslate' 副本，并标记原始元素
-        Array.from(textBlocksToClone).reverse().forEach(originalElement => {
-            // 最终防御性检查
-            if (originalElement.classList.contains('thatcloned') || originalElement.classList.contains('notranslate')) {
-                return;
+            // 创建换行符
+            const brElement = document.createElement('br');
+
+            // 获取第一个子节点作为插入参考点 (如果为 null，则 insertBefore 相当于 appendChild)
+            const firstChild = target.firstChild;
+
+            // 1. 插入 <font> 元素
+            target.insertBefore(clonedfontElement, firstChild);
+
+            // 2. 插入 <br> 元素（插在 <font> 元素之后，但仍在原内容之前）
+            //    因为 clonedfontElement 现在是第一个子节点，我们以它为参考点插入 br
+            //    target.insertBefore(brElement, clonedfontElement.nextSibling); // 实际上 <font> 应该在 <br> 之后 if they go before text
+            //    为了保持 <font> 紧跟着原始文本，我们将 <br> 插入到 <font> 之后
+            target.insertBefore(brElement, clonedfontElement.nextSibling);
+
+
+            // 标记为已处理
+            target.dataset._textDuplicated = 'true';
+
+            // 滚动和高亮（只对第一个元素进行高亮）
+            if (i === 0) {
+                target.style.outline = '3px solid #ff5722';
+                target.scrollIntoView({ block: 'center', behavior: 'smooth' });
+                setTimeout(() => target.style.outline = '', 3000);
             }
 
-            const clone = originalElement.cloneNode(true);
-            clone.classList.add('notranslate');
-            originalElement.parentNode.insertBefore(clone, originalElement);
-            originalElement.classList.add('thatcloned');
+            // 记录到结果
+            results.push({ text: originalText, target });
         });
 
-        // 3. 完成提示
-        console.log(`%c [Immersive Translate] 成功处理 ${textBlocksToClone.size} 个正文块级元素。`,
-            'color:#fff;background:#0d6efd;font-weight:bold;padding:2px 4px;border-radius:4px;font-size:12px;');
+        // =======================================================
+        // 3. 美观输出与撤销函数
+        // =======================================================
+        console.log(`%c 成功为 ${results.length} 个元素追加了克隆文本`,
+            'color:#fff;background:#00bcd4;padding:8px 16px;border-radius:8px;font-size:16px;');
+
+        results.forEach((item, i) => {
+            if (item !== undefined) {
+                //console.groupCollapsed(`%c[${i + 1}] ${item.text.substring(0, 100)}${item.text.length > 100 ? '…' : ''}`,
+                console.groupCollapsed(`%c[${i + 1}] ${item.text}`,
+                    'color:#555;font-weight:normal;');
+                console.log('%c原文本：', 'color:#4caf50;font-weight:bold;', item.text);
+                console.log('%c已追加到 →', 'color:#f57c00;font-weight:bold;', item.target);
+                console.log('标签：', item.target.tagName.toLowerCase(), item.target);
+                console.log('%c点击高亮元素', 'color:#2196f3;cursor:pointer;', item.target);
+                console.groupEnd();
+            }
+        });
+
+        // 方便你一键撤销（现在需要删除最前面的两个元素：<font> 和 <br>）
+        window.REVERT_TEXT_DUPLICATE = () => {
+            document.querySelectorAll('[data-_textDuplicated]').forEach(el => {
+                // 删除最前面的两个子节点 (<font> 和 <br>)
+                for (let i = 0; i < 2; i++) {
+                    if (el.firstChild) {
+                        el.firstChild.remove();
+                    }
+                }
+                delete el.dataset._textDuplicated;
+                el.style.outline = '';
+            });
+            console.log('已撤销所有文本重复');
+        };
+
+        console.log('%c 如需撤销重复，执行：REVERT_TEXT_DUPLICATE()',
+            'background:#ff9800;color:#fff;padding:6px 12px;border-radius:4px;');
+
+        // 把结果也挂到全局，方便复制
+        window.__DUPLICATED_TEXTS__ = results;
+        console.log('%c 结果已保存到 __DUPLICATED_TEXTS__，复制命令：copy(__DUPLICATED_TEXTS__)',
+            'background:#9c27b0;color:#fff;padding:6px 12px;border-radius:4px;');
     })();
 }
 
@@ -218,32 +313,43 @@ function createFloatingButton() {
     // 2. 注入 CSS 样式
     const css = `
     .translate-hidden {
+    display:inherit;
     height:0px;
     opacity:0 !important;
     pointer-events:none !important;
     transition:opacity 0.3s ease !important;
     }
         #translation-button {
-            position: fixed;
-            bottom: 30px;
-            right: 0px;
-            z-index: 10000;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background-color: #4A90E2;
-            color: white;
-            font-size: 18px;
-            font-weight: bold;
-            text-align: center;
-            line-height: 50px;
-            cursor: pointer;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            transition: all 0.3s ease;
-            border: none;
-            user-select: none;
-        }
+        position: fixed;
+    right: 0px;
+    left: auto;
+    top: 50%;                       /* 保留这一行也没事，但下面这行必须加 */
+    transform: translateY(-50%);    /* 初始垂直居中（关键！） */
+
+    /* 下面这三行是治愈“拖不到顶部”的终极解药 */
+    top: 45% !important;              /* 强制把锚点钉在屏幕顶部！ */
+    bottom: auto !important;
+    height: auto;                   /* 配合 top:0 让 transform 完全接管垂直位置 */
+
+    z-index: 10000;
+    width: 45px;
+    height: 45px;
+    border-radius: 5px 0 0 5px;
+    background-color: #4A90E2;
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+    text-align: center;
+    line-height: 50px;
+    cursor: ns-resize;
+    user-select: none;
+    touch-action: pan-y;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+    border: none;
+}
             
+        font.notranslate.cjsfy {word-break:break-word;user-select:text;}
         #translation-button:hover { background-color: #357ABD; box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3); transform: scale(1.05); }
         #translation-button:active { transform: scale(0.98); background-color: #285A90; }
 
@@ -259,28 +365,81 @@ function createFloatingButton() {
     // 3. 创建 HTML DOM 结构
     const button = document.createElement('div');
     button.id = 'translation-button';
+    button.className = 'notranslate cjsfy btx';
     button.textContent = '译'; // 默认显示“译”
     //document.querySelectorAll('.thatcloned').forEach((e) => { e.classList.remove('translate-hidden') }) 
 
     // 4. 添加点击事件监听器，实现状态切换逻辑
     button.addEventListener('click', () => {
         // 通过检查 .thatcloned 元素是否存在来判断当前是否处于双语状态
-        const isTranslated = document.querySelector('.thatcloned');
+        const isTranslated = document.querySelector('font.notranslate.cjsfy');
 
-        if (isTranslated && !document.querySelector('.thatcloned.translate-hidden')) {
+        if (isTranslated && !document.querySelector('font.notranslate.cjsfy.translate-hidden')) {
             // 如果是双语状态，点击后恢复原文
             button.textContent = '译'; // 按钮文本改为“译”
             button.classList.remove('translated');
-            document.querySelectorAll('.thatcloned').forEach((e) => { e.classList.add('translate-hidden') })
-            //location.reload();
+
+            // 显示翻译前
+            document.querySelectorAll('font.notranslate.cjsfy').forEach((e) => { e.classList.add('translate-hidden') })
+
+
         } else {
             // 如果是原文状态，点击后启动翻译
             initiateTranslationFlow();
-            button.textContent = '原'; // 按钮文本改为“原”
+            button.textContent = '原'
             button.classList.add('translated');
-            document.querySelectorAll('.thatcloned').forEach((e) => { e.classList.remove('translate-hidden') })
+
+            // 显示翻译后
+            document.querySelectorAll('font.notranslate.cjsfy').forEach((e) => { e.classList.remove('translate-hidden') })
+
         }
     });
+
+
+    // * drag 拖拽
+    let isDragging = false;
+    let startY = 0;
+    let initialY = 0;
+
+    button.addEventListener('mousedown', start);
+    button.addEventListener('touchstart', start, { passive: false });
+
+    document.addEventListener('mousemove', drag);
+    document.addEventListener('touchmove', drag, { passive: false });
+
+    document.addEventListener('mouseup', end);
+    document.addEventListener('touchend', end);
+
+    function start(e) {
+        e.preventDefault();
+        const clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
+        startY = clientY;
+
+        const matrix = new DOMMatrix(getComputedStyle(button).transform);
+        initialY = matrix.m42;          // 永远能正确读取当前 Y 值
+
+        isDragging = true;
+    }
+
+    function drag(e) {
+        if (!isDragging) return;
+        e.preventDefault();
+
+        const clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
+        let newY = initialY + (clientY - startY);
+
+        // 限制不超出屏幕上下边界
+        const rect = button.getBoundingClientRect();
+        const maxY = window.innerHeight - rect.height;
+        newY = Math.max(-rect.height / 2, Math.min(newY, maxY + rect.height / 2)); // 稍微宽松一点不贴边太死
+
+        button.style.transform = `translateY(${newY}px)`;
+    }
+
+    function end() {
+        isDragging = false;
+    }
+
 
     // 5. 将按钮添加到页面的 body 中
     document.body.appendChild(button);
@@ -289,3 +448,70 @@ function createFloatingButton() {
 
 // --- IV. 脚本入口点 ---
 createFloatingButton();
+
+
+/**
+ * @function monitorClickAndUrlChange
+ * @description 监控页面上的点击事件，并在 3 秒后检查 URL 是否已更改。
+ */
+function monitorClickAndUrlChange() {
+    console.log("URL 变化监控已启动...");
+
+    // 监听全局的点击事件
+    document.addEventListener('click', (event) => {
+        // 1. 获取点击时的当前 URL
+        const originalUrl = window.location.href;
+        console.log(`%c[点击事件] 捕获到点击。原始 URL: ${originalUrl}`, 'color: #3f51b5;');
+
+        // 2. 设置 3 秒延时检查
+        const checkDelay = 3000; // 3000 毫秒 = 3 秒
+
+        setTimeout(() => {
+            // 3. 延时后获取新的 URL
+            const currentUrl = window.location.href;
+
+            // 4. 比较 URL
+            if (currentUrl !== originalUrl) {
+                console.log(`   原始 URL: ${originalUrl}`);
+                console.log(`   当前 URL: ${currentUrl}`);
+
+                setTimeout(() => {
+                    const googletraLength = document.querySelectorAll("font[dir] > font[dir]").length
+                    const cjsfytraLength = document.querySelectorAll("font.notranslate.cjsfy").length
+
+                    if (googletraLength !== 0 && cjsfytraLength !== 0) {
+                        if (googletraLength - cjsfytraLength > 100) {
+
+                            // ⚠️ 使用 confirm 替代 alert
+                            const userAction = confirm(
+                                '⚠️ 提示：当前页面未按预期进行双语对照翻译：是否需要重新加载以便正确执行翻译请求？\n\n如需请点击确认；'
+                            );
+
+                            // 如果用户点击“确定” (userAction 为 true)，则移除 UI 容器
+                            if (userAction) {
+                                // 如果加载失败，移除 UI 容器以避免干扰
+                                location.reload(true)
+                            } else {
+                                // 如果用户点击“取消” (userAction 为 false)，则保留 UI 容器
+                                console.log("[Google Translate] UI 容器保留在页面上。");
+                            }
+
+                        }
+                    }
+                }, 3000)
+
+            } else {
+
+                console.log(`   URL 仍然是: ${currentUrl}`);
+            }
+
+        }, checkDelay);
+
+        // 提示：你可以在这里添加一个可选的标记或处理，以防止在 3 秒内发生多次点击
+        // 例如：event.stopPropagation(); 或设置一个全局锁
+
+    }, true); // 使用捕获阶段 (true) 来确保尽早捕获所有点击
+}
+
+// 启动监控
+monitorClickAndUrlChange();
