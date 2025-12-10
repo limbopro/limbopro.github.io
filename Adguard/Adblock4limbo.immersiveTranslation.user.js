@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         沉浸式双语翻译 (Google Translate & Dual Wrapper) - 简洁滚动控制 - 纯JS版本
 // @namespace    http://tampermonkey.net/
-// @version      2025-12-10_Final_V16_ScrollSimple_CloseButton_Stable
+// @version      2025-12-10_Final_V16.7_ScrollSimple_CloseButton_Stable
 // @description  基于 Google Translate，采用双包裹体结构实现沉浸式双语对照翻译。修复了点击“双语”按钮后关闭按钮丢失的问题，并在切换模式时加入了关闭按钮的防御性检查和重建。
 // @author       limbopro
 // @match        https://*/*
@@ -118,7 +118,7 @@ function loadGoogleTranslateUI() {
 
             if (userAction) {
                 // 移除与翻译功能相关的自定义元素
-                // document.querySelectorAll('.cjsfy-original, .cjsfy-translated, .jiange').forEach((e) => { e.remove() });
+                // document.querySelectorAll('.cjsfy-original, .cjsfy-translated, .spacer').forEach((e) => { e.remove() });
                 // document.getElementById('translation-button')?.remove();
                 // document.getElementById(uiContainerId)?.remove();
             } else {
@@ -138,7 +138,7 @@ function applyDualWrapperProtection() {
     (() => {
         console.clear();
 
-        document.querySelectorAll('.cjsfy-original, .cjsfy-translated, .jiange').forEach(e => e.remove());
+        document.querySelectorAll('.cjsfy-original, .cjsfy-translated, .spacer').forEach(e => e.remove());
 
         const targetsToProcess = [];
 
@@ -147,7 +147,17 @@ function applyDualWrapperProtection() {
             NodeFilter.SHOW_TEXT,
             {
                 acceptNode: node => {
-                    if (!node.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+
+                    const text = node.nodeValue.trim();
+                    //const pureNumericOrSymbolic = /^[\d\s\W]+$/.test(text);
+                    const pureNumericOrSymbolic = /^\s*[\d\s.,]+\s*$/.test(text)
+                    if (!text) return NodeFilter.FILTER_REJECT;
+                    
+
+                    if (pureNumericOrSymbolic) {
+                        return NodeFilter.FILTER_REJECT;
+                    }
+
                     const parent = node.parentElement;
 
                     if (!parent) return NodeFilter.FILTER_REJECT;
@@ -162,8 +172,7 @@ function applyDualWrapperProtection() {
                     }
 
                     if (parent.dataset._textDuplicated) return NodeFilter.FILTER_REJECT;
-                    if (node.nodeValue.trim().length < 2) return NodeFilter.FILTER_REJECT;
-
+                    if (text.length < 2) return NodeFilter.FILTER_REJECT; // 字符长度 
                     return NodeFilter.FILTER_ACCEPT;
                 }
             }
@@ -184,31 +193,24 @@ function applyDualWrapperProtection() {
         const results = [];
         targetsToProcess.forEach(({ originalText, target }, i) => {
 
-            // 1. 创建 原文副本 (notranslate)
-            const originalWrapper = document.createElement('font');
-            originalWrapper.className = 'notranslate Original ori';
-            originalWrapper.textContent = originalText;
 
-            // 2. 创建 分隔符
+            // 1. 创建 原文副本 (克隆：保留原结构和内容)
+            const originalWrapper = target.cloneNode(true);
+            originalWrapper.classList.add('notranslate', 'Original', 'ori');
+
+
+            // 创建 分隔符
             const separator = document.createElement('p');
-            separator.className = 'jiange';
+            separator.className = 'spacer';
 
-            // 3. 创建 译文包裹层 (translate)
-            const translatedWrapper = document.createElement('font');
+            // 2. 创建 译文包裹层
+            //// const translatedWrapper = document.createElement('font');
+            const translatedWrapper = originalWrapper.cloneNode(true)
             translatedWrapper.className = 'cjsfy-translated';
-            translatedWrapper.textContent = originalText;
 
-            // 4. 将 target 的所有原有子节点移动到 译文包裹层 中
-
-            /*
-            const originalChildren = [...target.childNodes];
-            originalChildren.forEach(child => {
-                translatedWrapper.appendChild(child);
-            });
-            */
 
             // 5. 清空 target 元素，并按顺序插入
-            target.textContent = '';
+            target.innerText = ''
             target.appendChild(originalWrapper);
             target.appendChild(separator);
             target.appendChild(translatedWrapper);
@@ -231,7 +233,7 @@ function applyDualWrapperProtection() {
         window.REVERT_DUAL_WRAPPER = () => {
             document.querySelectorAll('[data-_textDuplicated]').forEach(el => {
                 const translatedWrapper = el.querySelector('.cjsfy-translated');
-                const separator = el.querySelector('.jiange');
+                const separator = el.querySelector('.spacer');
                 const Original = el.querySelector('.Original.ori');
 
                 separator?.remove();
@@ -257,8 +259,8 @@ function applyDualWrapperProtection() {
 }
 
 
-function protectPreTags() {
-    document.querySelectorAll('span.label,#jable-skip-panel,button:has(svg),svg,video,div.plyr__controls,[data-fancybox="ajax"],#dh_pageContainer,div.house,input,label,table,pre,td').forEach((element) => {
+function protectPreTags() { // 排除
+    document.querySelectorAll('button:not(:has(> *)),span.label,#jable-skip-panel,button:has(svg),svg,video,div.plyr__controls,[data-fancybox="ajax"],#dh_pageContainer,div.house,input,label,table,pre,td').forEach((element) => {
         element.classList.add('notranslate');
     });
 }
@@ -297,6 +299,8 @@ function createFloatingButton() {
     }
 
     .Original {
+    margin: 0px;
+    padding:0px;
     /*display: none !important;*/
     }
 
@@ -304,7 +308,7 @@ function createFloatingButton() {
     /*display: none !important;*/
     }
 
-    .jiange {
+    .spacer {
         height:1px;
         margin:0px;
         padding:0px;
@@ -320,6 +324,7 @@ function createFloatingButton() {
     
     .cjsfy-original, .cjsfy-translated {
         pointer-events: none;
+        color: inherit;
         word-break: break-word;
         user-select: text;
         /*display: block !important;*/
@@ -423,8 +428,6 @@ function createFloatingButton() {
     const createCloseButton = () => {
 
 
-
-
         let closeButton = document.getElementById('translation-close-btn');
 
         if (!closeButton) {
@@ -464,7 +467,7 @@ function createFloatingButton() {
     // 4. 点击事件监听器 (V12 修正逻辑)
     button.addEventListener('click', () => {
         const ori = document.querySelectorAll('.notranslate.ori');
-        const translatedElements = document.querySelectorAll('.cjsfy-translated, .jiange');
+        const translatedElements = document.querySelectorAll('.cjsfy-translated, .spacer');
 
 
         const isWrapped = ori.length > 0;
