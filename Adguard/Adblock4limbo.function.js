@@ -949,7 +949,7 @@ function parentElement_add() {
 
     // 1. 初始化状态 (保持不变)
     initFloatingNav(0, -114154, 1, 'none');
-    body_build('false');
+    // body_build('false');
 
     // 2. 缓存核心 DOM 节点 (保持不变)
     const echoDiv = document.querySelector('div.echo');
