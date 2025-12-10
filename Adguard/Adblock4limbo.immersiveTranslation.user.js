@@ -183,7 +183,6 @@ function applyDualWrapperProtection() {
         while (textNode = walker.nextNode()) {
             const target = textNode.parentElement;
             target.dataset._textDuplicated = 'pending';
-
             targetsToProcess.push({
                 originalText: target.innerText,
                 target: target
@@ -195,11 +194,18 @@ function applyDualWrapperProtection() {
         targetsToProcess.forEach(({ originalText, target }, i) => {
 
 
+
+
+
+
+
             function wrapTarget() { // 打包函数开始 包裹 对于普通节点
+
+                console.log(target.innerText)
+
                 // 1. 创建 原文副本 (克隆：保留原结构和内容)
                 const originalWrapper = target.cloneNode(true);
                 originalWrapper.classList.add('notranslate', 'Original', 'ori');
-
 
                 // 创建 分隔符
                 const separator = document.createElement('p');
@@ -229,10 +235,12 @@ function applyDualWrapperProtection() {
                 results.push({ target });
             } // 打包函数结束
 
+
+
+
             // 克隆函数开始
 
-            window.cloneThat = function cloneAndModifyElements() { // 对于含有 br 的节点 
-                const originalElements = document.querySelectorAll('.immersive.notranslate');
+            window.cloneThat = function cloneAndModifyElements(originalElements) { // 对于含有 br 的节点 
                 originalElements.forEach(originalElement => {
                     const clonedElement = originalElement.cloneNode(true);
                     clonedElement.classList.remove('notranslate');
@@ -242,9 +250,77 @@ function applyDualWrapperProtection() {
                 console.log(`成功处理了 ${originalElements.length} 个元素。`);
             }
 
+            window.cloneThats = function cloneAndModifyElements(originalElement) { // 对于含有 br 的节点 
+                const clonedElement = originalElement.cloneNode(true);
+                clonedElement.classList.add('notranslate');
+                originalElement.parentElement.insertBefore(clonedElement, originalElement);
+                originalElement.classList.add('cjsfy-translated')
+            }
+
             // 克隆函数结束
 
-            // 拆分函数开始 拆分 含有 br 的节点
+
+            // 删除冗余
+            window.redundancy = function redundancyRemove() {
+
+                document.querySelectorAll('.notranslate.ori').forEach(parentElement => {
+                    if (parentElement.querySelector('.cjsfy-translated')) {
+                        parentElement.querySelector('.cjsfy-translated').remove();
+                    }
+
+                    if (parentElement.querySelector('.spacer')) {
+                        parentElement.querySelector('.spacer').remove();
+                    }
+                });
+
+                document.querySelectorAll('.cjsfy-translated').forEach(parentElement => {
+                    if (parentElement.querySelector('.notranslate')) {
+                        parentElement.querySelector('.notranslate').remove();
+                    }
+
+                    if (parentElement.querySelector('.spacer')) {
+                        parentElement.querySelector('.spacer').remove();
+                    }
+                });
+
+            }
+
+            // 不要遗忘那个没被包裹的元素
+
+            window.last = function lastForgotten() {
+                if (document.querySelectorAll('[data-_text-duplicated=pending]').length > 0)
+                    document.querySelectorAll('[data-_text-duplicated=pending]').forEach((x) => {
+                        if (x.className.indexOf('notranslate') == -1 && x.className.indexOf('cjsfy-translated') == -1) {
+                            if (x.querySelectorAll('.notranslate').length == 0) {
+                                if (x.parentElement.className.indexOf('notranslate') == -1 && x.parentElement.className.indexOf('cjsfy-translated') == -1) {
+                                    if (x.parentElement.parentElement.className.indexOf('notranslate') == -1 && x.parentElement.parentElement.className.indexOf('cjsfy-translated') == -1) {
+                                        cloneThats(x)
+                                    }
+                                }
+
+                            }
+                        }
+                    })
+            }
+
+            // 删除重复的 br 标签 
+            function removeDuplicateBr(target) {
+                const brElements = target.querySelectorAll('br');
+                for (let i = brElements.length - 1; i >= 0; i--) {
+                    const currentBr = brElements[i];
+
+                    const nextSibling = currentBr.nextSibling;
+                    if (nextSibling && nextSibling.tagName === 'BR') {
+
+                        currentBr.parentNode.removeChild(currentBr);
+                    }
+                }
+
+                (function () { const brs = target.querySelectorAll('br'); const lastBr = brs.length > 0 ? brs[brs.length - 1] : null; if (lastBr && !lastBr.nextSibling) { lastBr.remove(); } })();
+            }
+
+
+            // 拆分函数开始 拆分 含有 br 的节点 转为 p
 
             function brToParagraphs(target, innerHTMLString) {
                 let cleanedString = innerHTMLString.trim();
@@ -254,25 +330,31 @@ function applyDualWrapperProtection() {
                 const paragraphs = processedString.split(newParaDelimiter);
                 const validParagraphs = paragraphs.filter(p => p.trim().length > 0);
                 const resultHTML = validParagraphs
-                    .map(p => `<p class='immersive notranslate frombrEL'>${p.trim()}</p>`)
+                    .map(p => `<p class='immersive brToParagraphs cut notranslate'>${p.trim()}</p>`)
                     .join('');
                 target.innerHTML = resultHTML
-                console.log(target.querySelectorAll('.immersive.notranslate').length)
-
             }
 
             // 拆分br函数结束
 
             // 判断是否存在 br 然后开始包裹
-            if (target.querySelectorAll('br').length == 0 && target.querySelectorAll('button').length == 0) {
+            if (target.querySelectorAll('br').length == 0) {
                 wrapTarget(target)
-            } else {
+            } else if (target.querySelectorAll('br').length > 0) {
+                removeDuplicateBr(target)
                 brToParagraphs(target, target.innerHTML)
+            } else {
+                wrapTarget(target)
+                console.log('wtf')
             }
 
         });
 
-        cloneThat();
+        cloneThat(document.querySelectorAll('.brToParagraphs.notranslate'));
+        redundancy()
+        setTimeout(() => {
+            last()
+        }, 500)
 
         console.log(`%c 成功为 ${results.length} 个元素创建了双包裹结构`,
             'color:#fff;background:#00bcd4;padding:8px 16px;border-radius:8px;font-size:16px;');
@@ -346,7 +428,7 @@ function createFloatingButton() {
     }
 
     .Original {
-    margin: 0px;
+    /*margin: 0px;*/
     padding:0px;
     /*display: none !important;*/
     }
@@ -371,6 +453,7 @@ function createFloatingButton() {
     
     .cjsfy-original, .cjsfy-translated {
         pointer-events: none;
+        margin: 0px !important;
         color: inherit;
         word-break: break-word;
         user-select: text;
@@ -573,7 +656,7 @@ function createFloatingButton() {
     };
 
     const showElements = () => {
-        
+
         const googleEl = document.getElementById('google_translate_element');
         if (googleEl) {
             googleEl.classList.remove('scroll-hidden');
