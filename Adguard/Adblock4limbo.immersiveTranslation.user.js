@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         沉浸式双语翻译 (Google Translate & Dual Wrapper) - 简洁滚动控制 - 纯JS版本
 // @namespace    http://tampermonkey.net/
-// @version      2025-12-09_Final_V15_ScrollSimple_CloseButton_Stable
+// @version      2025-12-10_Final_V16_ScrollSimple_CloseButton_Stable
 // @description  基于 Google Translate，采用双包裹体结构实现沉浸式双语对照翻译。修复了点击“双语”按钮后关闭按钮丢失的问题，并在切换模式时加入了关闭按钮的防御性检查和重建。
 // @author       limbopro
 // @match        https://*/*
@@ -14,6 +14,9 @@
  * 加载并初始化谷歌翻译用户界面组件。
  * 兼容 Trusted Types 环境，以避免 'TrustedScriptURL' 错误。
  */
+
+document.cookie = "googtrans=/auto/zh-CN; path=/";
+
 function loadGoogleTranslateUI() {
 
     // 如果 UI 已存在，直接返回
@@ -181,14 +184,9 @@ function applyDualWrapperProtection() {
         const results = [];
         targetsToProcess.forEach(({ originalText, target }, i) => {
 
-            // 0. 创建 原文副本 (notranslate)
-            const originalWrapper_ori = document.createElement('font');
-            originalWrapper_ori.className = 'notranslate hiddenOriginal ori';
-            originalWrapper_ori.textContent = originalText;
-
             // 1. 创建 原文副本 (notranslate)
             const originalWrapper = document.createElement('font');
-            originalWrapper.className = 'notranslate cjsfy-original';
+            originalWrapper.className = 'notranslate Original ori';
             originalWrapper.textContent = originalText;
 
             // 2. 创建 分隔符
@@ -198,16 +196,19 @@ function applyDualWrapperProtection() {
             // 3. 创建 译文包裹层 (translate)
             const translatedWrapper = document.createElement('font');
             translatedWrapper.className = 'cjsfy-translated';
+            translatedWrapper.textContent = originalText;
 
             // 4. 将 target 的所有原有子节点移动到 译文包裹层 中
+            
+            /*
             const originalChildren = [...target.childNodes];
             originalChildren.forEach(child => {
                 translatedWrapper.appendChild(child);
             });
+            */
 
             // 5. 清空 target 元素，并按顺序插入
             target.textContent = '';
-            target.appendChild(originalWrapper_ori);
             target.appendChild(originalWrapper);
             target.appendChild(separator);
             target.appendChild(translatedWrapper);
@@ -230,13 +231,11 @@ function applyDualWrapperProtection() {
         window.REVERT_DUAL_WRAPPER = () => {
             document.querySelectorAll('[data-_textDuplicated]').forEach(el => {
                 const translatedWrapper = el.querySelector('.cjsfy-translated');
-                const originalWrapper = el.querySelector('.cjsfy-original');
                 const separator = el.querySelector('.jiange');
-                const hiddenOriginal = el.querySelector('.hiddenOriginal.ori');
+                const Original = el.querySelector('.Original.ori');
 
-                originalWrapper?.remove();
                 separator?.remove();
-                hiddenOriginal?.remove();
+                Original?.remove();
 
                 if (translatedWrapper) {
                     while (translatedWrapper.firstChild) {
@@ -267,13 +266,15 @@ function protectPreTags() {
 // --- III. 流程控制与用户交互 ---
 
 function initiateTranslationFlow() {
-        // 所有资源（图片、css、js 等）都加载完毕
-        console.log("[Immersive Translate] 翻译流程开始...");
-        // 如果 按钮 已存在，直接返回
-        protectPreTags();
-        applyDualWrapperProtection();
-        loadGoogleTranslateUI();
-        console.log("[Immersive Translate] 翻译流程执行完毕。");
+    // 所有资源（图片、css、js 等）都加载完毕
+    console.log("[Immersive Translate] 翻译流程开始...");
+    // 如果 按钮 已存在，直接返回
+    document.querySelectorAll("#translation-button")
+    //if (document.getElementById('translation-button')) return;
+    protectPreTags();
+    applyDualWrapperProtection();
+    loadGoogleTranslateUI();
+    console.log("[Immersive Translate] 翻译流程执行完毕。");
 }
 
 
@@ -295,8 +296,8 @@ function createFloatingButton() {
         opacity:0;
     }
 
-    .hiddenOriginal {
-    display: none !important;
+    .Original {
+    /*display: none !important;*/
     }
 
     .showOriginal {
@@ -318,9 +319,10 @@ function createFloatingButton() {
     }
     
     .cjsfy-original, .cjsfy-translated {
+        pointer-events: none;
         word-break: break-word;
         user-select: text;
-        display: block !important; 
+        /*display: block !important;*/
     }
     
     /* 滚动隐藏/显示所需的样式 */
@@ -344,7 +346,7 @@ function createFloatingButton() {
         position: fixed;
         right: 2px;
         left: auto;
-        bottom: 30% !important;              
+        bottom: 35% !important;              
         height: auto;                       
         z-index: 10000;
         width: 45px;
@@ -419,6 +421,10 @@ function createFloatingButton() {
     // 新增：创建关闭按钮的函数，以便在需要时调用
     // =======================================================
     const createCloseButton = () => {
+
+
+
+
         let closeButton = document.getElementById('translation-close-btn');
 
         if (!closeButton) {
@@ -458,7 +464,6 @@ function createFloatingButton() {
     // 4. 点击事件监听器 (V12 修正逻辑)
     button.addEventListener('click', () => {
         const ori = document.querySelectorAll('.notranslate.ori');
-        const originalWrappers = document.querySelectorAll('.cjsfy-original');
         const translatedElements = document.querySelectorAll('.cjsfy-translated, .jiange');
 
 
@@ -468,14 +473,14 @@ function createFloatingButton() {
         if (isWrapped && !isTranslatedHidden) {
 
             button.textContent = '双语';
+            localStorage.setItem('ybyfy', 'by')
             button.classList.remove('translated');
 
             translatedElements.forEach((e) => { e.classList.add('dual-wrapper-hidden') });
-            //originalWrappers.forEach((e) => { e.classList.add('dual-wrapper-hidden') });
 
             ori.forEach((e) => {
                 e.classList.add('showOriginal')
-                e.classList.remove('hiddenOriginal')
+                e.classList.remove('Original')
             });
 
             console.log('切换成原文模式...')
@@ -485,6 +490,7 @@ function createFloatingButton() {
                 createCloseButton();
             }
 
+            showElements() // 显示谷歌翻译小工具组件
 
         } else {
 
@@ -496,9 +502,10 @@ function createFloatingButton() {
 
             button.textContent = '原文';
             button.classList.add('translated');
-
+            showElements() // 显示谷歌翻译小工具组件
             translatedElements.forEach((e) => { e.classList.remove('dual-wrapper-hidden') });
             console.log('切换成双语模式...')
+            localStorage.setItem('ybyfy', 'y')
         }
     });
 
@@ -526,7 +533,9 @@ function createFloatingButton() {
     };
 
     const handleScroll = () => {
-        hideElements();
+
+        if (document.querySelector('.cjsfy-translated').classList.value.includes('dual-wrapper-hidden') || document.querySelector('.cjsfy-translated') == null || document.querySelector('.cjsfy-translated').querySelector('font[dir]') !== null)
+            hideElements();
         clearTimeout(scrollTimer);
 
         scrollTimer = setTimeout(() => {
@@ -542,8 +551,6 @@ function createFloatingButton() {
 // --- IV. 脚本入口点与监控 ---
 
 createFloatingButton();
-
-
 function monitorClickAndUrlChange() {
     console.log("URL 变化监控已启动...");
 
@@ -579,3 +586,10 @@ function monitorClickAndUrlChange() {
 }
 
 monitorClickAndUrlChange();
+
+if (localStorage.getItem('ybyfy') == 'y') {
+
+    setTimeout(() => {
+        document.getElementById('translation-button')?.click()
+    }, 750)
+}
