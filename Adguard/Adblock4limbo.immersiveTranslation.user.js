@@ -1,30 +1,44 @@
 // ==UserScript==
 // @name         沉浸式双语翻译 (Google Translate & Dual Wrapper) - 简洁滚动控制 - 纯JS版本
 // @namespace    http://tampermonkey.net/
-// @version      2025-12-09_Final_V14_ScrollSimple_CloseButton_Stable
+// @version      2025-12-09_Final_V15_ScrollSimple_CloseButton_Stable
 // @description  基于 Google Translate，采用双包裹体结构实现沉浸式双语对照翻译。修复了点击“双语”按钮后关闭按钮丢失的问题，并在切换模式时加入了关闭按钮的防御性检查和重建。
 // @author       limbopro
 // @match        https://*/*
+// require       https://translate.google.com/translate_a/element.js?cb=google.translate.TranslateElementInit
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=translate.google.com/
 // @grant        none
 // ==/UserScript==
 
-// --- I. 谷歌翻译加载与配置 ---
-
+/**
+ * 加载并初始化谷歌翻译用户界面组件。
+ * 兼容 Trusted Types 环境，以避免 'TrustedScriptURL' 错误。
+ */
 function loadGoogleTranslateUI() {
-    if (document.getElementById('google_translate_element')) return;
 
+    // 如果 UI 已存在，直接返回
+    const uiContainerId = 'google_translate_element';
+
+    // 如果元素已存在，则直接返回
+    if (document.getElementById(uiContainerId)) return;
+
+    // --- 1. 谷歌翻译初始化函数配置 ---
+
+    // 确保全局对象存在
     window.google = window.google || {};
-    window.google.translate = window.translate || {};
+    window.google.translate = window.google.translate || {};
+
+    // 定义回调函数，供谷歌脚本加载后调用
     window.google.translate.TranslateElementInit = function () {
         new google.translate.TranslateElement({
             includedLanguages: 'zh-CN,en',
             layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
             autoDisplay: false
-        }, 'google_translate_element');
+        }, uiContainerId);
     };
 
-    const uiContainerId = 'google_translate_element';
+    // --- 2. 创建 UI 容器 DOM 元素 ---
+
     let uiContainer = document.getElementById(uiContainerId);
 
     if (!uiContainer) {
@@ -32,6 +46,7 @@ function loadGoogleTranslateUI() {
         uiContainer.id = uiContainerId;
         document.body.appendChild(uiContainer);
 
+        // 设置样式以创建浮动翻译组件容器
         uiContainer.classList.add('notranslate');
         uiContainer.style.position = 'fixed';
         uiContainer.style.top = '40px';
@@ -46,13 +61,45 @@ function loadGoogleTranslateUI() {
         uiContainer.style.lineHeight = '0';
     }
 
+    // --- 3. 动态加载谷歌翻译脚本 (Trusted Types 兼容处理) ---
+
     const scriptUrl = '//translate.google.com/translate_a/element.js?cb=google.translate.TranslateElementInit';
     const script = document.createElement('script');
     script.type = 'text/javascript';
-    script.src = scriptUrl;
+
+    let finalScriptSrc = scriptUrl;
+
+    // 检查并应用 Trusted Types
+    if (window.trustedTypes && trustedTypes.createPolicy) {
+        try {
+            // 创建一个 Trusted Script URL Policy
+            const policy = trustedTypes.createPolicy('google-translate-loader', {
+                // 仅允许加载谷歌翻译的脚本
+                createScriptURL: (url) => {
+                    if (url.startsWith('//translate.google.com/')) {
+                        return url;
+                    }
+                    throw new Error("Attempted to load untrusted script URL.");
+                }
+            });
+            // 将 URL 字符串转换为 TrustedScriptURL 对象
+            finalScriptSrc = policy.createScriptURL(scriptUrl);
+            console.log("[Trusted Types] 成功使用 TrustedScriptURL 加载谷歌翻译脚本。");
+        } catch (e) {
+            console.warn("[Trusted Types] 无法创建或应用 TrustedScriptURL 策略，回退到普通字符串赋值。如果环境开启了严格 Trusted Types，这可能导致加载失败。", e);
+            finalScriptSrc = scriptUrl;
+        }
+    }
+
+    // 赋值给 script.src。如果 finalScriptSrc 是 TrustedScriptURL，则安全；否则是原始字符串。
+    script.src = finalScriptSrc;
+
+    // 注入脚本
     document.head.appendChild(script);
 
-    const checkDelay = 30000;
+    // --- 4. 超时检查和清理机制 ---
+
+    const checkDelay = 15000;
     const successSelector = '.skiptranslate.goog-te-gadget';
 
     setTimeout(() => {
@@ -63,19 +110,23 @@ function loadGoogleTranslateUI() {
                 'color: #FF9800; font-weight: bold; background: #fff3e0; padding: 4px 8px; border-radius: 4px;');
 
             const userAction = confirm(
-                '⚠️ 提示：谷歌翻译组件在 30 秒内未加载成功，翻译功能可能无法正常使用。\n\n是否移除 UI 元素？'
+                '⚠️ 提示：\n\n谷歌翻译组件在 15 秒内未加载成功，翻译功能可能无法正常使用。\n\n可能的原因：\n1.内容安全策略（Content Security Policy, CSP），刷新也没用；\n2.网络问题，稍后刷新页面再试试；\n\n以上。'
             );
 
             if (userAction) {
-                document.querySelectorAll('.cjsfy-original, .cjsfy-translated, .jiange').forEach((e) => { e.remove() });
-                document.getElementById('translation-button')?.remove();
-                document.getElementById('google_translate_element')?.remove();
+                // 移除与翻译功能相关的自定义元素
+                // document.querySelectorAll('.cjsfy-original, .cjsfy-translated, .jiange').forEach((e) => { e.remove() });
+                // document.getElementById('translation-button')?.remove();
+                // document.getElementById(uiContainerId)?.remove();
             } else {
                 console.log("[Google Translate] UI 容器保留在页面上。");
             }
         }
     }, checkDelay);
 }
+
+// 您需要调用此函数来启动加载过程
+// loadGoogleTranslateUI();
 
 
 // --- II. 双包裹体创建逻辑 ---
@@ -216,19 +267,33 @@ function protectPreTags() {
 // --- III. 流程控制与用户交互 ---
 
 function initiateTranslationFlow() {
-    console.log("[Immersive Translate] 翻译流程开始...");
-    protectPreTags();
-    applyDualWrapperProtection();
-    loadGoogleTranslateUI();
-    console.log("[Immersive Translate] 翻译流程执行完毕。");
+        // 所有资源（图片、css、js 等）都加载完毕
+        console.log("[Immersive Translate] 翻译流程开始...");
+        // 如果 按钮 已存在，直接返回
+        protectPreTags();
+        applyDualWrapperProtection();
+        loadGoogleTranslateUI();
+        console.log("[Immersive Translate] 翻译流程执行完毕。");
 }
 
 
 function createFloatingButton() {
 
     document.cookie = "googtrans=/auto/zh-CN; path=/";
-
     const css = `
+
+    /* 该死的广告 */
+    [id*="ad-unit"], 
+    [class*="ad-unit"], 
+    [data*="ad-unit"], 
+    [data-name*="ad-unit"], 
+    [data-testid*="ad-unit"],
+    [class*='ads'],
+    [id*='ads'] {
+        display: none !important;
+        pointer-events: none !important;
+        opacity:0;
+    }
 
     .hiddenOriginal {
     display: none !important;
@@ -397,7 +462,7 @@ function createFloatingButton() {
         const translatedElements = document.querySelectorAll('.cjsfy-translated, .jiange');
 
 
-        const isWrapped = originalWrappers.length > 0;
+        const isWrapped = ori.length > 0;
         const isTranslatedHidden = translatedElements.length > 0 && translatedElements[0].classList.contains('dual-wrapper-hidden');
 
         if (isWrapped && !isTranslatedHidden) {
@@ -406,7 +471,7 @@ function createFloatingButton() {
             button.classList.remove('translated');
 
             translatedElements.forEach((e) => { e.classList.add('dual-wrapper-hidden') });
-            originalWrappers.forEach((e) => { e.classList.add('dual-wrapper-hidden') });
+            //originalWrappers.forEach((e) => { e.classList.add('dual-wrapper-hidden') });
 
             ori.forEach((e) => {
                 e.classList.add('showOriginal')
@@ -429,9 +494,7 @@ function createFloatingButton() {
                 setTimeout(createCloseButton, 500);
             }
 
-
-
-            button.textContent = '原';
+            button.textContent = '原文';
             button.classList.add('translated');
 
             translatedElements.forEach((e) => { e.classList.remove('dual-wrapper-hidden') });
@@ -494,13 +557,13 @@ function monitorClickAndUrlChange() {
             if (currentUrl !== originalUrl) {
                 setTimeout(() => {
                     const googletraLength = document.querySelectorAll("font[dir] > font[dir]").length;
-                    const cjsfytraLength = document.querySelectorAll(".cjsfy-original, .cjsfy-translated").length;
+                    const cjsfytraLength = document.querySelectorAll(".notranslate.ori, .cjsfy-translated").length;
 
                     if (cjsfytraLength > 0 && googletraLength > 0 && (googletraLength / cjsfytraLength) > 0.8) {
 
                         console.warn('翻译元素数量可能不匹配，建议重新加载。');
                         const userAction = confirm(
-                            '⚠️ 提示：当前页面未按预期进行双语对照翻译，可能是单页应用路由跳转导致。\n\n是否需要重新加载以便正确执行翻译请求？'
+                            '⚠️ 提示：\n\n存在的问题：\n当前页面未按预期进行双语对照翻译；\n\n可能的原因：\n单页应用路由跳转导致（如网站使用了AJAX技术）\n\n是否需要重新加载页面以便正确执行翻译请求？'
                         );
 
                         if (userAction) {
