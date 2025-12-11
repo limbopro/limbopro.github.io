@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         沉浸式双语翻译 (Google Translate & Dual Wrapper) - 简洁滚动控制 - 纯JS版本
 // @namespace    http://tampermonkey.net/
-// @version      2025-12-11_Final_V16.8_ScrollSimple_CloseButton_Stable
+// @version      2025-12-12_Final_V16.9_ScrollSimple_CloseButton_Stable
 // @description  基于 Google Translate，采用双包裹结构实现沉浸式双语对照翻译。包含：Trusted Types兼容加载、SPA路由变化监控、滚动时自动隐藏 UI、以及浮动按钮切换“双语/原文”模式。
 // @author       limbopro
 // @match        https://*/*
@@ -149,12 +149,15 @@ function applyDualWrapperProtection() {
                 acceptNode: node => {
 
                     const text = node.nodeValue.trim();
-                    //const pureNumericOrSymbolic = /^[\d\s\W]+$/.test(text);
-                    const pureNumericOrSymbolic = /^\s*[\d\s.,]+\s*$/.test(text)
                     if (!text) return NodeFilter.FILTER_REJECT;
 
-
+                    const pureNumericOrSymbolic = /^\s*[\d\s.,]+\s*$/.test(text)
                     if (pureNumericOrSymbolic) {
+                        return NodeFilter.FILTER_REJECT;
+                    }
+
+                    const dateformat = /\b(\d{1,4}[-\/.]\d{1,2}[-\/.]\d{1,4})\b/.test(text)
+                    if (dateformat) {
                         return NodeFilter.FILTER_REJECT;
                     }
 
