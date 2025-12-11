@@ -127,7 +127,9 @@ function loadGoogleTranslateUI() {
                 console.log("[Google Translate] UI 容器保留在页面上。");
             }
 
-            location.reload(true);
+window.location.reload()
+
+            //location.reload(true);
         }
     }, checkDelay);
 }
@@ -136,7 +138,7 @@ function loadGoogleTranslateUI() {
 
 // --- II. 双包裹体创建逻辑 ---
 
-function applyDualWrapperProtection() {
+window.applyDualWrapperProtection=function applyDualWrapperProtection() {
     (() => {
         console.clear();
 
@@ -734,11 +736,13 @@ function monitorClickAndUrlChange() {
 
                         console.warn('翻译元素数量可能不匹配，建议重新加载。');
                         const userAction = confirm(
-                            '⚠️ 提示：\n\n存在的问题：\n当前页面未按预期进行双语对照翻译；\n\n可能的原因：\n单页应用路由跳转导致（如网站使用了AJAX技术）\n\n是否需要重新加载页面以便正确执行翻译请求？'
+                            '⚠️ 提示：\n\n存在的问题：\n当前页面未按预期进行双语对照翻译；\n\n可能的原因：\n单页应用路由跳转导致（如网站使用了PJAX/AJAX技术）\n\n是否需要重新加载页面以便正确执行翻译请求？\n\n如果仍不能按预期进行双语对照翻译，请手动刷新页面。更多问题请进入导航->设置-反馈/留言。'
                         );
 
                         if (userAction) {
-                            location.reload(true);
+window.location.reload()
+
+                            //location.reload(true);
                         }
                     }
                 }, 3000);
@@ -751,15 +755,22 @@ function monitorClickAndUrlChange() {
 
 monitorClickAndUrlChange();
 
+/*document.addEventListener('DOMContentLoaded', function() {*/
+
 if (localStorage.getItem('ybyfy') == 'y') {
     setTimeout(() => {
-        document.getElementById('translation-button')?.click()
-    }, 1250)
+        //applyDualWrapperProtection()
+document.getElementById('translation-button')?.click()
+    }, 250)
 }
+
+/*});*/
+
 
 setInterval(() => {
     if (localStorage.getItem('ybyfy') == 'y' && document.querySelector('.skiptranslate.goog-te-gadget') == null) {
-        loadGoogleTranslateUI()
+        //loadGoogleTranslateUI()
+//alert('wtf')
     }
 }, 2000)
 
@@ -955,4 +966,3 @@ window.initAdblockLoader = function initAdblockLoader() {
 
 // 启动加载器
 initAdblockLoader();
-

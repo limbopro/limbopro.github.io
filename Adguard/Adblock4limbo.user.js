@@ -5489,3 +5489,58 @@ console.log(`⚠️ 事件时间窗口和悬浮窗自动关闭时间均设置为
 console.log(`警告将在累积次数恰好为 6 且 dh_button 元素不存在时触发。`);
 
 
+
+
+/**
+ * ===========================================
+ * 综合脚本：自动诊断并尝试修复滚动问题
+ * ===========================================
+ */
+
+function attemptFixScrolling() {
+
+    const targets = [document.documentElement, document.body];
+    let fixedCount = 0;
+
+    targets.forEach(element => {
+        const name = element.tagName; // HTML 或 BODY
+        const style = window.getComputedStyle(element);
+
+        // --- 诊断阶段 ---
+        const isOverflowHidden =
+            style.overflow === 'hidden' ||
+            style.overflowX === 'hidden' ||
+            style.overflowY === 'hidden';
+
+        if (isOverflowHidden) {
+            console.warn(`[ScrollFixer] ⚠️ 发现问题：${name} 元素上的 Overflow 属性被设置为 hidden。`);
+
+            // --- 自动修复阶段 ---
+
+            // 1. 尝试覆盖内联样式，强制启用滚动
+            element.style.overflow = 'auto';
+            element.style.overflowX = 'auto';
+            element.style.overflowY = 'auto';
+
+            // 2. 移除常见的禁用滚动类名 (可根据需要添加更多)
+            element.classList.remove('modal-open', 'no-scroll');
+
+            console.log(`[ScrollFixer] ✅ 自动修复尝试完成：${name} 的 overflow 已设为 auto。`);
+            fixedCount++;
+        }
+    });
+
+    if (fixedCount > 0) {
+        console.log(`--- 总结：成功自动修复了 ${fixedCount} 个元素上的滚动禁用问题。 ---`);
+    } else {
+        console.log('--- 总结：HTML 和 BODY 上的常见滚动禁用问题未发现。 ---');
+    }
+}
+
+// 立即执行整个自动修复流程
+
+setInterval(() => {
+    if (document.querySelectorAll("div:has(a[href*='admiral'])").length >= 1) {
+        attemptFixScrolling();
+    }
+}, 3000)
