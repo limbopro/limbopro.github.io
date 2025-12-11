@@ -502,6 +502,7 @@ function createFloatingButton() {
     }
 
         #translation-button {
+        padding: 0px;
         border:1px solid #1a73e8;
         position: fixed;
         right: 0px;

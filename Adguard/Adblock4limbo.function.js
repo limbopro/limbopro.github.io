@@ -547,7 +547,10 @@ function getNavigationHTML() {
   <div class="div_global feedback">
     <div class="title_global">反馈/建议/功能设置//</div>
     <ul class="ul_global">
-      <li class="li_global"><a class="a_global" id="admin" href="https://limbopro.com/6.html" target="_blank">联系博主</a></li>
+      <!-- <li class="li_global"><a class="a_global" id="admin" href="https://limbopro.com/6.html" target="_blank">联系博主</a></li> -->
+      <li class="li_global">
+    <button class="a_global special yellow" id="admin" onclick="alFeedback_showPanel()">联系博主/反馈</button>
+</li>
             <li class="li_global"><a class="a_global" id="ifeedback" href="https://limbopro.com/feedback/" target="_blank">匿名留言</a></li>
       <li class="li_global"><button class="crbhms" id="hidedaohang">导航按钮(OFF)</button></li>
       <li class="li_global"><button class="crbhms" id="cjsfy" data-state="off" style="background-color:red">沉浸式翻译(OFF)</button></li>
@@ -676,7 +679,7 @@ var file = {
         ".active {z-index:114154 !important; pointer-events:auto !important; opacity:1 !important;}",
 
         /* 通用按钮基础样式（.crbhms） */
-        ".crbhms {text-align:center; white-space:break-spaces; color:white !important; border-radius:0px; margin:1px; border:1px solid #1f2f47 !important; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; padding-bottom:6px; padding-top:6px; text-decoration:none; text-shadow:0px 1px 0px #263666;}",
+        ".crbhms {padding:0px;text-align:center; white-space:break-spaces; color:white !important; border-radius:0px; margin:1px; border:1px solid #1f2f47 !important; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; padding-bottom:6px; padding-top:6px; text-decoration:none; text-shadow:0px 1px 0px #263666;}",
 
         /* 主按钮样式 .a_global（核心样式） */
         ".a_global {text-align:center; white-space:break-spaces; color:white !important; box-shadow:inset 0px 0px 15px 3px #23395e; background:linear-gradient(to bottom,#2e466e 5%,#415989 100%); background-color:#2e466e !important; border-radius:0px; margin:1px; border:1px solid #1f2f47 !important; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; padding-bottom:6px; padding-top:6px; text-decoration:none; text-shadow:0px 1px 0px #263666;}",
@@ -1571,7 +1574,7 @@ function daohangMode_switch(x) {
 
         setTimeout(() => {
             body_build('false')
-        }, 2000)
+        }, 1000)
 
 
     } else if (getCookie("daohangMode_yourChoice") == '' || getCookie("daohangMode_yourChoice") == 'hidden') {
@@ -4206,3 +4209,283 @@ if (localStorage.getItem('huacisousuo') == 'true') {
     // toggleSearchState('true');
     initLimoProSearch();
 }
+
+
+
+/*debug*/
+
+/* 反馈信息展示脚本 (重命名版) */
+
+/**
+ * 目的：在页面加载时自动显示一个悬浮窗口，用于收集用户环境信息和脚本状态，以便反馈调试。
+ * 1. 自动注入 CSS 样式并创建 DOM 结构。
+ * 2. 自动收集 URL, UA/OS 信息，以及关键脚本加载状态。
+ * 3. 提供“复制调试信息”功能。
+ * 4. 2 分钟后自动移除。
+ */
+
+// 悬浮窗的自动移除时间
+const AL_FEEDBACK_TIMEOUT_MS = 120000; // 重命名变量
+// 要检查的脚本文件名列表
+const AL_TARGET_SCRIPTS = [ // 重命名变量
+    'Adblock4limbo.user.js',
+    'Adblock4limbo.function.js',
+    'Adblock4limbo.immersiveTranslation.user.js'
+];
+
+
+// --- 悬浮窗函数 ---
+
+/**
+ * 检查并注入悬浮窗的基本 CSS 样式
+ */
+window.alFeedback_injectStyles = function alFeedback_injectStyles() { // 重命名函数
+    const STYLE_ID = 'al-feedback-style'; // 重命名 ID
+    if (document.getElementById(STYLE_ID)) return;
+
+    const style = document.createElement('style');
+    style.id = STYLE_ID;
+    style.textContent = `
+        #al-feedback-box { /* 重命名 ID */
+            position: fixed;
+            top: 15%; 
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999999999;
+            background-color: rgba(220, 50, 50, 0.95); 
+            color: white;
+            padding: 20px 25px;
+            border-radius: 8px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+            font-size: 16px;
+            max-width: 90%;
+            text-align: left;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+            line-height: 1.5;
+        }
+        #al-feedback-box.show { /* 重命名 ID */
+            opacity: 1;
+        }
+        .al-close-btn { /* 重命名类名 */
+            float: right;
+            font-weight: bold;
+            font-size: 20px;
+            cursor: pointer;
+            line-height: 1;
+            padding-left: 10px;
+        }
+        .al-info-block { /* 重命名类名 */
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.3);
+    font-size: 14px;
+    height: 200px;
+    /* --- 关键修改：从 overlay 改为 scroll --- */
+    overflow: scroll; 
+    /* -------------------------------------- */
+    word-break: break-all;
+}
+        .al-copy-btn { /* 重命名类名 */
+            display: block;
+            width: 100%;
+            margin-top: 15px;
+            padding: 8px;
+            background-color: #ffdd57;
+            color: #333;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+        .al-copy-btn:hover { /* 重命名类名 */
+            background-color: #ffe88c;
+        }
+        .al-script-status-list { /* 重命名类名 */
+            list-style: none;
+            padding-left: 0;
+            margin: 5px 0 0 0;
+        }
+        .al-script-status-list li { /* 重命名类名 */
+            margin-bottom: 3px;
+        }
+        .al-script-loaded { /* 重命名类名 */
+            color: lightgreen;
+        }
+        .al-script-missing { /* 重命名类名 */
+            color: #ffdd57; 
+        }
+        .al-contact-link { /* 重命名类名 */
+            color: #ffdd57; 
+            text-decoration: underline;
+        }
+    `;
+    document.head.appendChild(style);
+}
+
+/**
+ * 检查目标脚本是否存在于当前页面
+ * @returns {string} 返回包含脚本检查状态的 HTML 列表
+ */
+function alFeedback_checkScriptExistence() { // 重命名函数
+    const scripts = document.getElementsByTagName('script');
+    let statusHtml = '<ul class="al-script-status-list">'; // 使用新的类名
+
+    AL_TARGET_SCRIPTS.forEach(targetName => { // 使用新的变量名
+        let found = false;
+
+        for (let i = 0; i < scripts.length; i++) {
+            const src = scripts[i].src;
+            if (src && src.includes(targetName)) {
+                found = true;
+                break;
+            }
+        }
+
+        const statusClass = found ? 'al-script-loaded' : 'al-script-missing'; // 使用新的类名
+        const statusIcon = found ? '已挂载✅' : '未挂载❌';
+
+        statusHtml += `
+            <li>
+                <span class="${statusClass}">${statusIcon} ${targetName}</span>
+            </li>
+        `;
+    });
+
+    statusHtml += '</ul>';
+    return statusHtml;
+}
+
+
+/**
+ * 核心复制函数：将调试信息复制到剪贴板
+ * ⚠️ 注意：此函数逻辑仅提取特定 ID 块内的系统信息和脚本状态。
+ */
+function alFeedback_copyDebugInfo(infoBlockId) { // 重命名函数
+    const infoBlock = document.getElementById(infoBlockId);
+    if (!infoBlock) return;
+
+    // 提取纯文本信息，去除 HTML 标签，并格式化
+    const debugInfoText =
+        infoBlock.innerText.replace('系统信息 (用于调试):\n', '') // 移除标题
+            .trim()
+            .split('\n')
+            .map(line => line.trim()) // 清理每行两端的空格
+            .filter(line => line.length > 0) // 移除空行
+            .join('\n');
+
+    // 使用 Clipboard API 复制文本
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(debugInfoText).then(() => {
+            // 复制成功后，临时改变按钮文本
+            const btn = document.querySelector('.al-copy-btn'); // 使用新的类名
+            if (btn) {
+                btn.textContent = '已复制!';
+                setTimeout(() => {
+                    btn.textContent = '复制调试信息';
+                }, 1500);
+            }
+        }).catch(err => {
+            console.error('复制失败:', err);
+            alert('复制失败，请手动选择复制。');
+        });
+    } else {
+        // 降级处理
+        console.warn('Clipboard API 不可用，使用旧方法复制。');
+        const tempTextArea = document.createElement('textarea');
+        tempTextArea.value = debugInfoText;
+        document.body.appendChild(tempTextArea);
+        tempTextArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(tempTextArea);
+
+        const btn = document.querySelector('.al-copy-btn'); // 使用新的类名
+        if (btn) {
+            btn.textContent = '已复制!';
+            setTimeout(() => {
+                btn.textContent = '复制调试信息';
+            }, 1500);
+        }
+    }
+}
+
+
+/**
+ * 显示悬浮警告框
+ */
+window.alFeedback_showPanel = function alFeedback_showPanel() { // 重命名函数
+    const BOX_ID = 'al-feedback-box'; // 重命名 ID
+    const INFO_BLOCK_ID = 'al-debug-info-content'; // 重命名 ID
+
+    let existingBox = document.getElementById(BOX_ID);
+    if (existingBox) {
+        existingBox.remove();
+    }
+
+    alFeedback_injectStyles(); // 调用已修改名称的函数
+
+    // --- 动态获取信息 ---
+    const currentURL = window.location.href;
+    const userAgent = navigator.userAgent;
+    const platform = navigator.platform || navigator.oscpu || '未知操作系统';
+    const scriptStatusHtml = alFeedback_checkScriptExistence(); // 调用已修改名称的函数
+
+
+    // 构建包含所有信息的 HTML 内容 
+    const messageHTML = `
+        <span class="al-close-btn" onclick="this.parentElement.remove();">&times;</span> <p style="margin-bottom: 10px;">
+            <strong>Adblock4limbo:</strong> 调试信息面板。请复制以下信息，以便向开发者反馈问题。
+        </p>
+        
+        <p style="margin-bottom: 0;">
+            联系博主：<a href="https://limbopro.com/6.html" target="_blank" class="al-contact-link">点此联系？反馈</a> </p>
+
+        <div class="al-info-block" id="${INFO_BLOCK_ID}"> <strong>系统信息 (用于调试):</strong>
+            <br>
+            <strong>当前页面URL:</strong> ${currentURL}
+            <br>
+            <strong>OS/平台:</strong> ${platform}
+            <br>
+            <strong>UA:</strong> ${userAgent}
+            <br>
+            <strong>关键脚本加载状态:</strong> 
+            ${scriptStatusHtml} 
+        </div>
+        
+        <button class="al-copy-btn" onclick="alFeedback_copyDebugInfo('${INFO_BLOCK_ID}')">复制调试信息</button> `;
+
+    const box = document.createElement('div');
+    box.id = BOX_ID;
+    box.innerHTML = messageHTML;
+
+    document.body.appendChild(box);
+
+    // 渐入效果
+    setTimeout(() => {
+        box.classList.add('show');
+    }, 10);
+
+    // 2 分钟后自动移除
+    setTimeout(() => {
+        if (box) {
+            box.classList.remove('show');
+            setTimeout(() => {
+                if (box && box.parentElement) {
+                    box.remove();
+                }
+            }, 500);
+        }
+    }, AL_FEEDBACK_TIMEOUT_MS); // 使用新的变量名
+}
+
+// ⚠️ 将 alFeedback_copyDebugInfo 函数暴露到全局
+window.alFeedback_copyDebugInfo = alFeedback_copyDebugInfo;
+
+// --- 脚本主流程：自动显示弹窗 ---
+
+// 自动显示弹窗的调用 (如果你需要它在脚本加载时自动运行)
+// alFeedback_showPanel(); 
+
+console.log(`脚本已运行，自动显示反馈信息面板。`);
+console.log(`⚠️ 悬浮窗自动关闭时间设置为 ${AL_FEEDBACK_TIMEOUT_MS / 1000} 秒 (2 分钟)。`); // 使用新的变量名

@@ -5168,3 +5168,324 @@ window.initAdblockLoader = function initAdblockLoader() {
 
 // 启动加载器
 initAdblockLoader();
+
+
+/* 监控用户尝试唤起导航页 */
+
+
+/* 监控用户尝试唤起导航页 */
+
+/**
+ * 监听页面 Esc 键盘事件，实现以下逻辑：
+ * 1. 记录 120 秒内按 2 次 Esc 键的行为，记为一次“事件”。
+ * 2. 累加事件总次数 (badEventCount)。
+ * 3. 警告触发条件：累积次数恰好为 6 且 ID 为 'dh_button' 的元素不存在。
+ * 4. 每次事件发生时，在控制台输出当前次数。
+ * 5. 悬浮窗内容包含警告信息、联系链接、UA/OS 信息、关键脚本加载状态，以及“复制”按钮。
+ */
+
+// 设置时间间隔 (120000毫秒 = 2分钟)。判断“事件”的窗口时间。
+const TIME_WINDOW_MS = 120000;
+// 悬浮窗的自动移除时间
+const WARNING_TIMEOUT_MS = 120000;
+// 要检查的脚本文件名列表
+const TARGET_SCRIPTS = [
+    'Adblock4limbo.user.js',
+    'Adblock4limbo.function.js',
+    'Adblock4limbo.immersiveTranslation.user.js'
+];
+
+// --- 悬浮窗函数 ---
+
+/**
+ * 检查并注入悬浮窗的基本 CSS 样式
+ */
+function injectWarningStyles() {
+    if (document.getElementById('floating-warning-style')) return;
+
+    const style = document.createElement('style');
+    style.id = 'floating-warning-style';
+    style.textContent = `
+        #floating-warning-box {
+            position: fixed;
+            top: 15%; 
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 99999;
+            background-color: rgba(220, 50, 50, 0.95); 
+            color: white;
+            padding: 20px 25px;
+            border-radius: 8px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+            font-size: 16px;
+            max-width: 90%;
+            text-align: left;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+            line-height: 1.5;
+        }
+        #floating-warning-box.show {
+            opacity: 1;
+        }
+        .close-btn {
+            float: right;
+            font-weight: bold;
+            font-size: 20px;
+            cursor: pointer;
+            line-height: 1;
+            padding-left: 10px;
+        }
+        .info-block {
+            margin-top: 15px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.3);
+            font-size: 14px;
+            word-break: break-all;
+            /* 确保这个块内的文本可以被精确复制 */
+        }
+        .copy-btn {
+            display: block;
+            width: 100%;
+            margin-top: 15px;
+            padding: 8px;
+            background-color: #ffdd57;
+            color: #333;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+        .copy-btn:hover {
+            background-color: #ffe88c;
+        }
+        .script-status-list {
+            list-style: none;
+            padding-left: 0;
+            margin: 5px 0 0 0;
+        }
+        .script-status-list li {
+            margin-bottom: 3px;
+        }
+        .script-loaded {
+            color: lightgreen;
+        }
+        .script-missing {
+            color: #ffdd57; 
+        }
+        .contact-link {
+            color: #ffdd57; 
+            text-decoration: underline;
+        }
+    `;
+    document.head.appendChild(style);
+}
+
+/**
+ * 检查目标脚本是否存在于当前页面
+ * @returns {string} 返回包含两个脚本检查状态的 HTML 列表
+ */
+function checkTargetScriptExistence() {
+    const scripts = document.getElementsByTagName('script');
+    let statusHtml = '<ul class="script-status-list">';
+
+    TARGET_SCRIPTS.forEach(targetName => {
+        let found = false;
+
+        for (let i = 0; i < scripts.length; i++) {
+            const src = scripts[i].src;
+            if (src && src.includes(targetName)) {
+                found = true;
+                break;
+            }
+        }
+
+        const statusClass = found ? 'script-loaded' : 'script-missing';
+        const statusIcon = found ? '已挂载✅' : '未挂载❌';
+
+        statusHtml += `
+            <li>
+                <span class="${statusClass}">${statusIcon} ${targetName}</span>
+            </li>
+        `;
+    });
+
+    statusHtml += '</ul>';
+    return statusHtml;
+}
+
+
+/**
+ * 核心复制函数：将调试信息复制到剪贴板
+ */
+function copyDebugInfo(infoBlockId) {
+    const infoBlock = document.getElementById(infoBlockId);
+    if (!infoBlock) return;
+
+    // 提取纯文本信息，去除 HTML 标签，并格式化
+    const debugInfoText =
+        infoBlock.innerText.replace('系统信息 (用于调试):\n', '') // 移除标题
+            .trim()
+            //.replace(/[\n\s]+/g, '\n') // 简化连续的换行和空格
+            .split('\n')
+            .map(line => line.trim()) // 清理每行两端的空格
+            .filter(line => line.length > 0) // 移除空行
+            .join('\n');
+
+    // 使用 Clipboard API 复制文本
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(debugInfoText).then(() => {
+            // 复制成功后，临时改变按钮文本
+            const btn = document.querySelector('.copy-btn');
+            if (btn) {
+                btn.textContent = '已复制!';
+                setTimeout(() => {
+                    btn.textContent = '复制调试信息';
+                }, 1500);
+            }
+        }).catch(err => {
+            console.error('复制失败:', err);
+            // 失败时可使用 document.execCommand('copy') 作为备用，但现代浏览器推荐使用 Clipboard API
+            alert('复制失败，请手动选择复制。');
+        });
+    } else {
+        // 降级处理（针对旧版浏览器或非安全上下文）
+        console.warn('Clipboard API 不可用，使用旧方法复制。');
+        const tempTextArea = document.createElement('textarea');
+        tempTextArea.value = debugInfoText;
+        document.body.appendChild(tempTextArea);
+        tempTextArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(tempTextArea);
+
+        const btn = document.querySelector('.copy-btn');
+        if (btn) {
+            btn.textContent = '已复制!';
+            setTimeout(() => {
+                btn.textContent = '复制调试信息';
+            }, 1500);
+        }
+    }
+}
+
+
+/**
+ * 显示悬浮警告框
+ */
+function showFloatingWarning() {
+    let existingBox = document.getElementById('floating-warning-box');
+    if (existingBox) {
+        existingBox.remove();
+    }
+
+    injectWarningStyles();
+
+    // --- 动态获取信息 ---
+    const currentURL = window.location.href;
+    const userAgent = navigator.userAgent;
+    const platform = navigator.platform || navigator.oscpu || '未知操作系统';
+    const scriptStatusHtml = checkTargetScriptExistence();
+
+    // 构建调试信息块的 ID，用于复制函数定位
+    const INFO_BLOCK_ID = 'debug-info-content';
+
+    // 构建包含所有信息的 HTML 内容 
+    const messageHTML = `
+        <span class="close-btn" onclick="this.parentElement.remove();">&times;</span>
+        
+        <p style="margin-bottom: 10px;">
+            <strong>Adblock4limbo:</strong> 你似乎在尝试打开导航详情页?[多次双击ESC键] 遗憾的是：当前网页似乎未能正常加载导航代码...
+        </p>
+        
+        <p style="margin-bottom: 0;">
+            可尝试联系博主：<a href="https://limbopro.com/6.html" target="_blank" class="contact-link">点此联系反馈</a>
+        </p>
+
+        <div class="info-block" id="${INFO_BLOCK_ID}">
+            <strong>系统信息 (用于调试):</strong>
+            <br>
+            <strong>当前页面URL:</strong> ${currentURL}
+            <br>
+            <strong>OS/平台:</strong> ${platform}
+            <br>
+            <strong>UA:</strong> ${userAgent}
+            <br>
+            <strong>关键脚本加载状态:</strong> 
+            ${scriptStatusHtml} 
+        </div>
+        
+        <button class="copy-btn" onclick="copyDebugInfo('${INFO_BLOCK_ID}')">复制调试信息</button>
+    `;
+
+    const box = document.createElement('div');
+    box.id = 'floating-warning-box';
+    box.innerHTML = messageHTML;
+
+    document.body.appendChild(box);
+
+    // 渐入效果
+    setTimeout(() => {
+        box.classList.add('show');
+    }, 10);
+
+    // 2 分钟后自动移除
+    setTimeout(() => {
+        if (box) {
+            box.classList.remove('show');
+            setTimeout(() => {
+                if (box && box.parentElement) {
+                    box.remove();
+                }
+            }, 500);
+        }
+    }, WARNING_TIMEOUT_MS);
+}
+
+// ⚠️ 将 copyDebugInfo 函数暴露到全局，以便 onclick 事件能够找到它
+window.copyDebugInfo = copyDebugInfo;
+
+// --- 键盘监听逻辑 ---
+
+function checkButtonExistence() {
+    return !!document.getElementById('dh_button');
+}
+
+let escPressTimestamps = [];
+let badEventCount = 0;
+
+document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' || event.keyCode === 27) {
+
+        const now = Date.now();
+
+        escPressTimestamps = escPressTimestamps.filter(timestamp => {
+            return now - timestamp < TIME_WINDOW_MS;
+        });
+
+        escPressTimestamps.push(now);
+
+        if (escPressTimestamps.length >= 2) {
+
+            badEventCount++;
+
+            console.log(`💥 事件已发生，累积次数: ${badEventCount}`);
+
+            const isButtonPresent = checkButtonExistence();
+
+            if (badEventCount > 3 && badEventCount < 5 && !isButtonPresent) {
+
+                showFloatingWarning(); // 显示悬浮窗
+
+                console.warn(`🚨 警告触发！累积次数为 ${badEventCount} 且 ID 为 'dh_button' 的元素不存在。`);
+            }
+
+            escPressTimestamps = [];
+        }
+    }
+});
+
+console.log(`脚本已运行，监听 Esc 键。`);
+console.log(`⚠️ 事件时间窗口和悬浮窗自动关闭时间均设置为 ${TIME_WINDOW_MS / 1000} 秒 (2 分钟)。`);
+console.log(`警告将在累积次数恰好为 6 且 dh_button 元素不存在时触发。`);
+
+
