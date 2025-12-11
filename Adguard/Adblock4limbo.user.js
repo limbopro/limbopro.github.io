@@ -348,6 +348,7 @@ var adsMax = {
     },
     css: {
         globalcss: "https://limbopro.com/CSS/Adblock4limbo.user.css", // 全局
+        weblistads: "https://limbopro.com/CSS/Adblock4limbo.weblist.user.css", // 全局
         othercss: ".jable_css { background: rgb(0, 172, 106) important; border-right:6px solid #28a745 !important;} .fontColor {color:green !important}", // 按钮输入框块等元素类
         libvio: ".container > .t-img-box:first-child, .hidden-log ,a[target=\"_blank\"] > .img-responsive ,.advertise ,#adsbox ,.t-img-box ,.inner-advertise ,.advertise  {display: none! important;}", // libvio
         goole: "#tvcap,[data-text-ad] {display:none !important}", // 谷歌搜索广告
@@ -430,6 +431,12 @@ var adsMax = {
 loadCSS(adsMax.css.globalcss, () => {
     console.log('CSS 已生效');
 })
+
+/*
+loadCSS(adsMax.css.weblistads, () => {
+    console.log('CSS 已生效');
+})
+*/
 
 css_adsRemove(adsMax.css.othercss, 0, 'othercss') // 引用全局样式
 
@@ -5029,3 +5036,41 @@ function injectPreventSetTimeout() {
 
     console.log('%c[Scriptlet] prevent-setTimeout 已注入，保护当前站点', 'color: #2ecc71; font-weight: bold;');
 }
+
+
+
+
+/**
+ * 初始化广告拦截 CSS 加载器。
+ */
+
+window.initAdblockLoader = function initAdblockLoader() {
+    // --- 配置 ---
+    const BASE_CSS_URL = 'https://limbopro.com/CSS/';
+    const TT_POLICY_NAME = 'adblock-css-loader'; // 确保策略名称唯一
+    const TT_URL_PREFIX = BASE_CSS_URL; // 信任的前缀就是 CSS 文件的基础路径
+    // --- 配置结束 ---
+
+    if (typeof window === 'undefined' || !document.head) {
+        return; // 非浏览器环境或 DOM 未就绪
+    }
+
+    // 1. 获取当前页面的主机名 (例如: "www.bbc.com", "news.reuters.com")
+    const hostname = window.location.hostname;
+
+    // **核心：获取主域名**
+    const siteName = getRootDomain(hostname);
+
+
+    // 3. 构建 CSS 文件名和完整的 URL
+    const cssFileName = siteName + '.css';
+    const cssUrl = BASE_CSS_URL + cssFileName;
+
+    // 4. 使用安全的函数加载样式表
+    loadStylesheetWithTrustedTypes(cssUrl, TT_POLICY_NAME, TT_URL_PREFIX);
+
+    console.log(`[Adblock Loader] 尝试根据域名 "${hostname}" 加载 "${cssFileName}"`);
+}
+
+// 启动加载器
+initAdblockLoader();

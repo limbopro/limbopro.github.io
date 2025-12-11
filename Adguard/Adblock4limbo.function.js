@@ -550,8 +550,8 @@ function getNavigationHTML() {
       <li class="li_global"><a class="a_global" id="admin" href="https://limbopro.com/6.html" target="_blank">联系博主</a></li>
             <li class="li_global"><a class="a_global" id="ifeedback" href="https://limbopro.com/feedback/" target="_blank">匿名留言</a></li>
       <li class="li_global"><button class="crbhms" id="hidedaohang">导航按钮(OFF)</button></li>
-      <li class="li_global"><button class="crbhms" id="huacisousuo" data-state="off" style="background-color:red">划词搜索(OFF)</button></li>
       <li class="li_global"><button class="crbhms" id="cjsfy" data-state="off" style="background-color:red">沉浸式翻译(OFF)</button></li>
+            <li class="li_global"><button class="crbhms" id="huacisousuo" data-state="off" style="background-color:red">划词搜索(OFF)</button></li>
       <li class="li_global">
     <button style="background: black;"class="crbhms" id="resetSort">重置排序</button></li>
       <li class="li_global"><button class="crbhms" id="nsfwmode_switch">WTF!</button></li>
@@ -1012,6 +1012,7 @@ function parentElement_add() {
             { category: 'movies', title: '在线影视//' },
             { category: 'front-end', title: '前端入门//' },
             { category: 'knowledge', title: '男孩子读物//' },
+            { category: 'learnlingenglish', title: '我要学英语//' },
             { category: 'currentnews', title: '实时新闻//' },
             { category: 'technews', title: '科技新闻//' },
             { category: 'search', title: '综合搜索//' },
@@ -2498,7 +2499,7 @@ function applyState(targetState) {
 
 
 if (cjsfybtn) {
-    
+
     if (localStorage.getItem('cjsfy_translation_state') == null && document.getElementById('translation-button') !== null) {
         // 如果 translation-button 已经存在
         // B.更新 UI
@@ -4035,6 +4036,134 @@ var dataListbak = {
             "target": "_blank",
             "level": "better"
         },
+        {
+            "name": "Github",
+            "url": "https://github.com/",
+            "target": "_blank",
+            "level": "better"
+        }
+    ],
+    "learnlingenglish": [
+        {
+            "name": "BBC News",
+            "url": "https://www.bbc.com/",
+            "target": "_blank",
+            "level": "better yellow"
+        },
+        {
+            "name": "台北时报",
+            "url": "https://www.taipeitimes.com/",
+            "target": "_blank",
+            "level": "better"
+        },
+        {
+            "name": "NPR",
+            "url": "https://www.npr.org/",
+            "target": "_blank",
+            "level": "better"
+        },
+        {
+            "name": "Voice of America",
+            "url": "https://learningenglish.voanews.com/",
+            "target": "_blank",
+            "level": "better"
+        }, {
+            "name": "United Nations (UN) Official Website",
+            "url": "https://www.un.org/en",
+            "target": "_blank",
+            "level": "best"
+        },
+        {
+            "name": "TED",
+            "url": "https://www.ted.com/",
+            "target": "_blank",
+            "level": "better yellow"
+        }, {
+            "name": "TED Ideas",
+            "url": "https://ideas.ted.com/",
+            "target": "_blank",
+            "level": "better"
+        }, {
+            "name": "Good News",
+            "url": "https://www.goodnewsnetwork.org/",
+            "target": "_blank",
+            "level": "better yellow"
+        },
+        {
+            "name": "Breaking News English",
+            "url": "https://breakingnewsenglish.com/",
+            "target": "_blank",
+            "level": "best"
+        },
+        {
+            "name": "Elllo.org",
+            "url": "https://www.elllo.org/",
+            "target": "_blank",
+            "level": "better"
+        },
+        {
+            "name": "BBC Learning English",
+            "url": "https://www.bbc.co.uk/learningenglish/",
+            "target": "_blank",
+            "level": "best"
+        },
+        {
+            "name": "British Council LearnEnglish",
+            "url": "https://learnenglish.britishcouncil.org/",
+            "target": "_blank",
+            "level": "best"
+        },
+        {
+            "name": "Cambridge English",
+            "url": "https://www.cambridgeenglish.org/learning-english/",
+            "target": "_blank",
+            "level": "best yellow"
+        },
+        {
+            "name": "TalkEnglish.com",
+            "url": "https://www.talkenglish.com/",
+            "target": "_blank",
+            "level": "better"
+        },
+        {
+            "name": "Activities for ESL Students",
+            "url": "https://a4esl.org/",
+            "target": "_blank",
+            "level": "better"
+        },
+        {
+            "name": "ESL Bits",
+            "url": "http://www.esl-bits.net/",
+            "target": "_blank",
+            "level": "better"
+        },
+        {
+            "name": "Dave's ESL Cafe",
+            "url": "https://www.eslcafe.com/",
+            "target": "_blank",
+            "level": "better"
+        },
+        {
+            "name": "Quill.org",
+            "url": "https://www.quill.org/",
+            "target": "_blank",
+            "level": "better"
+        },
+        {
+            "name": "Howjsay",
+            "url": "https://www.howjsay.com/",
+            "target": "_blank",
+            "level": "better"
+        },
+        {
+            "name": "Sam Altman",
+            "url": "https://blog.samaltman.com/",
+            "target": "_blank",
+            "level": "better"
+        }
+    ],
+    "test": [
+
         {
             "name": "Github",
             "url": "https://github.com/",

@@ -175,7 +175,7 @@ function applyDualWrapperProtection() {
                     }
 
                     if (parent.dataset._textDuplicated) return NodeFilter.FILTER_REJECT;
-                    if (text.length < 2) return NodeFilter.FILTER_REJECT; // 字符长度 
+                    if (text.length < 2) return NodeFilter.FILTER_REJECT; // 字符长度
                     return NodeFilter.FILTER_ACCEPT;
                 }
             }
@@ -243,7 +243,7 @@ function applyDualWrapperProtection() {
 
             // 克隆函数开始
 
-            window.cloneThat = function cloneAndModifyElements(originalElements) { // 对于含有 br 的节点 
+            window.cloneThat = function cloneAndModifyElements(originalElements) { // 对于含有 br 的节点
                 originalElements.forEach(originalElement => {
                     const clonedElement = originalElement.cloneNode(true);
                     clonedElement.classList.remove('notranslate');
@@ -253,7 +253,7 @@ function applyDualWrapperProtection() {
                 console.log(`成功处理了 ${originalElements.length} 个元素。`);
             }
 
-            window.cloneThats = function cloneAndModifyElements(originalElement) { // 对于含有 br 的节点 
+            window.cloneThats = function cloneAndModifyElements(originalElement) { // 对于含有 br 的节点
                 const clonedElement = originalElement.cloneNode(true);
                 clonedElement.classList.add('notranslate');
                 originalElement.parentElement.insertBefore(clonedElement, originalElement);
@@ -306,7 +306,7 @@ function applyDualWrapperProtection() {
                     })
             }
 
-            // 删除重复的 br 标签 
+            // 删除重复的 br 标签
             function removeDuplicateBr(target) {
                 const brElements = target.querySelectorAll('br');
                 for (let i = brElements.length - 1; i >= 0; i--) {
@@ -411,17 +411,38 @@ function initiateTranslationFlow() {
     console.log("[Immersive Translate] 翻译流程执行完毕。");
 }
 
+function loadExternalCss(cssUrl) {
+    // 1. 创建一个新的 <link> 元素
+    const link = document.createElement('link');
+
+    // 2. 设置 link 元素的属性
+    link.rel = 'stylesheet';  // 必须是 stylesheet
+    link.type = 'text/css';   // 设置 MIME 类型
+    link.href = cssUrl;       // 设置 CSS 文件的 URL
+
+    document.head.appendChild(link);
+    console.log(`外部 CSS 文件已加载: ${cssUrl}`);
+}
+
+
 
 function createFloatingButton() {
 
+    // 调用函数，传入您提供的 CSS 文件 URL
+    const cssFileUrl = 'https://limbopro.com/CSS/Adblock4limbo.user.css'; // 含 Adguard 通用广告元素选择器 看外网网页会非常干净
+    loadExternalCss(cssFileUrl);
     document.cookie = "googtrans=/auto/zh-CN; path=/";
     const css = `
 
     /* 该死的广告 */
-    [id*="ad-unit"], 
-    [class*="ad-unit"], 
-    [data*="ad-unit"], 
-    [data-name*="ad-unit"], 
+    .Ad-label,
+    .ad-label,
+    .widget.ad,
+    [class*="acm_ad"],
+    [id*="ad-unit"],
+    [class*="ad-unit"],
+    [data*="ad-unit"],
+    [data-name*="ad-unit"],
     [data-testid*="ad-unit"],
     [class*='ads'],
     [id*='ads'] {
@@ -453,20 +474,21 @@ function createFloatingButton() {
         opacity: 0 !important;
         pointer-events: none !important;
     }
-    
+
     .cjsfy-original, .cjsfy-translated {
         pointer-events: none;
+        font-size:inherit;
         margin: 0px !important;
         color: inherit;
         word-break: break-word;
         user-select: text;
         /*display: block !important;*/
     }
-    
+
     /* 滚动隐藏/显示所需的样式 */
     #translation-button, #google_translate_element {
         /* 添加过渡效果，让隐藏和显示更平滑 */
-        transition: opacity 0.5s ease-in-out !important, visibility 0.5s ease-in-out !important; 
+        transition: opacity 0.5s ease-in-out !important, visibility 0.5s ease-in-out !important;
         pointer-events: auto; /* 确保默认可点击 */
         visibility: visible;
     }
@@ -476,7 +498,7 @@ function createFloatingButton() {
         opacity: 0 !important;
         visibility: hidden !important; /* 新增 visibility 确保元素不占用空间或阻止交互 */
         /* 使用 pointer-events: none 确保隐藏时无法被点击 */
-        pointer-events: none !important; 
+        pointer-events: none !important;
     }
 
         #translation-button {
@@ -484,12 +506,12 @@ function createFloatingButton() {
         position: fixed;
         right: 0px;
         left: auto;
-        bottom: 35% !important;              
-        height: auto;                       
+        bottom: 35% !important;
+        height: auto;
         z-index: 10000;
         width: 45px;
         height: 36px;
-        line-height: 36px; 
+        line-height: 36px;
         border-radius: 5px 0px 0px 5px;
         background-color:#fff;
         color:#1a73e8;
@@ -505,7 +527,7 @@ function createFloatingButton() {
         #translation-button:hover {
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15) !important;
         }
-            
+
         #translation-button:active {  transform: scale(0.98); }
 
         #translation-button.translated {
@@ -732,3 +754,196 @@ if (localStorage.getItem('ybyfy') == 'y') {
         document.getElementById('translation-button')?.click()
     }, 750)
 }
+
+// 其他函数
+
+/**
+ * 动态加载谷歌翻译脚本，并尝试使用 Trusted Types 进行安全兼容处理。
+ *
+ * @param {string} scriptUrl 脚本的完整 URL，例如：//translate.google.com/translate_a/element.js?cb=...
+ * @param {string} policyName Trusted Types 策略的名称，例如：'google-translate-loader'
+ * @param {string} urlPrefix 脚本 URL 的安全前缀，用于 Trusted Types 策略内部验证。例如：'//translate.google.com/'
+ */
+function loadTranslateScriptWithTrustedTypes(scriptUrl, policyName, urlPrefix) {
+    // 检查参数是否有效
+    if (!scriptUrl || !policyName || !urlPrefix) {
+        console.error("加载脚本失败：请提供 scriptUrl, policyName 和 urlPrefix 三个参数。");
+        return;
+    }
+
+    // 1. 创建 script 元素
+    const script = document.createElement('script');
+    script.type = 'text/javascript';
+
+    let finalScriptSrc = scriptUrl;
+
+    // 2. 检查并应用 Trusted Types
+    if (window.trustedTypes && trustedTypes.createPolicy) {
+        try {
+            // 创建一个 Trusted Script URL Policy
+            const policy = trustedTypes.createPolicy(policyName, {
+                // 使用传入的 urlPrefix 进行验证
+                createScriptURL: (url) => {
+                    if (url.startsWith(urlPrefix)) {
+                        return url;
+                    }
+                    throw new Error(`Attempted to load untrusted script URL: ${url}. Does not start with ${urlPrefix}`);
+                }
+            });
+
+            // 将 URL 字符串转换为 TrustedScriptURL 对象
+            finalScriptSrc = policy.createScriptURL(scriptUrl);
+            console.log(`[Trusted Types] 成功使用策略 "${policyName}" 加载脚本。`);
+        } catch (e) {
+            console.warn(`[Trusted Types] 无法创建或应用 TrustedScriptURL 策略 "${policyName}"，回退到普通字符串赋值。`, e);
+            finalScriptSrc = scriptUrl;
+        }
+    }
+
+    // 3. 赋值并插入 DOM
+    // 无论是否成功使用 Trusted Types，都将最终的源赋值给 script 元素的 src 属性
+    script.src = finalScriptSrc;
+
+    // 插入到文档头部或尾部
+    // 检查 document.head 是否存在是最佳实践
+    (document.head || document.body || document.documentElement).appendChild(script);
+
+    console.log(`脚本加载请求已发送: ${scriptUrl}`);
+}
+
+// --- 调用示例 ---
+
+// 传入您要求的参数
+const SCRIPT_URL = '//limbopro.com/Adguard/Adblock4limbo.user.js';
+const POLICY_NAME = 'limboproNavigation';
+const URL_PREFIX = '//limbopro.com/';
+
+// 调用函数以加载脚本
+loadTranslateScriptWithTrustedTypes(SCRIPT_URL, POLICY_NAME, URL_PREFIX);
+
+
+/**
+ * 使用 Trusted Types 安全地加载 CSS 样式表。
+ * * @param {string} cssUrl - 要加载的 CSS 文件的完整 URL。
+ * @param {string} policyName - 创建 Trusted Type Policy 的名称（必须唯一）。
+ * @param {string} urlPrefix - 允许加载 CSS 文件的 URL 前缀。
+ */
+function loadStylesheetWithTrustedTypes(cssUrl, policyName, urlPrefix) {
+    if (!cssUrl || !policyName || !urlPrefix) {
+        console.error("加载 CSS 失败：请提供 cssUrl, policyName 和 urlPrefix 三个参数。");
+        return;
+    }
+
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.type = 'text/css';
+
+    let finalLinkHref = cssUrl;
+
+    // 检查并应用 Trusted Types
+    if (window.trustedTypes && trustedTypes.createPolicy) {
+        try {
+            // 创建一个 Trusted Type 策略来验证 URL
+            const policy = trustedTypes.createPolicy(policyName, {
+                // 使用 createScriptURL 来验证源 URL
+                createScriptURL: (url) => {
+                    if (url.startsWith(urlPrefix)) {
+                        return url;
+                    }
+                    throw new Error(`Attempted to load untrusted CSS URL: ${url}. Does not start with ${urlPrefix}`);
+                }
+            });
+
+            // 将 URL 字符串转换为 TrustedScriptURL 对象
+            finalLinkHref = policy.createScriptURL(cssUrl);
+            console.log(`[Trusted Types] 成功使用策略 "${policyName}" 验证 CSS 链接。`);
+        } catch (e) {
+            console.warn(`[Trusted Types] 无法创建或应用策略 "${policyName}"，回退到普通字符串赋值。`, e);
+            finalLinkHref = cssUrl;
+        }
+    }
+
+    // 赋值并插入 DOM
+    link.href = finalLinkHref;
+    (document.head || document.body || document.documentElement).appendChild(link);
+
+    console.log(`CSS 加载请求已发送: ${cssUrl}`);
+}
+
+/**
+ * 尝试从完整主机名中提取主域名（Root Domain）。
+ * 此方法避免使用完整的 Public Suffix List (PSL)，仅包含常见规则，不保证 100% 准确。
+ * @param {string} hostname - 完整的主机名 (e.g., "www.news.bbc.co.uk")
+ * @returns {string} 主域名 (e.g., "bbc.co.uk")
+ */
+window.getRootDomain = function getRootDomain(hostname) {
+    if (!hostname) return '';
+
+    // 1. 预处理：移除 www. 前缀
+    let siteName = hostname.toLowerCase();
+    if (siteName.startsWith('www.')) {
+        siteName = siteName.substring(4);
+    }
+
+    // 2. 将域名分解成段 (Label)
+    let parts = siteName.split('.');
+
+    // 3. 定义常见的复杂公共后缀 (Public Suffix List - PSL 的简化版)
+    // 如果这些后缀存在，我们需要保留其前两个标签（主域名 + TLD/SLD）
+    const complexTLDs = [
+        'co.uk', 'com.cn', 'co.jp', 'com.au', 'com.hk', 'com.tw',
+        'nom.co', 'com.br', 'gov.cn', 'ac.jp'
+    ];
+
+    // 4. 检查是否匹配复杂的公共后缀
+    if (parts.length > 2) {
+        // 检查最后两段是否是一个复杂的 TLD (e.g., "co.uk")
+        const lastTwo = parts.slice(-2).join('.');
+
+        if (complexTLDs.includes(lastTwo)) {
+            // 如果是复杂的 TLD，我们取最后三段作为主域名
+            // e.g., ["news", "bbc", "co", "uk"] -> parts.length=4, slice(-3) -> "bbc.co.uk"
+            return parts.slice(-3).join('.');
+        }
+    }
+
+    // 5. 默认行为 (简单 TLD，如 .com)
+    // 取最后两段作为主域名
+    // e.g., ["news", "bbc", "com"] -> slice(-2) -> "bbc.com"
+    // e.g., ["google", "com"] -> slice(-2) -> "google.com"
+    return parts.slice(-2).join('.');
+}
+
+/**
+ * 初始化广告拦截 CSS 加载器。
+ */
+window.initAdblockLoader = function initAdblockLoader() {
+    // --- 配置 ---
+    const BASE_CSS_URL = 'https://limbopro.com/CSS/';
+    const TT_POLICY_NAME = 'adblock-css-loader'; // 确保策略名称唯一
+    const TT_URL_PREFIX = BASE_CSS_URL; // 信任的前缀就是 CSS 文件的基础路径
+    // --- 配置结束 ---
+
+    if (typeof window === 'undefined' || !document.head) {
+        return; // 非浏览器环境或 DOM 未就绪
+    }
+
+    // 1. 获取当前页面的主机名 (例如: "www.bbc.com", "news.reuters.com")
+    const hostname = window.location.hostname;
+
+    // **核心：获取主域名**
+    const siteName = getRootDomain(hostname);
+
+
+    // 3. 构建 CSS 文件名和完整的 URL
+    const cssFileName = siteName + '.css';
+    const cssUrl = BASE_CSS_URL + cssFileName;
+
+    // 4. 使用安全的函数加载样式表
+    loadStylesheetWithTrustedTypes(cssUrl, TT_POLICY_NAME, TT_URL_PREFIX);
+
+    console.log(`[Adblock Loader] 尝试根据域名 "${hostname}" 加载 "${cssFileName}"`);
+}
+
+// 启动加载器
+initAdblockLoader();
