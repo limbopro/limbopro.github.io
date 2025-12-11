@@ -17,6 +17,8 @@
 
 document.cookie = "googtrans=/auto/zh-CN; path=/";
 
+
+
 function loadGoogleTranslateUI() {
 
     // 如果 UI 已存在，直接返回
@@ -102,7 +104,7 @@ function loadGoogleTranslateUI() {
 
     // --- 4. 超时检查和清理机制 ---
 
-    const checkDelay = 15000;
+    const checkDelay = 8000;
     const successSelector = '.skiptranslate.goog-te-gadget';
 
     setTimeout(() => {
@@ -113,7 +115,7 @@ function loadGoogleTranslateUI() {
                 'color: #FF9800; font-weight: bold; background: #fff3e0; padding: 4px 8px; border-radius: 4px;');
 
             const userAction = confirm(
-                '⚠️ 提示：\n\n谷歌翻译组件在 15 秒内未加载成功，翻译功能可能无法正常使用。\n\n可能的原因：\n1.内容安全策略（Content Security Policy, CSP），刷新也没用；\n2.网络问题，稍后刷新页面再试试；\n\n以上。'
+                '⚠️ 提示：\n\n谷歌翻译组件在 8 秒内未加载成功，翻译功能可能无法正常使用。\n\n可能的原因：\n1.内容安全策略（Content Security Policy, CSP），刷新也没用；\n2.网络问题，稍后刷新页面再试试；\n\n以上。'
             );
 
             if (userAction) {
@@ -124,12 +126,12 @@ function loadGoogleTranslateUI() {
             } else {
                 console.log("[Google Translate] UI 容器保留在页面上。");
             }
+
+            location.reload(true);
         }
     }, checkDelay);
 }
 
-// 您需要调用此函数来启动加载过程
-// loadGoogleTranslateUI();
 
 
 // --- II. 双包裹体创建逻辑 ---
@@ -750,11 +752,16 @@ function monitorClickAndUrlChange() {
 monitorClickAndUrlChange();
 
 if (localStorage.getItem('ybyfy') == 'y') {
-
     setTimeout(() => {
         document.getElementById('translation-button')?.click()
-    }, 750)
+    }, 1250)
 }
+
+setInterval(() => {
+    if (localStorage.getItem('ybyfy') == 'y' && document.querySelector('.skiptranslate.goog-te-gadget') == null) {
+        loadGoogleTranslateUI()
+    }
+}, 2000)
 
 // 其他函数
 
@@ -948,3 +955,4 @@ window.initAdblockLoader = function initAdblockLoader() {
 
 // 启动加载器
 initAdblockLoader();
+

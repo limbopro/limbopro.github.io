@@ -4214,12 +4214,14 @@ if (localStorage.getItem('huacisousuo') == 'true') {
 
 /*debug*/
 
-/* 反馈信息展示脚本 (重命名版) */
+/* 用户反馈信息展示脚本 (重命名版) */
+
+/* 反馈信息展示脚本 (重命名版 - 已增强) */
 
 /**
  * 目的：在页面加载时自动显示一个悬浮窗口，用于收集用户环境信息和脚本状态，以便反馈调试。
  * 1. 自动注入 CSS 样式并创建 DOM 结构。
- * 2. 自动收集 URL, UA/OS 信息，以及关键脚本加载状态。
+ * 2. 自动收集 URL, UA/OS 信息，以及关键脚本、元素、全局变量和 AJAX 库状态。
  * 3. 提供“复制调试信息”功能。
  * 4. 2 分钟后自动移除。
  */
@@ -4230,7 +4232,8 @@ const AL_FEEDBACK_TIMEOUT_MS = 120000; // 重命名变量
 const AL_TARGET_SCRIPTS = [ // 重命名变量
     'Adblock4limbo.user.js',
     'Adblock4limbo.function.js',
-    'Adblock4limbo.immersiveTranslation.user.js'
+    'Adblock4limbo.immersiveTranslation.user.js',
+    'isAgent.js'
 ];
 
 
@@ -4276,16 +4279,14 @@ window.alFeedback_injectStyles = function alFeedback_injectStyles() { // 重命�
             padding-left: 10px;
         }
         .al-info-block { /* 重命名类名 */
-    margin-top: 15px;
-    padding-top: 10px;
-    border-top: 1px solid rgba(255, 255, 255, 0.3);
-    font-size: 14px;
-    height: 200px;
-    /* --- 关键修改：从 overlay 改为 scroll --- */
-    overflow: scroll; 
-    /* -------------------------------------- */
-    word-break: break-all;
-}
+            margin-top: 15px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.3);
+            font-size: 14px;
+            height: 200px;
+            overflow: scroll; 
+            word-break: break-all;
+        }
         .al-copy-btn { /* 重命名类名 */
             display: block;
             width: 100%;
@@ -4325,16 +4326,17 @@ window.alFeedback_injectStyles = function alFeedback_injectStyles() { // 重命�
 }
 
 /**
- * 检查目标脚本是否存在于当前页面
- * @returns {string} 返回包含脚本检查状态的 HTML 列表
+ * 检查目标脚本、关键 DOM 元素、全局变量和 AJAX 库/API 的存在状态 (已增强)
+ * @returns {string} 返回包含所有检查状态的 HTML 列表
  */
 function alFeedback_checkScriptExistence() { // 重命名函数
     const scripts = document.getElementsByTagName('script');
-    let statusHtml = '<ul class="al-script-status-list">'; // 使用新的类名
+    let statusHtml = '<ul class="al-script-status-list">';
 
-    AL_TARGET_SCRIPTS.forEach(targetName => { // 使用新的变量名
+    // --- 脚本文件状态 ---
+    statusHtml += '<li><strong>--- 脚本文件状态 ---</strong></li>';
+    AL_TARGET_SCRIPTS.forEach(targetName => {
         let found = false;
-
         for (let i = 0; i < scripts.length; i++) {
             const src = scripts[i].src;
             if (src && src.includes(targetName)) {
@@ -4342,16 +4344,48 @@ function alFeedback_checkScriptExistence() { // 重命名函数
                 break;
             }
         }
-
-        const statusClass = found ? 'al-script-loaded' : 'al-script-missing'; // 使用新的类名
+        const statusClass = found ? 'al-script-loaded' : 'al-script-missing'; 
         const statusIcon = found ? '已挂载✅' : '未挂载❌';
-
-        statusHtml += `
-            <li>
-                <span class="${statusClass}">${statusIcon} ${targetName}</span>
-            </li>
-        `;
+        statusHtml += `<li><span class="${statusClass}">${statusIcon} ${targetName}</span></li>`;
     });
+    
+    // --- 关键元素状态 ---
+    statusHtml += '<li><strong>--- 关键元素状态 ---</strong></li>';
+    const TARGET_ELEMENTS = [
+        { id: 'dh_button', name: '导航按钮' },
+        { id: 'translation-button', name: '沉浸式翻译按钮' }
+    ];
+
+    TARGET_ELEMENTS.forEach(item => {
+        const found = !!document.getElementById(item.id);
+        const statusClass = found ? 'al-script-loaded' : 'al-script-missing';
+        const statusIcon = found ? '存在✅' : '缺失❌';
+        statusHtml += `<li><span class="${statusClass}">${statusIcon} 元素: ${item.name} (ID: ${item.id})</span></li>`;
+    });
+
+    // --- 全局变量状态 (window.isAgent) ---
+    statusHtml += '<li><strong>--- 全局变量状态 ---</strong></li>';
+    const isAgentExists = typeof window.isAgent !== 'undefined';
+    const isAgentStatusClass = isAgentExists ? 'al-script-loaded' : 'al-script-missing';
+    const isAgentStatusIcon = isAgentExists ? '存在✅' : '缺失❌';
+    statusHtml += `<li><span class="${isAgentStatusClass}">${isAgentStatusIcon} 全局变量: window.isAgent</span></li>`;
+    
+    // --- 异步请求/库状态 (AJAX Heuristic Check) ---
+    statusHtml += '<li><strong>--- 异步请求/库状态 (推测AJAX) ---</strong></li>';
+    
+    const AJAX_CHECKS = [
+        { name: 'window.XMLHttpRequest', exists: typeof window.XMLHttpRequest !== 'undefined' },
+        { name: 'window.fetch', exists: typeof window.fetch === 'function' },
+        { name: 'window.jQuery (或 $)', exists: typeof window.jQuery !== 'undefined' || typeof window.$ !== 'undefined' },
+        { name: 'window.axios', exists: typeof window.axios !== 'undefined' }
+    ];
+
+    AJAX_CHECKS.forEach(check => {
+        const statusClass = check.exists ? 'al-script-loaded' : 'al-script-missing';
+        const statusIcon = check.exists ? '存在✅' : '缺失❌';
+        statusHtml += `<li><span class="${statusClass}">${statusIcon} ${check.name}</span></li>`;
+    });
+
 
     statusHtml += '</ul>';
     return statusHtml;
@@ -4360,7 +4394,6 @@ function alFeedback_checkScriptExistence() { // 重命名函数
 
 /**
  * 核心复制函数：将调试信息复制到剪贴板
- * ⚠️ 注意：此函数逻辑仅提取特定 ID 块内的系统信息和脚本状态。
  */
 function alFeedback_copyDebugInfo(infoBlockId) { // 重命名函数
     const infoBlock = document.getElementById(infoBlockId);
@@ -4449,7 +4482,7 @@ window.alFeedback_showPanel = function alFeedback_showPanel() { // 重命名函�
             <br>
             <strong>UA:</strong> ${userAgent}
             <br>
-            <strong>关键脚本加载状态:</strong> 
+            <strong>关键组件加载状态:</strong> 
             ${scriptStatusHtml} 
         </div>
         
@@ -4484,7 +4517,7 @@ window.alFeedback_copyDebugInfo = alFeedback_copyDebugInfo;
 
 // --- 脚本主流程：自动显示弹窗 ---
 
-// 自动显示弹窗的调用 (如果你需要它在脚本加载时自动运行)
+// 自动显示弹窗的调用 (如果您希望它在脚本加载时自动运行，请取消注释下一行)
 // alFeedback_showPanel(); 
 
 console.log(`脚本已运行，自动显示反馈信息面板。`);

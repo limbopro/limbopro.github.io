@@ -7,19 +7,19 @@
     <!-- <link rel=preload - NSFW grayscale() css settings > -->
 
     <!-- <link rel=preload> -->
-        <link rel="preload" href="usr/themes/handsome/assets/css/postContent.css" as="style">
-    <link rel="preload" href="usr/themes/handsome/assets/libs/bootstrap/css/bootstrap.min.css" as="style">
-    <link rel="preload" href="usr/themes/handsome/assets/css/origin/function.min.css" as="style">
-    <link rel="preload" href="usr/themes/handsome/assets/css/handsome.min.css" as="style">
-    <link rel="preload" href="usr/themes/handsome/assets/css/features/coolopacity.min.css" as="style">
+        <link rel="preload" href="/usr/themes/handsome/assets/css/postContent.css" as="style">
+    <!--<link rel="preload" href="/usr/themes/handsome/assets/libs/bootstrap/css/bootstrap.min.css" as="style">-->
+    <link rel="preload" href="/usr/themes/handsome/assets/css/origin/function.min.css" as="style">
+    <link rel="preload" href="/usr/themes/handsome/assets/css/handsome.min.css" as="style">
+    <link rel="preload" href="/usr/themes/handsome/assets/css/features/coolopacity.min.css" as="style">
     <!-- <link rel="preload" href="/usr/themes/handsome/assets/css/color.css" as="style">
 -->
     <!-- <link rel="preload" href="/usr/themes/handsome/assets/css/features/dark.min.css" as="style"> -->
     <!-- <link rel="preload" href="/usr/themes/handsome/assets/css/color.css" as="style"> -->
-    <link rel="preload" href="usr/plugins/TableOfContents/css/toc_style.css" as="style">
-    <link rel="preload" href="usr/themes/handsome/assets/libs/bootstrap/fonts/glyphicons-halflings-regular.woff2"
+    <link rel="preload" href="/usr/plugins/TableOfContents/css/toc_style.css" as="style">
+    <link rel="preload" href="/usr/themes/handsome/assets/libs/bootstrap/fonts/glyphicons-halflings-regular.woff2"
         as="font" type="font/woff2" crossorigin="anonymous">
-    <!-- <link rel="preload" href="/usr/themes/handsome/assets/fonts/fontello/fontello.woff" as="font" type="font/woff" crossorigin="anonymous"> -->
+    <link rel="preload" href="/usr/themes/handsome/assets/fonts/fontello/fontello.woff" as="font" type="font/woff" crossorigin="anonymous">
     <!-- <link rel="preload" href="/usr/themes/handsome/codecopy.js" as="script"> -->
     <!-- End <link rel=preload> -->
 
@@ -80,8 +80,8 @@
     <!-- End Sharethis -->
 
     <!-- <title>联系我们 - 毒奶 - 欢迎使用代理访问本站。</title> -->
-            <link rel="icon" type="image/ico" href="favicon.ico">
-        <link rel="stylesheet" type="text/css" href="usr/plugins/TableOfContents/css/toc_style.css" />
+            <link rel="icon" type="image/ico" href="/favicon.ico">
+        <link rel="stylesheet" type="text/css" href="/usr/plugins/TableOfContents/css/toc_style.css" />
 
     <!-- 由 Google 结构化数据标记助手生成的 JSON-LD 标记。 -->
     <script type="application/ld+json">
@@ -105,7 +105,7 @@
     "url" : "https://www.instagram.com/limboprossr"
     }],
     "datePublished" : "2019-05-12",
-    "dateModified" : "2025-11-14",
+    "dateModified" : "2025-12-11",
     "inLanguage":["zh"],
             "image" : "https://limbopro.com/usr/uploads/2019/11/425005431.jpg",
         "url" : "https://limbopro.com/6.html",
@@ -295,21 +295,27 @@
     
 
     <!-- 第三方CDN加载CSS -->
-    <link href="https://cdn.bootcss.com/bootstrap/3.3.4/css/bootstrap.min.css" rel="stylesheet">
+    <!-- <link href="https://cdn.bootcss.com/bootstrap/3.3.4/css/bootstrap.min.css" rel="stylesheet"> -->
 
 
     <!-- 本地css静态资源 -->
 
-            <link rel="stylesheet" href="usr/themes/handsome/assets/css/origin/function.min.css" type="text/css" />
-        <link rel="stylesheet" href="usr/themes/handsome/assets/css/handsome.min.css" type="text/css" />
-        <link rel="stylesheet" href="usr/themes/handsome/assets/css/bootstrap.min.css" type="text/css" />
+            <!--<link rel="stylesheet" href="https://limbopro.com/usr/themes/handsome/assets/css/origin/function.min.css" type="text/css" />-->
+        <!--<link rel="stylesheet" href="https://limbopro.com/usr/themes/handsome/assets/css/handsome.min.css" type="text/css" />-->
+        <!--<link rel="stylesheet" href="https://limbopro.com/usr/themes/handsome/assets/css/bootstrap.min.css" type="text/css" />-->
+
+         <link rel="stylesheet" href="/usr/themes/handsome/assets/css/origin/function.min.css" type="text/css" />
+        <link rel="stylesheet" href="/usr/themes/handsome/assets/css/handsome.min.css" type="text/css" />
+        <link rel="stylesheet" href="/usr/themes/handsome/assets/css/bootstrap.min.css" type="text/css" />
 
         
     
     <!--主题组件css文件加载-->
-            <link rel="stylesheet"
-            href="usr/themes/handsome/assets/css/features/coolopacity.min.css"
+           
+        <link rel="stylesheet"
+            href="https://limbopro.com/usr/themes/handsome/assets/css/features/coolopacity.min.css"
             type="text/css" />
+            
 
                     <style>
                 .cool-transparent .app:before {
@@ -343,6 +349,9 @@ body {
 background:black!important;
 }
 
+blockquote>p {
+font-size:14px;
+}
 
 .navbar {
     border:0px solid transparent;
@@ -357,6 +366,12 @@ a {
         display: none !important;
     }
 
+/*文章头图*/
+
+
+div.entry-thumbnail .img-responsive {
+    display:none !importm;
+}
 
 #body {
 text-align :left !important;
@@ -455,19 +470,19 @@ padding:0px !important;
     .nav-tabs-alt .nav-tabs>li[data-index="0"].active~.navs-slider-bar {
         transform: translateX(100%);
     }#aside .wrapper:hover {
-	background: url(usr/themes/handsome/assets/img/snow.gif);
+	background: url(https://limbopro.com/usr/themes/handsome/assets/img/snow.gif);
 	background-size: cover;
 	color: #000000ff;
 }    </style>
 
     <!--全站jquery-->
-    <script src="https://cdn.bootcss.com/jquery/2.1.4/jquery.min.js"></script>
+    <!--<script src="https://cdn.bootcss.com/jquery/2.1.4/jquery.min.js"></script>-->
 
     <!--网站统计代码-->
     <!-- Cloudflare Web Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "d1fb06c8c738484db4702b74068271b8"}'></script><!-- End Cloudflare Web Analytics -->
 
-<script src="Adguard/Adblock4limbo.function.js" async></script>
-<script src="usr/themes/handsome/assets/js/jquery.min.js"></script>
+<script src="/Adguard/Adblock4limbo.function.js" async></script>
+<script src="/usr/themes/handsome/assets/js/jquery.min.js"></script>
     <!-- Cloudflare Web Analytics -->
     <!-- <script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "d1fb06c8c738484db4702b74068271b8"}'></script> -->
     <!-- End Cloudflare Web Analytics -->
@@ -520,7 +535,7 @@ input.gsc-input {color:black !important}
         <span class="menu-icons"><i data-feather="menu"></i></span>
     </button>
     <!-- brand -->
-    <a href="index.html" class="navbar-brand text-lt">
+    <a href="https://limbopro.com/" class="navbar-brand text-lt">
         <span id="navbar-brand-day">
                                                 <i class="fontello fontello-home"></i>
                             <span class="hidden-folded m-l-xs">It's limboPro.com</span>
@@ -540,7 +555,7 @@ input.gsc-input {color:black !important}
         <ul class="nav navbar-nav navbar-right">
                                     <!--闲言碎语-->
             <li class="dropdown">
-                <a href="6.html#" data-toggle="dropdown" class="feathericons dropdown-toggle">
+                <a href="#" data-toggle="dropdown" class="feathericons dropdown-toggle">
                     <i data-feather="twitch"></i>
                     <span class="visible-xs-inline">
               闲言碎语              </span>
@@ -573,13 +588,13 @@ input.gsc-input {color:black !important}
           <div class="clearfix hidden-xs text-center hide  show" id="aside-user">
             <div class="dropdown wrapper ">
                 <div ui-nav>
-                          <a href="cross.html">
+                          <a href="https://limbopro.com/cross.html">
                             <span class="thumb-lg w-auto-folded avatar m-t-sm  ">
                   <img src="https://limbopro.com/usr/uploads/2022/04/921153523.jpg" class="img-full img-circle normal-shadow">
                 </span>
               </a>
                 </div>
-              <a href="6.html#" data-toggle="dropdown" class="dropdown-toggle hidden-folded  ">
+              <a href="#" data-toggle="dropdown" class="dropdown-toggle hidden-folded  ">
                 <span class="clear">
                   <span class="block m-t-sm">
                     <strong class="font-bold text-lt">毒奶</strong>
@@ -594,10 +609,10 @@ input.gsc-input {color:black !important}
                 <li class="wrapper b-b m-b-sm bg-info m-n">
                   <span class="arrow top hidden-folded arrow-info"></span>
                   <div>
-                                                  <p>下午好，是时候打个盹了</p>
+                                                <p>晚上好，注意早点休息</p>
                                   </div>
                   <div class="progress progress-xs m-b-none dker">
-                    <div class="progress-bar bg-white" data-toggle="tooltip" data-original-title="时间已经度过50.00%" style="width: 50.00%"></div>
+                    <div class="progress-bar bg-white" data-toggle="tooltip" data-original-title="时间已经度过87.50%" style="width: 87.50%"></div>
                   </div>
                 </li>
               </ul>
@@ -616,13 +631,13 @@ input.gsc-input {color:black !important}
               </li>
                                           <!--主页-->
               <li>
-                <a href="index.html" class="auto">
+                <a href="https://limbopro.com/" class="auto">
                     <span class="nav-icon"><i data-feather="home"></i></span>
                     <span>首页</span>
                 </a>
               </li>
               <!-- /主页 -->
-                            <li> <a target="_blank" href="search.html" class ="auto"><span class="nav-icon"><i class="fontello-search"></i></span><span>毒奶搜索</span></a></li><li> <a target="_blank" href="6.html" class ="auto"><span class="nav-icon"><i class="glyphicon glyphicon-envelope"></i></span><span>联系我们</span></a></li><li> <a target="_blank" href="archives/机场推荐.html" class ="auto"><span class="nav-icon"><i class="glyphicon glyphicon-plane"></i></span><span>机场推荐</span></a></li><li> <a target="_blank" href="archives/subconverter.html" class ="auto"><span class="nav-icon"><i class="glyphicon glyphicon-retweet"></i></span><span>订阅转换</span></a></li><li> <a target="_blank" href="daohang/index.html" class ="auto"><span class="nav-icon"><i class="fontello-menu"></i></span><span>毒奶导航</span></a></li><li> <a target="_blank" href="category/builder/index.html" class ="auto"><span class="nav-icon"><i class="fontello-gear"></i></span><span>建站优化</span></a></li><li> <a target="_blank" href="allpages.html" class ="auto"><span class="nav-icon"><i class="glyphicon glyphicon-book"></i></span><span>文章归档</span></a></li><li> <a target="_blank" href="links.html" class ="auto"><span class="nav-icon"><i class="glyphicon glyphicon-magnet"></i></span><span>友情链接</span></a></li>                              <li class="line dk"></li>
+                            <li> <a target="_blank" href="https://limbopro.com/search.html" class ="auto"><span class="nav-icon"><i class="glyphicon glyphicon-search"></i></span><span>毒奶搜索</span></a></li><li> <a target="_blank" href="https://limbopro.com/6.html" class ="auto"><span class="nav-icon"><i class="glyphicon glyphicon-envelope"></i></span><span>联系我们</span></a></li><li> <a target="_blank" href="https://limbopro.com/865.html" class ="auto"><span class="nav-icon"><i class="glyphicon glyphicon-plane"></i></span><span>机场推荐</span></a></li><li> <a target="_blank" href="https://limbopro.com/archives/subconverter.html" class ="auto"><span class="nav-icon"><i class="glyphicon glyphicon-retweet"></i></span><span>订阅转换</span></a></li><li> <a target="_blank" href="https://limbopro.com/daohang/index.html" class ="auto"><span class="nav-icon"><i class="glyphicon glyphicon-menu-hamburger"></i></span><span>毒奶导航</span></a></li><li> <a target="_blank" href="https://limbopro.com/category/builder/" class ="auto"><span class="nav-icon"><i class="glyphicon glyphicon-heart-empty"></i></span><span>建站优化</span></a></li><li> <a target="_blank" href="https://limbopro.com/allpages.html" class ="auto"><span class="nav-icon"><i class="glyphicon glyphicon-book"></i></span><span>文章归档</span></a></li><li> <a target="_blank" href="https://limbopro.com/links.html" class ="auto"><span class="nav-icon"><i class="glyphicon glyphicon-magnet"></i></span><span>友情链接</span></a></li>                              <li class="line dk"></li>
 			        <!--Components-->
               <li class="hidden-folded padder m-t m-b-sm text-muted text-xs">
                 <span>组成</span>
@@ -648,31 +663,31 @@ input.gsc-input {color:black !important}
                   </li>
                   <!--循环输出分类-->
 
-                    <li class="category-level-0 category-parent"><a  href="category/ssr/index.html"><b class="badge pull-right">42</b>科学上网</a></li><li class="category-level-0 category-parent"><a class="auto" href="category/builder/index.html"><span class="pull-right text-muted">
+                    <li class="category-level-0 category-parent"><a  href="https://limbopro.com/category/ssr/"><b class="badge pull-right">42</b>科学上网</a></li><li class="category-level-0 category-parent"><a class="auto" href="https://limbopro.com/category/builder/"><span class="pull-right text-muted">
                     <i class="fontello icon-fw fontello-angle-right text"></i>
                     <i class="fontello icon-fw fontello-angle-down text-active"></i>
-                  </span><span class="parent_name">建站优化</span></a><ul class="nav nav-sub dk child-nav"><li class="category-level-1 category-child category-level-odd"><a  href="category/LNMP/index.html"><b class="badge pull-right">38</b>建站指南</a></li><li class="category-level-1 category-child category-level-odd"><a  href="category/Typecho/index.html"><b class="badge pull-right">60</b>网站优化</a></li><li class="category-level-1 category-child category-level-odd"><a  href="category/Bulletin/index.html"><b class="badge pull-right">9</b>运营通报</a></li><li class="category-level-1 category-child category-level-odd"><a  href="category/website-protection/index.html"><b class="badge pull-right">10</b>网站防御</a></li></ul></li><li class="category-level-0 category-parent"><a class="auto" href="category/shares/index.html"><span class="pull-right text-muted">
+                  </span><span class="parent_name">建站优化</span></a><ul class="nav nav-sub dk child-nav"><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/LNMP/"><b class="badge pull-right">38</b>建站指南</a></li><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/Typecho/"><b class="badge pull-right">60</b>网站优化</a></li><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/Bulletin/"><b class="badge pull-right">9</b>运营通报</a></li><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/website-protection/"><b class="badge pull-right">10</b>网站防御</a></li></ul></li><li class="category-level-0 category-parent"><a class="auto" href="https://limbopro.com/category/shares/"><span class="pull-right text-muted">
                     <i class="fontello icon-fw fontello-angle-right text"></i>
                     <i class="fontello icon-fw fontello-angle-down text-active"></i>
-                  </span><span class="parent_name">实用分享</span></a><ul class="nav nav-sub dk child-nav"><li class="category-level-1 category-child category-level-odd"><a class="auto" href="category/tools/index.html"><span class="pull-right text-muted">
+                  </span><span class="parent_name">实用分享</span></a><ul class="nav nav-sub dk child-nav"><li class="category-level-1 category-child category-level-odd"><a class="auto" href="https://limbopro.com/category/tools/"><span class="pull-right text-muted">
                     <i class="fontello icon-fw fontello-angle-right text"></i>
                     <i class="fontello icon-fw fontello-angle-down text-active"></i>
-                  </span><span class="parent_name">实用工具</span></a><ul class="nav nav-sub dk child-nav"><li class="category-level-2 category-child category-level-even"><a  href="category/downloader/index.html"><b class="badge pull-right">13</b>下载工具</a></li></ul></li><li class="category-level-1 category-child category-level-odd"><a  href="category/software-skills/index.html"><b class="badge pull-right">128</b>软件百科</a></li><li class="category-level-1 category-child category-level-odd"><a  href="category/Toilet-reading/index.html"><b class="badge pull-right">30</b>书单推荐</a></li><li class="category-level-1 category-child category-level-odd"><a  href="category/AfterFQ/index.html"><b class="badge pull-right">4</b>毒奶世界</a></li><li class="category-level-1 category-child category-level-odd"><a  href="category/master-care/index.html"><b class="badge pull-right">30</b>无主杂记</a></li><li class="category-level-1 category-child category-level-odd"><a  href="category/shell/index.html"><b class="badge pull-right">15</b>常用命令</a></li></ul></li><li class="category-level-0 category-parent"><a class="auto" href="category/beautyandsex/index.html"><span class="pull-right text-muted">
+                  </span><span class="parent_name">实用工具</span></a><ul class="nav nav-sub dk child-nav"><li class="category-level-2 category-child category-level-even"><a  href="https://limbopro.com/category/downloader/"><b class="badge pull-right">13</b>下载工具</a></li></ul></li><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/software-skills/"><b class="badge pull-right">130</b>软件百科</a></li><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/Toilet-reading/"><b class="badge pull-right">30</b>书单推荐</a></li><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/AfterFQ/"><b class="badge pull-right">4</b>毒奶世界</a></li><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/master-care/"><b class="badge pull-right">30</b>无主杂记</a></li><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/shell/"><b class="badge pull-right">15</b>常用命令</a></li></ul></li><li class="category-level-0 category-parent"><a class="auto" href="https://limbopro.com/category/beautyandsex/"><span class="pull-right text-muted">
                     <i class="fontello icon-fw fontello-angle-right text"></i>
                     <i class="fontello icon-fw fontello-angle-down text-active"></i>
-                  </span><span class="parent_name">开车美图</span></a><ul class="nav nav-sub dk child-nav"><li class="category-level-1 category-child category-level-odd"><a  href="category/NSFW/index.html"><b class="badge pull-right">35</b>开车专栏</a></li><li class="category-level-1 category-child category-level-odd"><a  href="category/instagram/index.html"><b class="badge pull-right">25</b>美图欣赏</a></li><li class="category-level-1 category-child category-level-odd"><a  href="category/technologyart/index.html"><b class="badge pull-right">3</b>科技美学</a></li></ul></li><li class="category-level-0 category-parent"><a class="auto" href="category/movies/index.html"><span class="pull-right text-muted">
+                  </span><span class="parent_name">开车美图</span></a><ul class="nav nav-sub dk child-nav"><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/NSFW/"><b class="badge pull-right">35</b>开车专栏</a></li><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/instagram/"><b class="badge pull-right">25</b>美图欣赏</a></li><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/technologyart/"><b class="badge pull-right">3</b>科技美学</a></li></ul></li><li class="category-level-0 category-parent"><a class="auto" href="https://limbopro.com/category/movies/"><span class="pull-right text-muted">
                     <i class="fontello icon-fw fontello-angle-right text"></i>
                     <i class="fontello icon-fw fontello-angle-down text-active"></i>
-                  </span><span class="parent_name">影视剧集</span></a><ul class="nav nav-sub dk child-nav"><li class="category-level-1 category-child category-level-odd"><a  href="category/hot-movies/index.html"><b class="badge pull-right">36</b>追剧小组</a></li><li class="category-level-1 category-child category-level-odd"><a  href="category/films-recommend/index.html"><b class="badge pull-right">45</b>电影推荐</a></li></ul></li><li class="category-level-0 category-parent"><a class="auto" href="category/记录/index.html"><span class="pull-right text-muted">
+                  </span><span class="parent_name">影视剧集</span></a><ul class="nav nav-sub dk child-nav"><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/hot-movies/"><b class="badge pull-right">36</b>追剧小组</a></li><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/films-recommend/"><b class="badge pull-right">45</b>电影推荐</a></li></ul></li><li class="category-level-0 category-parent"><a class="auto" href="https://limbopro.com/category/%E8%AE%B0%E5%BD%95/"><span class="pull-right text-muted">
                     <i class="fontello icon-fw fontello-angle-right text"></i>
                     <i class="fontello icon-fw fontello-angle-down text-active"></i>
-                  </span><span class="parent_name">历史记录</span></a><ul class="nav nav-sub dk child-nav"><li class="category-level-1 category-child category-level-odd"><a  href="category/telegram-anecdote/index.html"><b class="badge pull-right">13</b>电报奇闻</a></li><li class="category-level-1 category-child category-level-odd"><a  href="category/Internetlog/index.html"><b class="badge pull-right">15</b>联网观察</a></li></ul></li><li class="category-level-0 category-parent"><a class="auto" href="category/bztj/index.html"><span class="pull-right text-muted">
+                  </span><span class="parent_name">历史记录</span></a><ul class="nav nav-sub dk child-nav"><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/telegram-anecdote/"><b class="badge pull-right">13</b>电报奇闻</a></li><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/Internetlog/"><b class="badge pull-right">15</b>联网观察</a></li></ul></li><li class="category-level-0 category-parent"><a class="auto" href="https://limbopro.com/category/bztj/"><span class="pull-right text-muted">
                     <i class="fontello icon-fw fontello-angle-right text"></i>
                     <i class="fontello icon-fw fontello-angle-down text-active"></i>
-                  </span><span class="parent_name">博主推荐</span></a><ul class="nav nav-sub dk child-nav"><li class="category-level-1 category-child category-level-odd"><a  href="category/游戏推荐/index.html"><b class="badge pull-right">2</b>游戏推荐</a></li></ul></li><li class="category-level-0 category-parent"><a class="auto" href="category/Best_Practices/index.html"><span class="pull-right text-muted">
+                  </span><span class="parent_name">博主推荐</span></a><ul class="nav nav-sub dk child-nav"><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/%E6%B8%B8%E6%88%8F%E6%8E%A8%E8%8D%90/"><b class="badge pull-right">2</b>游戏推荐</a></li></ul></li><li class="category-level-0 category-parent"><a class="auto" href="https://limbopro.com/category/Best_Practices/"><span class="pull-right text-muted">
                     <i class="fontello icon-fw fontello-angle-right text"></i>
                     <i class="fontello icon-fw fontello-angle-down text-active"></i>
-                  </span><span class="parent_name">最佳实践</span></a><ul class="nav nav-sub dk child-nav"><li class="category-level-1 category-child category-level-odd"><a  href="category/前端实践/index.html"><b class="badge pull-right">9</b>前端实践</a></li></ul></li>                    
+                  </span><span class="parent_name">最佳实践</span></a><ul class="nav nav-sub dk child-nav"><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/%E5%89%8D%E7%AB%AF%E5%AE%9E%E8%B7%B5/"><b class="badge pull-right">9</b>前端实践</a></li></ul></li>                    
                     <!--/循环输出分类-->
 
                 </ul>
@@ -695,12 +710,12 @@ input.gsc-input {color:black !important}
                     </a>
                   </li><!--这个字段不会被显示出来-->
                   <!--循环输出独立页面-->
-                                                                                   <li><a href="archives/机场推荐.html"><span>稳定好用的SS/Trojan/v2Ray机场推荐（2025年11月15日更新）</span></a></li>
-                                                                 <li><a href="cross.html"><span>闲言碎语</span></a></li>
-                                                                 <li><a href="win-win.html"><span>商务合作</span></a></li>
-                                                                 <li><a href="allpages.html"><span>文章归档</span></a></li>
-                                                                 <li><a href="6.html"><span>联系我们</span></a></li>
-                                                                 <li><a href="links.html"><span>友情链接</span></a></li>
+                                                                                   <li><a href="https://limbopro.com/865.html"><span>稳定好用的SS/Trojan/v2Ray机场推荐（2025年12月10日更新）✨❤️</span></a></li>
+                                                                 <li><a href="https://limbopro.com/cross.html"><span>闲言碎语</span></a></li>
+                                                                 <li><a href="https://limbopro.com/win-win.html"><span>商务合作</span></a></li>
+                                                                 <li><a href="https://limbopro.com/allpages.html"><span>文章归档</span></a></li>
+                                                                 <li><a href="https://limbopro.com/6.html"><span>联系我们</span></a></li>
+                                                                 <li><a href="https://limbopro.com/links.html"><span>友情链接</span></a></li>
                                    </ul>
               </li>
               <!--友情链接-->
@@ -736,13 +751,13 @@ data-placement="top"><a rel='noopener' href="https://139931.xyz" target="_blank"
                     <div id="left_footer" class="footer wrapper-xs text-center nav-xs lt">
                   
                                     <div class="col-xs-6 no-padder">
-                      <a target="_blank" class="tinav" href="feed/index.html" title="" data-toggle="tooltip" data-placement="top" data-original-title="文章RSS地址">
+                      <a target="_blank" class="tinav" href="https://limbopro.com/feed/" title="" data-toggle="tooltip" data-placement="top" data-original-title="文章RSS地址">
                           <span class="left-bottom-icons block"><i data-feather="rss"></i></span>
                           <small class="text-muted">文章</small>
                       </a>
                   </div>
                   <div class="col-xs-6 no-padder">
-                      <a target="_blank" href="feed/comments/index.html" title="" data-toggle="tooltip" data-placement="top" data-original-title="评论RSS地址">
+                      <a target="_blank" href="https://limbopro.com/feed/comments/" title="" data-toggle="tooltip" data-placement="top" data-original-title="评论RSS地址">
                           <span class="left-bottom-icons block"><i data-feather="message-square"></i></span>
                           <small class="text-muted">评论</small>
                       </a>
@@ -776,15 +791,15 @@ data-placement="top"><a rel='noopener' href="https://139931.xyz" target="_blank"
 data-toggle="tooltip" data-placement="right" data-original-title="阅读模式"><i data-feather="book-open"></i></a></h1></header>      <div class="wrapper-md" id="post-panel">
 		<!--正文顶部的部件，如“返回首页”-->
        <ol class="breadcrumb bg-white-pure" itemscope=""><li>
-                 <a href="index.html" itemprop="breadcrumb" title="返回首页" data-toggle="tooltip"><span class="home-icons"><i data-feather="home"></i></span>首页</a>
+                 <a href="https://limbopro.com/" itemprop="breadcrumb" title="返回首页" data-toggle="tooltip"><span class="home-icons"><i data-feather="home"></i></span>首页</a>
              </li><li class="active">联系我们&nbsp;&nbsp;</li></ol>       <!--博客文章样式 begin with .blog-post-->
        <div id="postpage" class="blog-post">
         <article class="single-post panel">
         <!--文章页面的头图-->
-            <div class="entry-thumbnail" aria-hidden="true"><img width="100%" height="auto"  src="6.html" 
+            <div class="entry-thumbnail" aria-hidden="true"><img width="100%" height="auto"  src="" 
  class="img-responsive lazy" /></div>         <!--文章内容-->
          <div id="post-content" class="wrapper-lg">
-             <div class="entry-content l-h-2x" id="md_handsome_origin"><div class="tox-index"><div class="tox-title">本文目录 <span class="tox-toggle">[<a id="content-index-togglelink" href="javascript:content_index_toggleToc()">隐藏</a>]</span></div><div id="toc-content"><ul><li class='toc-level2'><a href='6.html#联系我们的方法'> 联系我们的方法</a></li><li class='toc-level2'><a href='6.html#自行解决问题的方法'> 自行解决问题的方法</a></li><li class='toc-level2'><a href='6.html#不失联的方法'> 不失联的方法</a></li><li class='toc-level2'><a href='6.html#转载文章的方法'> 转载文章的方法</a></li><li class='toc-level2'><a href='6.html#交换友链的方法'> 交换友链的方法</a></li><li class='toc-level2'><a href='6.html#关于毒奶博主'> 关于毒奶博主</a></li><li class='toc-level2'><a href='6.html#其他'> 其他</a></li></ul></li></ul></div></div>
+             <div class="entry-content l-h-2x" id="md_handsome_origin"><div class="tox-index"><div class="tox-title">本文目录 <span class="tox-toggle">[<a id="content-index-togglelink" href="javascript:content_index_toggleToc()">隐藏</a>]</span></div><div id="toc-content"><ul><li class='toc-level2'><a href='#联系我们的方法'> 联系我们的方法</a></li><li class='toc-level2'><a href='#自行解决问题的方法'> 自行解决问题的方法</a></li><li class='toc-level2'><a href='#不失联的方法'> 不失联的方法</a></li><li class='toc-level2'><a href='#转载文章的方法'> 转载文章的方法</a></li><li class='toc-level2'><a href='#交换友链的方法'> 交换友链的方法</a></li><li class='toc-level2'><a href='#关于毒奶博主'> 关于毒奶博主</a></li><li class='toc-level2'><a href='#其他'> 其他</a></li></ul></li></ul></div></div>
 
 
 
@@ -796,8 +811,11 @@ data-toggle="tooltip" data-placement="right" data-original-title="阅读模式">
 <p>任何时候你都可以点击页面右侧但<strong>邮件</strong>📧ico到达本页面：</p>
 <h3>主要联系方式</h3>
 <p><div class="tip inlineBlock info"><strong>电报机器人🤖</strong>： <span class="external-link"><a class="no-external-link" href="http://t.me/limboprobot" target="_blank">http://t.me/limboprobot<i data-feather='external-link'></i></a></span> （简单建议/问题反馈/有趣文章或讯息投稿/...）；<br />
-<strong>邮箱地址📧</strong>： <a href="https://limbopro.com/cdn-cgi/l/email-protection#40332532362923256e2c292d222f30322f6e232f2d00272d21292c6e232f2d"><span class="__cf_email__" data-cfemail="ddaeb8afabb4beb8f3b1b4b0bfb2adafb2f3beb2b09dbab0bcb4b1f3beb2b0">[email&#160;protected]</span></a>（简单建议/问题反馈/推广合作）； ⚠️因为匿名以及无法有效沟通核实处理的关系，请不要通过文章留言的方式反馈问题；</div>
-<p><div class="tip inlineBlock warning">联系时请务必直接表明 <strong>你是谁</strong> -&gt; <strong>你想干嘛</strong>🎯（问题反馈/建议/推给合作/...），以及<strong>一系列构成要素、必要细节</strong>（如需要追问一次补充一点细节，再追问则再补充的，则代表缺乏细节；如你不知道该注意什么细节，请暂时不要发送邮件；）；</div>
+<strong>邮箱地址📧</strong>： <a href="/cdn-cgi/l/email-protection#9fecfaede9f6fcfab1f3f6f2fdf0efedf0b1fcf0f2dff8f2fef6f3b1fcf0f2"><span class="__cf_email__" data-cfemail="65160017130c06004b090c08070a15170a4b060a08250208040c094b060a08">[email&#160;protected]</span></a>（简单建议/问题反馈/推广合作）； ⚠️因为匿名以及无法有效沟通核实处理的关系，请不要通过文章留言的方式反馈问题；</div>
+<p><div class="tip inlineBlock warning">在联系时，请务必<strong>直接且明确地说明</strong>以下内容：<br />
+1.<strong>您的身份</strong>（您是谁）；<br />
+2.<strong>联系目的</strong>（您希望达成何种目标，例如问题反馈、提出建议、探讨合作等）；<br />
+3.相关构成要素及必要细节（<strong>请一次性提供完整信息，包括背景、具体描述、预期结果等关键要素</strong>；若细节不足，可能需要补充追问，多次追问表明初始信息缺乏完整性；若您不确定应提供哪些细节，建议暂缓发送邮件，直至准备充分）。</div>
 <h3>匿名留言</h3>
 <p><strong>适用无需博主回复的留言</strong>：<span class="external-link"><a class="no-external-link" href="https://bit.ly/3JHDnAe" target="_blank">https://limbopro.com/feedback/<i data-feather='external-link'></i></a></span> （好看的番号？电影？网站？书籍？====，很多你非常想说的，想推荐的，想反馈的建议/意见==...）；很棒的网站及小工具等等，博主会尝试添加进网页右下角导航，也有可能随着文章一齐发表或推送到我们的频道；⚠️注意，以上这个动作不会立即执行，可能会涉及观察/体验/等等，当然，你不妨任何时候重新给我们留言以提醒我；</p>
 <h2 id="自行解决问题的方法"> 自行解决问题的方法</h2>
@@ -825,10 +843,10 @@ data-toggle="tooltip" data-placement="right" data-original-title="阅读模式">
 3.<strong>相同方式共享</strong> — 如果您再混合、转换或者基于本作品进行创作，您必须基于 <span class="external-link"><a class="no-external-link" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh-hans#ref-same-license" target="_blank">与原先许可协议相同的许可协议<i data-feather='external-link'></i></a></span> 分发您贡献的作品。<br />
 4.<strong>没有附加限制</strong> — 您不得适用法律术语或者 <span class="external-link"><a class="no-external-link" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh-hans#ref-technological-measures" target="_blank">技术措施<i data-feather='external-link'></i></a></span> 从而限制其他人做许可协议允许的事情。</div>
 <h2 id="交换友链的方法"> 交换友链的方法</h2>
-<p><div class="tip inlineBlock share">请<strong>按如下样式</strong>将你的网站名称/网站链接/图片及说明发送至邮件：<a href="https://limbopro.com/cdn-cgi/l/email-protection#e4978196928d8781ca888d89868b94968bca878b89a48389858d88ca878b89"><span class="__cf_email__" data-cfemail="9eedfbece8f7fdfbb0f2f7f3fcf1eeecf1b0fdf1f3def9f3fff7f2b0fdf1f3">[email&#160;protected]</span></a> ，发邮件前，请确保<strong>你也喜欢本站内容</strong>而不是仅为了添加友链，请确保<strong>你的站点有在更新且内容主题丰富</strong>；不保证一定会添加；以上。</div>
+<p><div class="tip inlineBlock share">请<strong>按如下样式</strong>将你的网站名称/网站链接/图片及说明发送至邮件：<a href="/cdn-cgi/l/email-protection#d6a5b3a4a0bfb5b3f8babfbbb4b9a6a4b9f8b5b9bb96b1bbb7bfbaf8b5b9bb"><span class="__cf_email__" data-cfemail="37445245415e5452195b5e5a55584745581954585a77505a565e5b1954585a">[email&#160;protected]</span></a> ，发邮件前，请确保<strong>你也喜欢本站内容</strong>而不是仅为了添加友链，请确保<strong>你的站点有在更新且内容主题丰富</strong>；不保证一定会添加；以上。</div>
 <h3>样式如下：</h3>
 <p><div class="tip inlineBlock info"><strong>网站名称</strong>：毒奶博主<br />
-<strong>网站链接</strong>：<a href="index.html">https://limbopro.com</a>；<br />
+<strong>网站链接</strong>：<a href="https://limbopro.com">https://limbopro.com</a>；<br />
 <strong>网站图片：</strong><a href="https://limbopro.com/usr/uploads/2019/11/1242907945.jpg">https://limbopro.com/usr/uploads/2019/11/1242907945.jpg</a> 或 <a href="https://limbopro.com/usr/uploads/2019/11/1601982288.jpg">https://limbopro.com/usr/uploads/2019/11/1601982288.jpg</a> (如为美观，可适当裁剪)；<br />
 <strong>网站说明</strong>：够了，我无法忍受你的行为，现在你将成为我们中的一员。；<br />
 本站背景图片来自，<span class="external-link"><a class="no-external-link" href="https://movie.douban.com/subject/2997134/" target="_blank">創：光速戰記<i data-feather='external-link'></i></a></span>；优秀电影 <span class="external-link"><a class="no-external-link" href="https://movie.douban.com/subject/26718828/" target="_blank">勇往直前 Only the Brave (2017)<i data-feather='external-link'></i></a></span> 导演作品；</div>
@@ -837,13 +855,13 @@ data-toggle="tooltip" data-placement="right" data-original-title="阅读模式">
 我们的初心，我们的未来</p>
 <p><div class="preview">
 <div class="post-inser post box-shadow-wrap-normal">
-<a href="archives/2041.html" target="_blank" class="post_inser_a no-external-link">
+<a href="https://limbopro.com/archives/2041.html" target="_blank" class="post_inser_a no-external-link">
 <div class="inner-image bg" style="background-image: url(https://limbopro.com/usr/uploads/2019/09/2211209831.jpg);background-size: cover;"></div>
 
 <div class="inner-content" >
-<p class="inser-title">关于毒奶（02.25.2025）</p>
+<p class="inser-title">关于毒奶（12.04.2025）</p>
 <div class="inster-summary text-muted">
-via Dragon Ball主理人说（近期的一些更新说明） 事实证明在 Chrome 下访问本博客效果最佳。近期...
+Dragon Ball.pngvia Dragon Ball主理人说（近期的一些更新说明） 事实证明在 Chrom...
 </div>
 </div>
 </a>
@@ -869,15 +887,15 @@ via Dragon Ball主理人说（近期的一些更新说明） 事实证明在 Chr
 </div>
 
 <!-- 评论区广告/Adguard -->
-<div> <a target="_blank" href="archives/12904.html"><img
+<div> <a target="_blank" href="https://limbopro.com/archives/12904.html"><img
       src="https://limbopro.com/usr/uploads/2021/03/3476932119.png" style="width: auto;"></a> </div>
-<div> <a target="_blank" href="archives/1098.html"><img
+<div> <a target="_blank" href="https://limbopro.com/archives/1098.html"><img
       src="https://limbopro.com/usr/uploads/2024/05/4070755969.png" style="width: auto;"></a> </div>
 <!-- 评论区广告/商务合作 -->
 <!--<div> <a target="_blank" href="https://limbopro.com/865.html"><img src="https://limbopro.com/usr/uploads/2021/02/1311601671.png" style="width: auto;"></a> </div>-->
-<div> <a target="_blank" href="win-win.html"><img
+<div> <a target="_blank" href="https://limbopro.com/win-win.html"><img
       src="https://limbopro.com/usr/uploads/2021/01/830145139.png" style="width: auto;"></a> </div>
-<a target="_blank" href="search.html"><img
+<a target="_blank" href="https://limbopro.com/search.html"><img
     src="https://limbopro.com/usr/uploads/2021/12/2084042701.png" alt="点击进入毒奶搜索，搜万物。" /></a>
 
 
@@ -907,18 +925,18 @@ via Dragon Ball主理人说（近期的一些更新说明） 事实证明在 Chr
 <h5 class="widget-title m-t-none text-md">
   最新文章推荐</h5>
 <p></p>
-    <li class="list-group-item"><a href="archives/34562.html">让 Grok 帮写了一个网页划词搜索🔍🔞油猴脚本</a></li>
-      <li class="list-group-item"><a href="archives/34518.html">让 Grok 帮写了一个电报匿名留言板💬 [底部新增服务可用性提示]</a></li>
-      <li class="list-group-item"><a href="archives/30340.html">一周互联网观察 👀 —— 10.28.2025 ♻️ 更新</a></li>
-      <li class="list-group-item"><a href="archives/34346.html">提升幸福感的4种“快乐物质”</a></li>
-      <li class="list-group-item"><a href="archives/34295.html">如何使用 Google Gemini(Nano Banana) 生成个性化公仔手办模型？</a></li>
+    <li class="list-group-item"><a href="https://limbopro.com/archives/30340.html">一周互联网观察 👀 —— 12.04.2025 ♻️ 更新☁️</a></li>
+      <li class="list-group-item"><a href="https://limbopro.com/archives/34687.html">[亲测有效] 2025年+86用户如何申请谷歌邮箱？</a></li>
+      <li class="list-group-item"><a href="https://limbopro.com/archives/34678.html">[AI Q&amp;A] Ai给普通人带来的最大好处是什么？🤖</a></li>
+      <li class="list-group-item"><a href="https://limbopro.com/archives/34562.html">让 Grok 帮写了一个网页划词搜索🔍🔞油猴脚本?👌</a></li>
+      <li class="list-group-item"><a href="https://limbopro.com/archives/34518.html">让 Grok 帮写了一个电报匿名留言板💬 [底部新增服务可用性提示]</a></li>
   <p></p>
 
 
 <br>
 
 <div id="disqus_thread"></div>
-<script data-cfasync="false" src="cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 
   /**
    * *  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
@@ -984,7 +1002,7 @@ via Dragon Ball主理人说（近期的一些更新说明） 事实证明在 Chr
       <section id="tabs-4" class="widget widget_tabs clear">
        <div class="nav-tabs-alt no-js-hide">
         <ul class="nav nav-tabs nav-justified box-shadow-bottom-normal tablist" role="tablist">
-         <li data-index="0" class="active" role="presentation"> <a href="6.html#widget-tabs-4-hots" role="tab" aria-controls="widget-tabs-4-hots" aria-expanded="true" data-toggle="tab"><div class="sidebar-icon wrapper-sm"><i data-feather="thumbs-up"></i></div><span class="sr-only">热门文章</span> </a></li>
+         <li data-index="0" class="active" role="presentation"> <a href="#widget-tabs-4-hots" role="tab" aria-controls="widget-tabs-4-hots" aria-expanded="true" data-toggle="tab"><div class="sidebar-icon wrapper-sm"><i data-feather="thumbs-up"></i></div><span class="sr-only">热门文章</span> </a></li>
                        
         </ul>
        </div>
@@ -997,44 +1015,44 @@ via Dragon Ball主理人说（近期的一些更新说明） 事实证明在 Chr
        <h5 class="widget-title m-t-none text-md">热门分类</h5>
        
        <li class="list-group-item text-second"><span class="nav-icon"><i data-feather="battery-charging"></i></span>
-       <span class="badge pull-right" style="color:white"><a target="_self" href="category/Typecho/index.html">
+       <span class="badge pull-right" style="color:white"><a target="_self" href="https://limbopro.com/category/Typecho/">
        41</a></span>
-       <a target="_self" href="category/Typecho/index.html">建站指南</a></li>
+       <a target="_self" href="https://limbopro.com/category/Typecho/">建站指南</a></li>
        
        <li class="list-group-item text-second"><span class="nav-icon"><i data-feather="triangle"></i></span>
-       <span class="badge pull-right" style="color:white"><a target="_self" href="tag/Cloudflare/index.html">
+       <span class="badge pull-right" style="color:white"><a target="_self" href="https://limbopro.com/tag/Cloudflare/">
        8</a></span>
-       <a target="_self" href="tag/Cloudflare/index.html">网站防御</a></li>
+       <a target="_self" href="https://limbopro.com/tag/Cloudflare/">网站防御</a></li>
        
        <li class="list-group-item text-second"><span class="nav-icon"><i data-feather="tool"></i></span>
-       <span class="badge pull-right" style="color:white"><a target="_self" href="category/tools/index.html">
+       <span class="badge pull-right" style="color:white"><a target="_self" href="https://limbopro.com/category/tools/">
        86</a></span>
-       <a target="_self" href="category/tools/index.html">实用工具</a></li>
+       <a target="_self" href="https://limbopro.com/category/tools/">实用工具</a></li>
        
        <li class="list-group-item text-second"><span class="nav-icon"><i data-feather="box"></i></span>
-       <span class="badge pull-right" style="color:white"><a target="_self" href="category/software-skills/index.html">
-       128</a></span>
-       <a target="_self" href="category/software-skills/index.html">软件百科</a></li>
+       <span class="badge pull-right" style="color:white"><a target="_self" href="https://limbopro.com/category/software-skills/">
+       130</a></span>
+       <a target="_self" href="https://limbopro.com/category/software-skills/">软件百科</a></li>
 
        <li class="list-group-item text-second"><span class="nav-icon"><i data-feather="hash"></i></span>
-       <span class="badge pull-right" style="color:white"><a target="_self" href="category/shell/index.html">
+       <span class="badge pull-right" style="color:white"><a target="_self" href="https://limbopro.com/category/shell/">
        15</a></span>
-       <a target="_self" href="category/shell/index.html">常用命令</a></li>
+       <a target="_self" href="https://limbopro.com/category/shell/">常用命令</a></li>
        
        <li class="list-group-item text-second"><span class="nav-icon"><i data-feather="film"></i></span>
-       <span class="badge pull-right" style="color:white"><a target="_self" href="category/movies/index.html">
+       <span class="badge pull-right" style="color:white"><a target="_self" href="https://limbopro.com/category/movies/">
        45</a></span>
-       <a target="_self" href="category/movies/index.html">影视剧集</a></li>
+       <a target="_self" href="https://limbopro.com/category/movies/">影视剧集</a></li>
 
        <li class="list-group-item text-second"><span class="nav-icon"><i data-feather="instagram"></i></span>
-       <span class="badge pull-right" style="color:white"><a target="_self" href="category/instagram/index.html">
+       <span class="badge pull-right" style="color:white"><a target="_self" href="https://limbopro.com/category/instagram/">
        40</a></span>
-       <a target="_self" href="category/instagram/index.html">美图欣赏</a></li>
+       <a target="_self" href="https://limbopro.com/category/instagram/">美图欣赏</a></li>
        
        <li class="list-group-item text-second"><span class="nav-icon"><i data-feather="navigation-2"></i></span>
-       <span class="badge pull-right" style="color:white"><a target="_self" href="category/ssr/index.html">
+       <span class="badge pull-right" style="color:white"><a target="_self" href="https://limbopro.com/category/ssr/">
        45</a></span>
-       <a target="_self" href="category/ssr/index.html">科学上网</a></li>
+       <a target="_self" href="https://limbopro.com/category/ssr/">科学上网</a></li>
        
        </section>
 
@@ -1042,25 +1060,25 @@ via Dragon Ball主理人说（近期的一些更新说明） 事实证明在 Chr
        <section id="tag_cloud-2" class="widget widget_tag_cloud wrapper-md clear">
        <h5 class="widget-title m-t-none text-md">热门文章推荐</h5>
        <li class="list-group-item">
-                <a href="archives/8.html" class="pull-left thumb-sm m-r"><img src="usr/themes/handsome/assets/img/sj2/5.jpg" class="img-40px normal-shadow img-square"></a>
+                <a href="https://limbopro.com/archives/8.html" class="pull-left thumb-sm m-r"><img src="https://limbopro.com/usr/themes/handsome/assets/img/sj2/1.jpg" class="img-40px normal-shadow img-square"></a>
                 <div class="clear">
-                    <h4 class="h5 l-h text-second"> <a href="archives/8.html" title="权力的游戏丨第八季 😍"> 权力的游戏丨第八季 😍 </a></h4>
+                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/8.html" title="权力的游戏丨第八季 😍"> 权力的游戏丨第八季 😍 </a></h4>
                     </div></li><li class="list-group-item">
-                <a href="archives/17.html" class="pull-left thumb-sm m-r"><img src="usr/themes/handsome/assets/img/sj2/3.jpg" class="img-40px normal-shadow img-square"></a>
+                <a href="https://limbopro.com/archives/17.html" class="pull-left thumb-sm m-r"><img src="https://limbopro.com/usr/themes/handsome/assets/img/sj2/10.jpg" class="img-40px normal-shadow img-square"></a>
                 <div class="clear">
-                    <h4 class="h5 l-h text-second"> <a href="archives/17.html" title="谢春花丨还想听你的故事"> 谢春花丨还想听你的故事 </a></h4>
+                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/17.html" title="谢春花丨还想听你的故事"> 谢春花丨还想听你的故事 </a></h4>
                     </div></li><li class="list-group-item">
-                <a href="archives/19.html" class="pull-left thumb-sm m-r"><img src="usr/themes/handsome/assets/img/sj2/6.jpg" class="img-40px normal-shadow img-square"></a>
+                <a href="https://limbopro.com/archives/19.html" class="pull-left thumb-sm m-r"><img src="https://limbopro.com/usr/themes/handsome/assets/img/sj2/8.jpg" class="img-40px normal-shadow img-square"></a>
                 <div class="clear">
-                    <h4 class="h5 l-h text-second"> <a href="archives/19.html" title="韩国画家丨zipcy 梁世恩"> 韩国画家丨zipcy 梁世恩 </a></h4>
+                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/19.html" title="韩国画家丨zipcy 梁世恩"> 韩国画家丨zipcy 梁世恩 </a></h4>
                     </div></li><li class="list-group-item">
-                <a href="archives/22.html" class="pull-left thumb-sm m-r"><img src="usr/themes/handsome/assets/img/sj2/7.jpg" class="img-40px normal-shadow img-square"></a>
+                <a href="https://limbopro.com/archives/22.html" class="pull-left thumb-sm m-r"><img src="https://limbopro.com/usr/themes/handsome/assets/img/sj2/6.jpg" class="img-40px normal-shadow img-square"></a>
                 <div class="clear">
-                    <h4 class="h5 l-h text-second"> <a href="archives/22.html" title="恰当抑郁"> 恰当抑郁 </a></h4>
+                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/22.html" title="恰当抑郁"> 恰当抑郁 </a></h4>
                     </div></li><li class="list-group-item">
-                <a href="archives/243.html" class="pull-left thumb-sm m-r"><img src="usr/themes/handsome/assets/img/sj2/8.jpg" class="img-40px normal-shadow img-square"></a>
+                <a href="https://limbopro.com/archives/243.html" class="pull-left thumb-sm m-r"><img src="https://limbopro.com/usr/themes/handsome/assets/img/sj2/4.jpg" class="img-40px normal-shadow img-square"></a>
                 <div class="clear">
-                    <h4 class="h5 l-h text-second"> <a href="archives/243.html" title="查看 Google 搜索结果中的缓存版网页"> 查看 Google 搜索结果中的缓存版网页 </a></h4>
+                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/243.html" title="查看 Google 搜索结果中的缓存版网页"> 查看 Google 搜索结果中的缓存版网页 </a></h4>
                     </div></li>       
        </section>
 
@@ -1068,29 +1086,29 @@ via Dragon Ball主理人说（近期的一些更新说明） 事实证明在 Chr
        <section id="tag_cloud-2" class="widget widget_tag_cloud wrapper-md clear">
        <h5 class="widget-title m-t-none text-md">随机文章推荐</h5>
        <li class="list-group-item">
-                <a href="archives/Delta-Emulator.html"</a>
+                <a href="https://limbopro.com/archives/1369.html"</a>
                 <div class="clear">
-                    <h4 class="h5 l-h text-second"> <a href="archives/Delta-Emulator.html" title="[免费] iOS 游戏模拟器——Delta Emulator ，在你的iPhone上玩任天堂游戏！（NES、SNES、N64、Game Boy、GBC...!）"> [免费] iOS 游戏模拟器——Delta Emulator ，在你的iPhone上玩任天堂游戏！（NES、SNES、N64、Game Boy、GBC...!） </a></h4>
+                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/1369.html" title="西瓜🍉长猫🐱了（大雾"> 西瓜🍉长猫🐱了（大雾 </a></h4>
                     </div></li><li class="list-group-item">
-                <a href="archives/2929.html"</a>
+                <a href="https://limbopro.com/archives/27765.html"</a>
                 <div class="clear">
-                    <h4 class="h5 l-h text-second"> <a href="archives/2929.html" title="纪录片丨徒手攀岩 Free Solo (2018)"> 纪录片丨徒手攀岩 Free Solo (2018) </a></h4>
+                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/27765.html" title="Netflix 用户有福了！—— GTA 系列即将免费为 Netflix 会员开放下载（iOS/Android）"> Netflix 用户有福了！—— GTA 系列即将免费为 Netflix 会员开放下载（iOS/Android） </a></h4>
                     </div></li><li class="list-group-item">
-                <a href="archives/5832.html"</a>
+                <a href="https://limbopro.com/archives/4672.html"</a>
                 <div class="clear">
-                    <h4 class="h5 l-h text-second"> <a href="archives/5832.html" title="2019年度观影指南"> 2019年度观影指南 </a></h4>
+                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/4672.html" title="去他*的世界末日"> 去他*的世界末日 </a></h4>
                     </div></li><li class="list-group-item">
-                <a href="archives/13674.html"</a>
+                <a href="https://limbopro.com/archives/Alice-in-Borderland.html"</a>
                 <div class="clear">
-                    <h4 class="h5 l-h text-second"> <a href="archives/13674.html" title="Typecho优化 - 升级至 PHP 8.0.0（记录）"> Typecho优化 - 升级至 PHP 8.0.0（记录） </a></h4>
+                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/Alice-in-Borderland.html" title="今际之国的闯关者（今際の国のアリス）全集在线"> 今际之国的闯关者（今際の国のアリス）全集在线 </a></h4>
                     </div></li><li class="list-group-item">
-                <a href="archives/1398.html"</a>
+                <a href="https://limbopro.com/archives/1859.html"</a>
                 <div class="clear">
-                    <h4 class="h5 l-h text-second"> <a href="archives/1398.html" title="网站底部建站计时代码"> 网站底部建站计时代码 </a></h4>
+                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/1859.html" title="FinalShell - SSH 管理工具"> FinalShell - SSH 管理工具 </a></h4>
                     </div></li><li class="list-group-item">
-                <a href="archives/MacOS_terminal_proxy_setting.html"</a>
+                <a href="https://limbopro.com/archives/27377.html"</a>
                 <div class="clear">
-                    <h4 class="h5 l-h text-second"> <a href="archives/MacOS_terminal_proxy_setting.html" title="macOS terminal - 让终端使用代理的方法（以ClashX配合举例）"> macOS terminal - 让终端使用代理的方法（以ClashX配合举例） </a></h4>
+                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/27377.html" title="获取 Github raw 原始文件资源链接小Tips"> 获取 Github raw 原始文件资源链接小Tips </a></h4>
                     </div></li>       </section>
        <!--随机文章推荐-->
 
@@ -1099,29 +1117,29 @@ via Dragon Ball主理人说（近期的一些更新说明） 事实证明在 Chr
             <h5 class="widget-title m-t-none text-md">随机文章</h5>
             <ul class="list-group no-bg no-borders pull-in">
             <li class="list-group-item">
-                <a href="archives/CatNet.html"</a>
+                <a href="https://limbopro.com/archives/5198.html"</a>
                 <div class="clear">
-                    <h4 class="h5 l-h text-second"> <a href="archives/CatNet.html" title="CatNet机场——100GB/￥25/月-300GB/￥50/月（2025年11月更新）"> CatNet机场——100GB/￥25/月-300GB/￥50/月（2025年11月更新） </a></h4>
+                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/5198.html" title="好莱坞往事（2019）"> 好莱坞往事（2019） </a></h4>
                     </div></li><li class="list-group-item">
-                <a href="archives/1911.html"</a>
+                <a href="https://limbopro.com/archives/independent-thinker.html"</a>
                 <div class="clear">
-                    <h4 class="h5 l-h text-second"> <a href="archives/1911.html" title="Google Adsense 注册技巧及配置教程"> Google Adsense 注册技巧及配置教程 </a></h4>
+                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/independent-thinker.html" title="独立思考的方法"> 独立思考的方法 </a></h4>
                     </div></li><li class="list-group-item">
-                <a href="archives/7167.html"</a>
+                <a href="https://limbopro.com/archives/school.html"</a>
                 <div class="clear">
-                    <h4 class="h5 l-h text-second"> <a href="archives/7167.html" title="Typecho优化丨从 Nginx 迁移至 OpenResty（升级、源码编译、加装额外模块）"> Typecho优化丨从 Nginx 迁移至 OpenResty（升级、源码编译、加装额外模块） </a></h4>
+                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/school.html" title="死库水是什么"> 死库水是什么 </a></h4>
                     </div></li><li class="list-group-item">
-                <a href="archives/1186.html"</a>
+                <a href="https://limbopro.com/archives/4372.html"</a>
                 <div class="clear">
-                    <h4 class="h5 l-h text-second"> <a href="archives/1186.html" title="NSFW - 04期丨YUZUKI 写真集"> NSFW - 04期丨YUZUKI 写真集 </a></h4>
+                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/4372.html" title="倩女幽魂丨1987-1991"> 倩女幽魂丨1987-1991 </a></h4>
                     </div></li><li class="list-group-item">
-                <a href="archives/4104.html"</a>
+                <a href="https://limbopro.com/archives/33284.html"</a>
                 <div class="clear">
-                    <h4 class="h5 l-h text-second"> <a href="archives/4104.html" title="Google 相册丨免费且无限的照片与视频存储"> Google 相册丨免费且无限的照片与视频存储 </a></h4>
+                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/33284.html" title="收藏数破万系列——知名女优的经典番号推荐"> 收藏数破万系列——知名女优的经典番号推荐 </a></h4>
                     </div></li><li class="list-group-item">
-                <a href="archives/30771.html"</a>
+                <a href="https://limbopro.com/archives/1859.html"</a>
                 <div class="clear">
-                    <h4 class="h5 l-h text-second"> <a href="archives/30771.html" title="写 GitHub README.md 文档时如何换行&lt;br&gt;？"> 写 GitHub README.md 文档时如何换行&lt;br&gt;？ </a></h4>
+                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/1859.html" title="FinalShell - SSH 管理工具"> FinalShell - SSH 管理工具 </a></h4>
                     </div></li>            </ul>
         </div>
        </div>
@@ -1132,7 +1150,7 @@ via Dragon Ball主理人说（近期的一些更新说明） 事实证明在 Chr
        <ul class="list-group box-shadow-wrap-normal">
                       <li class="list-group-item"><span class="blog-info-icons"> <i data-feather="award"></i></span> <span
                        class="badge
-           pull-right">497</span>文章数目</li>
+           pull-right">499</span>文章数目</li>
           
          <!--  <li class="list-group-item"> <span class="blog-info-icons"> <i data-feather="message-circle"></i></span>
                <span class="badge
@@ -1140,11 +1158,11 @@ via Dragon Ball主理人说（近期的一些更新说明） 事实证明在 Chr
 
            <li class="list-group-item"><span class="blog-info-icons"> <i data-feather="calendar"></i></span>
                <span class="badge
-           pull-right">6年192天</span>建站已有</li>
+           pull-right">6年215天</span>建站已有</li>
 
            <li class="list-group-item"><span class="blog-info-icons"> <i data-feather="clock"></i></span>
                <span class="badge
-           pull-right">2060天</span>关站倒计时</li>
+           pull-right">2037天</span>关站倒计时</li>
 
            <li class="list-group-item"><span class="blog-info-icons"> <i data-feather="activity"></i></span> <span
                        class="badge
@@ -1152,7 +1170,7 @@ via Dragon Ball主理人说（近期的一些更新说明） 事实证明在 Chr
 
            <li class="list-group-item"><span class="blog-info-icons"> <i data-feather="cpu"></i></span> <span
                        class="badge
-           pull-right">267 ms</span>TTFB</li>
+           pull-right">580 ms</span>TTFB</li>
 
            <!--分享按钮-->
 
@@ -1198,36 +1216,36 @@ via Dragon Ball主理人说（近期的一些更新说明） 事实证明在 Chr
             <section id="tag_cloud-2" class="widget widget_tag_cloud wrapper-md clear">
        <h5 class="widget-title m-t-none text-md">标签云</h5>
           <div class="tags l-h-2x">
-                                                                    <a href="tag/NSFW/index.html" class="label badge" title="NSFW" data-toggle="tooltip">NSFW</a>
-                                        <a href="tag/Quantumult-X/index.html" class="label badge" title="Quantumult X" data-toggle="tooltip">Quantumult X</a>
-                                        <a href="tag/Cloudflare/index.html" class="label badge" title="Cloudflare" data-toggle="tooltip">Cloudflare</a>
-                                        <a href="tag/妹子图/index.html" class="label badge" title="妹子图" data-toggle="tooltip">妹子图</a>
-                                        <a href="tag/QuantumultX/index.html" class="label badge" title="QuantumultX" data-toggle="tooltip">QuantumultX</a>
-                                        <a href="tag/Google/index.html" class="label badge" title="Google" data-toggle="tooltip">Google</a>
-                                        <a href="tag/iOS/index.html" class="label badge" title="iOS" data-toggle="tooltip">iOS</a>
-                                        <a href="tag/Typecho/index.html" class="label badge" title="Typecho" data-toggle="tooltip">Typecho</a>
-                                        <a href="tag/DDOS/index.html" class="label badge" title="DDOS" data-toggle="tooltip">DDOS</a>
-                                        <a href="tag/Netflix/index.html" class="label badge" title="Netflix" data-toggle="tooltip">Netflix</a>
-                                        <a href="tag/JavaScript/index.html" class="label badge" title="JavaScript" data-toggle="tooltip">JavaScript</a>
-                                        <a href="tag/广告拦截/index.html" class="label badge" title="广告拦截" data-toggle="tooltip">广告拦截</a>
-                                        <a href="tag/电影推荐/index.html" class="label badge" title="电影推荐" data-toggle="tooltip">电影推荐</a>
-                                        <a href="tag/Typecho优化/index.html" class="label badge" title="Typecho优化" data-toggle="tooltip">Typecho优化</a>
-                                        <a href="tag/instagram/index.html" class="label badge" title="instagram" data-toggle="tooltip">instagram</a>
-                                        <a href="tag/毒奶精选/index.html" class="label badge" title="毒奶精选" data-toggle="tooltip">毒奶精选</a>
-                                        <a href="tag/NGINX/index.html" class="label badge" title="NGINX" data-toggle="tooltip">NGINX</a>
-                                        <a href="tag/毒奶下载/index.html" class="label badge" title="毒奶下载" data-toggle="tooltip">毒奶下载</a>
-                                        <a href="tag/Surge/index.html" class="label badge" title="Surge" data-toggle="tooltip">Surge</a>
-                                        <a href="tag/Shell/index.html" class="label badge" title="Shell" data-toggle="tooltip">Shell</a>
-                                        <a href="tag/宅男指北/index.html" class="label badge" title="宅男指北" data-toggle="tooltip">宅男指北</a>
-                                        <a href="tag/AI/index.html" class="label badge" title="AI" data-toggle="tooltip">AI</a>
-                                        <a href="tag/科学上网/index.html" class="label badge" title="科学上网" data-toggle="tooltip">科学上网</a>
-                                        <a href="tag/mac/index.html" class="label badge" title="mac" data-toggle="tooltip">mac</a>
-                                        <a href="tag/SEO/index.html" class="label badge" title="SEO" data-toggle="tooltip">SEO</a>
-                                        <a href="tag/macos/index.html" class="label badge" title="macos" data-toggle="tooltip">macos</a>
-                                        <a href="tag/linux/index.html" class="label badge" title="linux" data-toggle="tooltip">linux</a>
-                                        <a href="tag/油猴脚本/index.html" class="label badge" title="油猴脚本" data-toggle="tooltip">油猴脚本</a>
-                                        <a href="tag/Chrome/index.html" class="label badge" title="Chrome" data-toggle="tooltip">Chrome</a>
-                                        <a href="tag/SSH/index.html" class="label badge" title="SSH" data-toggle="tooltip">SSH</a>
+                                                                    <a href="https://limbopro.com/tag/NSFW/" class="label badge" title="NSFW" data-toggle="tooltip">NSFW</a>
+                                        <a href="https://limbopro.com/tag/Quantumult-X/" class="label badge" title="Quantumult X" data-toggle="tooltip">Quantumult X</a>
+                                        <a href="https://limbopro.com/tag/Cloudflare/" class="label badge" title="Cloudflare" data-toggle="tooltip">Cloudflare</a>
+                                        <a href="https://limbopro.com/tag/%E5%A6%B9%E5%AD%90%E5%9B%BE/" class="label badge" title="妹子图" data-toggle="tooltip">妹子图</a>
+                                        <a href="https://limbopro.com/tag/QuantumultX/" class="label badge" title="QuantumultX" data-toggle="tooltip">QuantumultX</a>
+                                        <a href="https://limbopro.com/tag/Google/" class="label badge" title="Google" data-toggle="tooltip">Google</a>
+                                        <a href="https://limbopro.com/tag/iOS/" class="label badge" title="iOS" data-toggle="tooltip">iOS</a>
+                                        <a href="https://limbopro.com/tag/Typecho/" class="label badge" title="Typecho" data-toggle="tooltip">Typecho</a>
+                                        <a href="https://limbopro.com/tag/DDOS/" class="label badge" title="DDOS" data-toggle="tooltip">DDOS</a>
+                                        <a href="https://limbopro.com/tag/Netflix/" class="label badge" title="Netflix" data-toggle="tooltip">Netflix</a>
+                                        <a href="https://limbopro.com/tag/JavaScript/" class="label badge" title="JavaScript" data-toggle="tooltip">JavaScript</a>
+                                        <a href="https://limbopro.com/tag/%E5%B9%BF%E5%91%8A%E6%8B%A6%E6%88%AA/" class="label badge" title="广告拦截" data-toggle="tooltip">广告拦截</a>
+                                        <a href="https://limbopro.com/tag/%E7%94%B5%E5%BD%B1%E6%8E%A8%E8%8D%90/" class="label badge" title="电影推荐" data-toggle="tooltip">电影推荐</a>
+                                        <a href="https://limbopro.com/tag/Typecho%E4%BC%98%E5%8C%96/" class="label badge" title="Typecho优化" data-toggle="tooltip">Typecho优化</a>
+                                        <a href="https://limbopro.com/tag/instagram/" class="label badge" title="instagram" data-toggle="tooltip">instagram</a>
+                                        <a href="https://limbopro.com/tag/%E6%AF%92%E5%A5%B6%E7%B2%BE%E9%80%89/" class="label badge" title="毒奶精选" data-toggle="tooltip">毒奶精选</a>
+                                        <a href="https://limbopro.com/tag/NGINX/" class="label badge" title="NGINX" data-toggle="tooltip">NGINX</a>
+                                        <a href="https://limbopro.com/tag/%E6%AF%92%E5%A5%B6%E4%B8%8B%E8%BD%BD/" class="label badge" title="毒奶下载" data-toggle="tooltip">毒奶下载</a>
+                                        <a href="https://limbopro.com/tag/Surge/" class="label badge" title="Surge" data-toggle="tooltip">Surge</a>
+                                        <a href="https://limbopro.com/tag/Shell/" class="label badge" title="Shell" data-toggle="tooltip">Shell</a>
+                                        <a href="https://limbopro.com/tag/AI/" class="label badge" title="AI" data-toggle="tooltip">AI</a>
+                                        <a href="https://limbopro.com/tag/%E5%AE%85%E7%94%B7%E6%8C%87%E5%8C%97/" class="label badge" title="宅男指北" data-toggle="tooltip">宅男指北</a>
+                                        <a href="https://limbopro.com/tag/%E7%A7%91%E5%AD%A6%E4%B8%8A%E7%BD%91/" class="label badge" title="科学上网" data-toggle="tooltip">科学上网</a>
+                                        <a href="https://limbopro.com/tag/mac/" class="label badge" title="mac" data-toggle="tooltip">mac</a>
+                                        <a href="https://limbopro.com/tag/SEO/" class="label badge" title="SEO" data-toggle="tooltip">SEO</a>
+                                        <a href="https://limbopro.com/tag/macos/" class="label badge" title="macos" data-toggle="tooltip">macos</a>
+                                        <a href="https://limbopro.com/tag/linux/" class="label badge" title="linux" data-toggle="tooltip">linux</a>
+                                        <a href="https://limbopro.com/tag/%E6%B2%B9%E7%8C%B4%E8%84%9A%E6%9C%AC/" class="label badge" title="油猴脚本" data-toggle="tooltip">油猴脚本</a>
+                                        <a href="https://limbopro.com/tag/Chrome/" class="label badge" title="Chrome" data-toggle="tooltip">Chrome</a>
+                                        <a href="https://limbopro.com/tag/SSH/" class="label badge" title="SSH" data-toggle="tooltip">SSH</a>
                                           </div>
       </section>
       
@@ -1248,8 +1266,8 @@ via Dragon Ball主理人说（近期的一些更新说明） 事实证明在 Chr
 <div id="morphing-content" class="hidden read_mode_article">
         <div class="page">
             <h1 class="title">联系我们</h1>
-            <div class="metadata singleline"><a href="6.html#" rel="author" class="byline">毒奶</a>&nbsp;•&nbsp;<span class="delimiter"></span><time class="date">2019 年 05 月 12 日</time></div>     
-            <div id="morphing-content-real_origin"><div class="tox-index"><div class="tox-title">本文目录 <span class="tox-toggle">[<a id="content-index-togglelink" href="javascript:content_index_toggleToc()">隐藏</a>]</span></div><div id="toc-content"><ul><li class='toc-level2'><a href='6.html#联系我们的方法'> 联系我们的方法</a></li><li class='toc-level2'><a href='6.html#自行解决问题的方法'> 自行解决问题的方法</a></li><li class='toc-level2'><a href='6.html#不失联的方法'> 不失联的方法</a></li><li class='toc-level2'><a href='6.html#转载文章的方法'> 转载文章的方法</a></li><li class='toc-level2'><a href='6.html#交换友链的方法'> 交换友链的方法</a></li><li class='toc-level2'><a href='6.html#关于毒奶博主'> 关于毒奶博主</a></li><li class='toc-level2'><a href='6.html#其他'> 其他</a></li></ul></li></ul></div></div>
+            <div class="metadata singleline"><a href="#" rel="author" class="byline">毒奶</a>&nbsp;•&nbsp;<span class="delimiter"></span><time class="date">2019 年 05 月 12 日</time></div>     
+            <div id="morphing-content-real_origin"><div class="tox-index"><div class="tox-title">本文目录 <span class="tox-toggle">[<a id="content-index-togglelink" href="javascript:content_index_toggleToc()">隐藏</a>]</span></div><div id="toc-content"><ul><li class='toc-level2'><a href='#联系我们的方法'> 联系我们的方法</a></li><li class='toc-level2'><a href='#自行解决问题的方法'> 自行解决问题的方法</a></li><li class='toc-level2'><a href='#不失联的方法'> 不失联的方法</a></li><li class='toc-level2'><a href='#转载文章的方法'> 转载文章的方法</a></li><li class='toc-level2'><a href='#交换友链的方法'> 交换友链的方法</a></li><li class='toc-level2'><a href='#关于毒奶博主'> 关于毒奶博主</a></li><li class='toc-level2'><a href='#其他'> 其他</a></li></ul></li></ul></div></div>
 
 
 
@@ -1261,8 +1279,11 @@ via Dragon Ball主理人说（近期的一些更新说明） 事实证明在 Chr
 <p>任何时候你都可以点击页面右侧但<strong>邮件</strong>📧ico到达本页面：</p>
 <h3>主要联系方式</h3>
 <p><div class="tip inlineBlock info"><strong>电报机器人🤖</strong>： <span class="external-link"><a class="no-external-link" href="http://t.me/limboprobot" target="_blank">http://t.me/limboprobot<i data-feather='external-link'></i></a></span> （简单建议/问题反馈/有趣文章或讯息投稿/...）；<br />
-<strong>邮箱地址📧</strong>： <a href="https://limbopro.com/cdn-cgi/l/email-protection#c6b5a3b4b0afa5a3e8aaafaba4a9b6b4a9e8a5a9ab86a1aba7afaae8a5a9ab"><span class="__cf_email__" data-cfemail="fa899f888c93999fd496939798958a8895d4999597ba9d979b9396d4999597">[email&#160;protected]</span></a>（简单建议/问题反馈/推广合作）； ⚠️因为匿名以及无法有效沟通核实处理的关系，请不要通过文章留言的方式反馈问题；</div>
-<p><div class="tip inlineBlock warning">联系时请务必直接表明 <strong>你是谁</strong> -&gt; <strong>你想干嘛</strong>🎯（问题反馈/建议/推给合作/...），以及<strong>一系列构成要素、必要细节</strong>（如需要追问一次补充一点细节，再追问则再补充的，则代表缺乏细节；如你不知道该注意什么细节，请暂时不要发送邮件；）；</div>
+<strong>邮箱地址📧</strong>： <a href="/cdn-cgi/l/email-protection#26554354504f4543084a4f4b44495654490845494b66414b474f4a0845494b"><span class="__cf_email__" data-cfemail="36455344405f5553185a5f5b54594644591855595b76515b575f5a1855595b">[email&#160;protected]</span></a>（简单建议/问题反馈/推广合作）； ⚠️因为匿名以及无法有效沟通核实处理的关系，请不要通过文章留言的方式反馈问题；</div>
+<p><div class="tip inlineBlock warning">在联系时，请务必<strong>直接且明确地说明</strong>以下内容：<br />
+1.<strong>您的身份</strong>（您是谁）；<br />
+2.<strong>联系目的</strong>（您希望达成何种目标，例如问题反馈、提出建议、探讨合作等）；<br />
+3.相关构成要素及必要细节（<strong>请一次性提供完整信息，包括背景、具体描述、预期结果等关键要素</strong>；若细节不足，可能需要补充追问，多次追问表明初始信息缺乏完整性；若您不确定应提供哪些细节，建议暂缓发送邮件，直至准备充分）。</div>
 <h3>匿名留言</h3>
 <p><strong>适用无需博主回复的留言</strong>：<span class="external-link"><a class="no-external-link" href="https://bit.ly/3JHDnAe" target="_blank">https://limbopro.com/feedback/<i data-feather='external-link'></i></a></span> （好看的番号？电影？网站？书籍？====，很多你非常想说的，想推荐的，想反馈的建议/意见==...）；很棒的网站及小工具等等，博主会尝试添加进网页右下角导航，也有可能随着文章一齐发表或推送到我们的频道；⚠️注意，以上这个动作不会立即执行，可能会涉及观察/体验/等等，当然，你不妨任何时候重新给我们留言以提醒我；</p>
 <h2 id="自行解决问题的方法"> 自行解决问题的方法</h2>
@@ -1290,10 +1311,10 @@ via Dragon Ball主理人说（近期的一些更新说明） 事实证明在 Chr
 3.<strong>相同方式共享</strong> — 如果您再混合、转换或者基于本作品进行创作，您必须基于 <span class="external-link"><a class="no-external-link" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh-hans#ref-same-license" target="_blank">与原先许可协议相同的许可协议<i data-feather='external-link'></i></a></span> 分发您贡献的作品。<br />
 4.<strong>没有附加限制</strong> — 您不得适用法律术语或者 <span class="external-link"><a class="no-external-link" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh-hans#ref-technological-measures" target="_blank">技术措施<i data-feather='external-link'></i></a></span> 从而限制其他人做许可协议允许的事情。</div>
 <h2 id="交换友链的方法"> 交换友链的方法</h2>
-<p><div class="tip inlineBlock share">请<strong>按如下样式</strong>将你的网站名称/网站链接/图片及说明发送至邮件：<a href="https://limbopro.com/cdn-cgi/l/email-protection#c0b3a5b2b6a9a3a5eeaca9ada2afb0b2afeea3afad80a7ada1a9aceea3afad"><span class="__cf_email__" data-cfemail="4b382e393d22282e6527222629243b3924652824260b2c262a222765282426">[email&#160;protected]</span></a> ，发邮件前，请确保<strong>你也喜欢本站内容</strong>而不是仅为了添加友链，请确保<strong>你的站点有在更新且内容主题丰富</strong>；不保证一定会添加；以上。</div>
+<p><div class="tip inlineBlock share">请<strong>按如下样式</strong>将你的网站名称/网站链接/图片及说明发送至邮件：<a href="/cdn-cgi/l/email-protection#b2c1d7c0c4dbd1d79cdedbdfd0ddc2c0dd9cd1dddff2d5dfd3dbde9cd1dddf"><span class="__cf_email__" data-cfemail="10637562667973753e7c797d727f60627f3e737f7d50777d71797c3e737f7d">[email&#160;protected]</span></a> ，发邮件前，请确保<strong>你也喜欢本站内容</strong>而不是仅为了添加友链，请确保<strong>你的站点有在更新且内容主题丰富</strong>；不保证一定会添加；以上。</div>
 <h3>样式如下：</h3>
 <p><div class="tip inlineBlock info"><strong>网站名称</strong>：毒奶博主<br />
-<strong>网站链接</strong>：<a href="index.html">https://limbopro.com</a>；<br />
+<strong>网站链接</strong>：<a href="https://limbopro.com">https://limbopro.com</a>；<br />
 <strong>网站图片：</strong><a href="https://limbopro.com/usr/uploads/2019/11/1242907945.jpg">https://limbopro.com/usr/uploads/2019/11/1242907945.jpg</a> 或 <a href="https://limbopro.com/usr/uploads/2019/11/1601982288.jpg">https://limbopro.com/usr/uploads/2019/11/1601982288.jpg</a> (如为美观，可适当裁剪)；<br />
 <strong>网站说明</strong>：够了，我无法忍受你的行为，现在你将成为我们中的一员。；<br />
 本站背景图片来自，<span class="external-link"><a class="no-external-link" href="https://movie.douban.com/subject/2997134/" target="_blank">創：光速戰記<i data-feather='external-link'></i></a></span>；优秀电影 <span class="external-link"><a class="no-external-link" href="https://movie.douban.com/subject/26718828/" target="_blank">勇往直前 Only the Brave (2017)<i data-feather='external-link'></i></a></span> 导演作品；</div>
@@ -1302,13 +1323,13 @@ via Dragon Ball主理人说（近期的一些更新说明） 事实证明在 Chr
 我们的初心，我们的未来</p>
 <p><div class="preview">
 <div class="post-inser post box-shadow-wrap-normal">
-<a href="archives/2041.html" target="_blank" class="post_inser_a no-external-link">
+<a href="https://limbopro.com/archives/2041.html" target="_blank" class="post_inser_a no-external-link">
 <div class="inner-image bg" style="background-image: url(https://limbopro.com/usr/uploads/2019/09/2211209831.jpg);background-size: cover;"></div>
 
 <div class="inner-content" >
-<p class="inser-title">关于毒奶（02.25.2025）</p>
+<p class="inser-title">关于毒奶（12.04.2025）</p>
 <div class="inster-summary text-muted">
-via Dragon Ball主理人说（近期的一些更新说明） 事实证明在 Chrome 下访问本博客效果最佳。近期...
+Dragon Ball.pngvia Dragon Ball主理人说（近期的一些更新说明） 事实证明在 Chrom...
 </div>
 </div>
 </a>
@@ -1322,7 +1343,7 @@ via Dragon Ball主理人说（近期的一些更新说明） 事实证明在 Chr
         </div>
     </div>
     <!-- footer -->
-	<script data-cfasync="false" src="cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script type="text/javascript">
+	<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script type="text/javascript">
 (function () {
     window.TypechoComment = {
         dom : function (id) {
@@ -1419,36 +1440,35 @@ var registCommentEvent = function() {
                         input.type = 'hidden';
                         input.name = '_';
                             input.value = (function () {
-    var _Exj4ypb = '5c'//'R'
-+//'fEo'
-'6'+'wBj'//'wBj'
-+'5d3'//'b'
-+//'q'
-'594'+//'Yo'
-'Yo'+'f4'//'3z'
-+'852'//'t'
-+'f'//'m'
-+//'3L'
-'c'+//'wM'
-'29'+//'z'
-'8'+'2'//'Lo'
-+'L'//'L'
-+''///*'u'*/'u'
-+//'Vr5'
-'b'+//'P'
-'839'+'xlS'//'xlS'
-+'43'//'ae'
-+//'Uq'
-'4ef'+//'tP7'
-'tP7'+'7'//'p'
-+//'K'
-'00', _rbrb = [[3,6],[9,11],[20,21],[24,27],[29,32]];
+    var _inF = //'Sp'
+'5c'+''///*'6'*/'6'
++//'3g'
+'6'+//'ywZ'
+'5d3'+'594'//'EIH'
++'f'//'4V'
++//'Qc'
+'485'+//'W'
+'2'+'fc2'//'hA8'
++''///*'RI'*/'RI'
++//'r'
+'r'+'982'//'U'
++/* 'PH'//'PH' */''+//'e'
+'b'+//'Oy'
+'Oy'+//'f8l'
+'f8l'+//'NDr'
+'8'+'39'//'Wk'
++//'E'
+'43'+''///*'L'*/'L'
++//'V'
+'4'+'ef'//'KzG'
++'700'//'0'
+, _GsYCiG = [[17,18],[21,23],[21,24]];
     
-    for (var i = 0; i < _rbrb.length; i ++) {
-        _Exj4ypb = _Exj4ypb.substring(0, _rbrb[i][0]) + _Exj4ypb.substring(_rbrb[i][1]);
+    for (var i = 0; i < _GsYCiG.length; i ++) {
+        _inF = _inF.substring(0, _GsYCiG[i][0]) + _inF.substring(_GsYCiG[i][1]);
     }
 
-    return _Exj4ypb;
+    return _inF;
 })();
                     
                         f.appendChild(input);
@@ -1478,8 +1498,8 @@ var registCommentEvent = function() {
           src="https://limbopro.com/usr/uploads/2021/07/2816325337.png" style="width: 50px;"></a>
       <a target="_blank" href="https://github.com/limbopro/"><img
           src="https://limbopro.com/usr/uploads/2021/07/3392286942.png" style="width: 40px;"></a>
-      441.76 W 字符
-      丨3人在线丨      <!-- 底部状态设置/阅读数/在线人数 -->
+      449.67 W 字符
+      丨1人在线丨      <!-- 底部状态设置/阅读数/在线人数 -->
 
       Powered by <a target="_blank" href="http://www.typecho.org">Typecho</a>&nbsp;|&nbsp;Theme by <a target="_blank"
         href="https://www.ihewro.com/archives/489/">handsome</a>
@@ -1493,7 +1513,7 @@ var registCommentEvent = function() {
       <button class="fix-padding btn btn-default no-shadow pos-abt border-radius-half-left"
       data-toggle="tooltip" data-placement="left" data-original-title="外观设置"
       data-toggle-class=".settings=active, .settings-icon=animate-spin">
-      <i class="fontello fontello-gear settings-icon"></i>
+      <i class="glyphicon glyphicon-cog"></i>
       </button>
       <div class="panel-heading">
       <button class="pull-right btn btn-xs btn-rounded btn-danger " name="reset" data-toggle="tooltip"
@@ -1558,7 +1578,7 @@ var registCommentEvent = function() {
 
     <button id="goToTop" class="fix-padding btn btn-default no-shadow pos-abt hide  border-radius-half-left"
       data-toggle="tooltip" data-placement="left" data-original-title="返回顶部">
-      <i class="fontello fontello-chevron-circle-up" aria-hidden="true"></i>
+      <i class="glyphicon glyphicon-chevron-up" aria-hidden="true"></i>
     </button>
 
     <button id="fixPage" class="fix-padding btn btn-default no-shadow pos-abt  border-radius-half-left"
@@ -1574,7 +1594,7 @@ var registCommentEvent = function() {
 
     <button id="searchx" class="fix-padding btn btn-default no-shadow pos-abt  border-radius-half-left"
       data-toggle="tooltip" data-placement="left" data-original-title="搜索" style="top: 233px;">
-      <i class="glyphicon fontello-search" aria-hidden="true"></i>
+      <i class="glyphicon glyphicon-search" aria-hidden="true"></i>
       <!--onclick="sidebar_search()"-->
     </button>
 
@@ -1609,8 +1629,8 @@ var registCommentEvent = function() {
 		});
 	})();
 </script>
-<script type="text/javascript" src="usr/plugins/CodePrettify/static/clipboard.min.js"></script>
-<script type="text/javascript" src="usr/plugins/CodePrettify/static/prism.js"></script>
+<script type="text/javascript" src="https://limbopro.com/usr/plugins/CodePrettify/static/clipboard.min.js"></script>
+<script type="text/javascript" src="https://limbopro.com/usr/plugins/CodePrettify/static/prism.js"></script>
 
 
 <!--定义全局变量-->
@@ -1631,9 +1651,9 @@ var registCommentEvent = function() {
 
 
 
-  <script src="usr/themes/handsome/assets/js/function.min.js%3Fv=7.3.12020081501"></script>
+  <script src="https://limbopro.com/usr/themes/handsome/assets/js/function.min.js?v=7.3.12020081501"></script>
 
-  <script src="usr/themes/handsome/assets/js/core.min.js%3Fv=7.3.12020081501"></script>
+  <script src="https://limbopro.com/usr/themes/handsome/assets/js/core.min.js?v=7.3.12020081501"></script>
 
 
 
@@ -1646,7 +1666,7 @@ var registCommentEvent = function() {
         try {
           $.message({
             title: "检测到本地缓存需要更新",
-            message: "<a href='6.html#' onclick='window.location.reload();'>点击刷新页面</a>更新本地缓存",
+            message: "<a href='#' onclick='window.location.reload();'>点击刷新页面</a>更新本地缓存",
             type: 'warning',
             time: '300000'
           });
@@ -1659,8 +1679,8 @@ var registCommentEvent = function() {
 </script>
 
 <!--主题组件js加载-->
-  <script src="usr/themes/handsome/assets/js/features/jquery.pjax.min.js" type="text/javascript"></script>
-  <script type="text/javascript" src="usr/themes/handsome/codecopy.js"></script>
+  <script src="https://limbopro.com/usr/themes/handsome/assets/js/features/jquery.pjax.min.js" type="text/javascript"></script>
+  <script type="text/javascript" src="/usr/themes/handsome/codecopy.js"></script>
 
 
 
@@ -1729,11 +1749,11 @@ document.addEventListener('DOMContentLoaded', () => {
         <div style="position:relative;background:#fff;padding:20px;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.4);min-width:300px;text-align:center;">
             <span id="closeFloat" style="position:absolute;top:4px;right:10px;font-size:28px;cursor:pointer;color:#999;">×</span>
             <h3 style="margin:0 0 18px 0;font-size:18px;">快速跳转</h3>
-            <a href="search.html" target="_blank" 
+            <a href="https://limbopro.com/search.html" target="_blank" 
                style="display:block;margin:10px auto;padding:12px 20px;background:#0066cc;color:#fff;text-decoration:none;border-radius:8px;">
                🎬毒奶搜索
             </a>
-            <a href="btsearch.html" target="_blank" 
+            <a href="https://limbopro.com/btsearch.html" target="_blank" 
                style="display:block;margin:10px auto;padding:12px 20px;background:#e91e63;color:#fff;text-decoration:none;border-radius:8px;">
                🔞番号搜索
             </a>
@@ -1815,7 +1835,7 @@ disable-menu='false'
 -->
 
 
-<script async="async" src="usr/themes/handsome/assets/js/corlor.js"></script>
+<script async="async" src="/usr/themes/handsome/assets/js/corlor.js"></script>
 <!--确认操作-->
   <div id="confirmMask" class="confirm-mask">
     <div class="confirm-dialog">

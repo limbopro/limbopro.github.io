@@ -28,19 +28,25 @@
 const CSS_URL = "https://limbopro.com/CSS/Adblock4limbo.user.css";
 const JS_URL = "https://limbopro.com/Adguard/Adblock4limbo.user.js";
 const fc_JS_URL = "https://limbopro.com/Adguard/Adblock4limbo.function.js";
+const agent_JS_URL = "https://limbopro.com/Adguard/isAgent.js";  // 无实意
 
 const TITLE_INJECTION = `</title>
 <link rel="stylesheet" href="${CSS_URL}" type="text/css" />
-<script type="text/javascript" async="async" src="${JS_URL}"><link rel="stylesheet" href="${CSS_URL}" type="text/css" />
+<script type="text/javascript" async="async" src="${JS_URL}">
+<link rel="stylesheet" href="${CSS_URL}" type="text/css" />
 <script type="text/javascript" async="async" src="${fc_JS_URL}"></script>
+<script type="text/javascript" async="async" src="${agent_JS_URL}"></script>
 `;
 
 // 插入
 
 const BODY_INJECTION = `
 <link rel="stylesheet" href="${CSS_URL}" type="text/css" />
-<script type="text/javascript" async="async" src="${JS_URL}"><link rel="stylesheet" href="${CSS_URL}" type="text/css" />
-<script type="text/javascript" async="async" src="${fc_JS_URL}"></script></body>
+<script type="text/javascript" async="async" src="${JS_URL}">
+<link rel="stylesheet" href="${CSS_URL}" type="text/css" />
+<script type="text/javascript" async="async" src="${fc_JS_URL}">
+<script type="text/javascript" async="async" src="${agent_JS_URL}"></script>
+</body>
 `;
 
 // 正则表达式
