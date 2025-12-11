@@ -53,6 +53,7 @@
 // @match        https://jav.land/*
 // @match        https://cn1.91short.com/*
 // @match        https://javday.tv/*
+// @match        https://javday.app/*
 // @match        https://www.xvideos.com/*
 // @match        https://4hu.tv/*
 // @match        https://www.4hu.tv/*
@@ -5038,6 +5039,99 @@ function injectPreventSetTimeout() {
 }
 
 
+
+/**
+ * 使用 Trusted Types 安全地加载 CSS 样式表。
+ * * @param {string} cssUrl - 要加载的 CSS 文件的完整 URL。
+ * @param {string} policyName - 创建 Trusted Type Policy 的名称（必须唯一）。
+ * @param {string} urlPrefix - 允许加载 CSS 文件的 URL 前缀。
+ */
+window.loadStylesheetWithTrustedTypes = function loadStylesheetWithTrustedTypes(cssUrl, policyName, urlPrefix) {
+    if (!cssUrl || !policyName || !urlPrefix) {
+        console.error("加载 CSS 失败：请提供 cssUrl, policyName 和 urlPrefix 三个参数。");
+        return;
+    }
+
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.type = 'text/css';
+
+    let finalLinkHref = cssUrl;
+
+    // 检查并应用 Trusted Types
+    if (window.trustedTypes && trustedTypes.createPolicy) {
+        try {
+            // 创建一个 Trusted Type 策略来验证 URL
+            const policy = trustedTypes.createPolicy(policyName, {
+                // 使用 createScriptURL 来验证源 URL
+                createScriptURL: (url) => {
+                    if (url.startsWith(urlPrefix)) {
+                        return url;
+                    }
+                    throw new Error(`Attempted to load untrusted CSS URL: ${url}. Does not start with ${urlPrefix}`);
+                }
+            });
+
+            // 将 URL 字符串转换为 TrustedScriptURL 对象
+            finalLinkHref = policy.createScriptURL(cssUrl);
+            console.log(`[Trusted Types] 成功使用策略 "${policyName}" 验证 CSS 链接。`);
+        } catch (e) {
+            console.warn(`[Trusted Types] 无法创建或应用策略 "${policyName}"，回退到普通字符串赋值。`, e);
+            finalLinkHref = cssUrl;
+        }
+    }
+
+    // 赋值并插入 DOM
+    link.href = finalLinkHref;
+    (document.head || document.body || document.documentElement).appendChild(link);
+
+    console.log(`CSS 加载请求已发送: ${cssUrl}`);
+}
+
+
+/**
+ * 尝试从完整主机名中提取主域名（Root Domain）。
+ * 此方法避免使用完整的 Public Suffix List (PSL)，仅包含常见规则，不保证 100% 准确。
+ * @param {string} hostname - 完整的主机名 (e.g., "www.news.bbc.co.uk")
+ * @returns {string} 主域名 (e.g., "bbc.co.uk")
+ */
+window.getRootDomain = function getRootDomain(hostname) {
+    if (!hostname) return '';
+
+    // 1. 预处理：移除 www. 前缀
+    let siteName = hostname.toLowerCase();
+    if (siteName.startsWith('www.')) {
+        siteName = siteName.substring(4);
+    }
+
+    // 2. 将域名分解成段 (Label)
+    let parts = siteName.split('.');
+
+    // 3. 定义常见的复杂公共后缀 (Public Suffix List - PSL 的简化版)
+    // 如果这些后缀存在，我们需要保留其前两个标签（主域名 + TLD/SLD）
+    const complexTLDs = [
+        'co.uk', 'com.cn', 'co.jp', 'com.au', 'com.hk', 'com.tw',
+        'nom.co', 'com.br', 'gov.cn', 'ac.jp'
+    ];
+
+    // 4. 检查是否匹配复杂的公共后缀
+    if (parts.length > 2) {
+        // 检查最后两段是否是一个复杂的 TLD (e.g., "co.uk")
+        const lastTwo = parts.slice(-2).join('.');
+
+        if (complexTLDs.includes(lastTwo)) {
+            // 如果是复杂的 TLD，我们取最后三段作为主域名
+            // e.g., ["news", "bbc", "co", "uk"] -> parts.length=4, slice(-3) -> "bbc.co.uk"
+            return parts.slice(-3).join('.');
+        }
+    }
+
+    // 5. 默认行为 (简单 TLD，如 .com)
+    // 取最后两段作为主域名
+    // e.g., ["news", "bbc", "com"] -> slice(-2) -> "bbc.com"
+    // e.g., ["google", "com"] -> slice(-2) -> "google.com"
+    return parts.slice(-2).join('.');
+}
 
 
 /**

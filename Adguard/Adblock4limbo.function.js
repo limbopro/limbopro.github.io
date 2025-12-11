@@ -739,7 +739,7 @@ var file = {
         "ul > li > button {overflow:visible; width:106px !important; line-height:15px !important;}",
         "ul.ul_global > li > a {box-shadow:0 4px 12px rgba(0,0,0,0.06); word-wrap:break-word; font-weight:lighter; overflow:visible; width:106px !important; font-size:15px !important; line-height:15px !important;}",
         ".li_global {display:flex; min-height:31px; font-size:medium; list-style:none; width:112px;}",
-        ".ul_global {padding:0px; font-size:15px !important; height:258px; margin:0px; overflow:auto; width:auto;}",
+        ".ul_global {padding:0px; font-size:15px !important; height:312px; margin:0px; overflow:auto; width:auto;}",
         ".title_global {font-weight:bolder !important; padding-left:2px; display:table-cell; vertical-align:bottom; width:106px; height:50px; text-align:center; font-size:initial; margin-bottom:5px; font-weight:lighter; color:black !important; padding-bottom:4px;}",
 
         /* 隐藏谷歌翻译框 */
@@ -1201,7 +1201,7 @@ function scroll_switch() {
 
         //console.log(sum)
 
-        if (div_global[i].querySelectorAll('li').length * 31 + fbt > 8 * 31 || sum + fbt > 8 * 31) {
+        if (div_global[i].querySelectorAll('li').length * 31 + fbt > 10 * 31 || sum + fbt > 10 * 31) {
             // if (sum_scroll() + fbt > 8 * 31) {
             let scroll_innerHTML = document.createElement('div');
             scroll_innerHTML.textContent = '*可向上滑动查看更多';
@@ -2768,9 +2768,36 @@ function mtzyczq() {
                     ${isFound ? `📋 一键复制全部 ${resources.length} 条链接` : '复制 (地址为空)'}
                 </button>
                 <p style="font-size: 10px; color: #aaa; margin-top: 5px;">* 多个链接将按序复制，每条链接占一行。</p>
+                <p style="font-size: 10px; margin-top: 5px;">
+  如何下载 M3U8 视频？点击跳转
+  <a href="https://limbopro.com/archives/M3U8-Downloader.html" target="_blank" style="color: #3f6edb; text-decoration: none;">
+    M3U8 视频下载教程
+  </a>
+</p>
+
+<p style="font-size: 10px; margin-top: 5px;">
+  如何下载 MP4 视频？
+  <a href="javascript:void(0);" onclick="showMp4DownloadTip(event)" style="color: #3f6edb; text-decoration: none;">
+    点击了解
+  </a>
+</p>
             </div>
         </div>
     `;
+
+        window.showMp4DownloadTip = function showMp4DownloadTip(event) {
+            // 阻止默认的链接跳转行为，确保只执行 confirm
+            event.preventDefault();
+
+            const downloadMessage =
+                "1. 复制视频下载地址；\n" +
+                "2. iOS用户推荐使用名叫 \"Documents\" 的 app 下载视频，打开 Documents app -> 浏览器 -> 粘贴视频下载地址；\n" +
+                "3. Android 暂无建议；\n" +
+                "4. 桌面浏览器用户在新的标签页打开下载地址，然后右键另存为即可；";
+
+            // 使用 confirm() 弹出确认框，内容为您指定的说明
+            confirm(downloadMessage);
+        }
 
         // --- 3. 注入 CSS 样式（保持不变）---
         const styleElement = document.createElement('style');
