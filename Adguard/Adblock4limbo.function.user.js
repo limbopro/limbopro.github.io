@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Adblock4limbo——导航及各类功能函数合集.[github]
 // @namespace    https://limbopro.com/Adguard/Adblock4limbo.function.js
-// @version      0.2025.12.10
+// @version      0.2025.12.12
 // @license      CC BY-NC-SA 4.0
 // @description  实用网站导航 —— 免费在线影视/前端学习/开发者社区/新闻/建站/下载工具/格式转换工具/电子书/新闻/写作/免费漫画等；
 // @author       limbopro
@@ -592,7 +592,7 @@ function getNavigationHTML() {
       <li class="li_global"><a class="a_global special yellow" id="毒奶搜索" href="https://limbopro.com/search.html" target="_blank" style="border-radius:4px;background:#c53f3f">毒奶搜索</a></li>
       <li class="li_global"><a class="a_global special yellow" id="番号搜索" href="https://limbopro.com/btsearch.html" target="_blank" style="border-radius:4px;background:#c53f3f">番号搜索</a></li>
       <li class="li_global"><button class="a_global special yellow" id="mtzyczq"  style="border-radius:4px;background:#c53f3f" onclick="mtzyczq()">媒体资源查找器</button></li>
-      <li class="li_global"><button class="a_global special yellow" id="zhixingjs"  style="border-radius:4px;background:#c53f3f">执行JS</button></li>
+      <li class="li_global"><button class="a_global special yellow" id="zhixingjs"  style="border-radius:4px;background:#c53f3f">执行JS代码</button></li>
     </ul>
   </div>
 
@@ -1935,7 +1935,7 @@ function promptAndExecute() {
     // 2. 提示用户输入代码
     const codeInput = prompt(
         "请输入您要执行的 JavaScript 代码或函数调用：",
-        "Math.random() > 0.5 ? '大于 0.5' : '小于等于 0.5';"
+        "alert(navigator.userAgent)"
     );
 
     // 3. 检查输入是否有效
@@ -2547,7 +2547,7 @@ if (cjsfybtn) {
 // 其他函数 媒体资源查找器 mtzyczq
 
 // --------------------------------------------------------
-// 【A】高级 M3U8 地址获取函数
+// 高级 M3U8 地址获取函数
 // --------------------------------------------------------
 /**
  * @function findAdvancedM3u8
@@ -2555,8 +2555,17 @@ if (cjsfybtn) {
  * @returns {Array<{url: string, type: string, format: 'M3U8'}>} 找到的 M3U8 资源列表。
  */
 
+
 function mtzyczq() {
 
+    // --------------------------------------------------------
+    // 【A】高级 M3U8 地址获取函数
+    // --------------------------------------------------------
+    /**
+     * @function findAdvancedM3u8
+     * @description 尝试通过非标准策略（如全局变量、特定元素属性）获取 M3U8 地址。
+     * @returns {Array<{url: string, type: string, format: 'M3U8'}>} 找到的 M3U8 资源列表。
+     */
     function findAdvancedM3u8() {
         let m3u8Address = null;
         const foundResources = []; // 存储找到的 M3U8 地址对象列表
@@ -2723,7 +2732,7 @@ function mtzyczq() {
     }
 
     // --------------------------------------------------------
-    // 【D】悬浮窗创建与事件绑定函数
+    // 【D】悬浮窗创建与事件绑定函数 (已优化：支持单条复制和播放)
     // --------------------------------------------------------
     const FINDER_CONFIG = {
         WINDOW_ID: 'media-resource-finder-window',
@@ -2733,9 +2742,10 @@ function mtzyczq() {
 
     /**
      * @function createFinderFloatingWindow
-     * @description 创建并显示悬浮窗，展示找到的媒体资源列表，并提供复制功能。
+     * @description 创建并显示悬浮窗，展示找到的媒体资源列表，并为每个资源提供单独的复制和播放功能。
      * @param {Array<{url: string, type: string, format: string}>} resources - 最终去重后的媒体资源列表。
      */
+
     function createFinderFloatingWindow(resources) {
         const { WINDOW_ID, STYLE_ID, OVERLAY_ID } = FINDER_CONFIG;
         const isFound = resources && resources.length > 0;
@@ -2745,17 +2755,38 @@ function mtzyczq() {
             return;
         }
 
-        // --- 1. 资源列表格式化：准备显示内容 ---
-        let outputContent = '';
+        // --- 1. 资源列表格式化：为每个资源创建独立的 HTML 结构 ---
+        let resourcesHtml = '';
         if (isFound) {
             resources.forEach((res, index) => {
-                outputContent += `${index + 1}. [${res.format}] 来源: ${res.type} \n\n${res.url}\n\n`;
+                // 使用 data-url 存储链接，用于复制和播放
+                resourcesHtml += `
+                    <div class="resource-item">
+                        <p class="resource-info">
+                            **[${res.format}]** 来源: ${res.type}
+                        </p>
+                        <textarea class="resource-url" readonly title="媒体资源 URL">${res.url}</textarea>
+                        <div class="button-group">
+                            <button class="copy-single-button" data-url="${res.url}">
+                                📋 复制
+                            </button>
+                           <!--<button class="play-single-button" data-url="${res.url}" data-format="${res.format}">
+                                ▶️ 播放
+                            </button>-->
+                            <a class="play-single-button" href="${res.url}" target="_blank" title="在新窗口打开播放">
+                            ▶️ 播放
+                        </a>
+                        </div>
+                    </div>
+                `;
             });
-            outputContent = outputContent.trim();
         } else {
-            outputContent = '未在 DOM 和高级策略中检测到 MP4/M3U8 播放地址。';
+            resourcesHtml = `
+                <div class="no-resource-message">
+                    未在 DOM 和高级策略中检测到 MP4/M3U8 播放地址。🌟：可尝试点击播放后再试。
+                </div>
+            `;
         }
-
 
         // --- 2. DOM 结构 HTML 模板 ---
         const windowHtml = `
@@ -2766,30 +2797,29 @@ function mtzyczq() {
             </div>
             <div id="${WINDOW_ID}-body">
                 <p>地址状态: <strong>${isFound ? `✅ 已找到 ${resources.length} 条` : '❌ 未找到'}</strong></p>
-                <textarea id="${WINDOW_ID}-output" readonly>${outputContent}</textarea>
-                <button id="${WINDOW_ID}-copy-button" ${!isFound ? 'disabled' : ''}>
-                    ${isFound ? `📋 一键复制全部 ${resources.length} 条链接` : '复制 (地址为空)'}
-                </button>
-                <p style="font-size: 10px; color: #aaa; margin-top: 5px;">* 多个链接将按序复制，每条链接占一行。</p>
-                <p style="font-size: 10px; margin-top: 5px;">
-  如何下载 M3U8 视频？点击跳转
-  <a href="https://limbopro.com/archives/M3U8-Downloader.html" target="_blank" style="color: #3f6edb; text-decoration: none;">
-    M3U8 视频下载教程
-  </a>
-</p>
+                
+                <div id="${WINDOW_ID}-resource-list">
+                    ${resourcesHtml}
+                </div>
 
-<p style="font-size: 10px; margin-top: 5px;">
-  如何下载 MP4 视频？
-  <a href="javascript:void(0);" onclick="showMp4DownloadTip(event)" style="color: #3f6edb; text-decoration: none;">
-    点击了解
-  </a>
-</p>
+               
+                <p style="font-size: 10px; margin-top: 15px;">
+                    如何下载 M3U8 视频？点击跳转
+                    <a href="https://limbopro.com/archives/M3U8-Downloader.html" target="_blank" style="color: #61dafb; text-decoration: none;">
+                        M3U8 视频下载教程
+                    </a>
+                </p>
+                <p style="font-size: 10px; margin-top: 5px;">
+                    如何下载 MP4 视频？
+                    <a href="javascript:void(0);" onclick="showMp4DownloadTip(event)" style="color: #61dafb; text-decoration: none;">
+                        点击了解
+                    </a>
+                </p>
             </div>
         </div>
     `;
 
         window.showMp4DownloadTip = function showMp4DownloadTip(event) {
-            // 阻止默认的链接跳转行为，确保只执行 confirm
             event.preventDefault();
 
             const downloadMessage =
@@ -2798,89 +2828,134 @@ function mtzyczq() {
                 "3. Android 暂无建议；\n" +
                 "4. 桌面浏览器用户在新的标签页打开下载地址，然后右键另存为即可；";
 
-            // 使用 confirm() 弹出确认框，内容为您指定的说明
             confirm(downloadMessage);
         }
 
-        // --- 3. 注入 CSS 样式（保持不变）---
+        // --- 3. 注入 CSS 样式（更新了按钮组和播放按钮样式）---
         const styleElement = document.createElement('style');
         styleElement.id = STYLE_ID;
         styleElement.textContent = `
-        #${OVERLAY_ID} {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.4); 
-            z-index: 1199998; 
-            display: flex;
-            justify-content: center;
-            align-items: center; 
-        }
-        #${WINDOW_ID} {
-            width: 350px;
-            z-index: 99999;
-            background: #282c34;
-            color: #ffffff;
-            border: 2px solid #61dafb;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-        }
-        #${WINDOW_ID}-header {
-            padding: 8px 12px;
-            background: #61dafb;
-            color: #282c34;
-            font-weight: bold;
-            border-top-left-radius: 6px;
-            border-top-right-radius: 6px;
-            cursor: move;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        #${WINDOW_ID}-close {
-            cursor: pointer;
-            font-size: 1.5em;
-            line-height: 0.8;
-        }
-        #${WINDOW_ID}-body {
-            text-align:center;
-            padding: 15px;
-        }
-        #${WINDOW_ID}-output {
-            width: 100%;
-            height: 150px; 
-            padding: 10px;
-            margin: 10px 0;
-            border: 1px solid #444;
-            background: #1e2127;
-            color: #ccc;
-            resize: none;
-            box-sizing: border-box;
-            font-size: 12px;
-            border-radius: 4px;
-        }
-        #${WINDOW_ID}-copy-button {
-            width: 100%;
-            padding: 10px;
-            background: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: background 0.2s;
-        }
-        #${WINDOW_ID}-copy-button:hover:not([disabled]) {
-            background: #45a049;
-        }
-        #${WINDOW_ID}-copy-button:disabled {
-            background: #555;
-            cursor: not-allowed;
-        }
-    `;
+            #${OVERLAY_ID} {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.4); 
+                z-index: 1199998; 
+                display: flex;
+                justify-content: center;
+                align-items: center; 
+            }
+            #${WINDOW_ID} {
+                width: 380px; 
+                max-height: 80vh; 
+                z-index: 99999;
+                background: #282c34;
+                color: #ffffff;
+                border: 2px solid #61dafb;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+                overflow: hidden; 
+            }
+            #${WINDOW_ID}-header {
+                padding: 8px 12px;
+                background: #61dafb;
+                color: #282c34;
+                font-weight: bold;
+                border-top-left-radius: 6px;
+                border-top-right-radius: 6px;
+                cursor: move;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+            #${WINDOW_ID}-close {
+                cursor: pointer;
+                font-size: 1.5em;
+                line-height: 0.8;
+            }
+            #${WINDOW_ID}-body {
+                text-align:center;
+                padding: 15px;
+                overflow-y: auto; 
+                max-height: calc(80vh - 50px); 
+            }
+            
+            #${WINDOW_ID}-resource-list {
+                margin-top: 10px;
+                text-align: left;
+            }
+            .resource-item {
+                border: 1px solid #444;
+                border-radius: 4px;
+                padding: 8px;
+                margin-bottom: 12px;
+                background: #1e2127;
+            }
+            .resource-info {
+                font-size: 13px;
+                margin: 0 0 5px 0;
+                line-height: 1.4;
+                color: #ccc;
+            }
+            .resource-url {
+                width: 100%;
+                height: 50px; 
+                padding: 5px;
+                margin: 5px 0;
+                border: 1px solid #555;
+                background: #1e2127;
+                color: #ccc;
+                resize: none;
+                box-sizing: border-box;
+                font-size: 11px;
+                border-radius: 4px;
+                line-height: 1.2;
+                overflow: auto;
+            }
+            
+            /* 按钮组样式 */
+            .button-group {
+                display: flex;
+                gap: 8px; /* 按钮之间的间距 */
+                margin-top: 5px;
+            }
+
+            /* 复制按钮样式 (左侧) */
+            .copy-single-button {
+                flex-grow: 1; /* 占据可用空间 */
+                padding: 8px;
+                background: #4CAF50; /* 绿色 */
+                color: white;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 14px;
+                transition: background 0.2s;
+            }
+            .copy-single-button:hover:not([disabled]) {
+                background: #45a049;
+            }
+
+            /* 播放按钮样式 (右侧) */
+            .play-single-button {
+                text-align: center;
+                flex-grow: 1; /* 占据可用空间 */
+                padding: 8px;
+                background: #008CBA; /* 蓝色 */
+                color: white;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 14px;
+                transition: background 0.2s;
+            }
+            .play-single-button:hover:not([disabled]) {
+                background: #007bb5;
+            }
+        `;
         document.head.appendChild(styleElement);
 
 
@@ -2897,52 +2972,69 @@ function mtzyczq() {
             const existingStyle = document.getElementById(STYLE_ID);
             if (existingOverlay) existingOverlay.remove();
             if (existingStyle) existingStyle.remove();
-            document.removeEventListener('click', handleOutsideClick, true); // 移除外部点击监听
+            document.removeEventListener('click', handleOutsideClick, true); 
         };
 
         // --- 6. 外部点击关闭的处理器 ---
         const handleOutsideClick = (e) => {
-            // 如果点击发生在悬浮窗外部，则销毁窗口
             if (document.getElementById(WINDOW_ID) && !document.getElementById(WINDOW_ID).contains(e.target)) {
                 destroyWindow();
             }
         };
 
 
-        // --- 7. 绑定事件监听器：关闭和复制 ---
+        // --- 7. 绑定事件监听器：关闭、复制和播放 ---
         const closeButton = document.getElementById(`${WINDOW_ID}-close`);
-        const copyButton = document.getElementById(`${WINDOW_ID}-copy-button`);
-
         closeButton.onclick = destroyWindow;
 
-        // 延迟添加外部点击监听，避免创建瞬间被触发
         setTimeout(() => {
             document.addEventListener('click', handleOutsideClick, true);
         }, 100);
 
-        copyButton.onclick = async () => {
-            // 提取所有 URL，用换行符连接
-            const cleanUrls = resources.map(res => res.url).join('\n');
+        // 绑定所有单独的复制按钮事件
+        document.querySelectorAll('.copy-single-button').forEach(button => {
+            button.onclick = async () => {
+                const urlToCopy = button.getAttribute('data-url');
+                if (!urlToCopy) return;
 
-            if (!cleanUrls) return;
+                try {
+                    await navigator.clipboard.writeText(urlToCopy);
 
-            try {
-                await navigator.clipboard.writeText(cleanUrls);
+                    // 复制成功反馈
+                    const originalText = button.textContent;
+                    button.textContent = '✅ 已复制!'; // 简化反馈文本
+                    button.style.backgroundColor = '#2196F3';
+                    setTimeout(() => {
+                        button.textContent = originalText;
+                        button.style.backgroundColor = '#4CAF50';
+                    }, 1500);
+                } catch (err) {
+                    console.error('复制失败:', err);
+                    const originalText = button.textContent;
+                    button.textContent = '❌ 复制失败';
+                    button.style.backgroundColor = '#F44336';
+                    setTimeout(() => {
+                        button.textContent = originalText;
+                        button.style.backgroundColor = '#4CAF50';
+                    }, 1500);
+                }
+            };
+        });
 
-                // 复制成功反馈
-                copyButton.textContent = '✅ 全部链接已复制!';
-                copyButton.style.backgroundColor = '#2196F3';
-                setTimeout(() => {
-                    copyButton.textContent = `📋 一键复制全部 ${resources.length} 条链接`;
-                    copyButton.style.backgroundColor = '#4CAF50';
-                }, 1500);
-            } catch (err) {
-                console.error('复制失败:', err);
-                // 复制失败反馈
-                copyButton.textContent = '❌ 复制失败';
-                copyButton.style.backgroundColor = '#F44336';
-            }
-        };
+        // 绑定所有单独的播放按钮事件
+        document.querySelectorAll('.play-single-button').forEach(button => {
+            button.onclick = () => {
+                const urlToPlay = button.getAttribute('data-url');
+                const format = button.getAttribute('data-format');
+                
+                if (urlToPlay) {
+                    // 直接在新标签页打开 URL，浏览器会自动尝试播放支持的媒体格式（如 MP4）
+                    // 对于 M3U8，如果浏览器/环境支持原生 HLS，也会尝试播放
+                    window.open(urlToPlay, '_blank');
+                    console.log(`正在尝试播放 ${format} 链接: ${urlToPlay}`);
+                }
+            };
+        });
     }
 
 
@@ -4344,11 +4436,11 @@ function alFeedback_checkScriptExistence() { // 重命名函数
                 break;
             }
         }
-        const statusClass = found ? 'al-script-loaded' : 'al-script-missing'; 
+        const statusClass = found ? 'al-script-loaded' : 'al-script-missing';
         const statusIcon = found ? '已挂载✅' : '未挂载❌';
         statusHtml += `<li><span class="${statusClass}">${statusIcon} ${targetName}</span></li>`;
     });
-    
+
     // --- 关键元素状态 ---
     statusHtml += '<li><strong>--- 关键元素状态 ---</strong></li>';
     const TARGET_ELEMENTS = [
@@ -4369,10 +4461,10 @@ function alFeedback_checkScriptExistence() { // 重命名函数
     const isAgentStatusClass = isAgentExists ? 'al-script-loaded' : 'al-script-missing';
     const isAgentStatusIcon = isAgentExists ? '存在✅' : '缺失❌';
     statusHtml += `<li><span class="${isAgentStatusClass}">${isAgentStatusIcon} 全局变量: window.isAgent</span></li>`;
-    
+
     // --- 异步请求/库状态 (AJAX Heuristic Check) ---
     statusHtml += '<li><strong>--- 异步请求/库状态 (推测AJAX) ---</strong></li>';
-    
+
     const AJAX_CHECKS = [
         { name: 'window.XMLHttpRequest', exists: typeof window.XMLHttpRequest !== 'undefined' },
         { name: 'window.fetch', exists: typeof window.fetch === 'function' },
@@ -4472,7 +4564,7 @@ window.alFeedback_showPanel = function alFeedback_showPanel() { // 重命名函�
         </p>
         
         <p style="margin-bottom: 0;">
-            联系博主：<a href="https://limbopro.com/6.html" target="_blank" class="al-contact-link">点此联系？反馈</a> </p>
+            联系博主：<a href="https://limbopro.com/6.html" target="_blank" class="al-contact-link">点此联系？反馈</a> 或<a href="https://limbopro.com/feedback/" target="_blank" class="al-contact-link">匿名留言</a> </p>
 
         <div class="al-info-block" id="${INFO_BLOCK_ID}"> <strong>系统信息 (用于调试):</strong>
             <br>
@@ -4522,3 +4614,58 @@ window.alFeedback_copyDebugInfo = alFeedback_copyDebugInfo;
 
 console.log(`脚本已运行，自动显示反馈信息面板。`);
 console.log(`⚠️ 悬浮窗自动关闭时间设置为 ${AL_FEEDBACK_TIMEOUT_MS / 1000} 秒 (2 分钟)。`); // 使用新的变量名
+
+
+
+/**
+ * 获取当前页面的 URL 和标题，并将其附加到指定的 URL 作为 UTM 参数。
+ * 基础 URL: https://limbopro.com/feedback/
+ */
+function generateFeedbackUrlWithContext() {
+    // 1. 获取当前页面的完整 URL 和标题
+    const currentPageUrl = window.location.href;
+    const currentPageTitle = document.title;
+    
+    // 2. 定义目标基础 URL
+    const baseUrl = 'https://limbopro.com/feedback/';
+    
+    // 3. 创建 URL 对象并添加参数 (使用现代 API 确保自动编码)
+    const url = new URL(baseUrl);
+    
+    // 将当前 URL 作为 utm_source (来源)
+    url.searchParams.set('utm_source', currentPageUrl); 
+    
+    // 将当前标题作为 utm_medium (媒介/内容)
+    url.searchParams.set('utm_medium', currentPageTitle);
+    
+    return url.toString(); // 返回最终生成的 URL 字符串
+}
+
+/**
+ * 查找 ID 为 'ifeedback' 的链接元素，并用动态生成的 URL 替换其 href 属性。
+ */
+function updateFeedbackLink() {
+    const linkElementId = 'ifeedback';
+    
+    // 1. 生成带有上下文的 URL
+    const newHref = generateFeedbackUrlWithContext();
+    
+    // 2. 获取目标链接元素
+    const feedbackLink = document.getElementById(linkElementId);
+    
+    if (feedbackLink && feedbackLink.tagName === 'A') {
+        // 3. 替换 href 属性
+        feedbackLink.href = newHref;
+        
+        console.log(`✅ 成功更新链接 #${linkElementId} 的 href 属性为:`);
+        console.log(newHref);
+    } else {
+        console.error(`❌ 无法找到 ID 为 '${linkElementId}' 的 <a> 链接元素。`);
+    }
+}
+
+// 确保在 DOM 元素加载完毕后执行更新操作
+document.addEventListener('DOMContentLoaded', updateFeedbackLink);
+
+// 或者如果您的脚本放在页面底部，可以直接调用：
+// updateFeedbackLink();
