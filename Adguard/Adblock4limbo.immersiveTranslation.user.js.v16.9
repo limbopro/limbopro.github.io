@@ -134,6 +134,7 @@ window.loadGoogleTranslateUI = function loadGoogleTranslateUI() {
         }
             */
 
+            loadGoogleTranslateUI()
             //forceHardReload()
         }
 
@@ -161,21 +162,13 @@ window.applyDualWrapperProtection = function applyDualWrapperProtection() {
                     const text = node.nodeValue.trim();
                     if (!text) return NodeFilter.FILTER_REJECT;
 
-                    // 1. 纯数字或符号 (例如 123.45)
                     const pureNumericOrSymbolic = /^\s*[\d\s.,]+\s*$/.test(text)
                     if (pureNumericOrSymbolic) {
                         return NodeFilter.FILTER_REJECT;
                     }
 
-                    // 2. 日期格式 (例如 2025-12-12)
                     const dateformat = /\b(\d{1,4}[-\/.]\d{1,2}[-\/.]\d{1,4})\b/.test(text)
                     if (dateformat) {
-                        return NodeFilter.FILTER_REJECT;
-                    }
-
-                    // **【新增过滤规则：纯时间格式 (例如 45:00, 1:23:45)】**
-                    const timeFormat = /^\s*(\d{1,2}:\d{2}(:\d{2})?)\s*$/.test(text);
-                    if (timeFormat) {
                         return NodeFilter.FILTER_REJECT;
                     }
 
@@ -400,23 +393,8 @@ window.applyDualWrapperProtection = function applyDualWrapperProtection() {
         console.log('%c 如需撤销包裹，执行：REVERT_DUAL_WRAPPER()',
             'background:#ff9800;color:#fff;padding:6px 12px;border-radius:4px;');
 
+        setInterval(() => { loadGoogleTranslateUI() }, 2500)
         console.log("[Immersive Translate] Google Translate UI 加载已触发。");
-
-        // **【修改点 A: 条件启动和存储 ID】**
-
-        loadGoogleTranslateUI()
-
-        setTimeout(() => {
-            if (wtfIntervalId === null) {
-                wtfIntervalId = setInterval(() => {
-                    skiptrs()
-                    loadGoogleTranslateUI()
-                }, 4000);
-                console.log(`[Immersive Translate] Google Translate UI 循环加载已启动 (ID: ${wtfIntervalId})。`);
-            } else {
-                console.log(`[Immersive Translate] Google Translate UI 循环加载已在运行中 (ID: ${wtfIntervalId})。`);
-            }
-        }, 4000)
 
     })();
 }
@@ -672,14 +650,6 @@ function createFloatingButton() {
             });
 
             console.log('切换成原文模式...')
-
-            // **【修改点 B: 停止循环】**
-            if (wtfIntervalId !== null) {
-                clearInterval(wtfIntervalId);
-                console.log(`[UI Control] Google Translate UI 循环加载已停止 (ID: ${wtfIntervalId})。`);
-                wtfIntervalId = null; // 重置 ID
-            }
-
             hideElements(); // 隐藏样式
 
             // *** 增强：切换到原文模式时，检查并重建关闭按钮 ***
@@ -752,17 +722,6 @@ function createFloatingButton() {
 
 createFloatingButton();
 
-// 判断谷歌翻译是否提前翻译
-
-window.skiptrs = function skiptrs() {
-    const googletraLength = document.querySelectorAll("font[dir] > font[dir]").length;
-    const cjsfytraLength = document.querySelectorAll(".notranslate.ori, .cjsfy-translated").length;
-    if (cjsfytraLength > 0 && googletraLength > 0 && (googletraLength / cjsfytraLength) > 0.8) {
-        forceHardReload()
-    }
-}
-
-
 function monitorClickAndUrlChange() {
     console.log("URL 变化监控已启动...");
 
@@ -775,8 +734,6 @@ function monitorClickAndUrlChange() {
 
             if (currentUrl !== originalUrl) {
                 setTimeout(() => {
-
-
                     const googletraLength = document.querySelectorAll("font[dir] > font[dir]").length;
                     const cjsfytraLength = document.querySelectorAll(".notranslate.ori, .cjsfy-translated").length;
 
@@ -788,11 +745,10 @@ function monitorClickAndUrlChange() {
                         );
 
                         if (userAction) {
-                            forceHardReload()
+                            window.location.reload()
+                            //location.reload(true);
                         }
                     }
-
-
                 }, 3000);
 
             }
@@ -878,7 +834,7 @@ function forceHardReload() {
 
     // 3. 导航到新的 URL
     loadTranslateScriptWithTrustedTypes(SCRIPT_URL, POLICY_NAME, URL_PREFIX);
-    //loadGoogleTranslateUI()
+    loadGoogleTranslateUI()
     window.location.href = currentUrl.toString();
 }
 
@@ -892,6 +848,7 @@ monitorDomAndUrlChanges()
 // 全局变量用于存储 setInterval ID
 // ==========================================================
 let wtfIntervalId = null;
+
 
 window.ybyfy = function ybyfy() {
 

@@ -5157,7 +5157,6 @@ window.initAdblockLoader = function initAdblockLoader() {
     // **核心：获取主域名**
     const siteName = getRootDomain(hostname);
 
-
     // 3. 构建 CSS 文件名和完整的 URL
     const cssFileName = siteName + '.css'; // // example reddit.com.css
     const cssUrl = BASE_CSS_URL + cssFileName; // // example http://limbopro.com/CSS/reddit.com.css

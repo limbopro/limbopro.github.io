@@ -19,16 +19,13 @@ document.cookie = "googtrans=/auto/zh-CN; path=/";
 
 
 
-window.loadGoogleTranslateUI = function loadGoogleTranslateUI() {
+function loadGoogleTranslateUI() {
 
     // 如果 UI 已存在，直接返回
     const uiContainerId = 'google_translate_element';
-    const googleWidget = document.querySelector('.skiptranslate.goog-te-gadget');
-    const ybyfyvalue = document.getElementById("translation-button")?.classList?.contains('translated')
 
     // 如果元素已存在，则直接返回
-    //if (!ybyfyvalue) return;
-    if (document.getElementById(uiContainerId) && googleWidget && ybyfyvalue) return;
+    if (document.getElementById(uiContainerId)) return;
 
     // --- 1. 谷歌翻译初始化函数配置 ---
 
@@ -111,32 +108,29 @@ window.loadGoogleTranslateUI = function loadGoogleTranslateUI() {
     const successSelector = '.skiptranslate.goog-te-gadget';
 
     setTimeout(() => {
-
         const isLoaded = document.querySelector(successSelector);
 
         if (!isLoaded) {
             console.warn(`%c[Google Translate] 警告：脚本可能加载失败或超时 (${checkDelay / 1000} 秒)。`,
                 'color: #FF9800; font-weight: bold; background: #fff3e0; padding: 4px 8px; border-radius: 4px;');
 
-            /* 不再提示
+            const userAction = confirm(
+                '⚠️ 提示：\n\n谷歌翻译组件在 8 秒内未加载成功，翻译功能可能无法正常使用。\n\n可能的原因：\n1.内容安全策略（Content Security Policy, CSP），刷新也没用；\n2.网络问题，稍后刷新页面再试试；\n\n以上。'
+            );
 
-        const userAction = confirm(
-            '⚠️ 提示：\n\n谷歌翻译组件在 8 秒内未加载成功，翻译功能可能无法正常使用。\n\n可能的原因：\n1.内容安全策略（Content Security Policy, CSP），刷新也没用；\n2.网络问题，稍后刷新页面再试试；\n\n以上。'
-        );
+            if (userAction) {
+                // 移除与翻译功能相关的自定义元素
+                // document.querySelectorAll('.cjsfy-original, .cjsfy-translated, .spacer').forEach((e) => { e.remove() });
+                // document.getElementById('translation-button')?.remove();
+                // document.getElementById(uiContainerId)?.remove();
+            } else {
+                console.log("[Google Translate] UI 容器保留在页面上。");
+            }
 
-        if (userAction) {
-            // 移除与翻译功能相关的自定义元素
-            // document.querySelectorAll('.cjsfy-original, .cjsfy-translated, .spacer').forEach((e) => { e.remove() });
-            // document.getElementById('translation-button')?.remove();
-            // document.getElementById(uiContainerId)?.remove();
-        } else {
-            console.log("[Google Translate] UI 容器保留在页面上。");
+window.location.reload()
+
+            //location.reload(true);
         }
-            */
-
-            //forceHardReload()
-        }
-
     }, checkDelay);
 }
 
@@ -144,7 +138,7 @@ window.loadGoogleTranslateUI = function loadGoogleTranslateUI() {
 
 // --- II. 双包裹体创建逻辑 ---
 
-window.applyDualWrapperProtection = function applyDualWrapperProtection() {
+window.applyDualWrapperProtection=function applyDualWrapperProtection() {
     (() => {
         console.clear();
 
@@ -161,21 +155,13 @@ window.applyDualWrapperProtection = function applyDualWrapperProtection() {
                     const text = node.nodeValue.trim();
                     if (!text) return NodeFilter.FILTER_REJECT;
 
-                    // 1. 纯数字或符号 (例如 123.45)
                     const pureNumericOrSymbolic = /^\s*[\d\s.,]+\s*$/.test(text)
                     if (pureNumericOrSymbolic) {
                         return NodeFilter.FILTER_REJECT;
                     }
 
-                    // 2. 日期格式 (例如 2025-12-12)
                     const dateformat = /\b(\d{1,4}[-\/.]\d{1,2}[-\/.]\d{1,4})\b/.test(text)
                     if (dateformat) {
-                        return NodeFilter.FILTER_REJECT;
-                    }
-
-                    // **【新增过滤规则：纯时间格式 (例如 45:00, 1:23:45)】**
-                    const timeFormat = /^\s*(\d{1,2}:\d{2}(:\d{2})?)\s*$/.test(text);
-                    if (timeFormat) {
                         return NodeFilter.FILTER_REJECT;
                     }
 
@@ -213,6 +199,11 @@ window.applyDualWrapperProtection = function applyDualWrapperProtection() {
         // 2. 统一处理：创建并插入 双包裹体 + 分隔符
         const results = [];
         targetsToProcess.forEach(({ originalText, target }, i) => {
+
+
+
+
+
 
 
             function wrapTarget() { // 打包函数开始 包裹 对于普通节点
@@ -400,24 +391,6 @@ window.applyDualWrapperProtection = function applyDualWrapperProtection() {
         console.log('%c 如需撤销包裹，执行：REVERT_DUAL_WRAPPER()',
             'background:#ff9800;color:#fff;padding:6px 12px;border-radius:4px;');
 
-        console.log("[Immersive Translate] Google Translate UI 加载已触发。");
-
-        // **【修改点 A: 条件启动和存储 ID】**
-
-        loadGoogleTranslateUI()
-
-        setTimeout(() => {
-            if (wtfIntervalId === null) {
-                wtfIntervalId = setInterval(() => {
-                    skiptrs()
-                    loadGoogleTranslateUI()
-                }, 4000);
-                console.log(`[Immersive Translate] Google Translate UI 循环加载已启动 (ID: ${wtfIntervalId})。`);
-            } else {
-                console.log(`[Immersive Translate] Google Translate UI 循环加载已在运行中 (ID: ${wtfIntervalId})。`);
-            }
-        }, 4000)
-
     })();
 }
 
@@ -434,9 +407,11 @@ function initiateTranslationFlow() {
     // 所有资源（图片、css、js 等）都加载完毕
     console.log("[Immersive Translate] 翻译流程开始...");
     // 如果 按钮 已存在，直接返回
+    document.querySelectorAll("#translation-button")
+    //if (document.getElementById('translation-button')) return;
     protectPreTags();
     applyDualWrapperProtection();
-    //loadGoogleTranslateUI();
+    loadGoogleTranslateUI();
     console.log("[Immersive Translate] 翻译流程执行完毕。");
 }
 
@@ -604,7 +579,6 @@ function createFloatingButton() {
     button.textContent = '双语';
     document.body.appendChild(button);
 
-
     // 保护主按钮不被双包裹逻辑处理
     button.setAttribute('data-_textDuplicated', 'true');
 
@@ -672,14 +646,6 @@ function createFloatingButton() {
             });
 
             console.log('切换成原文模式...')
-
-            // **【修改点 B: 停止循环】**
-            if (wtfIntervalId !== null) {
-                clearInterval(wtfIntervalId);
-                console.log(`[UI Control] Google Translate UI 循环加载已停止 (ID: ${wtfIntervalId})。`);
-                wtfIntervalId = null; // 重置 ID
-            }
-
             hideElements(); // 隐藏样式
 
             // *** 增强：切换到原文模式时，检查并重建关闭按钮 ***
@@ -751,18 +717,6 @@ function createFloatingButton() {
 // --- IV. 脚本入口点与监控 ---
 
 createFloatingButton();
-
-// 判断谷歌翻译是否提前翻译
-
-window.skiptrs = function skiptrs() {
-    const googletraLength = document.querySelectorAll("font[dir] > font[dir]").length;
-    const cjsfytraLength = document.querySelectorAll(".notranslate.ori, .cjsfy-translated").length;
-    if (cjsfytraLength > 0 && googletraLength > 0 && (googletraLength / cjsfytraLength) > 0.8) {
-        forceHardReload()
-    }
-}
-
-
 function monitorClickAndUrlChange() {
     console.log("URL 变化监控已启动...");
 
@@ -775,8 +729,6 @@ function monitorClickAndUrlChange() {
 
             if (currentUrl !== originalUrl) {
                 setTimeout(() => {
-
-
                     const googletraLength = document.querySelectorAll("font[dir] > font[dir]").length;
                     const cjsfytraLength = document.querySelectorAll(".notranslate.ori, .cjsfy-translated").length;
 
@@ -784,15 +736,15 @@ function monitorClickAndUrlChange() {
 
                         console.warn('翻译元素数量可能不匹配，建议重新加载。');
                         const userAction = confirm(
-                            '⚠️ 提示：\n\n存在的问题：\n当前页面未按预期进行双语对照翻译；\n\n可能的原因：\n单页应用路由跳转导致（如网站使用了PJAX/AJAX技术）\n\n是否需要重新加载页面以便正确执行翻译请求？\n\n如仍不能按预期进行双语对照翻译，请手动刷新页面。更多问题请进入导航->设置-反馈/留言。'
+                            '⚠️ 提示：\n\n存在的问题：\n当前页面未按预期进行双语对照翻译；\n\n可能的原因：\n单页应用路由跳转导致（如网站使用了PJAX/AJAX技术）\n\n是否需要重新加载页面以便正确执行翻译请求？\n\n如果仍不能按预期进行双语对照翻译，请手动刷新页面。更多问题请进入导航->设置-反馈/留言。'
                         );
 
                         if (userAction) {
-                            forceHardReload()
+window.location.reload()
+
+                            //location.reload(true);
                         }
                     }
-
-
                 }, 3000);
 
             }
@@ -801,143 +753,26 @@ function monitorClickAndUrlChange() {
     }, true);
 }
 
-/**
- * 使用 MutationObserver 监控 DOM 变化，以检测 SPA 导航加载新内容。
- * 并在检测到 URL 变化和 DOM 变化时，提示用户进行操作。
- */
-function monitorDomAndUrlChanges() {
-    let lastUrl = window.location.href;
-    console.log("[Observer] DOM 变动与 URL 监控已启动...");
+monitorClickAndUrlChange();
 
-    const observerConfig = {
-        childList: true, // 监控子节点的增减
-        subtree: true,   // 监控整个子树
-        attributes: false, // 不监控属性变化
-        characterData: false // 不监控文本内容变化
-    };
+/*document.addEventListener('DOMContentLoaded', function() {*/
 
-    const domObserver = new MutationObserver((mutationsList, observer) => {
-        // 仅在 URL 实际发生变化时采取行动 (这是 SPA 导航的关键判断)
-        if (window.location.href !== lastUrl) {
-            lastUrl = window.location.href;
-
-            // 暂停观察，防止递归调用
-            observer.disconnect();
-
-            console.log("检测到 SPA 路由变化和内容加载...");
-
-            // ----------------------------------------------------
-            // 替代原脚本中的 alert/confirm 逻辑
-            // ----------------------------------------------------
-            setTimeout(() => {
-
-                /*
-                                const userAction = confirm(
-                                    '⚠️ 提示：\n\n存在的问题：\n当前页面未按预期进行双语对照翻译；\n\n可能的原因：\n单页应用路由跳转导致（如网站使用了PJAX/AJAX技术）\n\n需要重新加载页面以便正确执行翻译请求？\n\n（如仍不能按预期进行双语对照翻译，请手动刷新页面。更多问题请进入导航->设置-反馈/留言。）\n\n'
-                                    //'⚠️ 提示：\n\n存在的问题：\n当前页面未按预期进行双语对照翻译；\n\n可能的原因：\n单页应用路由跳转导致（如网站使用了PJAX/AJAX技术）\n\n是否需要重新加载页面以便正确执行翻译请求？\n\n如仍不能按预期进行双语对照翻译，请手动刷新页面。更多问题请进入导航->设置-反馈/留言。\n\n'
-                                    //'⚠️ 提示：\n检测到单页应用 (SPA) 路由跳转导致内容刷新。\n\n是否需要**重新加载页面**以便正确执行翻译和包裹？\n'
-                                );
-                
-                                if (userAction) {
-                                    forceHardReload()
-                                } else {
-                                    // 如果用户选择不刷新，则尝试重新应用包裹和翻译流程 (如果需要)
-                                    // 注意: 强制重构 DOM 可能会导致用户体验不佳
-                                    // initiateTranslationFlow(); 
-                
-                                    // 重启观察者
-                                    observer.observe(document.body, observerConfig);
-                                }
-                */
-
-                forceHardReload()
-
-            }, 500); // 给浏览器一个短暂的时间来完成渲染新内容
-
-        }
-        // 如果 URL 未变，但 DOM 变动了 (例如，弹窗或懒加载内容)，通常不需要刷新。
-    });
-
-    // 开始观察 document.body
-    domObserver.observe(document.body, observerConfig);
+if (localStorage.getItem('ybyfy') == 'y') {
+    setTimeout(() => {
+        //applyDualWrapperProtection()
+document.getElementById('translation-button')?.click()
+    }, 250)
 }
 
-/**
- * 强制重新加载当前页面，通过附加时间戳参数来绕过浏览器缓存，
- * 达到模拟用户“硬刷新”的效果。
- */
-function forceHardReload() {
-    const currentUrl = new URL(window.location.href);
-    const timestamp = Date.now();
+/*});*/
 
-    // 1. 移除可能已存在的随机参数
-    currentUrl.searchParams.delete('cachebuster');
 
-    // 2. 添加新的时间戳参数
-    currentUrl.searchParams.set('cachebuster', timestamp);
-
-    // 3. 导航到新的 URL
-    loadTranslateScriptWithTrustedTypes(SCRIPT_URL, POLICY_NAME, URL_PREFIX);
-    //loadGoogleTranslateUI()
-    window.location.href = currentUrl.toString();
-}
-
-// 替换或补充您原有的 monitorClickAndUrlChange(); 调用
-// monitorDomAndUrlChanges();
-
-// monitorClickAndUrlChange();
-monitorDomAndUrlChanges()
-
-// ==========================================================
-// 全局变量用于存储 setInterval ID
-// ==========================================================
-let wtfIntervalId = null;
-
-window.ybyfy = function ybyfy() {
-
-    // --- V. 脚本入口点与监控 (最终优化后的自动点击部分) ---
-
-    if (localStorage.getItem('ybyfy') == 'y') {
-        setTimeout(() => {
-            const button = document.getElementById('translation-button');
-            const googleWidget = document.querySelector('.skiptranslate.goog-te-gadget');
-            const isTranslatedMode = button && button.classList.contains('translated');
-
-            if (button && !isTranslatedMode) {
-                // 场景 1: 按钮存在，且处于原文/初始模式 (需要切换到双语)
-                console.log("[Auto-Translate] 检测到存储状态为 '双语'，且按钮未激活，触发模拟点击。");
-                button.click();
-
-            } else if (isTranslatedMode) {
-                // 场景 2: 按钮存在，且已处于 '双语' 模式 (translated)
-
-                if (!googleWidget) {
-                    // 进一步检查：处于双语模式，但谷歌翻译组件缺失
-                    console.warn("%c[Auto-Translate] 警告: 处于 '双语' 模式，但谷歌翻译组件 (.goog-te-gadget) 缺失。",
-                        'color: #FF5722; font-weight: bold;');
-
-                    // 强制重新执行初始化流程，这会重新触发 applyDualWrapperProtection 和 loadGoogleTranslateUI
-                    // 模拟点击按钮会安全地重新尝试初始化
-
-                    console.log("[Auto-Translate] 尝试通过模拟点击重新加载翻译组件...");
-                    loadGoogleTranslateUI()
-                    //button.click();
-                } else {
-                    // 状态正常：处于双语模式，且谷歌翻译组件已加载
-                    console.log("[Auto-Translate] 按钮已存在且已处于 '双语' 模式 (translated)，谷歌组件正常。跳过模拟点击。");
-                }
-            } else {
-                // 场景 3: 浮动按钮尚未渲染
-                console.log("[Auto-Translate] 浮动按钮尚未渲染，无法执行自动点击。");
-            }
-        }, 250);
+setInterval(() => {
+    if (localStorage.getItem('ybyfy') == 'y' && document.querySelector('.skiptranslate.goog-te-gadget') == null) {
+        //loadGoogleTranslateUI()
+//alert('wtf')
     }
-
-}
-
-
-setTimeout(() => { ybyfy() }, 1250)
-
+}, 2000)
 
 // 其他函数
 
