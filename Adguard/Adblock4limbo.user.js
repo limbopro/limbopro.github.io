@@ -429,9 +429,11 @@ var adsMax = {
     }
 }
 
+
 loadCSS(adsMax.css.globalcss, () => {
-    console.log('CSS 已生效');
+    //console.log('CSS 已生效');
 })
+
 
 /*
 loadCSS(adsMax.css.weblistads, () => {
@@ -5157,12 +5159,22 @@ window.initAdblockLoader = function initAdblockLoader() {
 
 
     // 3. 构建 CSS 文件名和完整的 URL
-    const cssFileName = siteName + '.css';
-    const cssUrl = BASE_CSS_URL + cssFileName;
+    const cssFileName = siteName + '.css'; // // example reddit.com.css
+    const cssUrl = BASE_CSS_URL + cssFileName; // // example http://limbopro.com/CSS/reddit.com.css
+
+    // 3.1. 构建自定义 CSS 文件名和完整的 URL
+    const cssFileNameByhand = "limbopro" + siteName + '.css'; // // example limbopro.reddit.com.css
+    const cssUrlByhand = BASE_CSS_URL + cssFileNameByhand; // example http://limbopro.com/CSS/limbopro.reddit.com.css
 
     // 4. 使用安全的函数加载样式表
-    loadStylesheetWithTrustedTypes(cssUrl, TT_POLICY_NAME, TT_URL_PREFIX);
+    loadStylesheetWithTrustedTypes(cssUrl, TT_POLICY_NAME, TT_URL_PREFIX); // example http://limbopro.com/CSS/reddit.com.css
+    loadStylesheetWithTrustedTypes(cssUrlByhand, TT_POLICY_NAME, TT_URL_PREFIX); // example http://limbopro.com/CSS/limbopro.reddit.com.css
 
+//alert(cssUrl)
+
+loadCSS(cssUrl, () => {
+    //console.log('CSS 已生效');
+})
     console.log(`[Adblock Loader] 尝试根据域名 "${hostname}" 加载 "${cssFileName}"`);
 }
 
@@ -5192,7 +5204,8 @@ const WARNING_TIMEOUT_MS = 120000;
 const TARGET_SCRIPTS = [
     'Adblock4limbo.user.js',
     'Adblock4limbo.function.js',
-    'Adblock4limbo.immersiveTranslation.user.js'
+    'Adblock4limbo.immersiveTranslation.user.js',
+    'isAgent.js'
 ];
 
 // --- 悬浮窗函数 ---
@@ -5543,4 +5556,4 @@ setInterval(() => {
     if (document.querySelectorAll("div:has(a[href*='admiral'])").length >= 1) {
         attemptFixScrolling();
     }
-}, 3000)
+}, 5000)

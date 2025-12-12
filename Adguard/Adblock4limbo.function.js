@@ -1935,7 +1935,7 @@ function promptAndExecute() {
     // 2. 提示用户输入代码
     const codeInput = prompt(
         "请输入您要执行的 JavaScript 代码或函数调用：",
-        "Math.random() > 0.5 ? '大于 0.5' : '小于等于 0.5';"
+        "alert(navigator.userAgent)"
     );
 
     // 3. 检查输入是否有效
