@@ -2783,7 +2783,7 @@ function mtzyczq() {
         } else {
             resourcesHtml = `
                 <div class="no-resource-message">
-                    未在 DOM 和高级策略中检测到 MP4/M3U8 播放地址。
+                    未在 DOM 和高级策略中检测到 MP4/M3U8 播放地址。🌟：可尝试点击播放后再试。
                 </div>
             `;
         }
@@ -2802,6 +2802,7 @@ function mtzyczq() {
                     ${resourcesHtml}
                 </div>
 
+               
                 <p style="font-size: 10px; margin-top: 15px;">
                     如何下载 M3U8 视频？点击跳转
                     <a href="https://limbopro.com/archives/M3U8-Downloader.html" target="_blank" style="color: #61dafb; text-decoration: none;">
@@ -4613,3 +4614,58 @@ window.alFeedback_copyDebugInfo = alFeedback_copyDebugInfo;
 
 console.log(`脚本已运行，自动显示反馈信息面板。`);
 console.log(`⚠️ 悬浮窗自动关闭时间设置为 ${AL_FEEDBACK_TIMEOUT_MS / 1000} 秒 (2 分钟)。`); // 使用新的变量名
+
+
+
+/**
+ * 获取当前页面的 URL 和标题，并将其附加到指定的 URL 作为 UTM 参数。
+ * 基础 URL: https://limbopro.com/feedback/
+ */
+function generateFeedbackUrlWithContext() {
+    // 1. 获取当前页面的完整 URL 和标题
+    const currentPageUrl = window.location.href;
+    const currentPageTitle = document.title;
+    
+    // 2. 定义目标基础 URL
+    const baseUrl = 'https://limbopro.com/feedback/';
+    
+    // 3. 创建 URL 对象并添加参数 (使用现代 API 确保自动编码)
+    const url = new URL(baseUrl);
+    
+    // 将当前 URL 作为 utm_source (来源)
+    url.searchParams.set('utm_source', currentPageUrl); 
+    
+    // 将当前标题作为 utm_medium (媒介/内容)
+    url.searchParams.set('utm_medium', currentPageTitle);
+    
+    return url.toString(); // 返回最终生成的 URL 字符串
+}
+
+/**
+ * 查找 ID 为 'ifeedback' 的链接元素，并用动态生成的 URL 替换其 href 属性。
+ */
+function updateFeedbackLink() {
+    const linkElementId = 'ifeedback';
+    
+    // 1. 生成带有上下文的 URL
+    const newHref = generateFeedbackUrlWithContext();
+    
+    // 2. 获取目标链接元素
+    const feedbackLink = document.getElementById(linkElementId);
+    
+    if (feedbackLink && feedbackLink.tagName === 'A') {
+        // 3. 替换 href 属性
+        feedbackLink.href = newHref;
+        
+        console.log(`✅ 成功更新链接 #${linkElementId} 的 href 属性为:`);
+        console.log(newHref);
+    } else {
+        console.error(`❌ 无法找到 ID 为 '${linkElementId}' 的 <a> 链接元素。`);
+    }
+}
+
+// 确保在 DOM 元素加载完毕后执行更新操作
+document.addEventListener('DOMContentLoaded', updateFeedbackLink);
+
+// 或者如果您的脚本放在页面底部，可以直接调用：
+// updateFeedbackLink();
