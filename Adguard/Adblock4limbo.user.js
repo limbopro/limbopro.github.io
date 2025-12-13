@@ -1662,8 +1662,8 @@ function adsDomain_switch(x) { // 匹配参数值 执行相应函数
 
             }()
 
-            //noWindowOpenIf('window.open')
-            //noWindowOpenIf('touchend')
+            noWindowOpenIf('window.open')
+            noWindowOpenIf('touchend')
             window_open_defuser(); // 打断 window.open 施法
 
             break;
@@ -2435,7 +2435,7 @@ adsDomain_switch(values()) // 动手吧
 */
 
 // uBlock Origin 脚本添加
-function uBlockOrigin_add() {
+window.uBlockOrigin_add = function uBlockOrigin_add() {
     js_adsRemove(uBlockOrigin.chn0abortcurrentscript);
     js_adsRemove(uBlockOrigin.chn0setconstant);
     js_adsRemove(uBlockOrigin.abortcurrentscript);
