@@ -4829,10 +4829,10 @@ function injectStyles(containerId, windowId) {
 // 元素屏蔽器开始  START
 
 // ==UserScript==
-// @name         元素屏蔽/追踪器 (V26.0 - 链接调试模式, 强力 Hook, Iframe支持, 优化关闭按钮)
+// @name         元素屏蔽/追踪器 (V26.11 - 终极修复：Hook Top/Parent Location)
 // @namespace    http://tampermonkey.net/
-// @version      26.0
-// @description  用于在网页和同源Iframe内，选择并持久化移除任何元素，精确阻止广告链接和弹窗，并支持链接调试。
+// @version      26.11
+// @description  V26.10 基础上，新增对 window.parent.location 和 window.top.location 的 Hook，用于捕获来自 Iframe 的强制重定向。
 // @author       Gemini
 // @match        *://*/*
 // @grant        none
@@ -4848,17 +4848,20 @@ function injectStyles(containerId, windowId) {
     const isLimbopro_STORAGE_KEY_XZQ = 'gemini_zero_opacity_removals';
     const containerId = 'gemini-main-container';
     const windowId = 'gemini-float-window';
+    
+    // V26.1: 调试模式持久化键
+    const DEBUG_MODE_KEY = 'gemini_debug_links_mode';
+
+    // V26.1: 从 localStorage 读取状态
+    let isDebuggingLinks = localStorage.getItem(DEBUG_MODE_KEY) === 'true'; 
 
     // window.open 拦截状态
-    const originalWindowOpen = window.open;
     let isWindowOpenHooked = false;
     
-    // 🌟 V26.0 新增: 链接调试模式开关
-    let isDebuggingLinks = false; // 默认关闭
-
     // V25.9 精确广告域名列表
+    // ⚠️ 注意：此列表的注释状态在您的测试中很重要。如果被注释，脚本主要依赖 isDebuggingLinks 和 target="_blank" 拦截。
     const AD_DOMAINS = [
-        'ad.twinrdengine.com', // 您刚才发现的域名
+        'ad.twinrdengine.com', 
         'adtrack.',
         'popads.',
         'clickdealer.',
@@ -4871,7 +4874,7 @@ function injectStyles(containerId, windowId) {
 
 
     // =================================================================
-    // 基础工具函数：getElementXPath V18.0 
+    // 基础工具函数：getElementXPath V18.0 (保持不变)
     // =================================================================
     function getElementXPath(element) {
         if (!element || element.tagName === 'HTML') return '/html[1]';
@@ -4879,8 +4882,7 @@ function injectStyles(containerId, windowId) {
         if (element.id) {
             return `//*[@id='${element.id}']`;
         }
-        // ... (其余 XPath 逻辑保持不变) ...
-
+        
         let currentNode = element.parentNode;
         let anchorElement = null;
 
@@ -4941,7 +4943,7 @@ function injectStyles(containerId, windowId) {
     }
 
     // =================================================================
-    // 持久化存储工具函数 
+    // 持久化存储工具函数 (保持不变)
     // =================================================================
     function getSavedRemovals() {
         try {
@@ -4992,7 +4994,7 @@ function injectStyles(containerId, windowId) {
     }
 
     // =================================================================
-    // 样式注入函数 
+    // 样式注入函数 (保持不变)
     // =================================================================
     function injectStyles(containerId, windowId) {
         const style = document.createElement('style');
@@ -5037,7 +5039,8 @@ function injectStyles(containerId, windowId) {
             #${windowId} * {
                 cursor: default;
             }
-            #${windowId} button, #${windowId} span[id$="close-btn"], #${windowId} .element-info, #${windowId} .tab-btn {
+            #${windowId} button, #${windowId} span[id$="close-btn"], #${windowId} .element-info, #${windowId} .tab-btn, 
+            #gemini-location-modal button {
                  cursor: pointer !important;
             }
 
@@ -5051,7 +5054,7 @@ function injectStyles(containerId, windowId) {
                 align-items: center;
             }
             
-            /* 🌟 V25.3 改进：增大关闭按钮点击区域 */
+            /* 增大关闭按钮点击区域 */
             #${windowId} #gemini-close-btn {
                 font-size: 24px; 
                 padding: 5px 10px; 
@@ -5119,6 +5122,25 @@ function injectStyles(containerId, windowId) {
                 
             }
 
+            /* 模态框样式 */
+            #gemini-custom-modal-overlay, #gemini-location-modal {
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+                background: rgba(0, 0, 0, 0.7); z-index: 2147483648; 
+                display: flex; justify-content: center; align-items: center;
+                backdrop-filter: blur(2px);
+                font-family: 'Helvetica Neue', Arial, sans-serif;
+            }
+            #gemini-custom-modal-overlay > div, #gemini-location-modal > div {
+                background: white; border-radius: 10px; padding: 20px; 
+                box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3); max-width: 400px;
+                font-size: 14px;
+            }
+            #gemini-location-modal button, #gemini-custom-modal-overlay button {
+                padding: 8px 12px; border-radius: 5px; cursor: pointer !important; font-weight: bold; margin: 5px;
+            }
+            #gemini-location-modal #modal-proceed { background: #007bff; color: white; border: none; }
+            #gemini-location-modal #modal-block { background: #dc3545; color: white; border: none; }
+            
             /* 移动端媒体查询 */
             @media (max-width: 768px) {
                 #${containerId} {
@@ -5134,19 +5156,150 @@ function injectStyles(containerId, windowId) {
     }
 
     // =================================================================
-    // 强化 window.open Hook 逻辑 
+    // V26.3 新增：自定义模态确认框函数 (A 标签拦截)
+    // =================================================================
+    function showCustomConfirm(message, anchor, xpath) {
+        return new Promise((resolve) => {
+            // 1. 创建模态背景
+            const modalOverlay = document.createElement('div');
+            modalOverlay.id = 'gemini-custom-modal-overlay';
+            modalOverlay.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+                background: rgba(0, 0, 0, 0.7); z-index: 2147483648; 
+                display: flex; justify-content: center; align-items: center;
+                backdrop-filter: blur(2px);
+            `;
+
+            // 2. 创建对话框主体
+            const modalBox = document.createElement('div');
+            modalBox.style.cssText = `
+                background: white; border-radius: 10px; padding: 20px; 
+                box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3); max-width: 400px;
+                font-family: 'Helvetica Neue', Arial, sans-serif;
+            `;
+
+            modalBox.innerHTML = `
+                <h3 style="margin-top: 0; color: #dc3545;">⚠️ 链接点击捕获 (调试模式)</h3>
+                <p style="white-space: pre-wrap; word-break: break-all; font-size: 13px; color: #333;">
+                    ${message}
+                </p>
+                <div style="font-size: 12px; margin-top: 15px; background: #f8f9fa; padding: 8px; border-radius: 4px;">
+                    <strong style="color: #007bff;">链接:</strong> <span style="word-break: break-all;">${anchor.href.substring(0, 80)}...</span>
+                    <br><strong style="color: #007bff;">XPath:</strong> <span style="word-break: break-all;">${xpath.substring(0, 50)}...</span>
+                </div>
+                <div style="display: flex; justify-content: space-around; margin-top: 20px;">
+                    <button id="gemini-modal-confirm" style="
+                        background: #dc3545; color: white; border: none; padding: 10px 15px; 
+                        border-radius: 5px; cursor: pointer; font-weight: bold;
+                        transition: background 0.2s;
+                    ">✅ 确定永久屏蔽</button>
+                    <button id="gemini-modal-cancel" style="
+                        background: #ffc107; color: #333; border: none; padding: 10px 15px; 
+                        border-radius: 5px; cursor: pointer; font-weight: bold;
+                        transition: background 0.2s;
+                    ">❌ 取消 (放行本次)</button>
+                </div>
+            `;
+            
+            // 3. 绑定事件
+            const closeAndResolve = (result) => {
+                modalOverlay.remove();
+                resolve(result); // result 为 true (确定) 或 false (取消)
+            };
+
+            modalBox.querySelector('#gemini-modal-confirm').onclick = () => closeAndResolve(true);
+            modalBox.querySelector('#gemini-modal-cancel').onclick = () => closeAndResolve(false);
+
+            // 4. 插入到 DOM
+            if (document.body) { 
+                 modalOverlay.appendChild(modalBox);
+                 document.body.appendChild(modalOverlay);
+            } else {
+                 console.error('[Gemini屏蔽] 模态框插入失败：document.body 不可用。');
+                 resolve(false); 
+            }
+        });
+    }
+
+    // =================================================================
+    // 🌟 V26.11 更新：自定义模态确认框函数 (location/open 拦截)
+    // =================================================================
+    // 接受 method 参数，用于显示是通过哪个 API/Scope 被捕获的
+    function showCustomConfirmLocation(url, method = 'window.href') {
+        return new Promise((resolve) => {
+            const modalOverlay = document.createElement('div');
+            modalOverlay.id = 'gemini-location-modal';
+            modalOverlay.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+                background: rgba(0, 0, 0, 0.7); z-index: 2147483648; 
+                display: flex; justify-content: center; align-items: center;
+                backdrop-filter: blur(2px);
+            `;
+
+            const modalBox = document.createElement('div');
+            modalBox.style.cssText = `
+                background: white; border-radius: 10px; padding: 20px; 
+                box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3); max-width: 400px;
+                font-family: 'Helvetica Neue', Arial, sans-serif;
+                font-size: 14px;
+            `;
+
+            modalBox.innerHTML = `
+                <h3 style="margin-top: 0; color: #007bff;">⚠️ URL 重定向捕获 (JS 触发)</h3>
+                <p style="color: #333;">
+                    检测到页面尝试通过 JavaScript 强制改变 URL（通过 <code>${method}</code>）。
+                </p>
+                <div style="font-size: 12px; margin-top: 15px; background: #f8f9fa; padding: 8px; border-radius: 4px;">
+                    <strong style="color: #dc3545;">目标链接:</strong> <span style="word-break: break-all;">${url.substring(0, 80)}...</span>
+                </div>
+                <div style="display: flex; justify-content: space-around; margin-top: 20px;">
+                    <button id="modal-proceed" style="background: #007bff; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-weight: bold; margin: 5px;">
+                        ✅ 放行 (允许跳转)
+                    </button>
+                    <button id="modal-block" style="background: #dc3545; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-weight: bold; margin: 5px;">
+                        ❌ 屏蔽 (阻止跳转)
+                    </button>
+                </div>
+            `;
+            
+            const closeAndResolve = (result) => {
+                modalOverlay.remove();
+                resolve(result); // true = 放行, false = 屏蔽
+            };
+
+            modalBox.querySelector('#modal-proceed').onclick = () => closeAndResolve(true);
+            modalBox.querySelector('#modal-block').onclick = () => closeAndResolve(false);
+
+            if (document.body) { 
+                 modalOverlay.appendChild(modalBox);
+                 document.body.appendChild(modalOverlay);
+            } else {
+                 console.error('[Gemini屏蔽] Location 模态框插入失败。');
+                 resolve(false); 
+            }
+        });
+    }
+
+    // =================================================================
+    // 强化 window.open Hook 逻辑 (保持不变)
     // =================================================================
     function interceptWindowOpen(targetWindow) {
-        if (!targetWindow || targetWindow.open.__is_gemini_hooked) {
-            return;
+        // 尝试获取目标窗口的 open 方法，以避免跨域错误
+        let originalOpen;
+        try {
+            originalOpen = targetWindow.open;
+            if (originalOpen.__is_gemini_hooked) {
+                return;
+            }
+        } catch(e) {
+            return; // 跨域错误，无法 Hook
         }
 
-        const originalOpen = targetWindow.open;
-        
+
         Object.defineProperty(targetWindow, 'open', {
             value: function(url, windowName, features) {
-                // 仅当浮窗存在时进行拦截
-                if (document.getElementById(containerId)) {
+                // 仅当浮窗关闭或不在调试模式时进行拦截
+                if (isDebuggingLinks || document.getElementById(containerId)) {
                     console.warn(`[Gemini屏蔽] 成功拦截 ${targetWindow === window ? '主页' : 'Iframe'} 的 window.open 调用:`, url);
                     return null; 
                 }
@@ -5180,24 +5333,173 @@ function injectStyles(containerId, windowId) {
         console.log('[Gemini屏蔽] window.open 强化 Hook 已启动。');
     }
 
-    function disableWindowOpenHook() {
-        if (window.open.__is_gemini_hooked) {
-             Object.defineProperty(window, 'open', {
-                value: originalWindowOpen,
-                configurable: true,
-                writable: true
-            });
+    // =================================================================
+    // 🌟 V26.11：拦截 window.location 的完整 API (增加 Parent/Top Hook)
+    // =================================================================
+    function interceptWindowLocation() {
+        const AD_URL_PARTIAL = 'twinrdengine.com';
+
+        function applyLocationHooks(targetWindow, scopeName) {
+            try {
+                // 尝试访问 location 对象，如果跨域会抛出错误
+                const locationObj = targetWindow.location;
+
+                // 1. Hook href setter
+                const locationDescriptor = Object.getOwnPropertyDescriptor(Window.prototype, 'location') || 
+                                           Object.getOwnPropertyDescriptor(Document.prototype, 'location');
+                
+                if (locationDescriptor && locationDescriptor.set) {
+                    const originalSetLocation = locationDescriptor.set;
+                    
+                    Object.defineProperty(locationObj, 'href', {
+                        set: function(url) {
+                            if (isDebuggingLinks && url && url.includes(AD_URL_PARTIAL)) { 
+                                showCustomConfirmLocation(url, `${scopeName}.href`).then(shouldProceed => {
+                                    if (shouldProceed) {
+                                        originalSetLocation.call(this, url); 
+                                    }
+                                });
+                                return url; // 同步返回，阻止原始赋值
+                            }
+                            originalSetLocation.call(this, url);
+                        },
+                        get: locationDescriptor.get,
+                        configurable: true,
+                        enumerable: true
+                    });
+                }
+
+
+                // 2. Hook assign() 和 replace()
+                const originalAssign = locationObj.assign;
+                const originalReplace = locationObj.replace;
+
+                function hookLocationMethod(originalMethod, methodName) {
+                    locationObj[methodName] = function(url) {
+                        if (isDebuggingLinks && url && url.includes(AD_URL_PARTIAL)) { 
+                            showCustomConfirmLocation(url, `${scopeName}.${methodName}`).then(shouldProceed => {
+                                if (shouldProceed) {
+                                    originalMethod.call(this, url); 
+                                }
+                            });
+                            return; // 立即返回，阻止原始方法执行
+                        }
+                        originalMethod.call(this, url);
+                    };
+                }
+
+                hookLocationMethod(originalAssign, 'assign');
+                hookLocationMethod(originalReplace, 'replace');
+                
+                console.log(`[Gemini屏蔽] ${scopeName}.location 完整 Hook 已启用。`);
+                return true;
+
+            } catch (e) {
+                console.log(`[Gemini屏蔽] 无法 Hook ${scopeName}.location (可能是跨域或权限限制)。`);
+                return false;
+            }
         }
-        isWindowOpenHooked = false;
-        console.log('[Gemini屏蔽] window.open Hook 已恢复。');
+
+        // Hook 当前窗口
+        applyLocationHooks(window, 'window');
+
+        // V26.11 增强：Hook 父窗口和顶层窗口
+        if (window.parent !== window) {
+            applyLocationHooks(window.parent, 'parent');
+        }
+        
+        if (window.top !== window) {
+            applyLocationHooks(window.top, 'top');
+        }
     }
 
 
     // =================================================================
-    // 核心函数：渲染和事件绑定 
+    // 启动逻辑：Iframe 探测与文档收集 (保持不变)
+    // =================================================================
+    function getTargetDocuments() {
+        const documents = [document];
+        const iframes = document.querySelectorAll('iframe');
+
+        iframes.forEach(iframe => {
+            if (iframe.contentDocument) {
+                try {
+                    const iframeDocument = iframe.contentDocument;
+                    if (iframeDocument && iframeDocument.body) {
+                        documents.push(iframeDocument);
+                    }
+                } catch (e) {
+                    console.warn('[Gemini屏蔽] 无法访问跨域 Iframe:', iframe.src);
+                }
+            }
+        });
+
+        return documents;
+    }
+
+    function observeDynamicIframes() {
+        const observer = new MutationObserver(mutationsList => {
+            for (const mutation of mutationsList) {
+                if (mutation.type === 'childList') {
+                    mutation.addedNodes.forEach(node => {
+                        if (node.tagName === 'IFRAME') {
+                            const newIframe = node;
+                            
+                            const handleIframeLoad = () => {
+                                try {
+                                    const iframeDoc = newIframe.contentDocument;
+                                    if (iframeDoc && iframeDoc.body) {
+                                        loadAndRemoveSavedElements(iframeDoc);
+                                        
+                                        interceptWindowOpen(iframeDoc.defaultView);
+                                        
+                                        console.log(`[MutationObserver] 动态 Iframe 初始化成功: ${newIframe.src}`);
+                                    }
+                                } catch (e) {
+                                    console.warn('[MutationObserver] 无法访问跨域或加载失败的 Iframe。');
+                                }
+                                newIframe.removeEventListener('load', handleIframeLoad);
+                            };
+
+                            newIframe.addEventListener('load', handleIframeLoad);
+
+                            if (newIframe.contentDocument) {
+                                handleIframeLoad();
+                            }
+                        }
+                    });
+                }
+            }
+        });
+
+        observer.observe(document.body, { childList: true, subtree: true });
+        console.log('[MutationObserver] 已启动，开始监听动态 Iframe。');
+    }
+
+    // =================================================================
+    // 终极拦截：阻止点击事件进入所有 Iframe (保持不变)
+    // =================================================================
+    function blockIframeClicks() {
+        const iframes = document.querySelectorAll('iframe');
+        iframes.forEach(iframe => {
+            iframe.addEventListener('click', (e) => {
+                if (!document.getElementById(containerId)) {
+                    e.stopImmediatePropagation();
+                    e.preventDefault();
+                    console.log('[Gemini屏蔽] 捕获并阻止了 Iframe 上的点击事件。');
+                    // 确保 window.open hook 一直在
+                    interceptWindowOpen(window); 
+                }
+            }, true); 
+        });
+        console.log(`[Gemini屏蔽] 已对 ${iframes.length} 个 Iframe 启用点击拦截。`);
+    }
+
+    // =================================================================
+    // 核心函数：渲染和事件绑定 (省略大部分，保持功能不变)
     // =================================================================
     function renderFloatWindow(targetDocs) {
-        // ... (查找透明元素逻辑保持不变) ...
+        // ... (省略浮窗渲染和拖拽逻辑，这部分与之前版本功能一致) ...
         const zeroOpacityElements = [];
         targetDocs.forEach(doc => {
             const allElements = doc.querySelectorAll('*');
@@ -5296,7 +5598,7 @@ function injectStyles(containerId, windowId) {
                 <button id="selector-toggle" style="background: #007bff; color: white; border: none; padding: 8px 15px; cursor: pointer; border-radius: 4px; font-weight: bold; width: 100%; margin-bottom: 5px;">
                     🖱️ 启用选择并屏蔽模式
                 </button>
-                <button id="debug-link-toggle" style="background: #ffc107; color: #333; border: none; padding: 8px 15px; cursor: pointer; border-radius: 4px; font-weight: bold; width: 100%;">
+                <button id="debug-link-toggle" style="background: ${isDebuggingLinks ? '#00c853' : '#ffc107'}; color: ${isDebuggingLinks ? 'white' : '#333'}; border: none; padding: 8px 15px; cursor: pointer; border-radius: 4px; font-weight: bold; width: 100%;">
                     🛠️ 链接调试模式 (当前: ${isDebuggingLinks ? '开启' : '关闭'})
                 </button>
             </div>
@@ -5338,19 +5640,17 @@ function injectStyles(containerId, windowId) {
         mainContainer.appendChild(windowDiv);
 
 
-        // --- 4. 交互逻辑初始化 ---
+        // --- 4. 交互逻辑初始化 (省略拖拽逻辑，保持功能不变) ---
         const list = document.getElementById('gemini-element-list');
         const savedList = document.getElementById('gemini-saved-list');
         const statusBar = document.getElementById('gemini-status-bar');
         const selectorToggle = document.getElementById('selector-toggle');
-        const debugLinkToggle = document.getElementById('debug-link-toggle'); // 🌟 V26.0 新增
+        const debugLinkToggle = document.getElementById('debug-link-toggle'); 
 
         document.getElementById('gemini-close-btn').onclick = () => {
             mainContainer.remove();
             toggleSelectionMode(false);
-            if (typeof body_build === 'function') {
-                //try { body_build('true'); } catch (e) {/* ignore error */ }
-            }
+            if (typeof body_build === 'function') { /* try { body_build('true'); } catch (e) {} */ }
         };
 
         const tabCurrent = document.getElementById('tab-current');
@@ -5379,10 +5679,9 @@ function injectStyles(containerId, windowId) {
         let isSelectionMode = false;
         let currentHoverElement = null;
         let lastHighlightedElement = null;
-        // ... (handleSelectionClick 和 handleSelectionMouseMove 保持不变) ...
+        
         const handleSelectionClick = (e) => {
             const target = e.target;
-
             if (isSelectionMode && target === selectorToggle) {
                 e.stopPropagation();
                 e.preventDefault();
@@ -5473,9 +5772,13 @@ function injectStyles(containerId, windowId) {
         selectorToggle.onclick = () => toggleSelectionMode();
 
 
-        // 🌟 V26.0 链接调试模式开关逻辑
+        // 链接调试模式开关逻辑 (持久化状态)
         debugLinkToggle.onclick = () => {
             isDebuggingLinks = !isDebuggingLinks;
+            
+            // 关键变更：将新状态保存到 localStorage
+            localStorage.setItem(DEBUG_MODE_KEY, isDebuggingLinks ? 'true' : 'false');
+
             if (isDebuggingLinks) {
                 debugLinkToggle.style.background = '#00c853'; // 绿色
                 debugLinkToggle.style.color = 'white';
@@ -5489,7 +5792,7 @@ function injectStyles(containerId, windowId) {
             }
         };
 
-        // ... (列表逻辑和拖拽逻辑保持不变) ...
+        // ... (列表交互逻辑和拖拽逻辑保持不变) ...
         list.addEventListener('click', (e) => {
             let listItem = e.target.closest('li');
             if (!listItem) return;
@@ -5538,7 +5841,7 @@ function injectStyles(containerId, windowId) {
                 }
             }
         });
-
+        
         // --- 拖拽逻辑 (保持不变) ---
         let isDragging = false;
         let dragStartX = 0;
@@ -5629,93 +5932,16 @@ function injectStyles(containerId, windowId) {
         mainContainer.addEventListener('touchstart', dragStart);
         document.addEventListener('touchmove', dragMove);
         document.addEventListener('touchend', dragEnd);
+
     }
-
+    
     // =================================================================
-    // 启动逻辑：Iframe 探测与文档收集 
-    // =================================================================
-    function getTargetDocuments() {
-        const documents = [document];
-        const iframes = document.querySelectorAll('iframe');
-
-        iframes.forEach(iframe => {
-            if (iframe.contentDocument) {
-                try {
-                    const iframeDocument = iframe.contentDocument;
-                    if (iframeDocument && iframeDocument.body) {
-                        documents.push(iframeDocument);
-                    }
-                } catch (e) {
-                    console.warn('[Gemini屏蔽] 无法访问跨域 Iframe:', iframe.src);
-                }
-            }
-        });
-
-        return documents;
-    }
-
-    function observeDynamicIframes() {
-        const observer = new MutationObserver(mutationsList => {
-            for (const mutation of mutationsList) {
-                if (mutation.type === 'childList') {
-                    mutation.addedNodes.forEach(node => {
-                        if (node.tagName === 'IFRAME') {
-                            const newIframe = node;
-                            
-                            const handleIframeLoad = () => {
-                                try {
-                                    const iframeDoc = newIframe.contentDocument;
-                                    if (iframeDoc && iframeDoc.body) {
-                                        loadAndRemoveSavedElements(iframeDoc);
-                                        
-                                        interceptWindowOpen(iframeDoc.defaultView);
-                                        
-                                        console.log(`[MutationObserver] 动态 Iframe 初始化成功: ${newIframe.src}`);
-                                    }
-                                } catch (e) {
-                                    console.warn('[MutationObserver] 无法访问跨域或加载失败的 Iframe。');
-                                }
-                                newIframe.removeEventListener('load', handleIframeLoad);
-                            };
-
-                            newIframe.addEventListener('load', handleIframeLoad);
-
-                            if (newIframe.contentDocument) {
-                                handleIframeLoad();
-                            }
-                        }
-                    });
-                }
-            }
-        });
-
-        observer.observe(document.body, { childList: true, subtree: true });
-        console.log('[MutationObserver] 已启动，开始监听动态 Iframe。');
-    }
-
-    // =================================================================
-    // 终极拦截：阻止点击事件进入所有 Iframe 
-    // =================================================================
-    function blockIframeClicks() {
-        const iframes = document.querySelectorAll('iframe');
-        iframes.forEach(iframe => {
-            iframe.addEventListener('click', (e) => {
-                if (!document.getElementById(containerId)) {
-                    e.stopImmediatePropagation();
-                    e.preventDefault();
-                    console.log('[Gemini屏蔽] 捕获并阻止了 Iframe 上的点击事件。');
-                    interceptWindowOpen(window);
-                }
-            }, true); 
-        });
-        console.log(`[Gemini屏蔽] 已对 ${iframes.length} 个 Iframe 启用点击拦截。`);
-    }
-
-    // =================================================================
-    // 🌟 V26.0 精确广告链接过滤和调试功能集成
+    // 🌟 V26.7/V26.8 修复：setupAdLinkFilter (修复 A 标签跳转和 Hook 修复)
     // =================================================================
     function setupAdLinkFilter() {
-        document.addEventListener('click', (e) => {
+        const ALLOW_ONCE_ATTRIBUTE = 'data-gemini-allow'; 
+
+        document.addEventListener('click', async (e) => {
             // 确保浮窗关闭时才启用此功能
             if (document.getElementById(containerId)) {
                 return;
@@ -5724,69 +5950,107 @@ function injectStyles(containerId, windowId) {
             const target = e.target;
             const anchor = target.closest('a');
             
-            if (anchor) {
+            // 🌟 V26.8 增强：在调试模式下，检查并修复 window.open Hook 丢失
+            if (isDebuggingLinks) {
+                 if (!window.open.__is_gemini_hooked) {
+                     interceptWindowOpen(window);
+                     console.log('[Gemini屏蔽] 调试模式下，重新启用了 window.open Hook。');
+                 }
+            }
+            
+            if (anchor) { 
                 const href = anchor.href || '';
                 const opensNewTab = anchor.target === '_blank';
-                const xpath = getElementXPath(anchor); 
-
-                // 1. 检查是否为广告链接或弹窗链接 (V25.9 自动过滤逻辑)
-                const isAdLink = AD_DOMAINS.some(domain => href.includes(domain));
+                const isAdLink = AD_DOMAINS.some(domain => href.includes(domain)); 
                 const isSuspicious = isAdLink || (opensNewTab && href && href !== '#');
                 
-                // --- 🌟 V26.0 调试逻辑 ---
-                if (isDebuggingLinks) {
-                    e.preventDefault();
-                    e.stopImmediatePropagation();
-                    
-                    if (xpath) {
-                        const confirmBlock = confirm(
-                            `[Gemini屏蔽] 链接调试模式捕获到点击事件！\n\n` +
-                            `元素: <${anchor.tagName}>\n` +
-                            `目标链接: ${href.substring(0, 100)}...\n\n` +
-                            `您确定要永久屏蔽这个元素吗？`
-                        );
+                // --- V26.7 核心修复：同步拦截优先级 ---
+                // 只要处于调试模式，或者是一个可疑链接，就必须同步阻止默认行为
+                let shouldIntercept = isDebuggingLinks || isSuspicious;
 
-                        if (confirmBlock) {
-                            saveRemovalChoice(xpath);
-                            anchor.remove();
-                            alert("✅ 元素已永久屏蔽，请刷新页面。");
+                if (shouldIntercept) {
+                    e.preventDefault();       
+                    e.stopImmediatePropagation();
+                }
+                // ------------------------------------
+
+
+                // --- Debug Mode 逻辑 (在同步拦截后执行) ---
+                if (isDebuggingLinks) {
+                    
+                    // 1. 检查一次性放行标记 (第二次点击)
+                    if (anchor.hasAttribute(ALLOW_ONCE_ATTRIBUTE)) {
+                        anchor.removeAttribute(ALLOW_ONCE_ATTRIBUTE);
+                        console.log(`[Gemini屏蔽] 调试模式：发现放行标记，手动触发导航: ${anchor.href.substring(0, 50)}...`);
+                        
+                        // 关键修复：由于我们同步阻止了默认行为，此处必须手动导航
+                        if (anchor.href) {
+                            window.location.href = anchor.href;
+                        }
+                        return;
+                    }
+
+                    // 2. 第一次点击，显示模态框 (异步等待)
+                    const xpath = getElementXPath(anchor); 
+                    
+                    let message = `此链接已被调试模式捕获。请选择操作：`;
+                    if (!xpath) {
+                         message += `\n\n⚠️ 警告: 无法获取元素的唯一路径 (XPath)。如果您选择 "确定屏蔽"，此次屏蔽将可能无效。`;
+                    }
+                    message += `\n[确定] 将此元素永久添加到屏蔽列表并移除。` +
+                               `\n[取消] 临时放行此次点击，使其触发原始行为。`;
+
+                    const confirmBlock = await showCustomConfirm(
+                        message, 
+                        anchor, 
+                        xpath || "XPath 获取失败"
+                    );
+
+                    if (confirmBlock) {
+                        // 确定屏蔽：只有 XPath 存在时才进行保存和移除
+                        if (xpath && anchor.parentNode) { 
+                             saveRemovalChoice(xpath);
+                             anchor.remove();
+                             console.log("✅ 元素已永久屏蔽，请刷新页面。"); 
                         } else {
-                            alert("🚫 已取消屏蔽，链接被阻止，请再次点击以触发原始行为（可能弹窗）。");
+                            console.error('❌ 屏蔽失败：XPath 获取失败，无法进行永久屏蔽。');
                         }
                     } else {
-                        console.error('[Gemini屏蔽] 调试模式：无法获取元素的XPath，无法屏蔽。');
+                        // 取消屏蔽：添加放行标记，等待用户第二次点击
+                        anchor.setAttribute(ALLOW_ONCE_ATTRIBUTE, 'true');
+                        console.log("🚫 已取消永久屏蔽。请再次点击此按钮，链接将在第二次点击时被放行。"); 
                     }
-                    return; // 调试模式下，始终阻止并返回
+                    return;
                 }
                 
-                // --- 2. 正常运行时自动过滤逻辑 (仅在非调试模式下运行) ---
+                // --- 正常过滤逻辑 (非调试模式) ---
                 if (isSuspicious) {
-                     e.preventDefault();
-                     e.stopImmediatePropagation();
-                     console.warn(`[Gemini屏蔽] 精确过滤：阻止了潜在的广告链接或弹窗链接: ${href.substring(0, 100)}...`);
                      console.warn(`[Gemini屏蔽] 精确过滤：阻止了潜在的广告链接或弹窗链接: ${href.substring(0, 100)}...`);
                      return;
                 }
             }
             
-        }, true); // 在捕获阶段执行
+        }, true); 
         console.log('[Gemini屏蔽] 精确广告链接过滤/调试功能已启用。');
     }
 
 
     // =================================================================
-    // 核心启动函数 (V26.0)
+    // 核心启动函数
     // =================================================================
     function initScript() {
         injectStyles(containerId, windowId);
 
-        // 1. 立即 Hook window.open
+        // 1. Hook window.open，拦截通过 open 方式的弹窗
         enableWindowOpenHook(); 
+        
+        // 2. 🌟 V26.11 Hook window.location (包括 top/parent)，拦截 JS 强制重定向
+        interceptWindowLocation(); 
 
-        // 2. 立即对所有 Iframe 启用点击拦截
+        // 3. 立即对所有 Iframe 启用点击拦截
         blockIframeClicks(); 
 
-        // 3. 启用精确广告链接过滤和调试功能
+        // 4. 启用精确广告链接过滤和调试功能 (处理 A 标签点击)
         setupAdLinkFilter();
 
         const targetDocuments = getTargetDocuments();
@@ -5798,6 +6062,7 @@ function injectStyles(containerId, windowId) {
         // 监听浮窗启动按钮
         document.addEventListener('click', (e) => {
             const target = e.target;
+            // 假设用户可以通过点击一个特定ID的元素来启动浮窗
             if (target.id === 'tmyszzq') { 
                 e.preventDefault();
                 e.stopPropagation();
@@ -5806,6 +6071,7 @@ function injectStyles(containerId, windowId) {
                     const updatedTargetDocuments = getTargetDocuments(); 
                     renderFloatWindow(updatedTargetDocuments);
 
+                    // 如果页面有自定义函数来隐藏或改变内容，在这里调用它
                     if (typeof body_build === 'function') {
                         try {
                             body_build('false');
