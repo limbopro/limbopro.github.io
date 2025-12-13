@@ -4828,1001 +4828,830 @@ function injectStyles(containerId, windowId) {
 
 // 元素屏蔽器开始  START
 
-// ==UserScript==
-// @name         元素屏蔽/追踪器 (V26.0 - 链接调试模式, 强力 Hook, Iframe支持, 优化关闭按钮)
-// @namespace    http://tampermonkey.net/
-// @version      26.0
-// @description  用于在网页和同源Iframe内，选择并持久化移除任何元素，精确阻止广告链接和弹窗，并支持链接调试。
-// @author       Gemini
-// @match        *://*/*
-// @grant        none
-// @run-at       document-idle
-// ==/UserScript==
+// =================================================================
+// 元素屏蔽/追踪器 完整脚本 V25.1 (Iframe支持, click模式, 恢复 body_build)
+// =================================================================
 
-(function() {
-    'use strict';
-
-    // =================================================================
-    // ⚠️ 全局常量与状态 
-    // =================================================================
-    const isLimbopro_STORAGE_KEY_XZQ = 'gemini_zero_opacity_removals';
-    const containerId = 'gemini-main-container';
-    const windowId = 'gemini-float-window';
-
-    // window.open 拦截状态
-    const originalWindowOpen = window.open;
-    let isWindowOpenHooked = false;
-    
-    // 🌟 V26.0 新增: 链接调试模式开关
-    let isDebuggingLinks = false; // 默认关闭
-
-    // V25.9 精确广告域名列表
-    const AD_DOMAINS = [
-        'ad.twinrdengine.com', // 您刚才发现的域名
-        'adtrack.',
-        'popads.',
-        'clickdealer.',
-        'a-ads.',
-        'adcash.',
-        'popunder.',
-        'exoclick.',
-        'adnetwork.',
-    ];
+// ----------------------------------------------------------------
+// ⚠️ 全局常量
+// ----------------------------------------------------------------
+const isLimbopro_STORAGE_KEY_XZQ = 'gemini_zero_opacity_removals';
+const containerId = 'gemini-main-container';
+const windowId = 'gemini-float-window';
 
 
-    // =================================================================
-    // 基础工具函数：getElementXPath V18.0 
-    // =================================================================
-    function getElementXPath(element) {
-        if (!element || element.tagName === 'HTML') return '/html[1]';
+// ----------------------------------------------------------------
+// 基础工具函数：getElementXPath V18.0 (保持不变)
+// ----------------------------------------------------------------
+function getElementXPath(element) {
+    if (!element || element.tagName === 'HTML') return '/html[1]';
 
-        if (element.id) {
-            return `//*[@id='${element.id}']`;
-        }
-        // ... (其余 XPath 逻辑保持不变) ...
-
-        let currentNode = element.parentNode;
-        let anchorElement = null;
-
-        while (currentNode && currentNode.tagName !== 'BODY') {
-            if (currentNode.id) {
-                anchorElement = currentNode;
-                break;
-            }
-            currentNode = currentNode.parentNode;
-        }
-
-        if (anchorElement) {
-            let path = '';
-            let current = element;
-
-            while (current !== anchorElement) {
-                let ix = 0;
-                const siblings = current.parentNode.childNodes;
-
-                for (let i = 0; i < siblings.length; i++) {
-                    const sibling = siblings[i];
-                    if (sibling.nodeType === 1 && sibling.tagName === current.tagName) {
-                        ix++;
-                    }
-                    if (sibling === current) {
-                        break;
-                    }
-                }
-
-                const segment = `/${current.tagName.toLowerCase()}[${ix}]`;
-                path = segment + path;
-
-                current = current.parentNode;
-            }
-
-            return `//*[@id='${anchorElement.id}']` + path;
-        }
-
-        let ix = 0;
-        const siblings = element.parentNode.childNodes;
-
-        for (let i = 0; i < siblings.length; i++) {
-            const sibling = siblings[i];
-            if (sibling === element) {
-                const parentPath = getElementXPath(element.parentNode);
-                if (element.tagName === 'BODY') {
-                    return parentPath + '/body[1]';
-                }
-                return parentPath + '/' + element.tagName.toLowerCase() + '[' + (ix + 1) + ']';
-            }
-
-            if (sibling.nodeType === 1 && sibling.tagName === element.tagName) {
-                ix++;
-            }
-        }
-
-        return '';
+    if (element.id) {
+        return `//*[@id='${element.id}']`;
     }
 
-    // =================================================================
-    // 持久化存储工具函数 
-    // =================================================================
-    function getSavedRemovals() {
+    let currentNode = element.parentNode;
+    let anchorElement = null;
+
+    while (currentNode && currentNode.tagName !== 'BODY') {
+        if (currentNode.id) {
+            anchorElement = currentNode;
+            break;
+        }
+        currentNode = currentNode.parentNode;
+    }
+
+    if (anchorElement) {
+        let path = '';
+        let current = element;
+
+        while (current !== anchorElement) {
+            let ix = 0;
+            const siblings = current.parentNode.childNodes;
+
+            for (let i = 0; i < siblings.length; i++) {
+                const sibling = siblings[i];
+                if (sibling.nodeType === 1 && sibling.tagName === current.tagName) {
+                    ix++;
+                }
+                if (sibling === current) {
+                    break;
+                }
+            }
+
+            const segment = `/${current.tagName.toLowerCase()}[${ix}]`;
+            path = segment + path;
+
+            current = current.parentNode;
+        }
+
+        return `//*[@id='${anchorElement.id}']` + path;
+    }
+
+    let ix = 0;
+    const siblings = element.parentNode.childNodes;
+
+    for (let i = 0; i < siblings.length; i++) {
+        const sibling = siblings[i];
+        if (sibling === element) {
+            const parentPath = getElementXPath(element.parentNode);
+            if (element.tagName === 'BODY') {
+                return parentPath + '/body[1]';
+            }
+            return parentPath + '/' + element.tagName.toLowerCase() + '[' + (ix + 1) + ']';
+        }
+
+        if (sibling.nodeType === 1 && sibling.tagName === element.tagName) {
+            ix++;
+        }
+    }
+
+    return '';
+}
+
+// ----------------------------------------------------------------
+// 持久化存储工具函数 (保持不变)
+// ----------------------------------------------------------------
+function getSavedRemovals() {
+    try {
+        return JSON.parse(localStorage.getItem(isLimbopro_STORAGE_KEY_XZQ) || '[]');
+    } catch (e) {
+        console.error('[持久化] 读取记录失败:', e);
+        return [];
+    }
+}
+
+/**
+ * 在目标文档内查找并移除已保存的元素
+ * @param {Document} doc - 目标文档对象
+ */
+function loadAndRemoveSavedElements(doc) {
+    const removals = getSavedRemovals();
+    let removedCount = 0;
+    removals.forEach(xpath => {
         try {
-            return JSON.parse(localStorage.getItem(isLimbopro_STORAGE_KEY_XZQ) || '[]');
+            // 使用目标文档的 evaluate 方法
+            const result = doc.evaluate(xpath, doc, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
+            const element = result.singleNodeValue;
+
+            if (element && element.parentNode) {
+                element.remove();
+                removedCount++;
+            }
         } catch (e) {
-            console.error('[持久化] 读取记录失败:', e);
-            return [];
+            // 忽略 XPath 错误
         }
+    });
+    console.log(`[Gemini屏蔽] 已在 ${doc === document ? '主页' : 'Iframe'} 自动移除 ${removedCount} 个元素。`);
+    return removedCount;
+}
+
+function saveRemovalChoice(xpath) {
+    let removals = getSavedRemovals();
+    if (!removals.includes(xpath)) {
+        removals.push(xpath);
+        localStorage.setItem(isLimbopro_STORAGE_KEY_XZQ, JSON.stringify(removals));
     }
+}
 
-    function loadAndRemoveSavedElements(doc) {
-        const removals = getSavedRemovals();
-        let removedCount = 0;
-        removals.forEach(xpath => {
-            try {
-                const result = doc.evaluate(xpath, doc, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
-                const element = result.singleNodeValue;
-
-                if (element && element.parentNode) {
-                    element.remove();
-                    removedCount++;
-                }
-            } catch (e) {
-                // 忽略 XPath 错误
-            }
-        });
-        console.log(`[Gemini屏蔽] 已在 ${doc === document ? '主页' : 'Iframe'} 自动移除 ${removedCount} 个元素。`);
-        return removedCount;
+function removeRemovalChoice(xpath) {
+    let removals = getSavedRemovals();
+    const index = removals.indexOf(xpath);
+    if (index > -1) {
+        removals.splice(index, 1);
+        localStorage.setItem(isLimbopro_STORAGE_KEY_XZQ, JSON.stringify(removals));
+        return true;
     }
+    return false;
+}
 
-    function saveRemovalChoice(xpath) {
-        let removals = getSavedRemovals();
-        if (!removals.includes(xpath)) {
-            removals.push(xpath);
-            localStorage.setItem(isLimbopro_STORAGE_KEY_XZQ, JSON.stringify(removals));
+// ----------------------------------------------------------------
+// 样式注入函数 (保持不变)
+// ----------------------------------------------------------------
+function injectStyles(containerId, windowId) {
+    const style = document.createElement('style');
+    style.textContent = `
+        /* 1. 最外层容器：z-index 提高确保覆盖 Iframe */
+        #${containerId} {
+            position: fixed; 
+            top: 20px; 
+            right: 20px; 
+            z-index: 9999999;
+            transition: transform 0.2s ease-out; 
+            border-radius: 12px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1), 0 4px 6px rgba(0,0,0,0.05); 
+            width: 400px; 
+            background: #f7f7f7; 
+            padding: 15px; 
+            cursor: default; 
+            user-select: none;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
         }
-    }
-
-    function removeRemovalChoice(xpath) {
-        let removals = getSavedRemovals();
-        const index = removals.indexOf(xpath);
-        if (index > -1) {
-            removals.splice(index, 1);
-            localStorage.setItem(isLimbopro_STORAGE_KEY_XZQ, JSON.stringify(removals));
-            return true;
+        
+        /* 2. 内部浮窗：内容容器 */
+        #${windowId} {
+            background: #fff; 
+            border: 1px solid #e0e0e0; 
+            border-radius: 8px; 
+            font-size: 13px; 
+            max-height: 80vh; 
+            overflow: hidden; 
         }
-        return false;
-    }
 
-    // =================================================================
-    // 样式注入函数 
-    // =================================================================
-    function injectStyles(containerId, windowId) {
-        const style = document.createElement('style');
-        style.textContent = `
-            /* 1. 最外层容器：z-index 提高确保覆盖 Iframe */
+        /* 3. 内部拖拽区域和光标设置 */
+        #${windowId} #gemini-header,
+        #${windowId} #gemini-status-bar,
+        #${windowId} .gemini-tip-text,
+        #${containerId} { 
+            cursor: move; 
+            touch-action: none; 
+        }
+        
+        /* 阻止内部可点击元素继承 move 光标 */
+        #${windowId} * {
+            cursor: default;
+        }
+        #${windowId} button, #${windowId} span[id$="close-btn"], #${windowId} .element-info, #${windowId} .tab-btn {
+             cursor: pointer !important;
+        }
+
+        /* 头部样式 */
+        #${windowId} #gemini-header {
+            padding: 10px 15px;
+            background: #f8f8f8; 
+            border-bottom: 1px solid #ececec;
+        }
+
+        /* 状态栏样式 (美化) */
+        #${windowId} #gemini-status-bar {
+            padding: 8px 15px;
+            background: #e6f7ff; 
+            color: #0050b3; 
+            border-top: 1px solid #cceeff;
+            font-weight: 500;
+            text-align: left;
+            border-radius: 0 0 8px 8px; 
+        }
+
+        /* 提示信息样式 (美化) */
+        #${windowId} .gemini-tip-text {
+            padding: 5px 15px;
+            background: #fafafa; 
+            color: #888;
+            font-size: 11px;
+            border-top: 1px dashed #eee;
+            text-align: center;
+        }
+        
+        /* Tab 按钮样式 */
+        #${windowId} .tab-btn {
+            padding: 10px 8px;
+            border: none;
+            background: #fff;
+            font-size: 13px;
+            font-weight: 600;
+            color: #555;
+            transition: color 0.2s, background 0.2s;
+        }
+        #${windowId} .tab-btn:hover {
+            background: #f0f0f0;
+        }
+
+        /* 列表滚动容器样式 */
+        #${windowId} .gemini-list-scroll-area {
+            max-height: 250px; 
+            overflow-y: auto; 
+            padding: 0;
+            margin: 0;
+            border-top: 1px solid #eee; 
+        }
+        
+        /* 列表项美化 */
+        #${windowId} ul li {
+            font-size: 12px;
+            padding: 8px 15px;
+            
+        }
+
+        /* 移动端媒体查询 */
+        @media (max-width: 768px) {
             #${containerId} {
-                position: fixed; 
-                top: 20px; 
-                right: 20px; 
-                z-index: 2147483647; 
-                transition: transform 0.2s ease-out; 
-                border-radius: 12px; 
-                box-shadow: 0 10px 30px rgba(0,0,0,0.1), 0 4px 6px rgba(0,0,0,0.05); 
-                width: 400px; 
-                background: #f7f7f7; 
-                padding: 15px; 
-                cursor: default; 
-                user-select: none;
-                font-family: 'Helvetica Neue', Arial, sans-serif;
+                width: 90vw; 
+                right: 5vw; 
+                left: 5vw; 
+                top: 5px;
+                padding: 10px; 
             }
-            
-            /* 2. 内部浮窗：内容容器 */
-            #${windowId} {
-                background: #fff; 
-                border: 1px solid #e0e0e0; 
-                border-radius: 8px; 
-                font-size: 13px; 
-                max-height: 80vh; 
-                overflow: hidden; 
+        }
+    `;
+    document.head.appendChild(style);
+}
+
+// ----------------------------------------------------------------
+// 核心函数：渲染和事件绑定 V25.1
+// ----------------------------------------------------------------
+
+/**
+ * 查找并渲染透明元素列表，同时初始化主浮窗和事件。
+ * @param {Array<Document>} targetDocs - 文档列表，包含主文档和所有同源 Iframe 文档
+ */
+function renderFloatWindow(targetDocs) {
+
+    // --- 1. 查找所有透明元素 (从所有文档中收集) ---
+    const zeroOpacityElements = [];
+    targetDocs.forEach(doc => {
+        const allElements = doc.querySelectorAll('*');
+        allElements.forEach((element, index) => {
+            if (element.tagName === 'SCRIPT' || element.tagName === 'STYLE' || element.tagName === 'NOSCRIPT' || element.tagName === 'TITLE' || !element.parentNode) {
+                return;
             }
 
-            /* 3. 内部拖拽区域和光标设置 */
-            #${windowId} #gemini-header,
-            #${windowId} #gemini-status-bar,
-            #${windowId} .gemini-tip-text,
-            #${containerId} { 
-                cursor: move; 
-                touch-action: none; 
-            }
-            
-            /* 阻止内部可点击元素继承 move 光标 */
-            #${windowId} * {
-                cursor: default;
-            }
-            #${windowId} button, #${windowId} span[id$="close-btn"], #${windowId} .element-info, #${windowId} .tab-btn {
-                 cursor: pointer !important;
-            }
+            try {
+                // 使用元素所在文档的 defaultView 获取计算样式
+                const computedStyle = element.ownerDocument.defaultView.getComputedStyle(element);
+                const opacityValue = parseFloat(computedStyle.opacity);
 
-            /* 头部样式 */
-            #${windowId} #gemini-header {
-                padding: 10px 15px;
-                background: #f8f8f8; 
-                border-bottom: 1px solid #ececec;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-            }
-            
-            /* 🌟 V25.3 改进：增大关闭按钮点击区域 */
-            #${windowId} #gemini-close-btn {
-                font-size: 24px; 
-                padding: 5px 10px; 
-                margin-left: 10px;
-                color: #555;
-                background: none;
-                border-radius: 4px;
-                transition: background 0.2s, color 0.2s;
-                cursor: pointer !important;
-                line-height: 1;
-            }
-            #${windowId} #gemini-close-btn:hover {
-                background: #ffe6e6; 
-                color: #dc3545; 
-            }
+                if (opacityValue === 0) {
+                    const rect = element.getBoundingClientRect();
+                    const xpath = getElementXPath(element);
 
-            /* 状态栏样式 (美化) */
-            #${windowId} #gemini-status-bar {
-                padding: 8px 15px;
-                background: #e6f7ff; 
-                color: #0050b3; 
-                border-top: 1px solid #cceeff;
-                font-weight: 500;
-                text-align: left;
-                border-radius: 0 0 8px 8px; 
-            }
-
-            /* 提示信息样式 (美化) */
-            #${windowId} .gemini-tip-text {
-                padding: 5px 15px;
-                background: #fafafa; 
-                color: #888;
-                font-size: 11px;
-                border-top: 1px dashed #eee;
-                text-align: center;
-            }
-            
-            /* Tab 按钮样式 */
-            #${windowId} .tab-btn {
-                padding: 10px 8px;
-                border: none;
-                background: #fff;
-                font-size: 13px;
-                font-weight: 600;
-                color: #555;
-                transition: color 0.2s, background 0.2s;
-            }
-            #${windowId} .tab-btn:hover {
-                background: #f0f0f0;
-            }
-
-            /* 列表滚动容器样式 */
-            #${windowId} .gemini-list-scroll-area {
-                max-height: 250px; 
-                overflow-y: auto; 
-                padding: 0;
-                margin: 0;
-                border-top: 1px solid #eee; 
-            }
-            
-            /* 列表项美化 */
-            #${windowId} ul li {
-                font-size: 12px;
-                padding: 8px 15px;
-                
-            }
-
-            /* 移动端媒体查询 */
-            @media (max-width: 768px) {
-                #${containerId} {
-                    width: 90vw; 
-                    right: 5vw; 
-                    left: 5vw; 
-                    top: 5px;
-                    padding: 10px; 
+                    if (xpath) {
+                        zeroOpacityElements.push({
+                            index: index,
+                            tagName: element.tagName,
+                            className: element.className,
+                            id: element.id,
+                            width: rect.width.toFixed(0),
+                            height: rect.height.toFixed(0),
+                            element: element,
+                            xpath: xpath,
+                            document: doc, // 记录元素所在的文档对象
+                        });
+                    }
                 }
-            }
-        `;
-        document.head.appendChild(style);
+            } catch (e) { /* 忽略错误 */ }
+        });
+    });
+
+
+    // --- 2. 浮窗 DOM 渲染 (仅在主页文档) ---
+    const existingContainer = document.getElementById(containerId);
+    if (existingContainer) existingContainer.remove();
+
+    let savedRemovals = getSavedRemovals();
+
+    const mainContainer = document.createElement('div');
+    mainContainer.id = containerId;
+
+    const windowDiv = document.createElement('div');
+    windowDiv.id = windowId;
+
+    function renderSavedRemovalsList(removals) {
+        if (removals.length === 0) {
+            return '<li style="padding: 10px; text-align: center; color: #888;">暂无移除记录。</li>';
+        }
+        return removals.map((xpath) => `
+            <li style="display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; border-bottom: 1px dashed #ddd;">
+                <span title="${xpath}" style="flex-grow: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: #666;">
+                    ${xpath.substring(0, 40)}...
+                </span>
+                <button class="undo-btn" style="
+                    background: #ffc107; color: #333; border: none; padding: 2px 6px; 
+                    margin-left: 10px; cursor: pointer; border-radius: 3px; font-size: 11px;
+                " data-xpath="${xpath}">取消移除</button>
+            </li>
+        `).join('');
     }
 
-    // =================================================================
-    // 强化 window.open Hook 逻辑 
-    // =================================================================
-    function interceptWindowOpen(targetWindow) {
-        if (!targetWindow || targetWindow.open.__is_gemini_hooked) {
+    function renderZeroOpacityList(elements) {
+        if (elements.length === 0) {
+            return '<li style="padding: 10px; text-align: center; color: #888;">当前页面没有透明元素。</li>';
+        }
+        return elements.map(item => `
+            <li style="display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; border-bottom: 1px solid #eee; transition: background 0.2s;" 
+                data-xpath="${item.xpath}"
+                data-doc-url="${item.document.URL.split('/').pop()}"
+            >
+                <div class="element-info" style="cursor: pointer; flex-grow: 1;" title="点击高亮">
+                    <span style="color: #555; margin-right: 5px; font-weight: bold;">[${item.document === document ? '主页' : 'Iframe'}]</span>
+                    <span style="color: #6a0dad;">${item.tagName}</span>
+                    <span style="color: #007bff;">#${item.id || item.className.split(' ')[0] || 'N/A'}</span>
+                    <span style="color: #333; margin-left: 10px;">${item.width}x${item.height}px</span>
+                </div>
+                
+                <button class="remove-btn" style="
+                    background: #dc3545; color: white; border: none; padding: 2px 6px; 
+                    margin-left: 10px; cursor: pointer; border-radius: 3px; font-size: 11px;
+                " data-xpath="${item.xpath}">移除并保存</button>
+            </li>
+        `).join('');
+    }
+
+    windowDiv.innerHTML = `
+        <div id="gemini-header">
+            <strong>🔍 元素屏蔽/追踪器</strong>
+            <span id="gemini-close-btn">&times;</span>
+        </div>
+        
+        <div style="padding: 8px 15px; border-bottom: 1px solid #ccc; text-align: center;">
+            <button id="selector-toggle" style="background: #007bff; color: white; border: none; padding: 8px 15px; cursor: pointer; border-radius: 4px; font-weight: bold; width: 100%;">
+                🖱️ 启用选择并屏蔽模式
+            </button>
+        </div>
+        <div style="display: flex; border-bottom: 1px solid #ccc;">
+            <button id="tab-current" class="tab-btn" style="flex: 1; background: #fff; border-right: 1px solid #ccc;">
+                当前透明元素 (${zeroOpacityElements.length})
+            </button>
+            <button id="tab-saved" class="tab-btn" style="flex: 1; background: #f0f0f0;">
+                永久移除记录 (${savedRemovals.length})
+            </button>
+        </div>
+
+        <div id="content-current">
+            <div class="gemini-list-scroll-area">
+                <ul id="gemini-element-list" style="list-style: none; padding: 0; margin: 0;">
+                    ${renderZeroOpacityList(zeroOpacityElements)}
+                </ul>
+            </div>
+        </div>
+
+        <div id="content-saved" style="display: none;">
+            <div class="gemini-list-scroll-area">
+                <ul id="gemini-saved-list" style="list-style: none; padding: 0; margin: 0;">
+                    ${renderSavedRemovalsList(savedRemovals)}
+                </ul>
+            </div>
+        </div>
+
+        <div id="gemini-status-bar">
+            请点击列表项高亮，或点击“移除并保存”按钮。
+        </div>
+
+        <div class="gemini-tip-text">
+            **提示:** “选择模式”可屏蔽任何元素。取消移除后请**手动刷新**。
+        </div>
+    `;
+
+    document.body.appendChild(mainContainer);
+    mainContainer.appendChild(windowDiv);
+
+
+    // --- 3. 交互逻辑初始化 (在主页文档上绑定) ---
+    const list = document.getElementById('gemini-element-list');
+    const savedList = document.getElementById('gemini-saved-list');
+    const statusBar = document.getElementById('gemini-status-bar');
+    const selectorToggle = document.getElementById('selector-toggle');
+
+    document.getElementById('gemini-close-btn').onclick = () => {
+        mainContainer.remove();
+        toggleSelectionMode(false);
+        // 恢复 body_build 的状态，推测为 body_build('true') 或类似操作
+        if (typeof body_build === 'function') {
+            //try { body_build('true'); } catch (e) {/* ignore error */ }
+        }
+    };
+
+    const tabCurrent = document.getElementById('tab-current');
+    const tabSaved = document.getElementById('tab-saved');
+    const contentCurrent = document.getElementById('content-current');
+    const contentSaved = document.getElementById('content-saved');
+
+    function switchTab(currentTab) {
+        if (currentTab === 'current') {
+            tabCurrent.style.background = '#fff';
+            tabSaved.style.background = '#f0f0f0';
+            contentCurrent.style.display = 'block';
+            contentSaved.style.display = 'none';
+        } else {
+            tabCurrent.style.background = '#f0f0f0';
+            tabSaved.style.background = '#fff';
+            contentCurrent.style.display = 'none';
+            contentSaved.style.display = 'block';
+            savedList.innerHTML = renderSavedRemovalsList(getSavedRemovals());
+        }
+    }
+    tabCurrent.onclick = () => switchTab('current');
+    tabSaved.onclick = () => switchTab('saved');
+
+
+    let isSelectionMode = false;
+    let currentHoverElement = null;
+    let lastHighlightedElement = null;
+
+    // --- V25.1: 元素选择模式处理函数 (基于 click) ---
+
+    const handleSelectionClick = (e) => {
+        const target = e.target;
+
+        if (isSelectionMode && target === selectorToggle) {
+            e.stopPropagation();
+            e.preventDefault();
+            toggleSelectionMode(false);
             return;
         }
 
-        const originalOpen = targetWindow.open;
-        
-        Object.defineProperty(targetWindow, 'open', {
-            value: function(url, windowName, features) {
-                // 仅当浮窗存在时进行拦截
-                if (document.getElementById(containerId)) {
-                    console.warn(`[Gemini屏蔽] 成功拦截 ${targetWindow === window ? '主页' : 'Iframe'} 的 window.open 调用:`, url);
-                    return null; 
-                }
-                // 否则调用原始函数
-                return originalOpen.apply(targetWindow, arguments);
-            },
-            configurable: true,
-            writable: true
-        });
-
-        // 标记，防止重复 Hook
-        targetWindow.open.__is_gemini_hooked = true;
-    }
-
-    function enableWindowOpenHook() {
-        if (isWindowOpenHooked) return;
-
-        // 1. Hook 主页面
-        interceptWindowOpen(window);
-        
-        // 2. Hook 所有同源 Iframe
-        getTargetDocuments().forEach(doc => {
-            try {
-                interceptWindowOpen(doc.defaultView);
-            } catch(e) {
-                // 忽略跨域 Iframe 错误
-            }
-        });
-
-        isWindowOpenHooked = true;
-        console.log('[Gemini屏蔽] window.open 强化 Hook 已启动。');
-    }
-
-    function disableWindowOpenHook() {
-        if (window.open.__is_gemini_hooked) {
-             Object.defineProperty(window, 'open', {
-                value: originalWindowOpen,
-                configurable: true,
-                writable: true
-            });
-        }
-        isWindowOpenHooked = false;
-        console.log('[Gemini屏蔽] window.open Hook 已恢复。');
-    }
-
-
-    // =================================================================
-    // 核心函数：渲染和事件绑定 
-    // =================================================================
-    function renderFloatWindow(targetDocs) {
-        // ... (查找透明元素逻辑保持不变) ...
-        const zeroOpacityElements = [];
-        targetDocs.forEach(doc => {
-            const allElements = doc.querySelectorAll('*');
-            allElements.forEach((element, index) => {
-                if (element.tagName === 'SCRIPT' || element.tagName === 'STYLE' || element.tagName === 'NOSCRIPT' || element.tagName === 'TITLE' || !element.parentNode) {
-                    return;
-                }
-
-                try {
-                    const computedStyle = element.ownerDocument.defaultView.getComputedStyle(element);
-                    const opacityValue = parseFloat(computedStyle.opacity);
-
-                    if (opacityValue === 0) {
-                        const rect = element.getBoundingClientRect();
-                        const xpath = getElementXPath(element);
-
-                        if (xpath) {
-                            zeroOpacityElements.push({
-                                index: index,
-                                tagName: element.tagName,
-                                className: element.className,
-                                id: element.id,
-                                width: rect.width.toFixed(0),
-                                height: rect.height.toFixed(0),
-                                element: element,
-                                xpath: xpath,
-                                document: doc,
-                            });
-                        }
-                    }
-                } catch (e) { /* 忽略跨域错误 */ }
-            });
-        });
-
-
-        // --- 3. 浮窗 DOM 渲染 (仅在主页文档) ---
-        const existingContainer = document.getElementById(containerId);
-        if (existingContainer) existingContainer.remove();
-
-        let savedRemovals = getSavedRemovals();
-
-        const mainContainer = document.createElement('div');
-        mainContainer.id = containerId;
-
-        const windowDiv = document.createElement('div');
-        windowDiv.id = windowId;
-
-        function renderSavedRemovalsList(removals) {
-            if (removals.length === 0) {
-                return '<li style="padding: 10px; text-align: center; color: #888;">暂无移除记录。</li>';
-            }
-            return removals.map((xpath) => `
-                <li style="display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; border-bottom: 1px dashed #ddd;">
-                    <span title="${xpath}" style="flex-grow: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: #666;">
-                        ${xpath.substring(0, 40)}...
-                    </span>
-                    <button class="undo-btn" style="
-                        background: #ffc107; color: #333; border: none; padding: 2px 6px; 
-                        margin-left: 10px; cursor: pointer; border-radius: 3px; font-size: 11px;
-                    " data-xpath="${xpath}">取消移除</button>
-                </li>
-            `).join('');
-        }
-
-        function renderZeroOpacityList(elements) {
-            if (elements.length === 0) {
-                return '<li style="padding: 10px; text-align: center; color: #888;">当前页面没有透明元素。</li>';
-            }
-            return elements.map(item => `
-                <li style="display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; border-bottom: 1px solid #eee; transition: background 0.2s;" 
-                    data-xpath="${item.xpath}"
-                    data-doc-url="${item.document.URL.split('/').pop()}"
-                >
-                    <div class="element-info" style="cursor: pointer; flex-grow: 1;" title="点击高亮">
-                        <span style="color: #555; margin-right: 5px; font-weight: bold;">[${item.document === document ? '主页' : 'Iframe'}]</span>
-                        <span style="color: #6a0dad;">${item.tagName}</span>
-                        <span style="color: #007bff;">#${item.id || item.className.split(' ')[0] || 'N/A'}</span>
-                        <span style="color: #333; margin-left: 10px;">${item.width}x${item.height}px</span>
-                    </div>
-                    
-                    <button class="remove-btn" style="
-                        background: #dc3545; color: white; border: none; padding: 2px 6px; 
-                        margin-left: 10px; cursor: pointer; border-radius: 3px; font-size: 11px;
-                    " data-xpath="${item.xpath}">移除并保存</button>
-                </li>
-            `).join('');
-        }
-
-        windowDiv.innerHTML = `
-            <div id="gemini-header">
-                <strong>🔍 元素屏蔽/追踪器</strong>
-                <span id="gemini-close-btn">&times;</span>
-            </div>
-            
-            <div style="padding: 8px 15px; border-bottom: 1px solid #ccc; text-align: center;">
-                <button id="selector-toggle" style="background: #007bff; color: white; border: none; padding: 8px 15px; cursor: pointer; border-radius: 4px; font-weight: bold; width: 100%; margin-bottom: 5px;">
-                    🖱️ 启用选择并屏蔽模式
-                </button>
-                <button id="debug-link-toggle" style="background: #ffc107; color: #333; border: none; padding: 8px 15px; cursor: pointer; border-radius: 4px; font-weight: bold; width: 100%;">
-                    🛠️ 链接调试模式 (当前: ${isDebuggingLinks ? '开启' : '关闭'})
-                </button>
-            </div>
-            <div style="display: flex; border-bottom: 1px solid #ccc;">
-                <button id="tab-current" class="tab-btn" style="flex: 1; background: #fff; border-right: 1px solid #ccc;">
-                    当前透明元素 (${zeroOpacityElements.length})
-                </button>
-                <button id="tab-saved" class="tab-btn" style="flex: 1; background: #f0f0f0;">
-                    永久移除记录 (${savedRemovals.length})
-                </button>
-            </div>
-
-            <div id="content-current">
-                <div class="gemini-list-scroll-area">
-                    <ul id="gemini-element-list" style="list-style: none; padding: 0; margin: 0;">
-                        ${renderZeroOpacityList(zeroOpacityElements)}
-                    </ul>
-                </div>
-            </div>
-
-            <div id="content-saved" style="display: none;">
-                <div class="gemini-list-scroll-area">
-                    <ul id="gemini-saved-list" style="list-style: none; padding: 0; margin: 0;">
-                        ${renderSavedRemovalsList(savedRemovals)}
-                    </ul>
-                </div>
-            </div>
-
-            <div id="gemini-status-bar">
-                请点击列表项高亮，或点击“移除并保存”按钮。
-            </div>
-
-            <div class="gemini-tip-text">
-                **提示:** “选择模式”可屏蔽任何元素。取消移除后请**手动刷新**。
-            </div>
-        `;
-
-        document.body.appendChild(mainContainer);
-        mainContainer.appendChild(windowDiv);
-
-
-        // --- 4. 交互逻辑初始化 ---
-        const list = document.getElementById('gemini-element-list');
-        const savedList = document.getElementById('gemini-saved-list');
-        const statusBar = document.getElementById('gemini-status-bar');
-        const selectorToggle = document.getElementById('selector-toggle');
-        const debugLinkToggle = document.getElementById('debug-link-toggle'); // 🌟 V26.0 新增
-
-        document.getElementById('gemini-close-btn').onclick = () => {
-            mainContainer.remove();
-            toggleSelectionMode(false);
-            if (typeof body_build === 'function') {
-                //try { body_build('true'); } catch (e) {/* ignore error */ }
-            }
-        };
-
-        const tabCurrent = document.getElementById('tab-current');
-        const tabSaved = document.getElementById('tab-saved');
-        const contentCurrent = document.getElementById('content-current');
-        const contentSaved = document.getElementById('content-saved');
-
-        function switchTab(currentTab) {
-            if (currentTab === 'current') {
-                tabCurrent.style.background = '#fff';
-                tabSaved.style.background = '#f0f0f0';
-                contentCurrent.style.display = 'block';
-                contentSaved.style.display = 'none';
-            } else {
-                tabCurrent.style.background = '#f0f0f0';
-                tabSaved.style.background = '#fff';
-                contentCurrent.style.display = 'none';
-                contentSaved.style.display = 'block';
-                savedList.innerHTML = renderSavedRemovalsList(getSavedRemovals());
-            }
-        }
-        tabCurrent.onclick = () => switchTab('current');
-        tabSaved.onclick = () => switchTab('saved');
-
-
-        let isSelectionMode = false;
-        let currentHoverElement = null;
-        let lastHighlightedElement = null;
-        // ... (handleSelectionClick 和 handleSelectionMouseMove 保持不变) ...
-        const handleSelectionClick = (e) => {
-            const target = e.target;
-
-            if (isSelectionMode && target === selectorToggle) {
-                e.stopPropagation();
-                e.preventDefault();
-                toggleSelectionMode(false);
-                return;
-            }
-
-            if (target.closest(`#${containerId}`)) {
-                e.stopPropagation();
-                return;
-            }
-
-            e.preventDefault();
+        if (target.closest(`#${containerId}`)) {
             e.stopPropagation();
-
-            if (target.tagName === 'HTML' || target.tagName === 'BODY') {
-                statusBar.textContent = "不能屏蔽整个页面，请选择具体元素。";
-                toggleSelectionMode(false);
-                return;
-            }
-            
-            const xpath = getElementXPath(target);
-            if (xpath) {
-                saveRemovalChoice(xpath);
-            } else {
-                statusBar.textContent = "无法获取该元素的唯一路径，屏蔽失败。";
-                toggleSelectionMode(false);
-                return;
-            }
-
-            target.remove();
-
-            statusBar.textContent = `🎉 已永久屏蔽元素: ${target.tagName}。请刷新页面查看效果。`;
-            document.getElementById('tab-saved').innerHTML = `永久移除记录 (${getSavedRemovals().length})`;
-
-            toggleSelectionMode(false);
-        };
-
-        const handleSelectionMouseMove = (e) => {
-            const target = e.target;
-            if (target.closest(`#${containerId}`) || target.tagName === 'HTML' || target.tagName === 'BODY') {
-                if (currentHoverElement) {
-                    currentHoverElement.style.outline = '';
-                    currentHoverElement = null;
-                }
-                return;
-            }
-
-            if (currentHoverElement && currentHoverElement !== target) {
-                currentHoverElement.style.outline = '';
-            }
-
-            if (currentHoverElement !== target) {
-                currentHoverElement = target;
-                currentHoverElement.style.outline = '2px dashed orange';
-            }
-        };
-
-        function toggleSelectionMode(forceState) {
-            isSelectionMode = (forceState !== undefined) ? forceState : !isSelectionMode;
-
-            targetDocs.forEach(doc => {
-                if (isSelectionMode) {
-                    doc.addEventListener('click', handleSelectionClick, true);
-                    doc.addEventListener('mousemove', handleSelectionMouseMove); 
-                } else {
-                    doc.removeEventListener('click', handleSelectionClick, true);
-                    doc.removeEventListener('mousemove', handleSelectionMouseMove);
-                }
-            });
-
-            if (isSelectionMode) {
-                selectorToggle.textContent = '❌ 退出屏蔽模式';
-                selectorToggle.style.background = '#dc3545';
-                statusBar.textContent = '🖱️ 选择模式已启用：请点击需要屏蔽的元素。';
-                mainContainer.style.cursor = 'default';
-            } else {
-                if (currentHoverElement) {
-                    currentHoverElement.style.outline = '';
-                    currentHoverElement = null;
-                }
-                selectorToggle.textContent = '🖱️ 启用选择并屏蔽模式';
-                selectorToggle.style.background = '#007bff';
-                statusBar.textContent = '选择模式已禁用。';
-            }
+            return;
         }
 
-        selectorToggle.onclick = () => toggleSelectionMode();
+        e.preventDefault();
+        e.stopPropagation();
 
+        if (target.tagName === 'HTML' || target.tagName === 'BODY') {
+            statusBar.textContent = "不能屏蔽整个页面，请选择具体元素。";
+            toggleSelectionMode(false);
+            return;
+        }
 
-        // 🌟 V26.0 链接调试模式开关逻辑
-        debugLinkToggle.onclick = () => {
-            isDebuggingLinks = !isDebuggingLinks;
-            if (isDebuggingLinks) {
-                debugLinkToggle.style.background = '#00c853'; // 绿色
-                debugLinkToggle.style.color = 'white';
-                debugLinkToggle.textContent = '🛠️ 链接调试模式 (当前: 开启)';
-                statusBar.textContent = '链接调试模式已开启。请刷新页面并点击可疑按钮。';
+        const xpath = getElementXPath(target);
+        if (xpath) {
+            saveRemovalChoice(xpath);
+        } else {
+            statusBar.textContent = "无法获取该元素的唯一路径，屏蔽失败。";
+            toggleSelectionMode(false);
+            return;
+        }
+
+        target.remove();
+
+        statusBar.textContent = `🎉 已永久屏蔽元素: ${target.tagName}。请刷新页面查看效果。`;
+        document.getElementById('tab-saved').innerHTML = `永久移除记录 (${getSavedRemovals().length})`;
+
+        toggleSelectionMode(false);
+    };
+
+    // --- V25.1: MouseMove 逻辑 ---
+    const handleSelectionMouseMove = (e) => {
+        const target = e.target;
+        // 忽略悬浮窗和 HTML/BODY
+        if (target.closest(`#${containerId}`) || target.tagName === 'HTML' || target.tagName === 'BODY') {
+            if (currentHoverElement) {
+                currentHoverElement.style.outline = '';
+                currentHoverElement = null;
+            }
+            return;
+        }
+
+        if (currentHoverElement && currentHoverElement !== target) {
+            currentHoverElement.style.outline = '';
+        }
+
+        if (currentHoverElement !== target) {
+            currentHoverElement = target;
+            currentHoverElement.style.outline = '2px dashed orange';
+        }
+    };
+
+    /**
+     * 切换选择模式，并在所有目标文档上添加/移除监听器
+     */
+    function toggleSelectionMode(forceState) {
+        isSelectionMode = (forceState !== undefined) ? forceState : !isSelectionMode;
+
+        targetDocs.forEach(doc => {
+            if (isSelectionMode) {
+                // 关键：在所有文档的捕获阶段绑定 click
+                doc.addEventListener('click', handleSelectionClick, true);
+                doc.addEventListener('mousemove', handleSelectionMouseMove); // mousemove 绑定在当前文档
             } else {
-                debugLinkToggle.style.background = '#ffc107'; // 警告黄
-                debugLinkToggle.style.color = '#333';
-                debugLinkToggle.textContent = '🛠️ 链接调试模式 (当前: 关闭)';
-                statusBar.textContent = '链接调试模式已关闭。';
+                doc.removeEventListener('click', handleSelectionClick, true);
+                doc.removeEventListener('mousemove', handleSelectionMouseMove);
             }
-        };
+        });
 
-        // ... (列表逻辑和拖拽逻辑保持不变) ...
-        list.addEventListener('click', (e) => {
-            let listItem = e.target.closest('li');
-            if (!listItem) return;
-
-            const xpath = listItem.getAttribute('data-xpath');
-            const elementEntry = zeroOpacityElements.find(i => i.xpath === xpath);
-            if (!elementEntry) return;
-            const element = elementEntry.element;
-
-            if (e.target.classList.contains('remove-btn')) {
-                if (element && element.parentNode) {
-                    saveRemovalChoice(xpath);
-
-                    if (lastHighlightedElement) {
-                        lastHighlightedElement.style.border = '';
-                    }
-
-                    element.remove();
-                    listItem.remove();
-                    statusBar.textContent = `✅ 元素 ${elementEntry.tagName} 已永久移除并保存。`;
-                    document.getElementById('tab-saved').innerHTML = `永久移除记录 (${getSavedRemovals().length})`;
-                }
-                return;
+        if (isSelectionMode) {
+            selectorToggle.textContent = '❌ 退出屏蔽模式';
+            selectorToggle.style.background = '#dc3545';
+            statusBar.textContent = '🖱️ 选择模式已启用：请点击需要屏蔽的元素。';
+            mainContainer.style.cursor = 'default';
+        } else {
+            if (currentHoverElement) {
+                currentHoverElement.style.outline = '';
+                currentHoverElement = null;
             }
+            selectorToggle.textContent = '🖱️ 启用选择并屏蔽模式';
+            selectorToggle.style.background = '#007bff';
+            statusBar.textContent = '选择模式已禁用。';
+        }
+    }
 
-            if (e.target.closest('.element-info')) {
+    selectorToggle.onclick = () => toggleSelectionMode();
+
+
+    // --- 列表逻辑 (使用 element.document 确保高亮正确) ---
+    list.addEventListener('click', (e) => {
+        let listItem = e.target.closest('li');
+        if (!listItem) return;
+
+        const xpath = listItem.getAttribute('data-xpath');
+        // 必须从 zeroOpacityElements 中查找元素对象，因为它包含 document 引用
+        const elementEntry = zeroOpacityElements.find(i => i.xpath === xpath);
+        if (!elementEntry) return;
+        const element = elementEntry.element;
+
+        if (e.target.classList.contains('remove-btn')) {
+            if (element && element.parentNode) {
+                saveRemovalChoice(xpath);
+
                 if (lastHighlightedElement) {
                     lastHighlightedElement.style.border = '';
                 }
 
-                element.style.border = '2px solid red';
-                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-                lastHighlightedElement = element;
-                statusBar.textContent = `选中元素: [${elementEntry.document === document ? '主页' : 'Iframe'}] ${elementEntry.tagName} (${elementEntry.width}x${elementEntry.height}px)`;
+                element.remove();
+                listItem.remove();
+                statusBar.textContent = `✅ 元素 ${elementEntry.tagName} 已永久移除并保存。`;
+                document.getElementById('tab-saved').innerHTML = `永久移除记录 (${getSavedRemovals().length})`;
             }
-        });
-
-        savedList.addEventListener('click', (e) => {
-            if (e.target.classList.contains('undo-btn')) {
-                const xpath = e.target.getAttribute('data-xpath');
-                if (removeRemovalChoice(xpath)) {
-                    e.target.closest('li').remove();
-                    statusBar.textContent = `🚫 移除记录已取消。请刷新页面以恢复元素。`;
-                    document.getElementById('tab-saved').innerHTML = `永久移除记录 (${getSavedRemovals().length})`;
-                }
-            }
-        });
-
-        // --- 拖拽逻辑 (保持不变) ---
-        let isDragging = false;
-        let dragStartX = 0;
-        let dragStartY = 0;
-        let containerOffsetX = 0;
-        let containerOffsetY = 0;
-
-        function getEventXY(e) {
-            if (e.touches && e.touches.length > 0) {
-                return { x: e.touches[0].clientX, y: e.touches[0].clientY };
-            }
-            return { x: e.clientX, y: e.clientY };
+            return;
         }
 
-        function getTranslateXY(element) {
-            const style = window.getComputedStyle(element);
-            const transform = style.transform || style.webkitTransform || style.mozTransform;
-
-            let mat = transform.match(/^matrix3d\((.+)\)$/);
-            if (mat) {
-                const values = mat[1].split(', ');
-                return { x: parseFloat(values[12]) || 0, y: parseFloat(values[13]) || 0 };
+        if (e.target.closest('.element-info')) {
+            if (lastHighlightedElement) {
+                lastHighlightedElement.style.border = '';
             }
 
-            mat = transform.match(/^matrix\((.+)\)$/);
-            if (mat) {
-                const values = mat[1].split(', ');
-                return { x: parseFloat(values[4]) || 0, y: parseFloat(values[5]) || 0 };
-            }
-            return { x: 0, y: 0 };
+            element.style.border = '2px solid red';
+            // 滚动到 Iframe 内部元素
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+            lastHighlightedElement = element;
+            statusBar.textContent = `选中元素: [${elementEntry.document === document ? '主页' : 'Iframe'}] ${elementEntry.tagName} (${elementEntry.width}x${elementEntry.height}px)`;
         }
+    });
 
-        function isDragTarget(target) {
-            if (isSelectionMode) return false;
-
-            if (target === mainContainer) return true;
-
-            if (target.closest(`#${windowId}`)) {
-                const dragTargets = target.closest('#gemini-header, #gemini-status-bar, .gemini-tip-text');
-
-                if (dragTargets && !target.closest('button, span[id$="close-btn"], a')) {
-                    return true;
-                }
+    savedList.addEventListener('click', (e) => {
+        if (e.target.classList.contains('undo-btn')) {
+            const xpath = e.target.getAttribute('data-xpath');
+            if (removeRemovalChoice(xpath)) {
+                e.target.closest('li').remove();
+                statusBar.textContent = `🚫 移除记录已取消。请刷新页面以恢复元素。`;
+                document.getElementById('tab-saved').innerHTML = `永久移除记录 (${getSavedRemovals().length})`;
             }
-
-            return false;
         }
+    });
 
-        const dragStart = (e) => {
-            if (!isDragTarget(e.target)) { return; }
 
-            isDragging = true;
-            e.preventDefault();
+    // --- 拖拽逻辑 (保持不变) ---
+    let isDragging = false;
+    let dragStartX = 0;
+    let dragStartY = 0;
+    let containerOffsetX = 0;
+    let containerOffsetY = 0;
 
-            const { x, y } = getEventXY(e);
-
-            const currentTranslate = getTranslateXY(mainContainer);
-            containerOffsetX = currentTranslate.x;
-            containerOffsetY = currentTranslate.y;
-
-            dragStartX = x;
-            dragStartY = y;
-        };
-
-        const dragMove = (e) => {
-            if (!isDragging) return;
-            e.preventDefault();
-
-            const { x, y } = getEventXY(e);
-
-            const dx = x - dragStartX;
-            const dy = y - dragStartY;
-
-            const newX = containerOffsetX + dx;
-            const newY = containerOffsetY + dy;
-
-            mainContainer.style.transform = `translate3d(${newX}px, ${newY}px, 0)`;
-        };
-
-        const dragEnd = () => {
-            isDragging = false;
-        };
-
-        mainContainer.addEventListener('mousedown', dragStart);
-        document.addEventListener('mousemove', dragMove);
-        document.addEventListener('mouseup', dragEnd);
-
-        mainContainer.addEventListener('touchstart', dragStart);
-        document.addEventListener('touchmove', dragMove);
-        document.addEventListener('touchend', dragEnd);
+    function getEventXY(e) {
+        if (e.touches && e.touches.length > 0) {
+            return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        }
+        return { x: e.clientX, y: e.clientY };
     }
 
-    // =================================================================
-    // 启动逻辑：Iframe 探测与文档收集 
-    // =================================================================
-    function getTargetDocuments() {
-        const documents = [document];
-        const iframes = document.querySelectorAll('iframe');
+    function getTranslateXY(element) {
+        const style = window.getComputedStyle(element);
+        const transform = style.transform || style.webkitTransform || style.mozTransform;
 
-        iframes.forEach(iframe => {
-            if (iframe.contentDocument) {
-                try {
-                    const iframeDocument = iframe.contentDocument;
-                    if (iframeDocument && iframeDocument.body) {
-                        documents.push(iframeDocument);
-                    }
-                } catch (e) {
-                    console.warn('[Gemini屏蔽] 无法访问跨域 Iframe:', iframe.src);
-                }
-            }
-        });
+        let mat = transform.match(/^matrix3d\((.+)\)$/);
+        if (mat) {
+            const values = mat[1].split(', ');
+            return { x: parseFloat(values[12]) || 0, y: parseFloat(values[13]) || 0 };
+        }
 
-        return documents;
+        mat = transform.match(/^matrix\((.+)\)$/);
+        if (mat) {
+            const values = mat[1].split(', ');
+            return { x: parseFloat(values[4]) || 0, y: parseFloat(values[5]) || 0 };
+        }
+        return { x: 0, y: 0 };
     }
 
-    function observeDynamicIframes() {
-        const observer = new MutationObserver(mutationsList => {
-            for (const mutation of mutationsList) {
-                if (mutation.type === 'childList') {
-                    mutation.addedNodes.forEach(node => {
-                        if (node.tagName === 'IFRAME') {
-                            const newIframe = node;
-                            
-                            const handleIframeLoad = () => {
-                                try {
-                                    const iframeDoc = newIframe.contentDocument;
-                                    if (iframeDoc && iframeDoc.body) {
-                                        loadAndRemoveSavedElements(iframeDoc);
-                                        
-                                        interceptWindowOpen(iframeDoc.defaultView);
-                                        
-                                        console.log(`[MutationObserver] 动态 Iframe 初始化成功: ${newIframe.src}`);
-                                    }
-                                } catch (e) {
-                                    console.warn('[MutationObserver] 无法访问跨域或加载失败的 Iframe。');
+    function isDragTarget(target) {
+        if (isSelectionMode) return false;
+
+        if (target === mainContainer) return true;
+
+        if (target.closest(`#${windowId}`)) {
+            const dragTargets = target.closest('#gemini-header, #gemini-status-bar, .gemini-tip-text');
+
+            if (dragTargets && !target.closest('button, span[id$="close-btn"], a')) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    const dragStart = (e) => {
+        if (!isDragTarget(e.target)) { return; }
+
+        isDragging = true;
+        e.preventDefault();
+
+        const { x, y } = getEventXY(e);
+
+        const currentTranslate = getTranslateXY(mainContainer);
+        containerOffsetX = currentTranslate.x;
+        containerOffsetY = currentTranslate.y;
+
+        dragStartX = x;
+        dragStartY = y;
+    };
+
+    const dragMove = (e) => {
+        if (!isDragging) return;
+        e.preventDefault();
+
+        const { x, y } = getEventXY(e);
+
+        const dx = x - dragStartX;
+        const dy = y - dragStartY;
+
+        const newX = containerOffsetX + dx;
+        const newY = containerOffsetY + dy;
+
+        mainContainer.style.transform = `translate3d(${newX}px, ${newY}px, 0)`;
+    };
+
+    const dragEnd = () => {
+        isDragging = false;
+    };
+
+    mainContainer.addEventListener('mousedown', dragStart);
+    document.addEventListener('mousemove', dragMove);
+    document.addEventListener('mouseup', dragEnd);
+
+    mainContainer.addEventListener('touchstart', dragStart);
+    document.addEventListener('touchmove', dragMove);
+    document.addEventListener('touchend', dragEnd);
+}
+
+// ----------------------------------------------------------------
+// 启动逻辑：Iframe 探测与文档收集
+// ----------------------------------------------------------------
+
+/**
+ * 收集所有同源 Iframe 的文档对象
+ */
+function getTargetDocuments() {
+    const documents = [document];
+    const iframes = document.querySelectorAll('iframe');
+
+    iframes.forEach(iframe => {
+        // 确保 iframe 已经加载完毕
+        if (iframe.contentDocument) {
+            try {
+                // 尝试访问 contentDocument，如果跨域会抛出安全错误
+                const iframeDocument = iframe.contentDocument;
+
+                if (iframeDocument && iframeDocument.body) {
+                    documents.push(iframeDocument);
+                }
+            } catch (e) {
+                console.warn('[Gemini屏蔽] 无法访问跨域 Iframe:', iframe.src);
+            }
+        } else {
+            // 如果 iframe 尚未加载，在加载完成后再次尝试（仅在 Iframe 较多时有效）
+            iframe.onload = () => {
+                const loadedDocument = iframe.contentDocument;
+                if (loadedDocument && loadedDocument.body && !getTargetDocuments().includes(loadedDocument)) {
+                    // 如果脚本是在 onload 之后才运行，这里需要重新渲染浮窗，但为简化，我们依赖于外部刷新。
+                }
+            };
+        }
+    });
+
+    return documents;
+}
+
+/**
+ * 使用 MutationObserver 监听动态插入的 Iframe，并在它们加载完成后进行初始化。
+ */
+function observeDynamicIframes() {
+    const observer = new MutationObserver(mutationsList => {
+        for (const mutation of mutationsList) {
+            if (mutation.type === 'childList') {
+                mutation.addedNodes.forEach(node => {
+                    // 1. 检查新添加的节点是否是 Iframe 元素
+                    if (node.tagName === 'IFRAME') {
+                        const newIframe = node;
+                        console.log(`[MutationObserver] 发现动态 Iframe: ${newIframe.src}`);
+
+                        // 2. 像 initScript 一样，在其加载完成后尝试初始化
+                        const handleIframeLoad = () => {
+                            try {
+                                const iframeDoc = newIframe.contentDocument;
+                                if (iframeDoc && iframeDoc.body) {
+                                    // 重新加载并移除元素（自动屏蔽）
+                                    loadAndRemoveSavedElements(iframeDoc);
+
+                                    // 如果选择模式正在运行，需要更新事件监听器，但这太复杂，
+                                    // 更简单的做法是：让用户再次点击“启用选择并屏蔽模式”按钮。
+                                    console.log(`[MutationObserver] Iframe 初始化成功: ${newIframe.src}`);
                                 }
-                                newIframe.removeEventListener('load', handleIframeLoad);
-                            };
-
-                            newIframe.addEventListener('load', handleIframeLoad);
-
-                            if (newIframe.contentDocument) {
-                                handleIframeLoad();
+                            } catch (e) {
+                                console.warn('[MutationObserver] 无法访问跨域或加载失败的 Iframe。');
                             }
+                            // 确保移除监听器，避免重复执行
+                            newIframe.removeEventListener('load', handleIframeLoad);
+                        };
+
+                        // 无论当前状态如何，都绑定 load 事件
+                        newIframe.addEventListener('load', handleIframeLoad);
+
+                        // 如果 Iframe 已经加载完成，立即尝试执行
+                        if (newIframe.contentDocument) {
+                            handleIframeLoad();
                         }
-                    });
-                }
-            }
-        });
-
-        observer.observe(document.body, { childList: true, subtree: true });
-        console.log('[MutationObserver] 已启动，开始监听动态 Iframe。');
-    }
-
-    // =================================================================
-    // 终极拦截：阻止点击事件进入所有 Iframe 
-    // =================================================================
-    function blockIframeClicks() {
-        const iframes = document.querySelectorAll('iframe');
-        iframes.forEach(iframe => {
-            iframe.addEventListener('click', (e) => {
-                if (!document.getElementById(containerId)) {
-                    e.stopImmediatePropagation();
-                    e.preventDefault();
-                    console.log('[Gemini屏蔽] 捕获并阻止了 Iframe 上的点击事件。');
-                    interceptWindowOpen(window);
-                }
-            }, true); 
-        });
-        console.log(`[Gemini屏蔽] 已对 ${iframes.length} 个 Iframe 启用点击拦截。`);
-    }
-
-    // =================================================================
-    // 🌟 V26.0 精确广告链接过滤和调试功能集成
-    // =================================================================
-    function setupAdLinkFilter() {
-        document.addEventListener('click', (e) => {
-            // 确保浮窗关闭时才启用此功能
-            if (document.getElementById(containerId)) {
-                return;
-            }
-
-            const target = e.target;
-            const anchor = target.closest('a');
-            
-            if (anchor) {
-                const href = anchor.href || '';
-                const opensNewTab = anchor.target === '_blank';
-                const xpath = getElementXPath(anchor); 
-
-                // 1. 检查是否为广告链接或弹窗链接 (V25.9 自动过滤逻辑)
-                const isAdLink = AD_DOMAINS.some(domain => href.includes(domain));
-                const isSuspicious = isAdLink || (opensNewTab && href && href !== '#');
-                
-                // --- 🌟 V26.0 调试逻辑 ---
-                if (isDebuggingLinks) {
-                    e.preventDefault();
-                    e.stopImmediatePropagation();
-                    
-                    if (xpath) {
-                        const confirmBlock = confirm(
-                            `[Gemini屏蔽] 链接调试模式捕获到点击事件！\n\n` +
-                            `元素: <${anchor.tagName}>\n` +
-                            `目标链接: ${href.substring(0, 100)}...\n\n` +
-                            `您确定要永久屏蔽这个元素吗？`
-                        );
-
-                        if (confirmBlock) {
-                            saveRemovalChoice(xpath);
-                            anchor.remove();
-                            alert("✅ 元素已永久屏蔽，请刷新页面。");
-                        } else {
-                            alert("🚫 已取消屏蔽，链接被阻止，请再次点击以触发原始行为（可能弹窗）。");
-                        }
-                    } else {
-                        console.error('[Gemini屏蔽] 调试模式：无法获取元素的XPath，无法屏蔽。');
                     }
-                    return; // 调试模式下，始终阻止并返回
-                }
-                
-                // --- 2. 正常运行时自动过滤逻辑 (仅在非调试模式下运行) ---
-                if (isSuspicious) {
-                     e.preventDefault();
-                     e.stopImmediatePropagation();
-                     console.warn(`[Gemini屏蔽] 精确过滤：阻止了潜在的广告链接或弹窗链接: ${href.substring(0, 100)}...`);
-                     console.warn(`[Gemini屏蔽] 精确过滤：阻止了潜在的广告链接或弹窗链接: ${href.substring(0, 100)}...`);
-                     return;
-                }
+                });
             }
-            
-        }, true); // 在捕获阶段执行
-        console.log('[Gemini屏蔽] 精确广告链接过滤/调试功能已启用。');
-    }
+        }
+    });
 
+    // 开始观察整个文档 body 的子元素添加
+    observer.observe(document.body, { childList: true, subtree: true });
+    console.log('[MutationObserver] 已启动，开始监听动态 Iframe。');
+}
 
-    // =================================================================
-    // 核心启动函数 (V26.0)
-    // =================================================================
-    function initScript() {
-        injectStyles(containerId, windowId);
+function initScript() {
 
-        // 1. 立即 Hook window.open
-        enableWindowOpenHook(); 
+    // 1. 注入样式 (只需在主页面)
+    injectStyles(containerId, windowId);
 
-        // 2. 立即对所有 Iframe 启用点击拦截
-        blockIframeClicks(); 
+    const targetDocuments = getTargetDocuments();
 
-        // 3. 启用精确广告链接过滤和调试功能
-        setupAdLinkFilter();
+    // 2. 后台执行自动移除 (在所有文档上执行)
+    targetDocuments.forEach(doc => loadAndRemoveSavedElements(doc));
 
-        const targetDocuments = getTargetDocuments();
-        targetDocuments.forEach(doc => loadAndRemoveSavedElements(doc));
+    // 3. 绑定触发器 (在主页面绑定)
+    document.addEventListener('click', (e) => {
+        const target = e.target;
+        if (target.id === 'tmyszzq') {
+            e.preventDefault();
+            e.stopPropagation();
 
-        // 启动动态 Iframe 监听
-        observeDynamicIframes();
-        
-        // 监听浮窗启动按钮
-        document.addEventListener('click', (e) => {
-            const target = e.target;
-            if (target.id === 'tmyszzq') { 
-                e.preventDefault();
-                e.stopPropagation();
+            if (!document.getElementById(containerId)) {
+                // 渲染浮窗，传入所有文档对象以便于收集元素和绑定事件
+                renderFloatWindow(targetDocuments);
 
-                if (!document.getElementById(containerId)) {
-                    const updatedTargetDocuments = getTargetDocuments(); 
-                    renderFloatWindow(updatedTargetDocuments);
-
-                    if (typeof body_build === 'function') {
-                        try {
-                            body_build('false');
-                        } catch (e) {
-                            console.error("[Gemini屏蔽] body_build('false') 调用失败:", e);
-                        }
+                // 🚨 恢复用户要求的函数调用
+                if (typeof body_build === 'function') {
+                    try {
+                        body_build('false');
+                    } catch (e) {
+                        console.error("[Gemini屏蔽] body_build('false') 调用失败:", e);
                     }
                 }
             }
-        }, true);
-        
-        console.log(`[Gemini屏蔽] 脚本已初始化。已识别同源文档: ${targetDocuments.length} 个。`);
-    }
+        }
+    }, true);
 
-    // 启动脚本
-    initScript();
-})();
+    // 启动 MutationObserver 监听动态 Iframe 的添加
+    observeDynamicIframes();
+    console.log(`[Gemini屏蔽] 脚本已初始化。已识别同源文档: ${targetDocuments.length} 个。`);
+}
+
+// 启动脚本
+initScript();
 
 // 元素屏蔽器 END
 
