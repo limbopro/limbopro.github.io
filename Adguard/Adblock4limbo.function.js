@@ -6032,7 +6032,7 @@ function injectStyles(containerId, windowId) {
                 return;
             }
 
-            if (target.closest(`#${containerId}`)||target.closest('[class*="limbopro"]')) {
+            if (target.closest(`#${containerId}`)||target.closest("#tmyszzq")) {
                 e.stopPropagation();
                 return;
             }
