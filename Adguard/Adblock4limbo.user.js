@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Adblock4limbo.[github]
 // @namespace    https://github.com/limbopro/Adblock4limbo/raw/main/Adguard/Adblock4limbo.user.js
-// @version      0.2025.12.10
+// @version      0.2025.12.13
 // @license      CC BY-NC-SA 4.0
 // @description  毒奶去网页广告计划用户脚本 For Quantumult X & Surge & Shadowrocket & Loon & Stash & 油猴 ；1.新增页面右下角导航；2.通过 JavaScript 移除特定网站网页广告 —— 搜索引擎（Bing/Google）广告及内容农场结果清除/低端影视/欧乐影院/iyf爱壹帆/哔滴影视/Pornhub/Javbus/Supjav/Jable(支持抓取M3U8链接)/MissAv/91porn(支持视频下载)/hitomi/紳士漫畫/禁漫天堂/等视频&ACG&小说&漫画网站上的弹窗广告&视频广告&Gif图片广告等，保持网页清爽干净无打扰！ P.S. 欢迎提交issue
 // @author       limbopro
@@ -1476,8 +1476,8 @@ function adsDomain_switch(x) { // 匹配参数值 执行相应函数
                 }
             }, 2000);
 
-            videoAds_accelerateSkip(0.1); // 视频广告加速
-            setConstant(); // 视频广告加速
+            ////videoAds_accelerateSkip(0.1); // 视频广告加速
+            ////setConstant(); // 视频广告加速
             break;
 
         case 'cnys':
@@ -3881,11 +3881,11 @@ function abort_on_property_read() {
 };
 
 /* 视频页广告加速跳过 */
-function videoAds_accelerateSkip(fasterx) {
+window.videoAds_accelerateSkip = function videoAds_accelerateSkip(fasterx) {
     // https://github.com/gorhill/uBlock/wiki
     /// nano-setInterval-booster.js
     /// alias nano-sib.js
-    //console.log("视频广告加速")
+    console.log("视频广告加速")
     let needleArg = '{{1}}';
     if (needleArg === '{{1}}') { needleArg = ''; }
     let delayArg = '{{2}}';
@@ -5169,11 +5169,11 @@ window.initAdblockLoader = function initAdblockLoader() {
     loadStylesheetWithTrustedTypes(cssUrl, TT_POLICY_NAME, TT_URL_PREFIX); // example http://limbopro.com/CSS/reddit.com.css
     loadStylesheetWithTrustedTypes(cssUrlByhand, TT_POLICY_NAME, TT_URL_PREFIX); // example http://limbopro.com/CSS/limbopro.reddit.com.css
 
-//alert(cssUrl)
+    //alert(cssUrl)
 
-loadCSS(cssUrl, () => {
-    //console.log('CSS 已生效');
-})
+    loadCSS(cssUrl, () => {
+        //console.log('CSS 已生效');
+    })
     console.log(`[Adblock Loader] 尝试根据域名 "${hostname}" 加载 "${cssFileName}"`);
 }
 
