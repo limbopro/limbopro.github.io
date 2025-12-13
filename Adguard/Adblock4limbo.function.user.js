@@ -4830,92 +4830,98 @@ function injectStyles(containerId, windowId) {
 
 
 // ==UserScript==
-// @name         元素屏蔽/追踪器 (V26.31 - 纯白名单零沙箱/Hook Setter)
+// @name         元素屏蔽/追踪器 (V26.34 - 默认不沙箱的黑名单策略)
 // @namespace    http://tampermonkey.net/
-// @version      26.31
-// @description  V26.31：核心逻辑强化：在白名单页面，所有 Iframe 都被设置为【零沙箱】（完全移除 sandbox 属性），并通过 Hook 阻止网站 JS 重新设置沙箱。同时修复了点击调试模式下临时放行失败的问题。
+// @version      26.34
+// @description  V26.34：将策略修改为“默认全局不启用沙箱”，并将列表用途从“白名单”改为“黑名单”。只有在黑名单页面，才对 Iframe 实施严格沙箱。
 // @author       Gemini
 // @match        *://*/*
 // @grant        none
 // @run-at       document-start
 // ==/UserScript==
 
-(function() {
+(function () {
     'use strict';
 
     // =================================================================
-    // ⚠️ 全局常量与状态 
+    // ⚠️ 全局常量与状态 (V26.34 修改：移除 GLOBAL_SANDBOX_DISABLED_KEY)
     // =================================================================
     const isLimbopro_STORAGE_KEY_XZQ = 'gemini_zero_opacity_removals';
-    const PLAYBACK_PAGE_WHITELIST_KEY = 'gemini_playback_page_whitelist'; 
+    // V26.34 修改：将白名单键改为黑名单键
+    const PAGE_BLACKLIST_KEY = 'gemini_page_blacklist';
+
     const containerId = 'gemini-main-container';
     const windowId = 'gemini-float-window';
-    
+
     const DEBUG_CLICK_KEY = 'gemini_debug_element_click_mode';
     const DEBUG_LOCATION_KEY = 'gemini_debug_location_hook_mode';
 
-    let isDebuggingElementClick = false; 
-    let isDebuggingLocationHooks = false; 
+    let isDebuggingElementClick = false;
+    let isDebuggingLocationHooks = false;
     let isWindowOpenHooked = false;
-    
-    // V26.21 媒体播放器关键词，V26.31 中已不再用于沙箱判断，但保留用于识别 Iframe 类型
-    const MEDIA_KEYWORDS = [
-        'player', 
-        'embed', 
-        'video', 
-        'v.qq.com', 
-        'youku', 
-        'iqiyi', 
-        'm3u8',
-        'cdn.com',
-        'stream',
-    ];
+    // let isGlobalSandboxDisabled = false; // V26.34 移除
 
-    // V26.23 核心：用于硬编码拦截的广告域名片段 (保持不变，与沙箱逻辑独立)
     const AD_URL_PARTIAL_PERMANENT = 'twinrdengine.com';
 
 
     // =================================================================
-    // 播放页白名单管理函数 (保持不变)
+    // 黑名单管理函数 (V26.34 修改：取代白名单函数)
     // =================================================================
+
+    /**
+     * 获取当前页面 Host + Path 作为列表的唯一键。
+     * @returns {string} host/path
+     */
     function getCurrentPageKey() {
         try {
             const url = new URL(window.location.href);
-            return url.host + url.pathname; 
+            return url.host + url.pathname;
         } catch (e) {
             return window.location.host;
         }
     }
 
-    function getPlaybackWhitelist() {
+    /**
+     * V26.34：从 localStorage 读取黑名单列表。
+     * @returns {string[]}
+     */
+    function getPageBlacklist() {
         try {
-            const list = JSON.parse(localStorage.getItem(PLAYBACK_PAGE_WHITELIST_KEY) || '[]');
+            // V26.34 使用新的黑名单键
+            const list = JSON.parse(localStorage.getItem(PAGE_BLACKLIST_KEY) || '[]');
             return list.filter(item => item && typeof item === 'string');
         } catch (e) {
-            console.error('[白名单] 读取失败:', e);
+            console.error('[黑名单] 读取失败:', e);
             return [];
         }
     }
 
-    function isCurrentPageWhitelisted() {
+    /**
+     * V26.34：判断当前页面是否在黑名单中。
+     * @returns {boolean}
+     */
+    function isCurrentPageBlacklisted() {
         const currentPageKey = getCurrentPageKey();
-        return getPlaybackWhitelist().includes(currentPageKey);
+        return getPageBlacklist().includes(currentPageKey);
     }
 
-    function togglePageWhitelist(shouldAdd, pageKey = getCurrentPageKey()) {
-        let list = getPlaybackWhitelist();
+    /**
+     * V26.34：切换当前页面在黑名单中的状态 (添加/移除)。
+     */
+    function togglePageBlacklist(shouldAdd, pageKey = getCurrentPageKey()) {
+        let list = getPageBlacklist();
         const index = list.indexOf(pageKey);
 
         if (shouldAdd) {
             if (index === -1) {
                 list.push(pageKey);
-                localStorage.setItem(PLAYBACK_PAGE_WHITELIST_KEY, JSON.stringify(list));
+                localStorage.setItem(PAGE_BLACKLIST_KEY, JSON.stringify(list));
                 return true;
             }
         } else {
             if (index > -1) {
                 list.splice(index, 1);
-                localStorage.setItem(PLAYBACK_PAGE_WHITELIST_KEY, JSON.stringify(list));
+                localStorage.setItem(PAGE_BLACKLIST_KEY, JSON.stringify(list));
                 return true;
             }
         }
@@ -4924,120 +4930,108 @@ function injectStyles(containerId, windowId) {
 
 
     // =================================================================
-    // 属性 Hook 工具函数 V26.31 (白名单页：阻止任何 sandbox 设置)
+    // 属性 Hook 工具函数 V26.34 (仅在黑名单页面才会被调用)
     // =================================================================
+    /**
+     * Hook Iframe 的 sandbox setter，防止其解除沙箱。
+     * ⚠️ 此函数仅在黑名单状态下被调用。
+     */
     function hookIframeSandboxSetter(iframe) {
-        // 检查是否已经 Hook 过
         if (iframe.__sandbox_hooked) return;
-        
-        // 获取 Iframe 元素原型链上的 sandbox 属性描述符
-        const sandboxDescriptor = Object.getOwnPropertyDescriptor(Element.prototype, 'sandbox') || 
-                                  Object.getOwnPropertyDescriptor(HTMLIFrameElement.prototype, 'sandbox');
+
+        const sandboxDescriptor = Object.getOwnPropertyDescriptor(Element.prototype, 'sandbox') ||
+            Object.getOwnPropertyDescriptor(HTMLIFrameElement.prototype, 'sandbox');
 
         if (sandboxDescriptor && sandboxDescriptor.set) {
             const originalSetter = sandboxDescriptor.set;
+            // 严格沙箱属性
+            const strictSandboxAttributes = 'allow-scripts allow-forms allow-same-origin allow-popups allow-pointer-lock';
 
             Object.defineProperty(iframe, 'sandbox', {
-                set: function(value) {
-                    // V26.31 核心：不再检查 Iframe 类型，只检查页面是否在白名单
-                    const applyZeroSandbox = isCurrentPageWhitelisted(); 
+                set: function (value) {
+                    // 既然此 Hook 被调用，则当前处于“黑名单/严格沙箱”模式，我们强制应用严格沙箱。
+                    const newValue = value || strictSandboxAttributes;
+                    originalSetter.call(this, newValue);
 
-                    if (applyZeroSandbox) {
-                        // 白名单页面：阻止任何 Iframe 设置 sandbox 属性
-                        console.warn(`[Gemini屏蔽 V26.31] 🛡️ 白名单策略生效，阻止所有 Iframe 重新设置 sandbox 属性。`);
-                        iframe.removeAttribute('sandbox'); // 再次移除
-                        return;
-                    }
-                    
-                    // 非白名单页面：执行原始的设置行为
-                    originalSetter.call(this, value);
+                    console.warn(`[Gemini屏蔽 V26.34] 🛡️ 黑名单页面：Iframe sandbox 被 Setter Hook 强制设置为严格沙箱。`);
                 },
-                get: function() {
+                get: function () {
                     return iframe.getAttribute('sandbox');
                 },
                 configurable: true,
                 enumerable: true
             });
             iframe.__sandbox_hooked = true;
-            console.log(`[Gemini屏蔽 V26.31] 🌟 Iframe sandbox 属性 Setter Hook 成功。`);
+            console.log(`[Gemini屏蔽 V26.34] 🌟 Iframe sandbox 属性 Setter Hook 成功启用 (仅对黑名单页面有效)。`);
         }
     }
 
 
     // =================================================================
-    // Iframe 沙箱处理函数 V26.31 (白名单页面 Iframe 零沙箱)
+    // Iframe 沙箱处理函数 V26.34 (核心逻辑反转)
     // =================================================================
     function applyIframeSandbox(iframe) {
-        // 立即 Hook sandbox setter，防止被覆盖
-        hookIframeSandboxSetter(iframe); 
+
+        // --- 策略A: 默认不干预 (非黑名单页面) ---
+        if (!isCurrentPageBlacklisted()) {
+            console.log('[Gemini屏蔽 V26.34] 🚀 非黑名单页面：对 Iframe 不做任何操作，保持默认状态 (默认不沙箱)。');
+            return; // 立即退出，不干预 Iframe 的任何属性和方法
+        }
+
+        // --- 策略B: 严格沙箱 (黑名单页面) ---
 
         const iframeSrc = iframe.src || '';
-        
-        // V26.31 核心：仅依赖白名单状态
-        const applyZeroSandbox = isCurrentPageWhitelisted(); 
-        
-        let sandboxAttributes = '';
+        const sandboxAttributes = 'allow-scripts allow-forms allow-same-origin allow-popups allow-pointer-lock';
 
-        if (applyZeroSandbox) {
-            // 策略A：零沙箱策略 (完全不隔离)
-            if (iframe.hasAttribute('sandbox')) {
-                 iframe.removeAttribute('sandbox');
-                 console.log(`[Gemini屏蔽 V26.31] 🚀 白名单页面：所有 Iframe 已移除 sandbox 属性，应用零沙箱: ${iframeSrc.substring(0, 50)}...`);
-            } else {
-                 console.log(`[Gemini屏蔽 V26.31] 🚀 白名单页面：Iframe 确认无 sandbox 属性。`);
+        // 实施沙箱
+        // 立即 Hook sandbox setter，防止被覆盖
+        hookIframeSandboxSetter(iframe);
+
+        try {
+            const currentSandbox = iframe.getAttribute('sandbox');
+            if (currentSandbox !== sandboxAttributes) {
+                iframe.setAttribute('sandbox', sandboxAttributes);
+                console.log(`[Gemini屏蔽 V26.34] 🛡️ 黑名单页面：Iframe 强制设置严格沙箱属性: ${sandboxAttributes}`);
             }
-            return; 
-            
-        } else {
-            // 策略B：默认严格沙箱 (对于未标记的页面)
-            sandboxAttributes = 'allow-scripts allow-forms allow-same-origin allow-popups allow-pointer-lock';
-            
-            try {
-                const currentSandbox = iframe.getAttribute('sandbox');
-                if (currentSandbox !== sandboxAttributes) {
-                    iframe.setAttribute('sandbox', sandboxAttributes);
-                    console.log(`[Gemini屏蔽] 严格沙箱页面：Iframe 强制设置严格沙箱属性: ${sandboxAttributes}`);
-                }
-            } catch(e) {
-                 console.error('[Gemini屏蔽] Iframe 沙箱设置失败:', e);
-            }
+        } catch (e) {
+            console.error('[Gemini屏蔽 V26.34] Iframe 沙箱设置失败:', e);
         }
     }
 
     // =================================================================
-    // Hook document.createElement (V26.31 整合沙箱Hook)
+    // Hook document.createElement (调用 applyIframeSandbox)
     // =================================================================
     if (document.createElement) {
         const originalCreateElement = document.createElement;
-        document.createElement = function(tagName, options) {
+        document.createElement = function (tagName, options) {
             const element = originalCreateElement.call(this, tagName, options);
-            
+
             if (tagName.toLowerCase() === 'iframe') {
                 const iframe = element;
 
-                // V26.24 检查：如果 Iframe 初始 src 就包含广告，立即修改
+                // 检查：如果 Iframe 初始 src 就包含广告，立即修改 (此硬编码拦截不受沙箱开关影响)
                 if (iframe.src && iframe.src.includes(AD_URL_PARTIAL_PERMANENT)) {
                     console.warn(`[Gemini屏蔽 V26.24] 阻止 Iframe 初始加载广告: ${iframe.src.substring(0, 50)}...`);
                     iframe.src = 'about:blank';
                 }
 
-                applyIframeSandbox(iframe); // 立即应用沙箱（或零沙箱），内部会 Hook Setter
-                
+                applyIframeSandbox(iframe); // V26.34: 内部会判断黑名单
+
                 iframe.addEventListener('load', () => {
-                     applyIframeSandbox(iframe); // 加载完成再次确保
+                    applyIframeSandbox(iframe); // 加载完成再次确保
                 });
-                
-                // V26.24 Hook Iframe 的 src setter，防止后面通过 JS 改变 src 来触发跳转
+
+                // Hook Iframe 的 src setter，防止后面通过 JS 改变 src 来触发跳转
                 Object.defineProperty(iframe, 'src', {
-                    set: function(url) {
+                    set: function (url) {
                         if (url && url.includes(AD_URL_PARTIAL_PERMANENT)) {
                             console.warn(`[Gemini屏蔽 V26.24] 阻止 Iframe.src 赋值广告 URL: ${url.substring(0, 50)}...`);
-                            iframe.setAttribute('src', 'about:blank'); 
-                            return; 
+                            iframe.setAttribute('src', 'about:blank');
+                            return;
                         }
                         iframe.setAttribute('src', url);
                     },
-                    get: function() {
+                    get: function () {
                         return iframe.getAttribute('src');
                     },
                     configurable: true,
@@ -5046,8 +5040,12 @@ function injectStyles(containerId, windowId) {
             }
             return element;
         };
-        console.log('[Gemini屏蔽] document.createElement Hook 已启用 (V26.31 强化)。');
+        console.log('[Gemini屏蔽] document.createElement Hook 已启用 (V26.34 强化)。');
     }
+
+    // =================================================================
+    // 后续函数保持不变... (为保持代码完整性，以下内容保持与 V26.33 相同，仅修改引用和状态)
+    // =================================================================
 
     // =================================================================
     // 基础工具函数：getElementXPath (保持不变)
@@ -5055,7 +5053,7 @@ function injectStyles(containerId, windowId) {
     function getElementXPath(element) {
         if (!element || element.tagName === 'HTML') return '/html[1]';
         if (element.id) { return `//*[@id='${element.id}']`; }
-        
+
         let currentNode = element.parentNode;
         let anchorElement = null;
 
@@ -5134,7 +5132,7 @@ function injectStyles(containerId, windowId) {
                     element.remove();
                     removedCount++;
                 }
-            } catch (e) {}
+            } catch (e) { }
         });
         console.log(`[Gemini屏蔽] 已在 ${doc === document ? '主页' : 'Iframe'} 自动移除 ${removedCount} 个元素。`);
         return removedCount;
@@ -5339,7 +5337,7 @@ function injectStyles(containerId, windowId) {
         `;
         document.head.appendChild(style);
     }
-    
+
     function showCustomConfirm(message, anchor, xpath) {
         return new Promise((resolve) => {
             const modalOverlay = document.createElement('div');
@@ -5355,7 +5353,7 @@ function injectStyles(containerId, windowId) {
 
             let headerMessage = `此链接已被元素点击调试模式捕获。请选择操作：`;
             if (!xpath) {
-                 headerMessage += `\n\n⚠️ 警告: 无法获取元素的唯一路径 (XPath)。如果您选择 "确定屏蔽"，此次屏蔽将可能无效。`;
+                headerMessage += `\n\n⚠️ 警告: 无法获取元素的唯一路径 (XPath)。如果您选择 "确定屏蔽"，此次屏蔽将可能无效。`;
             }
 
             modalBox.innerHTML = `
@@ -5409,7 +5407,7 @@ function injectStyles(containerId, windowId) {
                     </button>
                 </div>
             `;
-            
+
             const closeAndResolve = (result) => {
                 modalOverlay.remove();
                 resolve(result);
@@ -5418,12 +5416,12 @@ function injectStyles(containerId, windowId) {
             modalBox.querySelector('#gemini-modal-confirm').onclick = () => closeAndResolve(true);
             modalBox.querySelector('#gemini-modal-cancel').onclick = () => closeAndResolve(false);
 
-            if (document.body) { 
-                 modalOverlay.appendChild(modalBox);
-                 document.body.appendChild(modalOverlay);
+            if (document.body) {
+                modalOverlay.appendChild(modalBox);
+                document.body.appendChild(modalOverlay);
             } else {
-                 console.error('[Gemini屏蔽] 模态框插入失败：document.body 不可用。');
-                 resolve(false); 
+                console.error('[Gemini屏蔽] 模态框插入失败：document.body 不可用。');
+                resolve(false);
             }
         });
     }
@@ -5457,7 +5455,7 @@ function injectStyles(containerId, windowId) {
                     </button>
                 </div>
             `;
-            
+
             const closeAndResolve = (result) => {
                 modalOverlay.remove();
                 resolve(result);
@@ -5466,12 +5464,12 @@ function injectStyles(containerId, windowId) {
             modalBox.querySelector('#modal-proceed').onclick = () => closeAndResolve(true);
             modalBox.querySelector('#modal-block').onclick = () => closeAndResolve(false);
 
-            if (document.body) { 
-                 modalOverlay.appendChild(modalBox);
-                 document.body.appendChild(modalOverlay);
+            if (document.body) {
+                modalOverlay.appendChild(modalBox);
+                document.body.appendChild(modalOverlay);
             } else {
-                 console.error('[Gemini屏蔽] Location 模态框插入失败。');
-                 resolve(false); 
+                console.error('[Gemini屏蔽] Location 模态框插入失败。');
+                resolve(false);
             }
         });
     }
@@ -5484,14 +5482,14 @@ function injectStyles(containerId, windowId) {
         try {
             originalOpen = targetWindow.open;
             if (originalOpen.__is_gemini_hooked) { return; }
-        } catch(e) { return; }
+        } catch (e) { return; }
 
         Object.defineProperty(targetWindow, 'open', {
-            value: function(url, windowName, features) {
-                // V26.23 增强：无论调试模式是否开启，都拦截所有 window.open
-                if (isDebuggingLocationHooks || document.getElementById(containerId) || (url && url.includes(AD_URL_PARTIAL_PERMANENT))) { 
+            value: function (url, windowName, features) {
+                // 无论调试模式是否开启，都拦截所有 window.open
+                if (isDebuggingLocationHooks || document.getElementById(containerId) || (url && url.includes(AD_URL_PARTIAL_PERMANENT))) {
                     console.warn(`[Gemini屏蔽] 成功拦截 ${targetWindow === window ? '主页' : 'Iframe'} 的 window.open 调用:`, url);
-                    return null; 
+                    return null;
                 }
                 return originalOpen.apply(targetWindow, arguments);
             },
@@ -5504,7 +5502,7 @@ function injectStyles(containerId, windowId) {
         if (isWindowOpenHooked) return;
         interceptWindowOpen(window);
         getTargetDocuments().forEach(doc => {
-            try { interceptWindowOpen(doc.defaultView); } catch(e) {}
+            try { interceptWindowOpen(doc.defaultView); } catch (e) { }
         });
         isWindowOpenHooked = true;
         console.log('[Gemini屏蔽] window.open 强化 Hook 已启动。');
@@ -5515,21 +5513,21 @@ function injectStyles(containerId, windowId) {
         function applyLocationHooks(targetWindow, scopeName) {
             try {
                 const locationObj = targetWindow.location;
-                const locationDescriptor = Object.getOwnPropertyDescriptor(Window.prototype, 'location') || 
-                                           Object.getOwnPropertyDescriptor(Document.prototype, 'location');
-                
+                const locationDescriptor = Object.getOwnPropertyDescriptor(Window.prototype, 'location') ||
+                    Object.getOwnPropertyDescriptor(Document.prototype, 'location');
+
                 if (locationDescriptor && locationDescriptor.set) {
                     const originalSetLocation = locationDescriptor.set;
-                    
+
                     Object.defineProperty(locationObj, 'href', {
-                        set: function(url) {
-                            // V26.23 核心：硬编码拦截 AD_URL_PARTIAL_PERMANENT 
-                            if (url && url.includes(AD_URL_PARTIAL_PERMANENT)) { 
+                        set: function (url) {
+                            // 核心：硬编码拦截 AD_URL_PARTIAL_PERMANENT 
+                            if (url && url.includes(AD_URL_PARTIAL_PERMANENT)) {
                                 console.warn(`[Gemini屏蔽 V26.24] 🎯 强制拦截已知广告域名重定向: ${url}`);
                                 return url; // 直接返回，阻止赋值
                             }
-                            
-                            if (isDebuggingLocationHooks) { 
+
+                            if (isDebuggingLocationHooks) {
                                 showCustomConfirmLocation(url, `${scopeName}.href`).then(shouldProceed => {
                                     if (shouldProceed) { originalSetLocation.call(this, url); }
                                 });
@@ -5546,14 +5544,14 @@ function injectStyles(containerId, windowId) {
                 const originalReplace = locationObj.replace;
 
                 function hookLocationMethod(originalMethod, methodName) {
-                    locationObj[methodName] = function(url) {
-                        // V26.23 核心：硬编码拦截 AD_URL_PARTIAL_PERMANENT 
-                        if (url && url.includes(AD_URL_PARTIAL_PERMANENT)) { 
+                    locationObj[methodName] = function (url) {
+                        // 核心：硬编码拦截 AD_URL_PARTIAL_PERMANENT 
+                        if (url && url.includes(AD_URL_PARTIAL_PERMANENT)) {
                             console.warn(`[Gemini屏蔽 V26.24] 🎯 强制拦截已知广告域名重定向 (Method ${methodName}): ${url}`);
                             return; // 直接返回，阻止执行
                         }
-                        
-                        if (isDebuggingLocationHooks) { 
+
+                        if (isDebuggingLocationHooks) {
                             showCustomConfirmLocation(url, `${scopeName}.${methodName}`).then(shouldProceed => {
                                 if (shouldProceed) { originalMethod.call(this, url); }
                             });
@@ -5565,7 +5563,7 @@ function injectStyles(containerId, windowId) {
 
                 hookLocationMethod(originalAssign, 'assign');
                 hookLocationMethod(originalReplace, 'replace');
-                
+
                 console.log(`[Gemini屏蔽] ${scopeName}.location 完整 Hook 已启用。`);
                 return true;
 
@@ -5574,28 +5572,28 @@ function injectStyles(containerId, windowId) {
                 return false;
             }
         }
-        
+
         // Hook Window.prototype.location
         try {
-            const protoLocationDescriptor = Object.getOwnPropertyDescriptor(Window.prototype, 'location') || 
-                                            Object.getOwnPropertyDescriptor(Document.prototype, 'location');
-            
+            const protoLocationDescriptor = Object.getOwnPropertyDescriptor(Window.prototype, 'location') ||
+                Object.getOwnPropertyDescriptor(Document.prototype, 'location');
+
             if (protoLocationDescriptor && protoLocationDescriptor.set) {
                 const originalProtoSetter = protoLocationDescriptor.set;
-                
+
                 Object.defineProperty(Window.prototype, 'location', {
                     get: protoLocationDescriptor.get,
-                    set: function(url) {
-                         // V26.23 核心：硬编码拦截 AD_URL_PARTIAL_PERMANENT 
-                        if (url && url.includes(AD_URL_PARTIAL_PERMANENT)) { 
+                    set: function (url) {
+                        // 核心：硬编码拦截 AD_URL_PARTIAL_PERMANENT 
+                        if (url && url.includes(AD_URL_PARTIAL_PERMANENT)) {
                             console.warn(`[Gemini屏蔽 V26.24] 🎯 强制拦截 Window.prototype.location 重定向: ${url}`);
                             return;
                         }
-                        
-                        if (isDebuggingLocationHooks) { 
+
+                        if (isDebuggingLocationHooks) {
                             showCustomConfirmLocation(url, `Window.location assignment`).then(shouldProceed => {
                                 if (shouldProceed) {
-                                    originalProtoSetter.call(this, url); 
+                                    originalProtoSetter.call(this, url);
                                 }
                             });
                             return;
@@ -5610,13 +5608,13 @@ function injectStyles(containerId, windowId) {
         } catch (e) {
             console.error('[Gemini屏蔽] 顶级 Hook Window.prototype.location 失败:', e);
         }
-        
+
         applyLocationHooks(window, 'window');
 
         if (window.parent !== window) {
             applyLocationHooks(window.parent, 'parent');
         }
-        
+
         if (window.top !== window) {
             applyLocationHooks(window.top, 'top');
         }
@@ -5626,7 +5624,7 @@ function injectStyles(containerId, windowId) {
     // =================================================================
     // DOM 遍历/观察/拦截函数 (保持不变)
     // =================================================================
-    
+
     function blockMetaRefresh(doc) {
         const head = doc.head || doc.getElementsByTagName('head')[0];
         if (!head) return;
@@ -5635,12 +5633,12 @@ function injectStyles(containerId, windowId) {
             if (node.tagName === 'META' && node.hasAttribute('http-equiv')) {
                 const httpEquiv = node.getAttribute('http-equiv').toLowerCase();
                 const content = node.getAttribute('content');
-                
+
                 if (httpEquiv === 'refresh' && content) {
                     const urlMatch = content.match(/url=(.*)/i);
                     const redirectUrl = urlMatch ? urlMatch[1] : '';
 
-                    if (redirectUrl.includes(AD_URL_PARTIAL_PERMANENT)) { 
+                    if (redirectUrl.includes(AD_URL_PARTIAL_PERMANENT)) {
                         console.warn(`[Gemini屏蔽 V26.24] 🚨 终极拦截：发现并移除了 Meta Refresh 广告重定向标签: ${redirectUrl.substring(0, 50)}...`);
                         node.remove();
                         return true;
@@ -5649,7 +5647,7 @@ function injectStyles(containerId, windowId) {
             }
             return false;
         };
-        
+
         const metaTags = head.querySelectorAll('meta');
         metaTags.forEach(checkAndRemoveMeta);
 
@@ -5657,8 +5655,8 @@ function injectStyles(containerId, windowId) {
             for (const mutation of mutationsList) {
                 if (mutation.type === 'childList') {
                     mutation.addedNodes.forEach(node => {
-                        if (node.nodeType === 1) { 
-                           checkAndRemoveMeta(node);
+                        if (node.nodeType === 1) {
+                            checkAndRemoveMeta(node);
                         }
                     });
                 }
@@ -5674,23 +5672,23 @@ function injectStyles(containerId, windowId) {
             const targetWindow = iframe.contentWindow;
             if (!targetWindow || targetWindow.top !== window) return;
 
-            interceptWindowLocation(targetWindow, 'Iframe'); 
+            interceptWindowLocation(targetWindow, 'Iframe');
             interceptWindowOpen(targetWindow);
-            
-        } catch(e) {
+
+        } catch (e) {
             // 跨域 Iframe 无法访问其 contentWindow/contentDocument
         }
     }
-    
+
     function getTargetDocuments() {
         const documents = [document];
         const iframes = document.querySelectorAll('iframe');
 
         iframes.forEach(iframe => {
-            // V26.31: 每次获取 Iframe 集合时，都应用沙箱规则和 Hook
-            applyIframeSandbox(iframe); 
+            // V26.34: 每次获取 Iframe 集合时，都应用沙箱规则和 Hook
+            applyIframeSandbox(iframe); // 内部会根据黑名单决定是否干预
             interceptIframeWindowTop(iframe);
-            
+
             if (iframe.contentDocument) {
                 try {
                     const iframeDocument = iframe.contentDocument;
@@ -5713,10 +5711,10 @@ function injectStyles(containerId, windowId) {
                     mutation.addedNodes.forEach(node => {
                         if (node.tagName === 'IFRAME') {
                             const newIframe = node;
-                            
+
                             // 立即执行 Iframe 检查和 Hook 
-                            applyIframeSandbox(newIframe); // V26.31 
-                            interceptIframeWindowTop(newIframe); 
+                            applyIframeSandbox(newIframe); // V26.34: 内部会判断黑名单
+                            interceptIframeWindowTop(newIframe);
 
                             const handleIframeLoad = () => {
                                 try {
@@ -5724,7 +5722,7 @@ function injectStyles(containerId, windowId) {
                                     if (iframeDoc && iframeDoc.body) {
                                         loadAndRemoveSavedElements(iframeDoc);
                                         interceptWindowOpen(iframeDoc.defaultView);
-                                        blockMetaRefresh(iframeDoc); 
+                                        blockMetaRefresh(iframeDoc);
                                         console.log(`[MutationObserver] 动态 Iframe 初始化成功: ${newIframe.src}`);
                                     }
                                 } catch (e) {
@@ -5745,12 +5743,18 @@ function injectStyles(containerId, windowId) {
         });
 
         if (document.body) {
-             observer.observe(document.body, { childList: true, subtree: true });
-             console.log('[MutationObserver] 已启动，开始监听动态 Iframe。');
+            observer.observe(document.body, { childList: true, subtree: true });
+            console.log('[MutationObserver] 已启动，开始监听动态 Iframe。');
         }
     }
 
     function blockIframeClicks() {
+        // V26.34：只有在黑名单页面才启用 Iframe 点击拦截
+        if (!isCurrentPageBlacklisted()) {
+            console.log(`[Gemini屏蔽] 非黑名单页面：Iframe 点击拦截已禁用 (默认不干预)。`);
+            return;
+        }
+
         const iframes = document.querySelectorAll('iframe');
         iframes.forEach(iframe => {
             iframe.addEventListener('click', (e) => {
@@ -5758,23 +5762,18 @@ function injectStyles(containerId, windowId) {
                     e.stopImmediatePropagation();
                     e.preventDefault();
                 }
-            }, true); 
+            }, true);
         });
-        // 仅在非白名单页面启用 Iframe 点击拦截
-        if (!isCurrentPageWhitelisted()) {
-            console.log(`[Gemini屏蔽] 已对 ${iframes.length} 个 Iframe 启用点击拦截。`);
-        } else {
-             console.log(`[Gemini屏蔽] 白名单页面：Iframe 点击拦截已禁用。`);
-        }
+        console.log(`[Gemini屏蔽] 已对 ${iframes.length} 个 Iframe 启用点击拦截 (黑名单)。`);
     }
 
     // =================================================================
-    // 核心函数：渲染和事件绑定 (保持不变)
+    // 核心函数：渲染和事件绑定 (V26.34 修改：移除全局沙箱开关，修改黑名单逻辑)
     // =================================================================
     function renderFloatWindow(targetDocs) {
         if (!document.body) {
-             console.error('[Gemini屏蔽] 无法渲染浮窗：document.body 不可用。');
-             return;
+            console.error('[Gemini屏蔽] 无法渲染浮窗：document.body 不可用。');
+            return;
         }
 
         const zeroOpacityElements = [];
@@ -5822,25 +5821,25 @@ function injectStyles(containerId, windowId) {
         const windowDiv = document.createElement('div');
         windowDiv.id = windowId;
 
-        function renderWhitelist(whitelist) {
-            if (whitelist.length === 0) {
-                return '<li style="padding: 10px; text-align: center; color: #888; background: #fff;">暂无白名单记录。</li>';
+        function renderBlacklist(blacklist) {
+            if (blacklist.length === 0) {
+                return '<li style="padding: 10px; text-align: center; color: #888; background: #fff;">暂无黑名单记录。</li>';
             }
-            return whitelist.map((pageKey) => `
+            return blacklist.map((pageKey) => `
                 <li style="display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; border-bottom: 1px dashed #ddd; background: #fff;">
-                    <span style="flex-grow: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: #0050b3; font-weight: bold;" title="${pageKey}">
+                    <span style="flex-grow: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: #dc3545; font-weight: bold;" title="${pageKey}">
                         ${pageKey}
                     </span>
-                    <button class="remove-whitelist-btn" style="
-                        background: #dc3545; color: white; border: none; padding: 2px 6px; 
+                    <button class="remove-blacklist-btn" style="
+                        background: #007bff; color: white; border: none; padding: 2px 6px; 
                         margin-left: 10px; cursor: pointer; border-radius: 3px; font-size: 11px;
-                    " data-page-key="${pageKey}">移除白名单</button>
+                    " data-page-key="${pageKey}">取消黑名单</button>
                 </li>
             `).join('');
         }
-        
+
         function renderSavedRemovalsList(removals) {
-             if (removals.length === 0) {
+            if (removals.length === 0) {
                 return '<li style="padding: 10px; text-align: center; color: #888; background: #fff;">暂无移除记录。</li>';
             }
             return removals.map((xpath) => `
@@ -5879,23 +5878,23 @@ function injectStyles(containerId, windowId) {
                 </li>
             `).join('');
         }
-        
-        let isWhitelisted = isCurrentPageWhitelisted();
+
+        let isBlacklisted = isCurrentPageBlacklisted();
 
         windowDiv.innerHTML = `
             <div id="gemini-header">
-                <strong>🔍 元素屏蔽/追踪器 (V26.31)</strong>
+                <strong>🔍 元素屏蔽/追踪器 (V26.34)</strong>
                 <span id="gemini-close-btn">&times;</span>
             </div>
             
             <div style="padding: 8px 15px; border-bottom: 1px solid #ccc; text-align: center;">
                 
-                <button id="whitelist-toggle" style="
-                    background: ${isWhitelisted ? '#007bff' : '#ff7a00'}; 
+                <button id="blacklist-toggle" style="
+                    background: ${isBlacklisted ? '#dc3545' : '#007bff'}; 
                     color: white; border: none; padding: 8px 15px; 
                     cursor: pointer; border-radius: 4px; font-weight: bold; width: 100%; margin-bottom: 5px;
                 ">
-                    ${isWhitelisted ? '✅ 当前为播放页 (点击取消)' : '➕ 标记为播放页 (启用零沙箱)'}
+                    ${isBlacklisted ? '🛡️ 当前为黑名单页 (启用严格沙箱)' : '➕ 标记为黑名单页 (启用严格沙箱)'}
                 </button>
                 
                 <button id="selector-toggle" style="background: #007bff; color: white; border: none; padding: 8px 15px; cursor: pointer; border-radius: 4px; font-weight: bold; width: 100%; margin-bottom: 5px;">
@@ -5915,7 +5914,7 @@ function injectStyles(containerId, windowId) {
                     当前透明元素 (${zeroOpacityElements.length})
                 </button>
                 <button id="tab-saved" class="tab-btn" style="flex: 1; background: #f0f0f0;">
-                    记录管理 (${getSavedRemovals().length + getPlaybackWhitelist().length})
+                    记录管理 (${getSavedRemovals().length + getPageBlacklist().length})
                 </button>
             </div>
 
@@ -5930,8 +5929,8 @@ function injectStyles(containerId, windowId) {
             <div id="content-saved" style="display: none;">
                 <div class="gemini-list-scroll-area">
                     <ul id="gemini-saved-list" style="list-style: none; padding: 0; margin: 0;">
-                         <li style="padding: 10px; background: #e6f7ff; font-weight: bold; color: #0050b3; border-bottom: 1px solid #cceeff;">🚀 播放页白名单 (${getPlaybackWhitelist().length})</li>
-                         ${renderWhitelist(getPlaybackWhitelist())}
+                         <li style="padding: 10px; background: #ffe6e6; font-weight: bold; color: #dc3545; border-bottom: 1px solid #ffcccc;">🚫 黑名单页面记录 (${getPageBlacklist().length})</li>
+                         ${renderBlacklist(getPageBlacklist())}
                          <li style="padding: 10px; background: #fafafa; font-weight: bold; color: #666; border-top: 1px solid #eee; border-bottom: 1px solid #eee;">🛡️ 元素永久移除记录 (${getSavedRemovals().length})</li>
                          ${renderSavedRemovalsList(getSavedRemovals())}
                     </ul>
@@ -5956,8 +5955,8 @@ function injectStyles(containerId, windowId) {
         const savedList = document.getElementById('gemini-saved-list');
         const statusBar = document.getElementById('gemini-status-bar');
         const selectorToggle = document.getElementById('selector-toggle');
-        const whitelistToggle = document.getElementById('whitelist-toggle'); 
-        
+        const blacklistToggle = document.getElementById('blacklist-toggle'); // V26.34 新增/修改
+
         const debugClickToggle = document.getElementById('debug-click-toggle');
         const debugLocationToggle = document.getElementById('debug-location-toggle');
 
@@ -5973,16 +5972,16 @@ function injectStyles(containerId, windowId) {
         const contentSaved = document.getElementById('content-saved');
 
         function updateSavedListContent() {
-             const savedRemovalsHtml = renderSavedRemovalsList(getSavedRemovals());
-             const whitelistHtml = renderWhitelist(getPlaybackWhitelist());
-             
-             savedList.innerHTML = `
-                 <li style="padding: 10px; background: #e6f7ff; font-weight: bold; color: #0050b3; border-bottom: 1px solid #cceeff;">🚀 播放页白名单 (${getPlaybackWhitelist().length})</li>
-                 ${whitelistHtml}
+            const savedRemovalsHtml = renderSavedRemovalsList(getSavedRemovals());
+            const blacklistHtml = renderBlacklist(getPageBlacklist());
+
+            savedList.innerHTML = `
+                 <li style="padding: 10px; background: #ffe6e6; font-weight: bold; color: #dc3545; border-bottom: 1px solid #ffcccc;">🚫 黑名单页面记录 (${getPageBlacklist().length})</li>
+                 ${blacklistHtml}
                  <li style="padding: 10px; background: #fafafa; font-weight: bold; color: #666; border-top: 1px solid #eee; border-bottom: 1px solid #eee;">🛡️ 元素永久移除记录 (${getSavedRemovals().length})</li>
                  ${savedRemovalsHtml}
              `;
-             tabSaved.innerHTML = `记录管理 (${getSavedRemovals().length + getPlaybackWhitelist().length})`;
+            tabSaved.innerHTML = `记录管理 (${getSavedRemovals().length + getPageBlacklist().length})`;
         }
 
         function switchTab(currentTab) {
@@ -5996,34 +5995,34 @@ function injectStyles(containerId, windowId) {
                 tabSaved.style.background = '#fff';
                 contentCurrent.style.display = 'none';
                 contentSaved.style.display = 'block';
-                updateSavedListContent(); 
+                updateSavedListContent();
             }
         }
         tabCurrent.onclick = () => switchTab('current');
         tabSaved.onclick = () => switchTab('saved');
-        
-        whitelistToggle.onclick = () => {
-            const shouldAdd = !isWhitelisted;
-            if (togglePageWhitelist(shouldAdd)) {
-                statusBar.textContent = shouldAdd 
-                    ? '✅ 已标记当前页面为播放页。请刷新页面使零沙箱策略生效。' 
-                    : '❌ 已取消标记。请刷新页面以恢复严格沙箱。';
-            } else {
-                 statusBar.textContent = shouldAdd 
-                    ? '⚠️ 标记失败：当前页面已在白名单中。' 
-                    : '⚠️ 取消标记失败：当前页面不在白名单中。';
-            }
-            
-            isWhitelisted = isCurrentPageWhitelisted(); 
-            whitelistToggle.style.background = isWhitelisted ? '#007bff' : '#ff7a00';
-            whitelistToggle.textContent = isWhitelisted ? '✅ 当前为播放页 (点击取消)' : '➕ 标记为播放页 (启用零沙箱)';
-        };
 
+        // V26.34：黑名单切换事件
+        blacklistToggle.onclick = () => {
+            const shouldAdd = !isBlacklisted;
+            if (togglePageBlacklist(shouldAdd)) {
+                statusBar.textContent = shouldAdd
+                    ? '🛡️ 已标记当前页面为黑名单。请刷新页面使**严格沙箱**策略生效。'
+                    : '✅ 已取消标记。请刷新页面以恢复**默认不沙箱**策略。';
+            } else {
+                statusBar.textContent = shouldAdd
+                    ? '⚠️ 标记失败：当前页面已在黑名单中。'
+                    : '⚠️ 取消标记失败：当前页面不在黑名单中。';
+            }
+
+            isBlacklisted = isCurrentPageBlacklisted();
+            blacklistToggle.style.background = isBlacklisted ? '#dc3545' : '#007bff';
+            blacklistToggle.textContent = isBlacklisted ? '🛡️ 当前为黑名单页 (启用严格沙箱)' : '➕ 标记为黑名单页 (启用严格沙箱)';
+        };
 
         let isSelectionMode = false;
         let currentHoverElement = null;
         let lastHighlightedElement = null;
-        
+
         const handleSelectionClick = (e) => {
             const target = e.target;
             if (isSelectionMode && target === selectorToggle) {
@@ -6046,7 +6045,7 @@ function injectStyles(containerId, windowId) {
                 toggleSelectionMode(false);
                 return;
             }
-            
+
             const xpath = getElementXPath(target);
             if (xpath) {
                 saveRemovalChoice(xpath);
@@ -6090,7 +6089,7 @@ function injectStyles(containerId, windowId) {
             targetDocs.forEach(doc => {
                 if (isSelectionMode) {
                     doc.addEventListener('click', handleSelectionClick, true);
-                    doc.addEventListener('mousemove', handleSelectionMouseMove); 
+                    doc.addEventListener('mousemove', handleSelectionMouseMove);
                 } else {
                     doc.removeEventListener('click', handleSelectionClick, true);
                     doc.removeEventListener('mousemove', handleSelectionMouseMove);
@@ -6117,17 +6116,17 @@ function injectStyles(containerId, windowId) {
 
 
         debugClickToggle.onclick = () => {
-            isDebuggingElementClick = !isDebuggingElementClick; 
-            
+            isDebuggingElementClick = !isDebuggingElementClick;
+
             localStorage.setItem(DEBUG_CLICK_KEY, isDebuggingElementClick ? 'true' : 'false');
 
             if (isDebuggingElementClick) {
-                debugClickToggle.style.background = '#00c853'; 
+                debugClickToggle.style.background = '#00c853';
                 debugClickToggle.style.color = 'white';
                 debugClickToggle.textContent = '🛠️ 元素点击调试 (开)';
                 statusBar.textContent = '✅ 元素点击拦截已开启，**立即生效**。请点击可疑按钮。';
             } else {
-                debugClickToggle.style.background = '#ffc107'; 
+                debugClickToggle.style.background = '#ffc107';
                 debugClickToggle.style.color = '#333';
                 debugClickToggle.textContent = '🛠️ 元素点击调试 (关)';
                 statusBar.textContent = '❌ 元素点击拦截已关闭，**立即生效**。';
@@ -6137,16 +6136,16 @@ function injectStyles(containerId, windowId) {
 
         debugLocationToggle.onclick = () => {
             isDebuggingLocationHooks = !isDebuggingLocationHooks;
-            
+
             localStorage.setItem(DEBUG_LOCATION_KEY, isDebuggingLocationHooks ? 'true' : 'false');
 
             if (isDebuggingLocationHooks) {
-                debugLocationToggle.style.background = '#00c853'; 
+                debugLocationToggle.style.background = '#00c853';
                 debugLocationToggle.style.color = 'white';
                 debugLocationToggle.textContent = '⚙️ JS 重定向调试 (开)';
                 statusBar.textContent = '⚠️ JS Hook 模式已开启。**必须刷新页面**才能开始捕获 URL 赋值操作。';
             } else {
-                debugLocationToggle.style.background = '#ffc107'; 
+                debugLocationToggle.style.background = '#ffc107';
                 debugLocationToggle.style.color = '#333';
                 debugLocationToggle.textContent = '⚙️ JS 重定向调试 (关)';
                 statusBar.textContent = 'JS 重定向调试已关闭。**必须刷新页面**才能解除 Hook。';
@@ -6201,22 +6200,23 @@ function injectStyles(containerId, windowId) {
                     updateSavedListContent();
                 }
             }
-            
-            // 移除白名单记录 V26.27
-            if (e.target.classList.contains('remove-whitelist-btn')) {
+
+            // 移除黑名单记录 V26.34
+            if (e.target.classList.contains('remove-blacklist-btn')) {
                 const pageKey = e.target.getAttribute('data-page-key');
-                if (togglePageWhitelist(false, pageKey)) {
+                if (togglePageBlacklist(false, pageKey)) {
+                    // 如果移除的是当前页面，需要更新按钮状态
                     if (pageKey === getCurrentPageKey()) {
-                        isWhitelisted = false;
-                        whitelistToggle.style.background = '#ff7a00';
-                        whitelistToggle.textContent = '➕ 标记为播放页 (启用零沙箱)';
+                        isBlacklisted = false;
+                        blacklistToggle.style.background = '#007bff';
+                        blacklistToggle.textContent = '➕ 标记为黑名单页 (启用严格沙箱)';
                     }
-                    statusBar.textContent = `❌ 已移除白名单 ${pageKey.substring(0, 15)}...。请刷新页面。`;
+                    statusBar.textContent = `✅ 已移除黑名单 ${pageKey.substring(0, 15)}...。请刷新页面。`;
                     updateSavedListContent();
                 }
             }
         });
-        
+
         // --- 拖拽逻辑 (保持不变) ---
         let isDragging = false;
         let dragStartX = 0;
@@ -6309,13 +6309,13 @@ function injectStyles(containerId, windowId) {
         document.addEventListener('touchend', dragEnd);
 
     }
-    
+
     // =================================================================
     // setupAdLinkFilter (点击事件拦截) V26.28 修复临时放行逻辑
     // =================================================================
     function setupAdLinkFilter() {
         const AD_DOMAINS = [
-            'ad.twinrdengine.com', 
+            'ad.twinrdengine.com',
             'adtrack.',
             'popads.',
             'clickdealer.',
@@ -6325,21 +6325,21 @@ function injectStyles(containerId, windowId) {
             'exoclick.',
             'adnetwork.',
         ];
-        const ALLOW_ONCE_ATTRIBUTE = 'data-gemini-allow'; 
+        const ALLOW_ONCE_ATTRIBUTE = 'data-gemini-allow';
 
         const eventListenerFunction = async (e) => {
             const target = e.target;
             const anchor = target.closest('a');
-            
+
             if (document.getElementById(containerId)) {
                 return;
             }
 
-            if (anchor) { 
+            if (anchor) {
                 const href = anchor.href || '';
                 const opensNewTab = anchor.target === '_blank';
-                const isAdLink = AD_DOMAINS.some(domain => href.includes(domain)); 
-                
+                const isAdLink = AD_DOMAINS.some(domain => href.includes(domain));
+
                 let shouldIntercept = isAdLink || (opensNewTab && href && href !== '#') || isDebuggingElementClick;
 
                 // V26.28 核心修复：检查是否已标记为临时放行
@@ -6350,40 +6350,40 @@ function injectStyles(containerId, windowId) {
                 }
 
                 if (shouldIntercept) {
-                    e.preventDefault();       
-                    e.stopImmediatePropagation(); 
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
 
-                    const xpath = getElementXPath(anchor); 
+                    const xpath = getElementXPath(anchor);
                     let message = `此链接已被元素点击调试模式捕获。请选择操作：`;
 
                     const confirmBlock = await showCustomConfirm(
-                        message, 
-                        anchor, 
+                        message,
+                        anchor,
                         xpath || "XPath 获取失败"
                     );
 
                     if (confirmBlock) {
                         // 确定屏蔽
-                        if (xpath && anchor.parentNode) { 
-                             saveRemovalChoice(xpath);
-                             anchor.remove();
-                             console.log("✅ 元素已永久屏蔽，请刷新页面。"); 
+                        if (xpath && anchor.parentNode) {
+                            saveRemovalChoice(xpath);
+                            anchor.remove();
+                            console.log("✅ 元素已永久屏蔽，请刷新页面。");
                         } else {
                             console.error('❌ 屏蔽失败：XPath 获取失败，无法进行永久屏蔽。');
                         }
                     } else {
                         // 临时放行：添加标记，等待用户第二次点击
                         anchor.setAttribute(ALLOW_ONCE_ATTRIBUTE, 'true');
-                        console.log("🚫 已取消永久屏蔽。请**再次点击**此按钮，链接将在第二次点击时被放行。"); 
+                        console.log("🚫 已取消永久屏蔽。请**再次点击**此按钮，链接将在第二次点击时被放行。");
                     }
-                    return; 
+                    return;
                 }
             }
-            
+
         };
-        
+
         document.addEventListener('click', eventListenerFunction, true);
-        console.log('[Gemini屏蔽] 精确广告链接过滤/调试功能已启用 (V26.31)。');
+        console.log('[Gemini屏蔽] 精确广告链接过滤/调试功能已启用 (V26.34)。');
     }
 
 
@@ -6391,54 +6391,50 @@ function injectStyles(containerId, windowId) {
     // 核心启动函数 
     // =================================================================
     function initScript() {
-        // 从 localStorage 读取状态
+        // V26.34 核心：从 localStorage 读取调试状态
         isDebuggingElementClick = localStorage.getItem(DEBUG_CLICK_KEY) === 'true';
         isDebuggingLocationHooks = localStorage.getItem(DEBUG_LOCATION_KEY) === 'true';
+        // V26.34 移除全局沙箱禁用状态读取
 
         injectStyles(containerId, windowId);
-        
-        // V26.24 启动 Meta Refresh 监控 (必须在 document-start 时立即生效)
-        blockMetaRefresh(document); 
 
-        // V26.31 确保 Hook 和沙箱机制在 document-start 时立即生效
-        // 这里的调用会立即遍历 DOM 中的 Iframe 并执行 applyIframeSandbox
-        const targetDocuments = getTargetDocuments(); 
+        blockMetaRefresh(document);
 
-        enableWindowOpenHook(); 
-        interceptWindowLocation(); 
-        // 仅在非白名单页面启用 Iframe 点击拦截
-        if (!isCurrentPageWhitelisted()) {
-            blockIframeClicks(); 
-        }
+        // V26.34 确保 Hook 和沙箱机制在 document-start 时立即生效
+        const targetDocuments = getTargetDocuments();
+
+        enableWindowOpenHook();
+        interceptWindowLocation();
+        // 仅在黑名单页面启用 Iframe 点击拦截
+        blockIframeClicks();
         setupAdLinkFilter();
 
         // 加载已移除的元素
         targetDocuments.forEach(doc => {
-             loadAndRemoveSavedElements(doc);
-             if (doc !== document) {
-                 blockMetaRefresh(doc); // 监控 Iframe 内容
-             }
+            loadAndRemoveSavedElements(doc);
+            if (doc !== document) {
+                blockMetaRefresh(doc); // 监控 Iframe 内容
+            }
         });
-        
+
         // 监听动态添加的 Iframe
         observeDynamicIframes();
-        
+
         // 浮窗快捷键 'tmyszzq' 点击事件监听
         document.addEventListener('click', (e) => {
             const target = e.target;
-            if (target.id === 'tmyszzq') { 
+            if (target.id === 'tmyszzq') {
                 e.preventDefault();
                 e.stopPropagation();
 
                 if (!document.getElementById(containerId)) {
-                    const updatedTargetDocuments = getTargetDocuments(); 
-                    renderFloatWindow(updatedTargetDocuments); 
-                    body_build('false')
+                    const updatedTargetDocuments = getTargetDocuments();
+                    renderFloatWindow(updatedTargetDocuments);
                 }
             }
         }, true);
-        
-        console.log(`[Gemini屏蔽] 脚本已初始化 (V26.31)。当前页面是否为白名单播放页: ${isCurrentPageWhitelisted() ? '是' : '否'}。`);
+
+        console.log(`[Gemini屏蔽] 脚本已初始化 (V26.34)。当前页面在黑名单中: ${isCurrentPageBlacklisted() ? '是' : '否'}。`);
     }
 
     // 确保脚本尽早运行
@@ -6449,34 +6445,34 @@ function injectStyles(containerId, windowId) {
     }
 })();
 
-    // 元素屏蔽器 END
+// 元素屏蔽器 END
 
 
-    // 视频广告加速跳过 Start
+// 视频广告加速跳过 Start
 
-    (function () {
-        // ----------------------------------------------------
-        // 局部配置变量
-        // ----------------------------------------------------
-        const CFG_BUTTON_ID = 'adsSkip';
-        const CFG_STATUS_SPAN_ID = 'toggle_status_text';
-        const CFG_STORAGE_KEY = 'AutoSkip_Enabled_State';
+(function () {
+    // ----------------------------------------------------
+    // 局部配置变量
+    // ----------------------------------------------------
+    const CFG_BUTTON_ID = 'adsSkip';
+    const CFG_STATUS_SPAN_ID = 'toggle_status_text';
+    const CFG_STORAGE_KEY = 'AutoSkip_Enabled_State';
 
-        // CSS 状态 Class
-        const CLASS_ENABLED = 'ads_skip_on';
-        const CLASS_DISABLED = 'ads_skip_off';
+    // CSS 状态 Class
+    const CLASS_ENABLED = 'ads_skip_on';
+    const CLASS_DISABLED = 'ads_skip_off';
 
-        // 样式配置
-        const COLOR_BG_ON = '#4CAF50';        // 开启：绿色
-        const COLOR_BG_OFF = '#F44336';       // 关闭：红色
-        const COLOR_TEXT_ON = '#ffffff';
-        const COLOR_TEXT_OFF = '#333333';
-        const COLOR_BG_STATUS_ON = 'rgba(255, 255, 255, 0.2)';
-        const COLOR_BG_STATUS_OFF = 'rgba(0, 0, 0, 0.1)';
+    // 样式配置
+    const COLOR_BG_ON = '#4CAF50';        // 开启：绿色
+    const COLOR_BG_OFF = '#F44336';       // 关闭：红色
+    const COLOR_TEXT_ON = '#ffffff';
+    const COLOR_TEXT_OFF = '#333333';
+    const COLOR_BG_STATUS_ON = 'rgba(255, 255, 255, 0.2)';
+    const COLOR_BG_STATUS_OFF = 'rgba(0, 0, 0, 0.1)';
 
-        // --- CSS 注入函数 (覆盖所有原有样式) ---
-        function injectStyles() {
-            const css = `
+    // --- CSS 注入函数 (覆盖所有原有样式) ---
+    function injectStyles() {
+        const css = `
             /* 全局重置和基础样式：控制按钮的尺寸、布局、字体 */
             #${CFG_BUTTON_ID} {
                 /* 核心尺寸和布局 */
@@ -6533,107 +6529,107 @@ function injectStyles(containerId, windowId) {
             }
         `;
 
-            const style = document.createElement('style');
-            style.type = 'text/css';
-            style.textContent = css;
-            document.head.appendChild(style);
-            console.log('✅ [Init] 状态切换和基础 CSS 已通过 <style> 标签注入。');
+        const style = document.createElement('style');
+        style.type = 'text/css';
+        style.textContent = css;
+        document.head.appendChild(style);
+        console.log('✅ [Init] 状态切换和基础 CSS 已通过 <style> 标签注入。');
+    }
+
+    // --- 状态和功能函数 (保持不变) ---
+    function isAutoSkipEnabled() {
+        return localStorage.getItem(CFG_STORAGE_KEY) === 'true';
+    }
+
+    function setAutoSkipState(enabled) {
+        localStorage.setItem(CFG_STORAGE_KEY, enabled ? 'true' : 'false');
+    }
+
+    window.executeSkipFunction = function executeSkipFunction() {
+        // 这是唯一与全局环境交互的地方
+        if (typeof window.videoAds_accelerateSkip === 'function') {
+            window.videoAds_accelerateSkip('0.01');
+            window.uBlockOrigin_add()
+            setConstant();
+            console.log('✅ [Skip] videoAds_accelerateSkip("0.2") 已执行。');
+        } else {
+            console.warn('⚠️ [Skip] videoAds_accelerateSkip 函数未在全局找到。');
+        }
+    }
+
+    // --- 样式更新函数 (通过 Class 切换样式) ---
+    function updateToggleButton(button, statusSpan, isEnabled) {
+        if (!button || !statusSpan) return;
+
+        if (isEnabled) {
+            button.classList.add(CLASS_ENABLED);
+            button.classList.remove(CLASS_DISABLED);
+        } else {
+            button.classList.add(CLASS_DISABLED);
+            button.classList.remove(CLASS_ENABLED);
         }
 
-        // --- 状态和功能函数 (保持不变) ---
-        function isAutoSkipEnabled() {
-            return localStorage.getItem(CFG_STORAGE_KEY) === 'true';
+        statusSpan.textContent = isEnabled ? '开启' : '关闭';
+        button.title = isEnabled ? '自动跳过广告已开启 (点击关闭)' : '自动跳过广告已关闭 (点击开启)';
+
+        console.log(`[UI] 按钮状态已切换 Class 为：${isEnabled ? CLASS_ENABLED : CLASS_DISABLED}`);
+    }
+
+    // --- 初始化和绑定逻辑 ---
+    function initialize() {
+        // 1. 注入 CSS 样式表 (必须先执行)
+        injectStyles();
+
+        let button = document.getElementById(CFG_BUTTON_ID);
+        let statusSpan = document.getElementById(CFG_STATUS_SPAN_ID);
+
+        if (!button || !statusSpan) {
+            console.error('❌ [Init] 致命错误：未找到按钮或状态 Span 元素。');
+            return;
         }
 
-        function setAutoSkipState(enabled) {
-            localStorage.setItem(CFG_STORAGE_KEY, enabled ? 'true' : 'false');
+        // 2. 事件清除修复：克隆按钮以清除所有旧事件监听器
+        const oldButton = button;
+        button = oldButton.cloneNode(true);
+        if (oldButton.parentNode) {
+            oldButton.parentNode.replaceChild(button, oldButton);
+        }
+        statusSpan = button.querySelector(`#${CFG_STATUS_SPAN_ID}`);
+
+        const isEnabled = isAutoSkipEnabled();
+
+        // 3. 同步初始状态和外观 (通过 Class)
+        updateToggleButton(button, statusSpan, isEnabled);
+        console.log(`[Init] 按钮 #${CFG_BUTTON_ID} 初始化完成。状态: ${isEnabled ? '开启' : '关闭'}。`);
+
+        // 4. 自动执行 (仅在持久化状态为开启时)
+        if (isEnabled) {
+            executeSkipFunction();
         }
 
-        window.executeSkipFunction = function executeSkipFunction() {
-            // 这是唯一与全局环境交互的地方
-            if (typeof window.videoAds_accelerateSkip === 'function') {
-                window.videoAds_accelerateSkip('0.01');
-                window.uBlockOrigin_add()
-                setConstant();
-                console.log('✅ [Skip] videoAds_accelerateSkip("0.2") 已执行。');
-            } else {
-                console.warn('⚠️ [Skip] videoAds_accelerateSkip 函数未在全局找到。');
-            }
-        }
+        // 5. 绑定新的点击事件
+        button.addEventListener('click', function () {
+            const currentState = isAutoSkipEnabled();
+            const newState = !currentState;
 
-        // --- 样式更新函数 (通过 Class 切换样式) ---
-        function updateToggleButton(button, statusSpan, isEnabled) {
-            if (!button || !statusSpan) return;
+            setAutoSkipState(newState);
+            updateToggleButton(button, statusSpan, newState);
 
-            if (isEnabled) {
-                button.classList.add(CLASS_ENABLED);
-                button.classList.remove(CLASS_DISABLED);
-            } else {
-                button.classList.add(CLASS_DISABLED);
-                button.classList.remove(CLASS_ENABLED);
-            }
-
-            statusSpan.textContent = isEnabled ? '开启' : '关闭';
-            button.title = isEnabled ? '自动跳过广告已开启 (点击关闭)' : '自动跳过广告已关闭 (点击开启)';
-
-            console.log(`[UI] 按钮状态已切换 Class 为：${isEnabled ? CLASS_ENABLED : CLASS_DISABLED}`);
-        }
-
-        // --- 初始化和绑定逻辑 ---
-        function initialize() {
-            // 1. 注入 CSS 样式表 (必须先执行)
-            injectStyles();
-
-            let button = document.getElementById(CFG_BUTTON_ID);
-            let statusSpan = document.getElementById(CFG_STATUS_SPAN_ID);
-
-            if (!button || !statusSpan) {
-                console.error('❌ [Init] 致命错误：未找到按钮或状态 Span 元素。');
-                return;
-            }
-
-            // 2. 事件清除修复：克隆按钮以清除所有旧事件监听器
-            const oldButton = button;
-            button = oldButton.cloneNode(true);
-            if (oldButton.parentNode) {
-                oldButton.parentNode.replaceChild(button, oldButton);
-            }
-            statusSpan = button.querySelector(`#${CFG_STATUS_SPAN_ID}`);
-
-            const isEnabled = isAutoSkipEnabled();
-
-            // 3. 同步初始状态和外观 (通过 Class)
-            updateToggleButton(button, statusSpan, isEnabled);
-            console.log(`[Init] 按钮 #${CFG_BUTTON_ID} 初始化完成。状态: ${isEnabled ? '开启' : '关闭'}。`);
-
-            // 4. 自动执行 (仅在持久化状态为开启时)
-            if (isEnabled) {
+            // 核心逻辑：如果切换到开启状态，则立即执行函数
+            if (newState) {
                 executeSkipFunction();
             }
+        });
 
-            // 5. 绑定新的点击事件
-            button.addEventListener('click', function () {
-                const currentState = isAutoSkipEnabled();
-                const newState = !currentState;
+        console.log(`✅ [Init] 按钮点击监听器已绑定。`);
+    }
 
-                setAutoSkipState(newState);
-                updateToggleButton(button, statusSpan, newState);
-
-                // 核心逻辑：如果切换到开启状态，则立即执行函数
-                if (newState) {
-                    executeSkipFunction();
-                }
-            });
-
-            console.log(`✅ [Init] 按钮点击监听器已绑定。`);
-        }
-
-        // 确保 DOM 加载后再执行
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initialize);
-        } else {
-            initialize();
-        }
-    })();
+    // 确保 DOM 加载后再执行
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initialize);
+    } else {
+        initialize();
+    }
+})();
 
 // 视频广告加速跳过 END
