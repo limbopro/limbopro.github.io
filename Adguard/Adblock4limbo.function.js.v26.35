@@ -6032,7 +6032,7 @@ function injectStyles(containerId, windowId) {
                 return;
             }
 
-            if (target.closest(`#${containerId}`)||target.closest('[class*="limbopro"]')) {
+            if (target.closest(`#${containerId}`)) {
                 e.stopPropagation();
                 return;
             }
@@ -6443,7 +6443,6 @@ function injectStyles(containerId, windowId) {
                 if (!document.getElementById(containerId)) {
                     const updatedTargetDocuments = getTargetDocuments();
                     renderFloatWindow(updatedTargetDocuments);
-                    body_build('false')
                 }
             }
         }, true);
@@ -6458,49 +6457,6 @@ function injectStyles(containerId, windowId) {
         initScript();
     }
 })();
-
-/*
-
-// 1. 获取当前页面的完整 URL
-const currentUrlx = window.location.href;
-
-// 要查找的字符串
-const searchString = 'supjav';
-
-// 2. 判断 URL 是否包含目标字符串
-// 使用 String.prototype.includes() 方法进行判断，简单且高效。
-if (currentUrlx.includes(searchString)) {
-    // 3. 如果包含 "supjav" 则执行以下代码块
-
-    console.log(`✅ URL 包含 "${searchString}"。当前 URL 为: ${currentUrlx}`);
-*/
-    // ----------------------------------------------------
-    // ⭐ 在这里添加您想要执行的操作（例如：跳转、修改元素、弹窗等）
-    // ----------------------------------------------------
-
-    // 示例操作：如果包含，则弹出一个警告框
-    // alert(`检测到关键字 "${searchString}"，执行特定操作。`);
-
-/*
-    setTimeout(() => {
-        if (localStorage.getItem('gemini_debug_element_click_mode') == null) {
-            document.getElementById('tmyszzq').click()
-            document.getElementById('debug-click-toggle').click()
-        } else {
-            document.getElementById('tmyszzq').click()
-        }
-    }, 3000)
-
-} else {
-    // 如果不包含 "supjav" 则执行以下代码块（可选）
-
-    console.log(`❌ URL 不包含 "${searchString}"。当前 URL 为: ${currentUrlx}`);
-
-    // 示例操作：如果不包含，则执行其他逻辑
-    // console.log("继续执行正常流程...");
-}
-
-*/
 
     // 元素屏蔽器 END
 
