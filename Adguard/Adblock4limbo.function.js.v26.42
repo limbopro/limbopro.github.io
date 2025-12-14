@@ -591,12 +591,12 @@
     <div class="title_global">工具箱//</div>
     <ul class="ul_global">
       <li class="li_global"><a class="a_global" id="itimer">计时器⏱️</a></li>
-      <li class="li_global"><a class="a_global" id="Adblock4limbo" href="https://limbopro.com/archives/12904.html" target="_blank" style="background:#5a4771;box-shadow:inset 0 0 15px 3px #16191f00">🚫广告拦截大全</a></li>
-      <li class="li_global"><a class="a_global" id="software_skills" href="https://limbopro.com/category/software-skills/" target="_blank">⚒️软件百科</a></li>
-      <li class="li_global"><a class="a_global special yellow" id="websiteStatus" href="https://limbopro.com/status/" target="_blank" style="background:#5a4771">✅网站实时状态</a></li>
-      <li class="li_global"><a class="a_global special yellow" id="毒奶搜索" href="https://limbopro.com/search.html" target="_blank" style="border-radius:4px;background:#c53f3f">🎬毒奶搜索</a></li>
-      <li class="li_global"><a class="a_global special yellow" id="番号搜索" href="https://limbopro.com/btsearch.html" target="_blank" style="border-radius:4px;background:#c53f3f">🔞番号搜索</a></li>
-      <li class="li_global"><button class="a_global special yellow" id="mtzyczq"  style="border-radius:4px;background:#c53f3f" onclick="mtzyczq()">🎦媒体资源查找器</button></li>
+      <li class="li_global"><a class="a_global" id="Adblock4limbo" href="https://limbopro.com/archives/12904.html" target="_blank" style="background:#5a4771;box-shadow:inset 0 0 15px 3px #16191f00">广告拦截大全</a></li>
+      <li class="li_global"><a class="a_global" id="software_skills" href="https://limbopro.com/category/software-skills/" target="_blank">软件百科</a></li>
+      <li class="li_global"><a class="a_global special yellow" id="websiteStatus" href="https://limbopro.com/status/" target="_blank" style="background:#5a4771">网站实时状态</a></li>
+      <li class="li_global"><a class="a_global special yellow" id="毒奶搜索" href="https://limbopro.com/search.html" target="_blank" style="border-radius:4px;background:#c53f3f">毒奶搜索</a></li>
+      <li class="li_global"><a class="a_global special yellow" id="番号搜索" href="https://limbopro.com/btsearch.html" target="_blank" style="border-radius:4px;background:#c53f3f">番号搜索</a></li>
+      <li class="li_global"><button class="a_global special yellow" id="mtzyczq"  style="border-radius:4px;background:#c53f3f" onclick="mtzyczq()">媒体资源查找器</button></li>
       <li class="li_global"><button class="a_global special yellow" id="tmyszzq"  style="border-radius:4px;background:#c53f3f">🔍 元素屏蔽/追踪器</button></li>
       <li class="li_global">
     <button 
@@ -606,7 +606,7 @@
         onclick="window.initWebDebugger()"> ⚙️ Web 存储调试器
     </button>
 </li>
-      <li class="li_global"><button class="a_global special yellow" id="zhixingjs"  style="border-radius:4px;background:#c53f3f">🧑‍💻执行JS代码</button></li>
+      <li class="li_global"><button class="a_global special yellow" id="zhixingjs"  style="border-radius:4px;background:#c53f3f">执行JS代码</button></li>
      <li class="li_global"><button id="adsSkip" class="a_global special yellow ads_skip_on" title="自动跳过广告已开启 (点击关闭)" style="
     width: 106px !important;
     height: 50px !important;
@@ -1760,12 +1760,13 @@
     }
 
 
-    // Start 运行js代码 zhixingjs
-
+    // Start
 
     // =========================================================
     // 核心函数定义
     // =========================================================
+
+
 
     /**
      * [新增] 将返回值格式化为可读的文本。
@@ -1773,6 +1774,8 @@
      * @param {*} result 待格式化的返回值。
      * @returns {string} 格式化后的 HTML 字符串。
      */
+
+    // 必须有这段逻辑来判断是否为对象
     function formatResult(result) {
         if (typeof result === 'object' && result !== null) {
             try {
@@ -1784,19 +1787,12 @@
                 return `[对象 - 无法序列化: ${e.message}]`;
             }
         }
-        // 处理 undefined 和其他类型
-        if (result === undefined) {
-            return '无返回值 (undefined)';
-        }
-        if (result === null) {
-            return 'null';
-        }
+        // ... (处理其他类型和 undefined 的逻辑)
         return result;
     }
 
     /**
      * 动态创建并注入 CSS 样式，用于悬浮窗。
-     * 包含了结果输出窗和代码输入窗的样式。
      */
     function injectFloatingWindowStyles() {
         const style = document.createElement('style');
@@ -1805,7 +1801,7 @@
                 #body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
                 #runButton { padding: 12px 25px; font-size: 18px; cursor: pointer; background-color: #007bff; color: white; border: none; border-radius: 5px; }
 
-                /* --- 结果输出窗 (Output Window) 样式 --- */
+                /* --- 悬浮窗 (Modal) 样式 --- */
                 #floating-output-container {
                     position: fixed;
                     top: 50%;
@@ -1818,7 +1814,7 @@
                     border: 3px solid #007bff;
                     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
                     z-index: 9999999;
-                    display: none; /* 默认隐藏，需要时再显示 */
+                    display: flex;
                     flex-direction: column;
                     border-radius: 8px;
                     overflow: hidden;
@@ -1855,72 +1851,6 @@
                 .success { color: green; font-weight: bold; }
                 .error { color: red; font-weight: bold; }
                 .result-item { margin-bottom: 10px; padding-bottom: 5px; border-bottom: 1px dotted #ccc; }
-                
-                /* --- 代码输入模态框 (Input Prompt Window) 样式 --- */
-                #input-prompt-container {
-                    position: fixed;
-                    top: 50%;
-                    left: 50%;
-                    transform: translate(-50%, -50%);
-                    width: 500px;
-                    max-width: 90vw;
-                    padding: 20px;
-                    background-color: #f9f9f9;
-                    border: 5px solid #0056b3;
-                    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
-                    z-index: 10000000; /* 比输出窗高 */
-                    border-radius: 10px;
-                    display: none; /* 默认隐藏 */
-                }
-                /* 输入框工具栏样式 */
-                #input-controls {
-                    display: flex; /* 使用 Flexbox 布局 */
-                    justify-content: flex-end; /* 按钮靠右对齐 */
-                    margin-bottom: 10px;
-                    gap: 10px; /* 按钮间距 */
-                }
-                .tool-btn {
-                    padding: 6px 12px;
-                    cursor: pointer;
-                    border: 1px solid #ccc;
-                    border-radius: 4px;
-                    font-size: 13px;
-                    background-color: #e9e9e9;
-                }
-                .tool-btn:hover {
-                    background-color: #ddd;
-                }
-                #input-code-textarea {
-                    width: 100%;
-                    min-height: 150px;
-                    padding: 10px;
-                    margin-bottom: 15px; /* 恢复为 15px，因为工具栏在输入框上方 */
-                    box-sizing: border-box;
-                    border: 1px solid #ccc;
-                    border-radius: 5px;
-                    font-family: monospace;
-                    font-size: 14px;
-                    resize: vertical;
-                }
-                #input-prompt-buttons {
-                    text-align: right;
-                }
-                .input-prompt-btn {
-                    padding: 10px 20px;
-                    margin-left: 10px;
-                    cursor: pointer;
-                    border: none;
-                    border-radius: 5px;
-                    font-weight: bold;
-                }
-                #execute-code-btn {
-                    background-color: #28a745; 
-                    color: white;
-                }
-                #cancel-code-btn {
-                    background-color: #dc3545; 
-                    color: white;
-                }
             `;
         document.head.appendChild(style);
     }
@@ -1937,9 +1867,10 @@
         let contentDiv;
 
         if (container) {
+            // 如果已存在，直接获取内容区域并清空
             contentDiv = document.getElementById(contentId);
             contentDiv.innerHTML = '';
-            container.style.display = 'flex';
+            container.style.display = 'flex'; // 确保显示
             return contentDiv;
         }
 
@@ -1956,7 +1887,8 @@
         closeBtn.className = 'close-btn';
         closeBtn.innerHTML = '&times;';
         closeBtn.onclick = () => {
-            container.style.display = 'none';
+            // 在这里，直接绑定点击事件
+            container.remove(); // 移除容器，实现关闭
         };
 
         header.appendChild(closeBtn);
@@ -1969,7 +1901,6 @@
 
         // --- 4. 将容器添加到 body ---
         document.body.appendChild(container);
-        container.style.display = 'flex';
 
         return contentDiv;
     }
@@ -1983,9 +1914,12 @@
         outputDiv.innerHTML += '<div class="result-item">--- **执行开始** ---</div>';
 
         if (typeof param === 'function') {
+            // ... (函数执行逻辑与之前相同) ...
             try {
                 const result = param();
                 outputDiv.innerHTML += `<p class="success">执行类型: [函数] 成功。</p>`;
+                // *** 修改这里：调用 formatResult ***
+                //  outputDiv.innerHTML += `<p><strong>函数返回值:</strong> ${result === undefined ? '无返回值 (undefined)' : result}</p>`;
                 outputDiv.innerHTML += `<p><strong>函数返回值:</strong> ${formatResult(result)}</p>`;
             } catch (error) {
                 outputDiv.innerHTML += `<p class="error">执行类型: [函数] 失败！</p>`;
@@ -1997,15 +1931,17 @@
             const code = param.trim();
 
             try {
-                // *** 使用 eval() 执行用户代码，可访问全局变量 ***
+                // *** 关键修改：为了访问全局变量 dataList，切换回 eval() ***
+                // ⚠️ 警告：这会允许代码访问全局作用域中的所有变量！
                 const result = eval(code);
 
                 outputDiv.innerHTML += `<p class="success">执行类型: [代码字符串] 成功。</p>`;
                 outputDiv.innerHTML += `<p><strong>代码返回值:</strong> ${formatResult(result)}</p>`;
             } catch (error) {
                 outputDiv.innerHTML += `<p class="error">执行类型: [代码字符串] 失败！</p>`;
+                // 提示用户可能是因为全局变量 dataList 无法访问
                 outputDiv.innerHTML += `<p><strong>错误信息:</strong> ${error.message}</p>`;
-                outputDiv.innerHTML += `<p style="color:red;">💡 提示：此错误可能是因为代码无法访问全局变量或语法错误。注意：代码通过 eval() 执行，具有全局访问权限。</p>`;
+                outputDiv.innerHTML += `<p style="color:red;">💡 提示：此错误可能是因为代码无法访问全局变量（如 dataList）。</p>`;
                 console.error(`代码执行失败。错误信息: ${error.message}`);
             }
         } else {
@@ -2017,150 +1953,45 @@
 
 
     /**
-     * [新增] 集中处理代码执行流程
-     * @param {string} codeInput 待执行的代码字符串
-     */
-    function executeCodeFromInput(codeInput) {
-        const outputDiv = createFloatingOutputDiv();
-        outputDiv.innerHTML = `<h3>准备执行</h3><p><strong>输入代码:</strong> <pre style="white-space: pre-wrap; word-break: break-all;">${codeInput}</pre></p>`;
-
-        attemptExecution(codeInput, outputDiv);
-
-        const container = document.getElementById('floating-output-container');
-        if (container) {
-            setTimeout(() => {
-                outputDiv.scrollTop = outputDiv.scrollHeight;
-            }, 50);
-        }
-    }
-
-
-    /**
-     * [修改] 创建并显示代码输入模态框，新增清空和粘贴按钮。
-     */
-    function createInputPrompt() {
-        const containerId = 'input-prompt-container';
-        const textareaId = 'input-code-textarea';
-        const executeBtnId = 'execute-code-btn';
-        const cancelBtnId = 'cancel-code-btn';
-
-        // 新增按钮 ID
-        const clearBtnId = 'clear-code-btn';
-        const pasteBtnId = 'paste-code-btn';
-
-        let container = document.getElementById(containerId);
-
-        if (!container) {
-            // --- 1. 创建容器 ---
-            container = document.createElement('div');
-            container.id = containerId;
-            container.innerHTML = `
-                <h3 style="margin-top: 0; color: #0056b3;">请输入要执行的 JavaScript 代码</h3>
-                
-                <div id="input-controls">
-                    <button id="${pasteBtnId}" class="tool-btn" style="
-        color: white;
-        background: green;
-    ">粘贴</button>
-                    <button id="${clearBtnId}" class="tool-btn" style="
-    color: white;
-    background: red;
-">清空</button>
-                </div>
-                
-                <textarea id="${textareaId}" placeholder="例如: document.title = 'Executed!'" value="console.log('Hello'); return 1 + 1;"></textarea>
-                
-                <div id="input-prompt-buttons">
-                    <button id="${cancelBtnId}" class="input-prompt-btn">取消</button>
-                    <button id="${executeBtnId}" class="input-prompt-btn">执行</button>
-                </div>
-            `;
-            document.body.appendChild(container);
-
-            // --- 2. 绑定事件 ---
-            const codeTextarea = document.getElementById(textareaId);
-            const executeBtn = document.getElementById(executeBtnId);
-            const cancelBtn = document.getElementById(cancelBtnId);
-
-            // 新增：获取工具按钮
-            const clearBtn = document.getElementById(clearBtnId);
-            const pasteBtn = document.getElementById(pasteBtnId);
-
-            // 清空按钮逻辑
-            clearBtn.onclick = () => {
-                codeTextarea.value = '';
-                codeTextarea.focus();
-            };
-
-            // 粘贴按钮逻辑
-            pasteBtn.onclick = async () => {
-                // 使用 Clipboard API 读取剪贴板内容 (需要浏览器权限)
-                try {
-                    const clipboardText = await navigator.clipboard.readText();
-                    codeTextarea.value = clipboardText;
-                } catch (err) {
-                    // 如果权限被拒绝或不支持
-                    alert('无法访问剪贴板，请检查浏览器权限设置或手动粘贴。错误: ' + err.message);
-                }
-                codeTextarea.focus();
-            };
-
-            // 执行逻辑
-            executeBtn.onclick = () => {
-                const codeInput = codeTextarea.value;
-                container.style.display = 'none';
-                if (codeInput.trim()) {
-                    executeCodeFromInput(codeInput);
-                } else {
-                    const outputDiv = createFloatingOutputDiv();
-                    outputDiv.innerHTML = '<p>输入内容为空，执行中止。</p>';
-                }
-            };
-
-            // 取消逻辑
-            cancelBtn.onclick = () => {
-                container.style.display = 'none';
-                const outputDiv = createFloatingOutputDiv();
-                outputDiv.innerHTML = '<p>用户已取消输入，执行中止。</p>';
-            };
-
-            codeTextarea.value = codeTextarea.value.trim();
-        }
-
-        return container;
-    }
-
-
-    /**
      * 引导用户输入并执行的主函数
      */
     function promptAndExecute() {
+        // 1. 获取或创建悬浮窗输出容器
+        const outputDiv = createFloatingOutputDiv();
+        outputDiv.innerHTML = '<h3>正在等待用户输入...</h3>';
 
-        if (typeof body_build == 'function') {
-            body_build('false')
+        // 2. 提示用户输入代码
+        const codeInput = prompt(
+            "请输入您要执行的 JavaScript 代码或函数调用：",
+            "alert(navigator.userAgent)"
+        );
+
+        // 3. 检查输入是否有效
+        if (codeInput === null) {
+            outputDiv.innerHTML = '<p>用户已取消输入，执行中止。</p>';
+            return;
+        }
+        if (codeInput.trim() === "") {
+            outputDiv.innerHTML = '<p>输入内容为空，执行中止。</p>';
+            return;
         }
 
-        const inputContainer = createInputPrompt();
-        inputContainer.style.display = 'block';
+        // 4. 确认执行
+        const confirmation = confirm(`您输入了以下代码，确认执行吗？\n\n---\n${codeInput}\n---`);
 
-        const codeTextarea = document.getElementById('input-code-textarea');
-        if (codeTextarea) {
-            codeTextarea.focus();
-        }
+        if (confirmation) {
+            outputDiv.innerHTML = `<h3>准备执行</h3><p><strong>输入代码:</strong> ${codeInput}</p>`;
 
-        // 隐藏结果输出框（如果它当前是打开的）
-        const outputContainer = document.getElementById('floating-output-container');
-        if (outputContainer) {
-            outputContainer.style.display = 'none';
+            // 5. 判断并执行
+            attemptExecution(codeInput, outputDiv);
+        } else {
+            outputDiv.innerHTML = '<p>用户取消了执行。</p>';
         }
     }
 
 
 
     // =========================================================
-    // 初始化和事件绑定
-    // =========================================================
-
     // 1. 注入 CSS 样式
     injectFloatingWindowStyles();
 
@@ -2169,11 +2000,10 @@
     if (runButton) {
         runButton.addEventListener('click', promptAndExecute);
     }
+    // };
 
 
-
-
-    // End 运行js代码 zhixingjs
+    // End
 
 
     // 复制 input 内容
@@ -7830,6 +7660,7 @@
         controlsContainer.className = 'header-controls';
 
         // 固定按钮逻辑
+        
         let isCurrentlyPinned = getPinState();
         const pinBtn = document.createElement('button');
         pinBtn.className = 'pin-btn';
@@ -7843,7 +7674,6 @@
                 pinBtn.classList.remove('pinned');
             }
         };
-
         updatePinButtonVisual();
 
         pinBtn.onclick = () => {
@@ -7851,6 +7681,7 @@
             localStorage.setItem(PIN_KEY, isCurrentlyPinned.toString());
             updatePinButtonVisual();
         };
+        
 
         // 关闭按钮逻辑
         const closeBtn = document.createElement('button');
@@ -8266,7 +8097,7 @@
 
 setTimeout(() => {
     if (localStorage.getItem('webDebuggerPinned') == 'true') {
-        window.initWebDebugger()
+         window.initWebDebugger()
     }
 
 }, 1000)
