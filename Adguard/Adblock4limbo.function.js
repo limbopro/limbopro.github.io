@@ -4827,438 +4827,435 @@
 
     // 元素屏蔽器开始  START
 
+// ==UserScript==
+    // @name         元素屏蔽/追踪器 (V26.39.9 - 强制同步中断)
+    // @namespace    http://tampermonkey.net/
+    // @version      26.39.9
+    // @description  V26.39.9：移除 JS 重定向调试模式下的异步确认框，替换为强制同步中断执行（Synchronous Throw），这是阻止所有同步重定向的终极防线。
+    // @author       Gemini
+    // @match        *://*/*
+    // @grant        none
+    // @run-at       document-start
+    // ==/UserScript==
 
-    // ==UserScript==
-// @name         元素屏蔽/追踪器 (V26.39.5 - 优化调试信息展示)
-// @namespace    http://tampermonkey.net/
-// @version      26.39.5
-// @description  V26.39.5：优化元素点击调试模式的模态框，只有在信息被截断时，才显示省略号(...)，避免用户迷惑。
-// @author       Gemini
-// @match        *://*/*
-// @grant        none
-// @run-at       document-start
-// ==/UserScript==
+    (function () {
+        'use strict';
 
-(function () {
-    'use strict';
+        // =================================================================
+        // ⚠️ 全局常量与状态 
+        // =================================================================
+        // 元素永久移除记录（透明元素、选择模式屏蔽的普通元素）
+        const ELEMENT_REMOVAL_KEY = 'gemini_zero_opacity_removals';
+        // Iframe 永久移除记录
+        const IFRAME_REMOVAL_KEY = 'gemini_iframe_permanent_removals';
 
-    // =================================================================
-    // ⚠️ 全局常量与状态 
-    // =================================================================
-    // 元素永久移除记录（透明元素、选择模式屏蔽的普通元素）
-    const ELEMENT_REMOVAL_KEY = 'gemini_zero_opacity_removals';
-    // Iframe 永久移除记录
-    const IFRAME_REMOVAL_KEY = 'gemini_iframe_permanent_removals';
+        const PAGE_BLACKLIST_KEY = 'gemini_page_blacklist';
 
-    const PAGE_BLACKLIST_KEY = 'gemini_page_blacklist';
+        const containerId = 'gemini-main-container';
+        const windowId = 'gemini-float-window';
 
-    const containerId = 'gemini-main-container';
-    const windowId = 'gemini-float-window';
+        const DEBUG_CLICK_KEY = 'gemini_debug_element_click_mode';
+        const DEBUG_LOCATION_KEY = 'gemini_debug_location_hook_mode';
+        // V26.39.3 NEW: 调试域名覆盖键 - 存储用户手动关闭调试的域名，以阻止自动开启
+        const DEBUG_WEBLIST_OVERRIDE_KEY = 'gemini_debug_weblist_override';
 
-    const DEBUG_CLICK_KEY = 'gemini_debug_element_click_mode';
-    const DEBUG_LOCATION_KEY = 'gemini_debug_location_hook_mode';
-    // V26.39.3 NEW: 调试域名覆盖键 - 存储用户手动关闭调试的域名，以阻止自动开启
-    const DEBUG_WEBLIST_OVERRIDE_KEY = 'gemini_debug_weblist_override';
+        let isDebuggingElementClick = false;
+        let isDebuggingLocationHooks = false;
+        let isWindowOpenHooked = false;
 
-    let isDebuggingElementClick = false;
-    let isDebuggingLocationHooks = false;
-    let isWindowOpenHooked = false;
+        // V26.39.2: 调试域名列表 - 如果当前页面域名在列表中，自动开启调试模式 (除非被用户覆盖)
+        const DEBUG_WEBLIST = [];
 
-    // V26.39.2: 调试域名列表 - 如果当前页面域名在列表中，自动开启调试模式 (除非被用户覆盖)
-    const DEBUG_WEBLIST = [];
+        const AD_URL_PARTIAL_PERMANENT = 'twinrdengine.com';
 
-    const AD_URL_PARTIAL_PERMANENT = 'twinrdengine.com';
-
-    // =================================================================
-    // 调试覆盖管理函数 (V26.39.3 NEW)
-    // =================================================================
-    function getCurrentHost() {
-        try {
-            return window.location.host;
-        } catch (e) {
-            return '';
-        }
-    }
-
-    function getDebugOverrideList() {
-        try {
-            const list = JSON.parse(localStorage.getItem(DEBUG_WEBLIST_OVERRIDE_KEY) || '[]');
-            return list.filter(item => item && typeof item === 'string');
-        } catch (e) {
-            console.error('[覆盖列表] 读取失败:', e);
-            return [];
-        }
-    }
-
-    function isCurrentHostOverridden() {
-        const currentHost = getCurrentHost();
-        return getDebugOverrideList().includes(currentHost);
-    }
-
-    function toggleDebugOverride(shouldAdd, host = getCurrentHost()) {
-        if (!host) return false;
-        let list = getDebugOverrideList();
-        const index = list.indexOf(host);
-
-        if (shouldAdd) {
-            if (index === -1) {
-                list.push(host);
-                localStorage.setItem(DEBUG_WEBLIST_OVERRIDE_KEY, JSON.stringify(list));
-                console.log(`[V26.39.3] 🎯 ${host} 已添加到调试覆盖列表。`);
-                return true;
-            }
-        } else {
-            if (index > -1) {
-                list.splice(index, 1);
-                localStorage.setItem(DEBUG_WEBLIST_OVERRIDE_KEY, JSON.stringify(list));
-                console.log(`[V26.39.3] 🎯 ${host} 已从调试覆盖列表移除。`);
-                return true;
+        // =================================================================
+        // 调试覆盖管理函数 (V26.39.3 NEW)
+        // =================================================================
+        function getCurrentHost() {
+            try {
+                return window.location.host;
+            } catch (e) {
+                return '';
             }
         }
-        return false;
-    }
 
-
-    // =================================================================
-    // 黑名单管理函数 (保持不变)
-    // =================================================================
-    function getCurrentPageKey() {
-        try {
-            const url = new URL(window.location.href);
-            return url.host + url.pathname;
-        } catch (e) {
-            return window.location.host;
-        }
-    }
-
-    function getPageBlacklist() {
-        try {
-            const list = JSON.parse(localStorage.getItem(PAGE_BLACKLIST_KEY) || '[]');
-            return list.filter(item => item && typeof item === 'string');
-        } catch (e) {
-            console.error('[黑名单] 读取失败:', e);
-            return [];
-        }
-    }
-
-    function isCurrentPageBlacklisted() {
-        const currentPageKey = getCurrentPageKey();
-        return getPageBlacklist().includes(currentPageKey);
-    }
-
-    function togglePageBlacklist(shouldAdd, pageKey = getCurrentPageKey()) {
-        let list = getPageBlacklist();
-        const index = list.indexOf(pageKey);
-
-        if (shouldAdd) {
-            if (index === -1) {
-                list.push(pageKey);
-                localStorage.setItem(PAGE_BLACKLIST_KEY, JSON.stringify(list));
-                return true;
-            }
-        } else {
-            if (index > -1) {
-                list.splice(index, 1);
-                localStorage.setItem(PAGE_BLACKLIST_KEY, JSON.stringify(list));
-                return true;
+        function getDebugOverrideList() {
+            try {
+                const list = JSON.parse(localStorage.getItem(DEBUG_WEBLIST_OVERRIDE_KEY) || '[]');
+                return list.filter(item => item && typeof item === 'string');
+            } catch (e) {
+                console.error('[覆盖列表] 读取失败:', e);
+                return [];
             }
         }
-        return false;
-    }
 
-
-    // =================================================================
-    // Iframe 沙箱处理函数 (保持不变)
-    // =================================================================
-    function hookIframeSandboxSetter(iframe) {
-        if (iframe.__sandbox_hooked) return;
-
-        const sandboxDescriptor = Object.getOwnPropertyDescriptor(Element.prototype, 'sandbox') ||
-            Object.getOwnPropertyDescriptor(HTMLIFrameElement.prototype, 'sandbox');
-
-        if (sandboxDescriptor && sandboxDescriptor.set) {
-            const originalSetter = sandboxDescriptor.set;
-            const strictSandboxAttributes = 'allow-scripts allow-forms allow-same-origin allow-popups allow-pointer-lock';
-
-            Object.defineProperty(iframe, 'sandbox', {
-                set: function (value) {
-                    const newValue = value || strictSandboxAttributes;
-                    originalSetter.call(this, newValue);
-
-                    console.warn(`[Gemini屏蔽 V26.34] 🛡️ 黑名单页面：Iframe sandbox 被 Setter Hook 强制设置为严格沙箱。`);
-                },
-                get: function () {
-                    return iframe.getAttribute('sandbox');
-                },
-                configurable: true,
-                enumerable: true
-            });
-            iframe.__sandbox_hooked = true;
-            console.log(`[Gemini屏蔽 V26.34] 🌟 Iframe sandbox 属性 Setter Hook 成功启用 (仅对黑名单页面有效)。`);
-        }
-    }
-
-    function applyIframeSandbox(iframe) {
-
-        if (!isCurrentPageBlacklisted()) {
-            console.log('[Gemini屏蔽 V26.34] 🚀 非黑名单页面：对 Iframe 不做任何操作，保持默认状态 (默认不沙箱)。');
-            return;
+        function isCurrentHostOverridden() {
+            const currentHost = getCurrentHost();
+            return getDebugOverrideList().includes(currentHost);
         }
 
-        const sandboxAttributes = 'allow-scripts allow-forms allow-same-origin allow-popups allow-pointer-lock';
+        function toggleDebugOverride(shouldAdd, host = getCurrentHost()) {
+            if (!host) return false;
+            let list = getDebugOverrideList();
+            const index = list.indexOf(host);
 
-        hookIframeSandboxSetter(iframe);
-
-        try {
-            const currentSandbox = iframe.getAttribute('sandbox');
-            if (currentSandbox !== sandboxAttributes) {
-                iframe.setAttribute('sandbox', sandboxAttributes);
-                console.log(`[Gemini屏蔽 V26.34] 🛡️ 黑名单页面：Iframe 强制设置严格沙箱属性: ${sandboxAttributes}`);
-            }
-        } catch (e) {
-            console.error('[Gemini屏蔽 V26.34] Iframe 沙箱设置失败:', e);
-        }
-    }
-
-    // =================================================================
-    // Hook document.createElement (保持不变)
-    // =================================================================
-    if (document.createElement) {
-        const originalCreateElement = document.createElement;
-        originalCreateElement.className = 'notranslate';
-        document.createElement = function (tagName, options) {
-            const element = originalCreateElement.call(this, tagName, options);
-
-            if (tagName.toLowerCase() === 'iframe') {
-                const iframe = element;
-
-                if (iframe.src && iframe.src.includes(AD_URL_PARTIAL_PERMANENT)) {
-                    console.warn(`[Gemini屏蔽 V26.24] 阻止 Iframe 初始加载广告: ${iframe.src.substring(0, 50)}...`);
-                    iframe.src = 'about:blank';
+            if (shouldAdd) {
+                if (index === -1) {
+                    list.push(host);
+                    localStorage.setItem(DEBUG_WEBLIST_OVERRIDE_KEY, JSON.stringify(list));
+                    console.log(`[V26.39.9] 🎯 ${host} 已添加到调试覆盖列表。`);
+                    return true;
                 }
+            } else {
+                if (index > -1) {
+                    list.splice(index, 1);
+                    localStorage.setItem(DEBUG_WEBLIST_OVERRIDE_KEY, JSON.stringify(list));
+                    console.log(`[V26.39.9] 🎯 ${host} 已从调试覆盖列表移除。`);
+                    return true;
+                }
+            }
+            return false;
+        }
 
-                applyIframeSandbox(iframe);
 
-                iframe.addEventListener('load', () => {
-                    applyIframeSandbox(iframe);
-                });
+        // =================================================================
+        // 黑名单管理函数 (保持不变)
+        // =================================================================
+        function getCurrentPageKey() {
+            try {
+                const url = new URL(window.location.href);
+                return url.host + url.pathname;
+            } catch (e) {
+                return window.location.host;
+            }
+        }
 
-                Object.defineProperty(iframe, 'src', {
-                    set: function (url) {
-                        if (url && url.includes(AD_URL_PARTIAL_PERMANENT)) {
-                            console.warn(`[Gemini屏蔽 V26.24] 阻止 Iframe.src 赋值广告 URL: ${url.substring(0, 50)}...`);
-                            iframe.setAttribute('src', 'about:blank');
-                            return;
-                        }
-                        iframe.setAttribute('src', url);
+        function getPageBlacklist() {
+            try {
+                const list = JSON.parse(localStorage.getItem(PAGE_BLACKLIST_KEY) || '[]');
+                return list.filter(item => item && typeof item === 'string');
+            } catch (e) {
+                console.error('[黑名单] 读取失败:', e);
+                return [];
+            }
+        }
+
+        function isCurrentPageBlacklisted() {
+            const currentPageKey = getCurrentPageKey();
+            return getPageBlacklist().includes(currentPageKey);
+        }
+
+        function togglePageBlacklist(shouldAdd, pageKey = getCurrentPageKey()) {
+            let list = getPageBlacklist();
+            const index = list.indexOf(pageKey);
+
+            if (shouldAdd) {
+                if (index === -1) {
+                    list.push(pageKey);
+                    localStorage.setItem(PAGE_BLACKLIST_KEY, JSON.stringify(list));
+                    return true;
+                }
+            } else {
+                if (index > -1) {
+                    list.splice(index, 1);
+                    localStorage.setItem(PAGE_BLACKLIST_KEY, JSON.stringify(list));
+                    return true;
+                }
+            }
+            return false;
+        }
+
+
+        // =================================================================
+        // Iframe 沙箱处理函数 (保持不变)
+        // =================================================================
+        function hookIframeSandboxSetter(iframe) {
+            if (iframe.__sandbox_hooked) return;
+
+            const sandboxDescriptor = Object.getOwnPropertyDescriptor(Element.prototype, 'sandbox') ||
+                Object.getOwnPropertyDescriptor(HTMLIFrameElement.prototype, 'sandbox');
+
+            if (sandboxDescriptor && sandboxDescriptor.set) {
+                const originalSetter = sandboxDescriptor.set;
+                const strictSandboxAttributes = 'allow-scripts allow-forms allow-same-origin allow-popups allow-pointer-lock';
+
+                Object.defineProperty(iframe, 'sandbox', {
+                    set: function (value) {
+                        const newValue = value || strictSandboxAttributes;
+                        originalSetter.call(this, newValue);
+
+                        console.warn(`[Gemini屏蔽 V26.34] 🛡️ 黑名单页面：Iframe sandbox 被 Setter Hook 强制设置为严格沙箱。`);
                     },
                     get: function () {
-                        return iframe.getAttribute('src');
+                        return iframe.getAttribute('sandbox');
                     },
                     configurable: true,
                     enumerable: true
                 });
-            }
-            return element;
-        };
-        console.log('[Gemini屏蔽] document.createElement Hook 已启用 (V26.34 强化)。');
-    }
-
-    // =================================================================
-    // 基础工具函数：getElementXPath (保持不变)
-    // =================================================================
-    function getElementXPath(element) {
-        if (!element || element.tagName === 'HTML') return '/html[1]';
-        if (element.id) { return `//*[@id='${element.id}']`; }
-
-        let currentNode = element.parentNode;
-        let anchorElement = null;
-
-        while (currentNode && currentNode.tagName !== 'BODY') {
-            if (currentNode.id) {
-                anchorElement = currentNode;
-                break;
-            }
-            currentNode = currentNode.parentNode;
-        }
-
-        if (anchorElement) {
-            let path = '';
-            let current = element;
-
-            while (current !== anchorElement) {
-                let ix = 0;
-                const siblings = current.parentNode.childNodes;
-
-                for (let i = 0; i < siblings.length; i++) {
-                    const sibling = siblings[i];
-                    if (sibling.nodeType === 1 && sibling.tagName === current.tagName) {
-                        ix++;
-                    }
-                    if (sibling === current) {
-                        break;
-                    }
-                }
-
-                const segment = `/${current.tagName.toLowerCase()}[${ix}]`;
-                path = segment + path;
-
-                current = current.parentNode;
-            }
-            return `//*[@id='${anchorElement.id}']` + path;
-        }
-
-        let ix = 0;
-        const siblings = element.parentNode.childNodes;
-
-        for (let i = 0; i < siblings.length; i++) {
-            const sibling = siblings[i];
-            if (sibling === element) {
-                const parentPath = getElementXPath(element.parentNode);
-                if (element.tagName === 'BODY') { return parentPath + '/body[1]'; }
-                return parentPath + '/' + element.tagName.toLowerCase() + '[' + (ix + 1) + ']';
-            }
-            if (sibling.nodeType === 1 && sibling.tagName === element.tagName) {
-                ix++;
+                iframe.__sandbox_hooked = true;
+                console.log(`[Gemini屏蔽 V26.34] 🌟 Iframe sandbox 属性 Setter Hook 成功启用 (仅对黑名单页面有效)。`);
             }
         }
-        return '';
-    }
 
-    // =================================================================
-    // 基础工具函数：getElementCssSelector (V26.39.4 NEW)
-    // =目标：快速生成一个简短的CSS选择器用于模态框显示
-    // =================================================================
-    function getElementCssSelector(element) {
-        if (!element || element.tagName === 'HTML' || element.tagName === 'BODY') return element.tagName ? element.tagName.toLowerCase() : '';
+        function applyIframeSandbox(iframe) {
 
-        // 1. 优先使用 ID (最精确)
-        if (element.id) {
-            return `#${element.id}`;
-        }
+            if (!isCurrentPageBlacklisted()) {
+                console.log('[Gemini屏蔽 V26.34] 🚀 非黑名单页面：对 Iframe 不做任何操作，保持默认状态 (默认不沙箱)。');
+                return;
+            }
 
-        // 2. 其次使用 TagName 和第一个 Class (具有一定特异性)
-        const tag = element.tagName.toLowerCase();
-        const classList = element.className.split(/\s+/).filter(c => c.length > 0);
+            const sandboxAttributes = 'allow-scripts allow-forms allow-same-origin allow-popups allow-pointer-lock';
 
-        if (classList.length > 0) {
-            // 返回 Tag.Class 形式
-            return `${tag}.${classList[0]}`;
-        }
+            hookIframeSandboxSetter(iframe);
 
-        // 3. 最后退化为纯 TagName
-        return tag;
-    }
-
-    // =================================================================
-    // 基础工具函数：safeTruncate (V26.39.5 NEW)
-    // 目标：安全截断字符串，仅在截断时添加...
-    // =================================================================
-    function safeTruncate(str, maxLen = 100) {
-        if (!str) return 'N/A';
-        if (str.length <= maxLen) {
-            return str;
-        }
-        return str.substring(0, maxLen) + '...';
-    }
-
-
-    // =================================================================
-    // 持久化存储工具函数 (保持不变)
-    // =================================================================
-
-    // --- 元素移除记录 (Element Removal) ---
-    function getSavedRemovals() {
-        try {
-            return JSON.parse(localStorage.getItem(ELEMENT_REMOVAL_KEY) || '[]');
-        } catch (e) {
-            console.error('[持久化] 元素记录读取失败:', e);
-            return [];
-        }
-    }
-
-    function saveRemovalChoice(xpath) {
-        let removals = getSavedRemovals();
-        if (!removals.includes(xpath)) {
-            removals.push(xpath);
-            localStorage.setItem(ELEMENT_REMOVAL_KEY, JSON.stringify(removals));
-        }
-    }
-
-    function removeRemovalChoice(xpath) {
-        let removals = getSavedRemovals();
-        const index = removals.indexOf(xpath);
-        if (index > -1) {
-            removals.splice(index, 1);
-            localStorage.setItem(ELEMENT_REMOVAL_KEY, JSON.stringify(removals));
-            return true;
-        }
-        return false;
-    }
-
-    // --- Iframe 移除记录 ---
-    function getIframeRemovals() {
-        try {
-            return JSON.parse(localStorage.getItem(IFRAME_REMOVAL_KEY) || '[]');
-        } catch (e) {
-            console.error('[持久化] Iframe 记录读取失败:', e);
-            return [];
-        }
-    }
-
-    function saveIframeRemovalChoice(xpath) {
-        let removals = getIframeRemovals();
-        if (!removals.includes(xpath)) {
-            removals.push(xpath);
-            localStorage.setItem(IFRAME_REMOVAL_KEY, JSON.stringify(removals));
-        }
-    }
-
-    function removeIframeRemovalChoice(xpath) {
-        let removals = getIframeRemovals();
-        const index = removals.indexOf(xpath);
-        if (index > -1) {
-            removals.splice(index, 1);
-            localStorage.setItem(IFRame_REMOVAL_KEY, JSON.stringify(removals));
-            return true;
-        }
-        return false;
-    }
-
-    // --- 加载并移除函数 (Load and Remove) ---
-    function loadAndRemoveSavedElements(doc) {
-        const elementRemovals = getSavedRemovals();
-        const iframeRemovals = getIframeRemovals();
-        const allRemovals = [...elementRemovals, ...iframeRemovals];
-
-        let removedCount = 0;
-        allRemovals.forEach(xpath => {
             try {
-                const result = doc.evaluate(xpath, doc, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
-                const element = result.singleNodeValue;
-
-                if (element && element.parentNode) {
-                    element.remove();
-                    removedCount++;
+                const currentSandbox = iframe.getAttribute('sandbox');
+                if (currentSandbox !== sandboxAttributes) {
+                    iframe.setAttribute('sandbox', sandboxAttributes);
+                    console.log(`[Gemini屏蔽 V26.34] 🛡️ 黑名单页面：Iframe 强制设置严格沙箱属性: ${sandboxAttributes}`);
                 }
-            } catch (e) { }
-        });
+            } catch (e) {
+                console.error('[Gemini屏蔽 V26.34] Iframe 沙箱设置失败:', e);
+            }
+        }
 
-        const isTopWindow = window === window.top;
-        const docName = (isTopWindow && doc === document) ? '主页' :
-            (!isTopWindow && doc === document) ? 'Iframe (自身)' :
-                'Iframe (同源)';
-        console.log(`[Gemini屏蔽] 已在 ${docName} 自动移除 ${removedCount} 个元素/Iframe。`);
-        return removedCount;
-    }
+        // =================================================================
+        // Hook document.createElement (保持不变)
+        // =================================================================
+        if (document.createElement) {
+            const originalCreateElement = document.createElement;
+            originalCreateElement.className = 'notranslate';
+            document.createElement = function (tagName, options) {
+                const element = originalCreateElement.call(this, tagName, options);
+
+                if (tagName.toLowerCase() === 'iframe') {
+                    const iframe = element;
+
+                    if (iframe.src && iframe.src.includes(AD_URL_PARTIAL_PERMANENT)) {
+                        console.warn(`[Gemini屏蔽 V26.24] 阻止 Iframe 初始加载广告: ${iframe.src.substring(0, 50)}...`);
+                        iframe.src = 'about:blank';
+                    }
+
+                    applyIframeSandbox(iframe);
+
+                    iframe.addEventListener('load', () => {
+                        applyIframeSandbox(iframe);
+                    });
+
+                    Object.defineProperty(iframe, 'src', {
+                        set: function (url) {
+                            if (url && url.includes(AD_URL_PARTIAL_PERMANENT)) {
+                                console.warn(`[Gemini屏蔽 V26.24] 阻止 Iframe.src 赋值广告 URL: ${url.substring(0, 50)}...`);
+                                iframe.setAttribute('src', 'about:blank');
+                                return;
+                            }
+                            iframe.setAttribute('src', url);
+                        },
+                        get: function () {
+                            return iframe.getAttribute('src');
+                        },
+                        configurable: true,
+                        enumerable: true
+                    });
+                }
+                return element;
+            };
+            console.log('[Gemini屏蔽] document.createElement Hook 已启用 (V26.34 强化)。');
+        }
+
+        // =================================================================
+        // 基础工具函数：getElementXPath (保持不变)
+        // =================================================================
+        function getElementXPath(element) {
+            if (!element || element.tagName === 'HTML') return '/html[1]';
+            if (element.id) { return `//*[@id='${element.id}']`; }
+
+            let currentNode = element.parentNode;
+            let anchorElement = null;
+
+            while (currentNode && currentNode.tagName !== 'BODY') {
+                if (currentNode.id) {
+                    anchorElement = currentNode;
+                    break;
+                }
+                currentNode = currentNode.parentNode;
+            }
+
+            if (anchorElement) {
+                let path = '';
+                let current = element;
+
+                while (current !== anchorElement) {
+                    let ix = 0;
+                    const siblings = current.parentNode.childNodes;
+
+                    for (let i = 0; i < siblings.length; i++) {
+                        const sibling = siblings[i];
+                        if (sibling.nodeType === 1 && sibling.tagName === current.tagName) {
+                            ix++;
+                        }
+                        if (sibling === current) {
+                            break;
+                        }
+                    }
+
+                    const segment = `/${current.tagName.toLowerCase()}[${ix}]`;
+                    path = segment + path;
+
+                    current = current.parentNode;
+                }
+                return `//*[@id='${anchorElement.id}']` + path;
+            }
+
+            let ix = 0;
+            const siblings = element.parentNode.childNodes;
+
+            for (let i = 0; i < siblings.length; i++) {
+                const sibling = siblings[i];
+                if (sibling === element) {
+                    const parentPath = getElementXPath(element.parentNode);
+                    if (element.tagName === 'BODY') { return parentPath + '/body[1]'; }
+                    return parentPath + '/' + element.tagName.toLowerCase() + '[' + (ix + 1) + ']';
+                }
+                if (sibling.nodeType === 1 && sibling.tagName === element.tagName) {
+                    ix++;
+                }
+            }
+            return '';
+        }
+
+        // =================================================================
+        // 基础工具函数：getElementCssSelector (V26.39.4 NEW)
+        // =================================================================
+        function getElementCssSelector(element) {
+            if (!element || element.tagName === 'HTML' || element.tagName === 'BODY') return element.tagName ? element.tagName.toLowerCase() : '';
+
+            // 1. 优先使用 ID (最精确)
+            if (element.id) {
+                return `#${element.id}`;
+            }
+
+            // 2. 其次使用 TagName 和第一个 Class (具有一定特异性)
+            const tag = element.tagName.toLowerCase();
+            const classList = element.className.split(/\s+/).filter(c => c.length > 0);
+
+            if (classList.length > 0) {
+                // 返回 Tag.Class 形式
+                return `${tag}.${classList[0]}`;
+            }
+
+            // 3. 最后退化为纯 TagName
+            return tag;
+        }
+
+        // =================================================================
+        // 基础工具函数：safeTruncate (V26.39.5 NEW)
+        // =================================================================
+        function safeTruncate(str, maxLen = 100) {
+            if (!str) return 'N/A';
+            if (str.length <= maxLen) {
+                return str;
+            }
+            return str.substring(0, maxLen) + '...';
+        }
 
 
-    // =================================================================
-    // 模态框函数 (V26.39.5 更新)
-    // =================================================================
-    function injectStyles(containerId, windowId) {
-        const style = document.createElement('style');
-        style.textContent = `
+        // =================================================================
+        // 持久化存储工具函数 (保持不变)
+        // =================================================================
+
+        // --- 元素移除记录 (Element Removal) ---
+        function getSavedRemovals() {
+            try {
+                return JSON.parse(localStorage.getItem(ELEMENT_REMOVAL_KEY) || '[]');
+            } catch (e) {
+                console.error('[持久化] 元素记录读取失败:', e);
+                return [];
+            }
+        }
+
+        function saveRemovalChoice(xpath) {
+            let removals = getSavedRemovals();
+            if (!removals.includes(xpath)) {
+                removals.push(xpath);
+                localStorage.setItem(ELEMENT_REMOVAL_KEY, JSON.stringify(removals));
+            }
+        }
+
+        function removeRemovalChoice(xpath) {
+            let removals = getSavedRemovals();
+            const index = removals.indexOf(xpath);
+            if (index > -1) {
+                removals.splice(index, 1);
+                localStorage.setItem(ELEMENT_REMOVAL_KEY, JSON.stringify(removals));
+                return true;
+            }
+            return false;
+        }
+
+        // --- Iframe 移除记录 ---
+        function getIframeRemovals() {
+            try {
+                return JSON.parse(localStorage.getItem(IFRAME_REMOVAL_KEY) || '[]');
+            } catch (e) {
+                console.error('[持久化] Iframe 记录读取失败:', e);
+                return [];
+            }
+        }
+
+        function saveIframeRemovalChoice(xpath) {
+            let removals = getIframeRemovals();
+            if (!removals.includes(xpath)) {
+                removals.push(xpath);
+                localStorage.setItem(IFRAME_REMOVAL_KEY, JSON.stringify(removals));
+            }
+        }
+
+        function removeIframeRemovalChoice(xpath) {
+            let removals = getIframeRemovals();
+            const index = removals.indexOf(xpath);
+            if (index > -1) {
+                removals.splice(index, 1);
+                localStorage.setItem(IFRAME_REMOVAL_KEY, JSON.stringify(removals));
+                return true;
+            }
+            return false;
+        }
+
+        // --- 加载并移除函数 (Load and Remove) ---
+        function loadAndRemoveSavedElements(doc) {
+            const elementRemovals = getSavedRemovals();
+            const iframeRemovals = getIframeRemovals();
+            const allRemovals = [...elementRemovals, ...iframeRemovals];
+
+            let removedCount = 0;
+            allRemovals.forEach(xpath => {
+                try {
+                    const result = doc.evaluate(xpath, doc, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
+                    const element = result.singleNodeValue;
+
+                    if (element && element.parentNode) {
+                        element.remove();
+                        removedCount++;
+                    }
+                } catch (e) { }
+            });
+
+            const isTopWindow = window === window.top;
+            const docName = (isTopWindow && doc === document) ? '主页' :
+                (!isTopWindow && doc === document) ? 'Iframe (自身)' :
+                    'Iframe (同源)';
+            console.log(`[Gemini屏蔽] 已在 ${docName} 自动移除 ${removedCount} 个元素/Iframe。`);
+            return removedCount;
+        }
+
+
+        // =================================================================
+        // 模态框函数 (V26.39.6 更新)
+        // =================================================================
+        function injectStyles(containerId, windowId) {
+            const style = document.createElement('style');
+            style.textContent = `
             /* 1. 最外层容器：z-index 提高确保覆盖 Iframe */
             #${containerId} {
                 position: fixed; 
@@ -5300,7 +5297,7 @@
                 cursor: default;
             }
             #${windowId} button, #${windowId} span[id$="close-btn"], #${windowId} .element-info, #${windowId} .iframe-info, #${windowId} .tab-btn, 
-            #gemini-location-modal button, #gemini-custom-modal-overlay button {
+            #gemini-custom-modal-overlay button {
                  cursor: pointer !important;
             }
 
@@ -5383,7 +5380,7 @@
             }
 
             /* 模态框样式 */
-            #gemini-custom-modal-overlay, #gemini-location-modal {
+            #gemini-custom-modal-overlay {
                 overflow:auto;
                 position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
                 background: rgba(0, 0, 0, 0.7); z-index: 2147483648; 
@@ -5391,14 +5388,14 @@
                 backdrop-filter: blur(2px);
                 font-family: 'Helvetica Neue', Arial, sans-serif;
             }
-            #gemini-custom-modal-overlay > div, #gemini-location-modal > div {
+            #gemini-custom-modal-overlay > div {
                 background: white; border-radius: 10px; padding: 20px; 
                 box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3); max-width: 450px;
                 width: 90%; /* 增加宽度适应性 */
                 font-size: 14px;
             }
             /* 通用按钮样式 */
-            #gemini-location-modal button, #gemini-custom-modal-overlay button {
+            #gemini-custom-modal-overlay button {
                 padding: 10px 15px; 
                 border-radius: 6px; 
                 cursor: pointer !important; 
@@ -5406,9 +5403,6 @@
                 margin: 5px;
                 transition: background 0.2s, box-shadow 0.2s;
             }
-            /* Location Modal 按钮颜色 */
-            #gemini-location-modal #modal-proceed { background: #007bff; color: white; border: none; }
-            #gemini-location-modal #modal-block { background: #dc3545; color: white; border: none; }
             
             /* V26.20 新增：操作提示文本容器样式 */
             #gemini-custom-modal-overlay .operation-notes p {
@@ -5432,43 +5426,47 @@
                 }
             }
         `;
-        document.head.appendChild(style);
-    }
-
-    function showCustomConfirm(message, elementInfo, xpath) { // <--- Signature Updated V26.39.4
-
-        // ⚠️ 新增/确保有这个判断：
-        if (localStorage.getItem('gemini_debug_element_click_mode') !== 'true') {
-            // 如果模式不是 'true'，则直接退出函数，不执行任何捕获逻辑
-            return;
+            document.head.appendChild(style);
         }
 
-        return new Promise((resolve) => {
-            const modalOverlay = document.createElement('div');
-            modalOverlay.id = 'gemini-custom-modal-overlay';
-            modalOverlay.className = 'notranslate';
+        function showCustomConfirm(message, elementInfo, xpath) { 
 
-            const modalBox = document.createElement('div');
-            modalBox.className = 'notranslate'
-            modalBox.style.cssText = `
+            // ⚠️ 新增/确保有这个判断：
+            if (localStorage.getItem('gemini_debug_element_click_mode') !== 'true') {
+                // 如果模式不是 'true'，则直接退出函数，不执行任何捕获逻辑
+                return;
+            }
+
+            return new Promise((resolve) => {
+                const modalOverlay = document.createElement('div');
+                modalOverlay.id = 'gemini-custom-modal-overlay';
+                modalOverlay.className = 'notranslate';
+
+                const modalBox = document.createElement('div');
+                modalBox.className = 'notranslate'
+                modalBox.style.cssText = `
                 background: white; border-radius: 10px; padding: 20px; 
                 box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3); max-width: 450px;
                 width: 90%; 
                 font-family: 'Helvetica Neue', Arial, sans-serif;
             `;
 
-            let headerMessage = `此链接已被元素点击调试模式捕获。请选择操作：`;
-            if (!xpath) {
-                headerMessage += `\n\n⚠️ 警告: 无法获取元素的唯一路径 (XPath)。如果您选择 "确定屏蔽"，此次屏蔽将可能无效。`;
-            }
+                let headerMessage = `此链接已被元素点击调试模式捕获。请选择操作：`;
+                if (!xpath) {
+                    headerMessage += `\n\n⚠️ 警告: 无法获取元素的唯一路径 (XPath)。如果您选择 "确定屏蔽"，此次屏蔽将可能无效。`;
+                }
 
-            // V26.39.5: 使用 safeTruncate 优化信息展示
-            const truncatedCssSelector = safeTruncate(elementInfo.cssSelector, 100);
-            const truncatedHref = safeTruncate(elementInfo.href, 100);
-            const truncatedXpath = safeTruncate(xpath, 70);
+                // V26.39.5: 使用 safeTruncate 优化信息展示
+                const truncatedCssSelector = safeTruncate(elementInfo.cssSelector, 100);
+                const truncatedHref = safeTruncate(elementInfo.href, 100);
+                const truncatedXpath = safeTruncate(xpath, 70);
+
+                // V26.39.6 增强信息
+                const truncatedParent = safeTruncate(elementInfo.parent, 70);
+                const truncatedInlineClick = safeTruncate(elementInfo.inlineClick || '[无内联事件]', 70);
 
 
-            modalBox.innerHTML = `
+                modalBox.innerHTML = `
                 <h3 style="margin-top: 0; color: #dc3545; border-bottom: 2px solid #eee; padding-bottom: 10px;">
                     🎯 链接点击捕获 (元素调试)
                 </h3>
@@ -5486,22 +5484,24 @@
                         font-size: 13px; padding: 5px 10px; 
                         background: #f1f8ff; border-left: 3px solid #007bff;
                     ">
-                        <strong>🛡️ [确定]</strong> 将此元素永久添加到屏蔽列表并移除。
+                        <strong>🛡️ [永久屏蔽]</strong> 将此元素永久添加到屏蔽列表并移除。
                     </p>
                     <p style="
                         font-size: 13px; padding: 5px 10px; 
                         background: #fffbe6; border-left: 3px solid #ffc107;
                     ">
-                        <strong>➡️ [取消]</strong> 临时放行此元素，但您需要**再次点击**此按钮来触发原始跳转行为。
+                        <strong>➡️ [临时放行]</strong> 临时放行此元素，但您需要**再次点击**此按钮来触发原始跳转行为。
                     </p>
                 </div>
                 
                 <div style="font-size: 12px; background: #f8f9fa; padding: 12px; border-radius: 6px; margin-bottom: 20px; border-left: 4px solid #007bff;">
-                    <strong style="color: #007bff; display: block; margin-bottom: 5px;">🚀 目标信息 (V26.39.5):</strong>
+                    <strong style="color: #007bff; display: block; margin-bottom: 5px;">🚀 目标信息 (V26.39.6 - 增强):</strong>
                     
                     <div style="word-break: break-all; margin-bottom: 5px;">
-                        <span style="font-weight: bold;">目标类型 (Tag):</span> ${elementInfo.tagName}
+                        <span style="font-weight: bold;">目标类型 (Tag):</span> ${elementInfo.tagName} 
+                        <span style="font-weight: bold; margin-left: 10px;">尺寸:</span> ${elementInfo.width}x${elementInfo.height}px 
                     </div>
+                    
                     <div style="word-break: break-all; margin-bottom: 5px;">
                         <span style="font-weight: bold;">CSS 选择器:</span> ${truncatedCssSelector}
                     </div>
@@ -5509,6 +5509,19 @@
                     <div style="word-break: break-all; margin-bottom: 5px;">
                         <span style="font-weight: bold;">链接 (Href):</span> ${truncatedHref}
                     </div>
+
+                    <div style="word-break: break-all; margin-bottom: 5px;">
+                        <span style="font-weight: bold;">Z/Opacity/Pos:</span> ${elementInfo.zIndex} / ${elementInfo.opacity} / ${elementInfo.position}
+                    </div>
+                    
+                    <div style="word-break: break-all; margin-bottom: 5px;">
+                        <span style="font-weight: bold;">父级简述:</span> ${truncatedParent}
+                    </div>
+                    
+                    <div style="word-break: break-all; margin-bottom: 5px;">
+                        <span style="font-weight: bold;">内联 Click:</span> ${truncatedInlineClick}
+                    </div>
+
                     <div style="word-break: break-all;">
                         <span style="font-weight: bold;">XPath:</span> ${truncatedXpath}
                     </div>
@@ -5528,398 +5541,507 @@
                 </div>
             `;
 
-            const closeAndResolve = (result) => {
-                modalOverlay.remove();
-                resolve(result);
-            };
+                const closeAndResolve = (result) => {
+                    modalOverlay.remove();
+                    resolve(result);
+                };
 
-            modalBox.querySelector('#gemini-modal-confirm').onclick = () => closeAndResolve(true);
-            modalBox.querySelector('#gemini-modal-cancel').onclick = () => closeAndResolve(false);
+                modalBox.querySelector('#gemini-modal-confirm').onclick = () => closeAndResolve(true);
+                modalBox.querySelector('#gemini-modal-cancel').onclick = () => closeAndResolve(false);
 
-            if (document.body) {
-                modalOverlay.appendChild(modalBox);
-                document.body.appendChild(modalOverlay);
-            } else {
-                console.error('[Gemini屏蔽] 模态框插入失败：document.body 不可用。');
-                resolve(false);
-            }
-        });
-    }
-
-    function showCustomConfirmLocation(url, method = 'window.href') {
-        return new Promise((resolve) => {
-            const modalOverlay = document.createElement('div');
-            modalOverlay.id = 'gemini-location-modal';
-
-            const modalBox = document.createElement('div');
-            modalBox.style.cssText = `
-                background: white; border-radius: 10px; padding: 20px; 
-                box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3); max-width: 400px;
-                font-size: 14px;
-            `;
-
-            modalBox.innerHTML = `
-                <h3 style="margin-top: 0; color: #007bff;">⚠️ URL 重定向捕获 (JS 调试)</h3>
-                <p style="color: #333;">
-                    检测到页面尝试通过 JavaScript 强制改变 URL（通过 <code>${method}</code>）。
-                </p>
-                <div style="font-size: 12px; margin-top: 15px; background: #f8f9fa; padding: 8px; border-radius: 4px;">
-                    <strong style="color: #dc3545;">目标链接:</strong> <span style="word-break: break-all;">${safeTruncate(url, 80)}</span>
-                </div>
-                <div style="display: flex; justify-content: space-around; margin-top: 20px;">
-                    <button id="modal-proceed">
-                        ✅ 放行 (允许跳转)
-                    </button>
-                    <button id="modal-block">
-                        ❌ 屏蔽 (阻止跳转)
-                    </button>
-                </div>
-            `;
-
-            const closeAndResolve = (result) => {
-                modalOverlay.remove();
-                resolve(result);
-            };
-
-            modalBox.querySelector('#modal-proceed').onclick = () => closeAndResolve(true);
-            modalBox.querySelector('#modal-block').onclick = () => closeAndResolve(false);
-
-            if (document.body) {
-                modalOverlay.appendChild(modalBox);
-                document.body.appendChild(modalOverlay);
-            } else {
-                console.error('[Gemini屏蔽] Location 模态框插入失败。');
-                resolve(false);
-            }
-        });
-    }
-
-    // =================================================================
-    // Hook 函数 (保持不变)
-    // =================================================================
-    function interceptWindowOpen(targetWindow) {
-        let originalOpen;
-        try {
-            originalOpen = targetWindow.open;
-            if (originalOpen.__is_gemini_hooked) { return; }
-        } catch (e) { return; }
-
-        Object.defineProperty(targetWindow, 'open', {
-            value: function (url, windowName, features) {
-                if (isDebuggingLocationHooks || document.getElementById(containerId) || (url && url.includes(AD_URL_PARTIAL_PERMANENT))) {
-                    console.warn(`[Gemini屏蔽] 成功拦截 ${targetWindow === window ? '当前窗口' : 'Iframe'} 的 window.open 调用:`, url);
-                    return null;
-                }
-                return originalOpen.apply(targetWindow, arguments);
-            },
-            configurable: true, writable: true
-        });
-        targetWindow.open.__is_gemini_hooked = true;
-    }
-
-    function enableWindowOpenHook() {
-        if (isWindowOpenHooked) return;
-        interceptWindowOpen(window);
-        getTargetDocuments().forEach(doc => {
-            try { interceptWindowOpen(doc.defaultView); } catch (e) { }
-        });
-        isWindowOpenHooked = true;
-        console.log('[Gemini屏蔽] window.open 强化 Hook 已启动。');
-    }
-
-    function interceptWindowLocation() {
-
-        function applyLocationHooks(targetWindow, scopeName) {
-            try {
-                const locationObj = targetWindow.location;
-                const locationDescriptor = Object.getOwnPropertyDescriptor(Window.prototype, 'location') ||
-                    Object.getOwnPropertyDescriptor(Document.prototype, 'location');
-
-                if (locationDescriptor && locationDescriptor.set) {
-                    const originalSetLocation = locationDescriptor.set;
-
-                    Object.defineProperty(locationObj, 'href', {
-                        set: function (url) {
-                            if (url && url.includes(AD_URL_PARTIAL_PERMANENT)) {
-                                console.warn(`[Gemini屏蔽 V26.24] 🎯 强制拦截已知广告域名重定向: ${url}`);
-                                return url;
-                            }
-
-                            if (isDebuggingLocationHooks) {
-                                showCustomConfirmLocation(url, `${scopeName}.href`).then(shouldProceed => {
-                                    if (shouldProceed) { originalSetLocation.call(this, url); }
-                                });
-                                return url;
-                            }
-                            originalSetLocation.call(this, url);
-                        },
-                        get: locationDescriptor.get,
-                        configurable: true, enumerable: true
-                    });
-                }
-
-                const originalAssign = locationObj.assign;
-                const originalReplace = locationObj.replace;
-
-                function hookLocationMethod(originalMethod, methodName) {
-                    locationObj[methodName] = function (url) {
-                        if (url && url.includes(AD_URL_PARTIAL_PERMANENT)) {
-                            console.warn(`[Gemini屏蔽 V26.24] 🎯 强制拦截已知广告域名重定向 (Method ${methodName}): ${url}`);
-                            return;
-                        }
-
-                        if (isDebuggingLocationHooks) {
-                            showCustomConfirmLocation(url, `${scopeName}.${methodName}`).then(shouldProceed => {
-                                if (shouldProceed) { originalMethod.call(this, url); }
-                            });
-                            return;
-                        }
-                        originalMethod.call(this, url);
-                    };
-                }
-
-                hookLocationMethod(originalAssign, 'assign');
-                hookLocationMethod(originalReplace, 'replace');
-
-                console.log(`[Gemini屏蔽] ${scopeName}.location 完整 Hook 已启用。`);
-                return true;
-
-            } catch (e) {
-                console.log(`[Gemini屏蔽] 无法 Hook ${scopeName}.location (跨域或权限限制)。`);
-                return false;
-            }
-        }
-
-        try {
-            const protoLocationDescriptor = Object.getOwnPropertyDescriptor(Window.prototype, 'location') ||
-                Object.getOwnPropertyDescriptor(Document.prototype, 'location');
-
-            if (protoLocationDescriptor && protoLocationDescriptor.set) {
-                const originalProtoSetter = protoLocationDescriptor.set;
-
-                Object.defineProperty(Window.prototype, 'location', {
-                    get: protoLocationDescriptor.get,
-                    set: function (url) {
-                        if (url && url.includes(AD_URL_PARTIAL_PERMANENT)) {
-                            console.warn(`[Gemini屏蔽 V26.24] 🎯 强制拦截 Window.prototype.location 重定向: ${url}`);
-                            return;
-                        }
-
-                        if (isDebuggingLocationHooks) {
-                            showCustomConfirmLocation(url, `Window.location assignment`).then(shouldProceed => {
-                                if (shouldProceed) {
-                                    originalProtoSetter.call(this, url);
-                                }
-                            });
-                            return;
-                        }
-                        originalProtoSetter.call(this, url);
-                    },
-                    configurable: true,
-                    enumerable: true
-                });
-                console.log('[Gemini屏蔽] 🌟 Window.prototype.location Setter Hook 已启用。');
-            }
-        } catch (e) {
-            console.error('[Gemini屏蔽] 顶级 Hook Window.prototype.location 失败:', e);
-        }
-
-        applyLocationHooks(window, 'window');
-
-        if (window.parent !== window) {
-            applyLocationHooks(window.parent, 'parent');
-        }
-
-        if (window.top !== window) {
-            applyLocationHooks(window.top, 'top');
-        }
-    }
-
-
-    // =================================================================
-    // DOM 遍历/观察/拦截函数 (保持不变)
-    // =================================================================
-
-    function blockMetaRefresh(doc) {
-        const head = doc.head || doc.getElementsByTagName('head')[0];
-        if (!head) return;
-
-        const checkAndRemoveMeta = (node) => {
-            if (node.tagName === 'META' && node.hasAttribute('http-equiv')) {
-                const httpEquiv = node.getAttribute('http-equiv').toLowerCase();
-                const content = node.getAttribute('content');
-
-                if (httpEquiv === 'refresh' && content) {
-                    const urlMatch = content.match(/url=(.*)/i);
-                    const redirectUrl = urlMatch ? urlMatch[1] : '';
-
-                    if (redirectUrl.includes(AD_URL_PARTIAL_PERMANENT)) {
-                        console.warn(`[Gemini屏蔽 V26.24] 🚨 终极拦截：发现并移除了 Meta Refresh 广告重定向标签: ${redirectUrl.substring(0, 50)}...`);
-                        node.remove();
-                        return true;
-                    }
-                }
-            }
-            return false;
-        };
-
-        const metaTags = head.querySelectorAll('meta');
-        metaTags.forEach(checkAndRemoveMeta);
-
-        const observer = new MutationObserver(mutationsList => {
-            for (const mutation of mutationsList) {
-                if (mutation.type === 'childList') {
-                    mutation.addedNodes.forEach(node => {
-                        if (node.nodeType === 1) {
-                            checkAndRemoveMeta(node);
-                        }
-                    });
-                }
-            }
-        });
-
-        observer.observe(head, { childList: true, subtree: true });
-        // V26.37 修复日志
-        const docName = (window === window.top && doc === document) ? '主页' : 'Iframe/同源';
-        console.log(`[Gemini屏蔽] Meta Refresh 监控已对 ${docName} 启用。`);
-    }
-
-    function interceptIframeWindowTop(iframe) {
-        try {
-            const targetWindow = iframe.contentWindow;
-            if (!targetWindow || targetWindow.top !== window) return;
-
-            interceptWindowLocation(targetWindow, 'Iframe');
-            interceptWindowOpen(targetWindow);
-
-        } catch (e) {
-            // 跨域 Iframe 无法访问其 contentWindow/contentDocument
-        }
-    }
-
-    function getTargetDocuments() {
-        const documents = [document];
-
-        // 只有在顶级窗口运行时才尝试检测同源 Iframe
-        if (window === window.top) {
-            const iframes = document.querySelectorAll('iframe');
-
-            iframes.forEach(iframe => {
-                applyIframeSandbox(iframe);
-                interceptIframeWindowTop(iframe);
-
-                if (iframe.contentDocument) {
-                    try {
-                        const iframeDocument = iframe.contentDocument;
-                        // 确保 Iframe 内容已加载且 DOM 可用
-                        if (iframeDocument && iframeDocument.body) {
-                            documents.push(iframeDocument);
-                        }
-                    } catch (e) {
-                        console.warn('[Gemini屏蔽] 无法访问跨域 Iframe:', iframe.src);
-                    }
+                if (document.body) {
+                    modalOverlay.appendChild(modalBox);
+                    document.body.appendChild(modalOverlay);
+                } else {
+                    console.error('[Gemini屏蔽] 模态框插入失败：document.body 不可用。');
+                    resolve(false);
                 }
             });
         }
+        
+        // V26.39.9: 移除 showCustomConfirmLocation，因为它在 Location Hook 中将导致异步中断失败。
 
-        return documents;
-    }
 
-    function observeDynamicIframes() {
-        // 仅在顶级窗口监控动态 Iframe
-        if (window !== window.top) return;
+        // =================================================================
+        // Hook 函数
+        // =================================================================
+        function interceptWindowOpen(targetWindow) {
+            let originalOpen;
+            try {
+                originalOpen = targetWindow.open;
+                if (originalOpen.__is_gemini_hooked) { return; }
+            } catch (e) { return; }
 
-        const observer = new MutationObserver(mutationsList => {
-            for (const mutation of mutationsList) {
-                if (mutation.type === 'childList') {
-                    mutation.addedNodes.forEach(node => {
-                        if (node.tagName === 'IFRAME') {
-                            const newIframe = node;
+            Object.defineProperty(targetWindow, 'open', {
+                value: function (url, windowName, features) {
+                    if (isDebuggingLocationHooks || document.getElementById(containerId) || (url && url.includes(AD_URL_PARTIAL_PERMANENT))) {
+                        console.warn(`[Gemini屏蔽] 成功拦截 ${targetWindow === window ? '当前窗口' : 'Iframe'} 的 window.open 调用:`, url);
+                        return null;
+                    }
+                    return originalOpen.apply(targetWindow, arguments);
+                },
+                configurable: true, writable: true
+            });
+            targetWindow.open.__is_gemini_hooked = true;
+        }
 
-                            applyIframeSandbox(newIframe);
-                            interceptIframeWindowTop(newIframe);
+        function enableWindowOpenHook() {
+            if (isWindowOpenHooked) return;
+            interceptWindowOpen(window);
+            getTargetDocuments().forEach(doc => {
+                try { interceptWindowOpen(doc.defaultView); } catch (e) { }
+            });
+            isWindowOpenHooked = true;
+            console.log('[Gemini屏蔽] window.open 强化 Hook 已启动。');
+        }
 
-                            const handleIframeLoad = () => {
-                                try {
-                                    const iframeDoc = newIframe.contentDocument;
-                                    if (iframeDoc && iframeDoc.body) {
-                                        loadAndRemoveSavedElements(iframeDoc);
-                                        interceptWindowOpen(iframeDoc.defaultView);
-                                        blockMetaRefresh(iframeDoc);
+        function interceptWindowLocation() {
 
-                                        applyClickDebugFilter(iframeDoc);
-                                        console.log(`[MutationObserver] 动态同源 Iframe 初始化成功: ${newIframe.src}`);
-                                    }
-                                } catch (e) {
-                                    console.warn('[MutationObserver] 无法访问跨域或加载失败的 Iframe。');
+            function applyLocationHooks(targetWindow, scopeName) {
+                try {
+                    const locationObj = targetWindow.location;
+                    const locationDescriptor = Object.getOwnPropertyDescriptor(Window.prototype, 'location') ||
+                        Object.getOwnPropertyDescriptor(Document.prototype, 'location');
+
+                    if (locationDescriptor && locationDescriptor.set) {
+                        const originalSetLocation = locationDescriptor.set;
+
+                        Object.defineProperty(locationObj, 'href', {
+                            set: function (url) {
+                                
+                                if (url && url.includes(AD_URL_PARTIAL_PERMANENT)) {
+                                    console.error(`[Gemini屏蔽 V26.39.9] 🎯 强制拦截已知广告域名重定向: ${url}`);
+                                    // 即使不调试，遇到永久黑名单域名也直接中断
+                                    throw new Error('GeminiAdBlocker: Known Ad Domain Location Intercepted'); 
                                 }
-                                newIframe.removeEventListener('load', handleIframeLoad);
-                            };
 
-                            newIframe.addEventListener('load', handleIframeLoad);
+                                if (isDebuggingLocationHooks) {
+                                    // ⭐️ V26.39.9 核心：同步中断执行，阻止代码继续
+                                    console.error(`[Gemini屏蔽 V26.39.9] 🚨 同步中断：${scopeName}.href 尝试重定向。URL: ${safeTruncate(url, 50)}`);
+                                    throw new Error('GeminiAdBlocker: Synchronous Location Href Intercepted'); 
+                                }
+                                
+                                originalSetLocation.call(this, url);
+                            },
+                            get: locationDescriptor.get,
+                            configurable: true, enumerable: true
+                        });
+                    }
 
-                            if (newIframe.contentDocument) {
-                                handleIframeLoad();
+                    const originalAssign = locationObj.assign;
+                    const originalReplace = locationObj.replace;
+
+                    function hookLocationMethod(originalMethod, methodName) {
+                        locationObj[methodName] = function (url) {
+                            
+                            if (url && url.includes(AD_URL_PARTIAL_PERMANENT)) {
+                                console.error(`[Gemini屏蔽 V26.39.9] 🎯 强制拦截已知广告域名重定向 (Method ${methodName}): ${url}`);
+                                throw new Error('GeminiAdBlocker: Known Ad Domain Location Intercepted'); 
                             }
-                        }
-                    });
+
+                            if (isDebuggingLocationHooks) {
+                                // ⭐️ V26.39.9 核心：同步中断执行，阻止代码继续
+                                console.error(`[Gemini屏蔽 V26.39.9] 🚨 同步中断：${scopeName}.${methodName} 尝试重定向。URL: ${safeTruncate(url, 50)}`);
+                                throw new Error('GeminiAdBlocker: Synchronous Location Method Intercepted'); 
+                            }
+                            originalMethod.call(this, url);
+                        };
+                    }
+
+                    hookLocationMethod(originalAssign, 'assign');
+                    hookLocationMethod(originalReplace, 'replace');
+
+                    console.log(`[Gemini屏蔽] ${scopeName}.location 完整 Hook 已启用。`);
+                    return true;
+
+                } catch (e) {
+                    console.log(`[Gemini屏蔽] 无法 Hook ${scopeName}.location (跨域或权限限制)。`);
+                    return false;
                 }
             }
-        });
-
-        if (document.body) {
-            observer.observe(document.body, { childList: true, subtree: true });
-            console.log('[MutationObserver] 已启动，开始监听动态 Iframe。');
-        }
-    }
-
-
-    // =================================================================
-    // 核心函数：渲染和事件绑定 (V26.39.5 更新)
-    // =================================================================
-
-    function getIframeData() {
-        // V26.38 新增：获取 Iframe 列表数据
-        if (window !== window.top) return [];
-
-        return Array.from(document.querySelectorAll('iframe')).map(iframe => {
-            let src = iframe.src || iframe.getAttribute('src') || '[未设置 src]';
-            let isCrossDomain = false;
-
+            
+            // Hook Window.prototype.location setter (V26.39.9 Sync Update)
             try {
-                // 尝试获取 URL 对象判断是否跨域
-                const iframeUrl = new URL(src, window.location.href);
-                if (iframeUrl.origin !== window.location.origin) {
-                    isCrossDomain = true;
-                }
-                // 此外，尝试访问 contentDocument 会在跨域时抛出错误
-                if (iframe.contentDocument === null) {
-                    isCrossDomain = true;
+                const protoLocationDescriptor = Object.getOwnPropertyDescriptor(Window.prototype, 'location') ||
+                    Object.getOwnPropertyDescriptor(Document.prototype, 'location');
+
+                if (protoLocationDescriptor && protoLocationDescriptor.set) {
+                    const originalProtoSetter = protoLocationDescriptor.set;
+
+                    Object.defineProperty(Window.prototype, 'location', {
+                        get: protoLocationDescriptor.get,
+                        set: function (url) {
+                            if (url && url.includes(AD_URL_PARTIAL_PERMANENT)) {
+                                console.error(`[Gemini屏蔽 V26.39.9] 🎯 强制拦截 Window.prototype.location 重定向: ${url}`);
+                                throw new Error('GeminiAdBlocker: Known Ad Domain Location Intercepted'); 
+                            }
+
+                            if (isDebuggingLocationHooks) {
+                                // ⭐️ V26.39.9 核心：同步中断执行，阻止代码继续
+                                console.error(`[Gemini屏蔽 V26.39.9] 🚨 同步中断：Window.location 赋值尝试重定向。URL: ${safeTruncate(url, 50)}`);
+                                throw new Error('GeminiAdBlocker: Synchronous Window.location Intercepted'); 
+                            }
+                            originalProtoSetter.call(this, url);
+                        },
+                        configurable: true,
+                        enumerable: true
+                    });
+                    console.log('[Gemini屏蔽] 🌟 Window.prototype.location Setter Hook 已启用。');
                 }
             } catch (e) {
-                // URL 解析或 contentDocument 访问失败，几乎肯定是跨域
-                isCrossDomain = true;
+                console.error('[Gemini屏蔽] 顶级 Hook Window.prototype.location 失败:', e);
             }
 
-            const xpath = getElementXPath(iframe);
+            applyLocationHooks(window, 'window');
 
-            return {
-                src: src,
-                xpath: xpath,
-                isCrossDomain: isCrossDomain,
-                element: iframe
-            };
-        }).filter(item => item.xpath); // 确保只有能获取 XPath 的才被列出
-    }
+            if (window.parent !== window) {
+                applyLocationHooks(window.parent, 'parent');
+            }
 
-    function renderIframeList(iframes) {
-        if (iframes.length === 0) {
-            return '<li style="padding: 10px; text-align: center; color: #888;">当前页面未检测到 Iframe 元素。</li>';
+            if (window.top !== window) {
+                applyLocationHooks(window.top, 'top');
+            }
         }
-        return iframes.map((item) => {
-            const status = item.isCrossDomain ? '跨域' : '同源';
-            const color = item.isCrossDomain ? '#dc3545' : '#17a2b8'; // Red for cross, blue for same
-            return `
+        
+        // =================================================================
+        // ⭐️ V26.39.7 Hook: History API (pushState/replaceState) (V26.39.9 Sync Update)
+        // =================================================================
+        function interceptHistoryAPI(targetWindow, scopeName) {
+            try {
+                const historyObj = targetWindow.history;
+                if (!historyObj) return;
+
+                const originalPushState = historyObj.pushState;
+                const originalReplaceState = historyObj.replaceState;
+
+                function hookHistoryMethod(originalMethod, methodName) {
+                    historyObj[methodName] = function (state, title, url) {
+                        
+                        if (isDebuggingLocationHooks && url) {
+                            // ⭐️ V26.39.9 核心：同步中断执行，阻止代码继续
+                            console.error(`[Gemini屏蔽 V26.39.9] 🚨 同步中断：${scopeName}.history.${methodName} 尝试重定向。URL: ${safeTruncate(url, 50)}`);
+                            throw new Error('GeminiAdBlocker: Synchronous History API Intercepted'); // Synchronous halt
+                        }
+                        
+                        originalMethod.apply(this, arguments);
+                    };
+                }
+
+                hookHistoryMethod(originalPushState, 'pushState');
+                hookHistoryMethod(originalReplaceState, 'replaceState');
+
+                console.log(`[Gemini屏蔽] ${scopeName}.history 完整 Hook 已启用 (V26.39.7)。`);
+            } catch (e) {
+                console.log(`[Gemini屏蔽] 无法 Hook ${scopeName}.history (权限限制)。`);
+            }
+        }
+
+        // =================================================================
+        // ⭐️ V26.39.7 Hook: Form 表单提交 (V26.39.9 Sync Update)
+        // =================================================================
+        function interceptFormSubmission() {
+            try {
+                // 确保 HTMLFormElement 存在
+                if (typeof HTMLFormElement === 'undefined' || !HTMLFormElement.prototype.submit) {
+                    console.log('[Gemini屏蔽] HTMLFormElement.prototype.submit 不可用。');
+                    return;
+                }
+                
+                const originalSubmit = HTMLFormElement.prototype.submit;
+
+                HTMLFormElement.prototype.submit = function () {
+                    const url = this.action || '[无 Action]';
+
+                    // 只有在调试开启、有明确 Action 且目标不是当前页自身时才拦截
+                    if (isDebuggingLocationHooks && url && url !== '[无 Action]' && url !== window.location.href && url !== '#') {
+
+                         // ⭐️ V26.39.9 核心：同步中断执行，阻止代码继续
+                         console.error(`[Gemini屏蔽 V26.39.9] 🚨 同步中断：Form Submission 尝试重定向。URL: ${safeTruncate(url, 50)}`);
+                         throw new Error('GeminiAdBlocker: Synchronous Form Submit Intercepted'); // Synchronous halt
+                    }
+
+                    originalSubmit.call(this);
+                };
+                console.log('[Gemini屏蔽] 🌟 Form Submission Hook 已启用 (V26.39.7)。');
+            } catch (e) {
+                console.error('[Gemini屏蔽] Form Submission Hook 失败:', e);
+            }
+        }
+
+        // =================================================================
+        // ⭐️ V26.39.8 Hook: document.write/writeln 终极拦截 (V26.39.9 Sync Update)
+        // =================================================================
+        function interceptDocumentWrite() {
+            try {
+                if (typeof Document === 'undefined' || !Document.prototype.write) {
+                    console.log('[Gemini屏蔽] Document.prototype.write 不可用。');
+                    return;
+                }
+
+                const originalWrite = Document.prototype.write;
+                const originalWriteln = Document.prototype.writeln;
+                
+                // 用于检测重定向代码的正则模式
+                const redirectPatterns = [
+                    /location\.(href|replace|assign)\s*=\s*['"](.+?)['"]/i, // JS location 赋值
+                    /<meta\s+[^>]*http-equiv\s*=\s*['"]refresh['"][^>]*content\s*=\s*['"]\s*\d+\s*;\s*url\s*=\s*(.+?)['"]/i // Meta Refresh
+                ];
+
+                function hookedWrite(content) {
+                    // 确保只处理字符串内容
+                    if (typeof content === 'string') {
+                        let isRedirectAttempt = false;
+                        let redirectUrl = 'Unknown';
+                        
+                        for (const pattern of redirectPatterns) {
+                            const match = content.match(pattern);
+                            if (match) {
+                                isRedirectAttempt = true;
+                                redirectUrl = match[match.length - 1]; // 捕获到的 URL
+                                break;
+                            }
+                        }
+                        
+                        if (isRedirectAttempt) {
+                            
+                            // 强制拦截已知广告域名
+                            if (redirectUrl.includes(AD_URL_PARTIAL_PERMANENT)) {
+                                console.error(`[Gemini屏蔽 V26.39.9] 🚨 终极拦截：document.write 尝试注入已知广告域名。`);
+                                throw new Error('GeminiAdBlocker: Known Ad Domain Document Write Intercepted'); 
+                            }
+                            
+                            if (isDebuggingLocationHooks) {
+                                // ⭐️ V26.39.9 核心：同步中断执行，阻止代码继续
+                                console.error(`[Gemini屏蔽 V26.39.9] 🚨 终极同步中断：document.write 尝试注入重定向代码。URL: ${safeTruncate(redirectUrl, 50)}`);
+                                throw new Error('GeminiAdBlocker: Synchronous Document Write Intercepted'); 
+                            }
+                            
+                            // 即使不调试，如果检测到重定向代码，也阻止写入，以防万一
+                            return; 
+                        }
+                        
+                        // 如果不是重定向或调试关闭，则执行原始方法
+                        originalWrite.call(this, content);
+                    } else {
+                        originalWrite.apply(this, arguments);
+                    }
+                }
+                
+                // 覆盖 write/writeln
+                Document.prototype.write = function() {
+                    hookedWrite.apply(this, arguments);
+                };
+                
+                // 确保 writeln 也被 Hook
+                Document.prototype.writeln = function() {
+                    if (arguments.length > 0 && typeof arguments[0] === 'string') {
+                         arguments[0] += '\n'; // 模拟 writeln 的换行行为
+                    }
+                    hookedWrite.apply(this, arguments);
+                };
+                
+                console.log('[Gemini屏蔽 V26.39.9] 🌟 document.write/writeln Hook 已启用。');
+            } catch (e) {
+                console.error('[Gemini屏蔽 V26.39.9] document.write Hook 失败:', e);
+            }
+        }
+
+
+        // =================================================================
+        // DOM 遍历/观察/拦截函数 (其余保持不变)
+        // =================================================================
+
+        function blockMetaRefresh(doc) {
+            const head = doc.head || doc.getElementsByTagName('head')[0];
+            if (!head) return;
+
+            const checkAndRemoveMeta = (node) => {
+                if (node.tagName === 'META' && node.hasAttribute('http-equiv')) {
+                    const httpEquiv = node.getAttribute('http-equiv').toLowerCase();
+                    const content = node.getAttribute('content');
+
+                    if (httpEquiv === 'refresh' && content) {
+                        const urlMatch = content.match(/url=(.*)/i);
+                        const redirectUrl = urlMatch ? urlMatch[1] : '';
+
+                        if (redirectUrl.includes(AD_URL_PARTIAL_PERMANENT)) {
+                            console.warn(`[Gemini屏蔽 V26.24] 🚨 终极拦截：发现并移除了 Meta Refresh 广告重定向标签: ${redirectUrl.substring(0, 50)}...`);
+                            node.remove();
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            };
+
+            const metaTags = head.querySelectorAll('meta');
+            metaTags.forEach(checkAndRemoveMeta);
+
+            const observer = new MutationObserver(mutationsList => {
+                for (const mutation of mutationsList) {
+                    if (mutation.type === 'childList') {
+                        mutation.addedNodes.forEach(node => {
+                            if (node.nodeType === 1) {
+                                checkAndRemoveMeta(node);
+                            }
+                        });
+                    }
+                }
+            });
+
+            observer.observe(head, { childList: true, subtree: true });
+            // V26.37 修复日志
+            const docName = (window === window.top && doc === document) ? '主页' : 'Iframe/同源';
+            console.log(`[Gemini屏蔽] Meta Refresh 监控已对 ${docName} 启用。`);
+        }
+
+        function interceptIframeWindowTop(iframe) {
+            try {
+                const targetWindow = iframe.contentWindow;
+                if (!targetWindow || targetWindow.top !== window) return;
+
+                interceptWindowLocation(targetWindow, 'Iframe');
+                interceptWindowOpen(targetWindow);
+                // V26.39.7: Iframe 内部也 Hook History 和 Form
+                interceptHistoryAPI(targetWindow, 'Iframe');
+                interceptFormSubmission();
+                // V26.39.8: Iframe 内部也 Hook Document Write
+                interceptDocumentWrite();
+
+            } catch (e) {
+                // 跨域 Iframe 无法访问其 contentWindow/contentDocument
+            }
+        }
+
+        function getTargetDocuments() {
+            const documents = [document];
+
+            // 只有在顶级窗口运行时才尝试检测同源 Iframe
+            if (window === window.top) {
+                const iframes = document.querySelectorAll('iframe');
+
+                iframes.forEach(iframe => {
+                    applyIframeSandbox(iframe);
+                    interceptIframeWindowTop(iframe);
+
+                    if (iframe.contentDocument) {
+                        try {
+                            const iframeDocument = iframe.contentDocument;
+                            // 确保 Iframe 内容已加载且 DOM 可用
+                            if (iframeDocument && iframeDocument.body) {
+                                documents.push(iframeDocument);
+                            }
+                        } catch (e) {
+                            console.warn('[Gemini屏蔽] 无法访问跨域 Iframe:', iframe.src);
+                        }
+                    }
+                });
+            }
+
+            return documents;
+        }
+
+        function observeDynamicIframes() {
+            // 仅在顶级窗口监控动态 Iframe
+            if (window !== window.top) return;
+
+            const observer = new MutationObserver(mutationsList => {
+                for (const mutation of mutationsList) {
+                    if (mutation.type === 'childList') {
+                        mutation.addedNodes.forEach(node => {
+                            if (node.tagName === 'IFRAME') {
+                                const newIframe = node;
+
+                                applyIframeSandbox(newIframe);
+                                interceptIframeWindowTop(newIframe);
+
+                                const handleIframeLoad = () => {
+                                    try {
+                                        const iframeDoc = newIframe.contentDocument;
+                                        if (iframeDoc && iframeDoc.body) {
+                                            loadAndRemoveSavedElements(iframeDoc);
+                                            interceptWindowOpen(iframeDoc.defaultView);
+                                            // V26.39.7: 动态 Iframe 也要 Hook History 和 Form
+                                            interceptHistoryAPI(iframeDoc.defaultView, 'Dynamic Iframe');
+                                            interceptFormSubmission();
+                                            // V26.39.8: 动态 Iframe 也要 Hook Document Write
+                                            interceptDocumentWrite();
+
+                                            blockMetaRefresh(iframeDoc);
+
+                                            applyClickDebugFilter(iframeDoc);
+                                            console.log(`[MutationObserver] 动态同源 Iframe 初始化成功: ${newIframe.src}`);
+                                        }
+                                    } catch (e) {
+                                        console.warn('[MutationObserver] 无法访问跨域或加载失败的 Iframe。');
+                                    }
+                                    newIframe.removeEventListener('load', handleIframeLoad);
+                                };
+
+                                newIframe.addEventListener('load', handleIframeLoad);
+
+                                if (newIframe.contentDocument) {
+                                    handleIframeLoad();
+                                }
+                            }
+                        });
+                    }
+                }
+            });
+
+            if (document.body) {
+                observer.observe(document.body, { childList: true, subtree: true });
+                console.log('[MutationObserver] 已启动，开始监听动态 Iframe。');
+            }
+        }
+
+
+        // =================================================================
+        // 核心函数：渲染和事件绑定 (V26.39.6 更新)
+        // =================================================================
+
+        function getIframeData() {
+            // V26.38 新增：获取 Iframe 列表数据
+            if (window !== window.top) return [];
+
+            return Array.from(document.querySelectorAll('iframe')).map(iframe => {
+                let src = iframe.src || iframe.getAttribute('src') || '[未设置 src]';
+                let isCrossDomain = false;
+
+                try {
+                    // 尝试获取 URL 对象判断是否跨域
+                    const iframeUrl = new URL(src, window.location.href);
+                    if (iframeUrl.origin !== window.location.origin) {
+                        isCrossDomain = true;
+                    }
+                    // 此外，尝试访问 contentDocument 会在跨域时抛出错误
+                    if (iframe.contentDocument === null) {
+                        isCrossDomain = true;
+                    }
+                } catch (e) {
+                    // URL 解析或 contentDocument 访问失败，几乎肯定是跨域
+                    isCrossDomain = true;
+                }
+
+                const xpath = getElementXPath(iframe);
+
+                return {
+                    src: src,
+                    xpath: xpath,
+                    isCrossDomain: isCrossDomain,
+                    element: iframe
+                };
+            }).filter(item => item.xpath); // 确保只有能获取 XPath 的才被列出
+        }
+
+        function renderIframeList(iframes) {
+            if (iframes.length === 0) {
+                return '<li style="padding: 10px; text-align: center; color: #888;">当前页面未检测到 Iframe 元素。</li>';
+            }
+            return iframes.map((item) => {
+                const status = item.isCrossDomain ? '跨域' : '同源';
+                const color = item.isCrossDomain ? '#dc3545' : '#17a2b8'; // Red for cross, blue for same
+                return `
                 <li style="display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; border-bottom: 1px solid #eee; transition: background 0.2s;" 
                     data-xpath="${item.xpath}"
                 >
@@ -5939,67 +6061,67 @@
                     " data-xpath="${item.xpath}">移除并保存</button>
                 </li>
             `;
-        }).join('');
-    }
-
-    function renderFloatWindow(targetDocs) {
-        if (!document.body) {
-            console.error('[Gemini屏蔽] 无法渲染浮窗：document.body 不可用。');
-            return;
+            }).join('');
         }
 
-        const zeroOpacityElements = [];
-        targetDocs.forEach(doc => {
-            const allElements = doc.querySelectorAll('*');
-            allElements.forEach((element, index) => {
-                if (element.tagName === 'SCRIPT' || element.tagName === 'STYLE' || element.tagName === 'NOSCRIPT' || element.tagName === 'TITLE' || !element.parentNode || element.tagName === 'IFRAME') {
-                    return; // 忽略 Iframe 自身，它有单独的列表
-                }
-
-                try {
-                    const computedStyle = element.ownerDocument.defaultView.getComputedStyle(element);
-                    const opacityValue = parseFloat(computedStyle.opacity);
-
-                    if (opacityValue === 0) {
-                        const rect = element.getBoundingClientRect();
-                        const xpath = getElementXPath(element);
-
-                        if (xpath) {
-                            zeroOpacityElements.push({
-                                index: index,
-                                tagName: element.tagName,
-                                className: element.className,
-                                id: element.id,
-                                width: rect.width.toFixed(0),
-                                height: rect.height.toFixed(0),
-                                element: element,
-                                xpath: xpath,
-                                document: doc,
-                            });
-                        }
-                    }
-                } catch (e) { /* 忽略跨域错误 */ }
-            });
-        });
-
-        const allIframes = getIframeData();
-
-        const existingContainer = document.getElementById(containerId);
-        if (existingContainer) existingContainer.remove();
-
-        const mainContainer = document.createElement('div');
-        mainContainer.className = 'notranslate';
-        mainContainer.id = containerId;
-
-        const windowDiv = document.createElement('div');
-        windowDiv.className = 'notranslate'
-        windowDiv.id = windowId;
-
-        function renderBlacklist(blacklist) {
-            if (blacklist.length === 0) {
-                return '<li style="padding: 10px; text-align: center; color: #888; background: #fff;">暂无黑名单记录。</li>';
+        function renderFloatWindow(targetDocs) {
+            if (!document.body) {
+                console.error('[Gemini屏蔽] 无法渲染浮窗：document.body 不可用。');
+                return;
             }
-            return blacklist.map((pageKey) => `
+
+            const zeroOpacityElements = [];
+            targetDocs.forEach(doc => {
+                const allElements = doc.querySelectorAll('*');
+                allElements.forEach((element, index) => {
+                    if (element.tagName === 'SCRIPT' || element.tagName === 'STYLE' || element.tagName === 'NOSCRIPT' || element.tagName === 'TITLE' || !element.parentNode || element.tagName === 'IFRAME') {
+                        return; // 忽略 Iframe 自身，它有单独的列表
+                    }
+
+                    try {
+                        const computedStyle = element.ownerDocument.defaultView.getComputedStyle(element);
+                        const opacityValue = parseFloat(computedStyle.opacity);
+
+                        if (opacityValue === 0) {
+                            const rect = element.getBoundingClientRect();
+                            const xpath = getElementXPath(element);
+
+                            if (xpath) {
+                                zeroOpacityElements.push({
+                                    index: index,
+                                    tagName: element.tagName,
+                                    className: element.className,
+                                    id: element.id,
+                                    width: rect.width.toFixed(0),
+                                    height: rect.height.toFixed(0),
+                                    element: element,
+                                    xpath: xpath,
+                                    document: doc,
+                                });
+                            }
+                        }
+                    } catch (e) { /* 忽略跨域错误 */ }
+                });
+            });
+
+            const allIframes = getIframeData();
+
+            const existingContainer = document.getElementById(containerId);
+            if (existingContainer) existingContainer.remove();
+
+            const mainContainer = document.createElement('div');
+            mainContainer.className = 'notranslate';
+            mainContainer.id = containerId;
+
+            const windowDiv = document.createElement('div');
+            windowDiv.className = 'notranslate'
+            windowDiv.id = windowId;
+
+            function renderBlacklist(blacklist) {
+                if (blacklist.length === 0) {
+                    return '<li style="padding: 10px; text-align: center; color: #888; background: #fff;">暂无黑名单记录。</li>';
+                }
+                return blacklist.map((pageKey) => `
                 <li style="display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; border-bottom: 1px dashed #ddd; background: #fff;">
                     <span style="flex-grow: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: #dc3545; font-weight: bold;" title="${pageKey}">
                         ${safeTruncate(pageKey, 50)}
@@ -6010,13 +6132,13 @@
                     " data-page-key="${pageKey}">取消黑名单</button>
                 </li>
             `).join('');
-        }
-
-        function renderSavedRemovalsList(removals) {
-            if (removals.length === 0) {
-                return '<li style="padding: 10px; text-align: center; color: #888; background: #fff;">暂无元素移除记录。</li>';
             }
-            return removals.map((xpath) => `
+
+            function renderSavedRemovalsList(removals) {
+                if (removals.length === 0) {
+                    return '<li style="padding: 10px; text-align: center; color: #888; background: #fff;">暂无元素移除记录。</li>';
+                }
+                return removals.map((xpath) => `
                 <li style="display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; border-bottom: 1px dashed #ddd; background: #fff;">
                     <span title="${xpath}" style="flex-grow: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: #666;">
                         ${safeTruncate(xpath, 40)}
@@ -6027,14 +6149,14 @@
                     " data-xpath="${xpath}">取消移除</button>
                 </li>
             `).join('');
-        }
-
-        // V26.39 NEW: Iframe 移除记录渲染
-        function renderSavedIframeRemovalsList(removals) {
-            if (removals.length === 0) {
-                return '<li style="padding: 10px; text-align: center; color: #888; background: #fff;">暂无 Iframe 移除记录。</li>';
             }
-            return removals.map((xpath) => `
+
+            // V26.39 NEW: Iframe 移除记录渲染
+            function renderSavedIframeRemovalsList(removals) {
+                if (removals.length === 0) {
+                    return '<li style="padding: 10px; text-align: center; color: #888; background: #fff;">暂无 Iframe 移除记录。</li>';
+                }
+                return removals.map((xpath) => `
                 <li style="display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; border-bottom: 1px dashed #ddd; background: #fff;">
                     <span title="${xpath}" style="flex-grow: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: #007bff; font-weight: bold;">
                         [IFRAME] ${safeTruncate(xpath, 30)}
@@ -6045,23 +6167,23 @@
                     " data-xpath="${xpath}">取消移除</button>
                 </li>
             `).join('');
-        }
-
-        // V26.37 修复 Iframe 识别
-        const isCurrentInTopWindow = window === window.top;
-        function renderZeroOpacityList(elements) {
-            if (elements.length === 0) {
-                return '<li style="padding: 10px; text-align: center; color: #888;">当前页面没有透明元素。</li>';
             }
-            return elements.map(item => {
-                let docLabel = '';
-                if (isCurrentInTopWindow) {
-                    docLabel = item.document === document ? '主页' : 'Iframe';
-                } else {
-                    docLabel = 'Iframe (自身)';
-                }
 
-                return `
+            // V26.37 修复 Iframe 识别
+            const isCurrentInTopWindow = window === window.top;
+            function renderZeroOpacityList(elements) {
+                if (elements.length === 0) {
+                    return '<li style="padding: 10px; text-align: center; color: #888;">当前页面没有透明元素。</li>';
+                }
+                return elements.map(item => {
+                    let docLabel = '';
+                    if (isCurrentInTopWindow) {
+                        docLabel = item.document === document ? '主页' : 'Iframe';
+                    } else {
+                        docLabel = 'Iframe (自身)';
+                    }
+
+                    return `
                 <li style="display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; border-bottom: 1px solid #eee; transition: background 0.2s;" 
                     data-xpath="${item.xpath}"
                     data-doc-url="${item.document.URL.split('/').pop()}"
@@ -6079,16 +6201,16 @@
                     " data-xpath="${item.xpath}">移除并保存</button>
                 </li>
             `;
-            }).join('');
-        }
+                }).join('');
+            }
 
-        let isBlacklisted = isCurrentPageBlacklisted();
-        const totalSavedCount = getSavedRemovals().length + getIframeRemovals().length + getPageBlacklist().length;
+            let isBlacklisted = isCurrentPageBlacklisted();
+            const totalSavedCount = getSavedRemovals().length + getIframeRemovals().length + getPageBlacklist().length;
 
 
-        windowDiv.innerHTML = `
+            windowDiv.innerHTML = `
             <div id="gemini-header">
-                <strong>🔍 元素屏蔽/追踪器 (V26.39.5)</strong>
+                <strong>🔍 元素屏蔽/追踪器 (V26.39.9)</strong>
                 <span id="gemini-close-btn">&times;</span>
             </div>
             
@@ -6169,44 +6291,44 @@
             </div>
         `;
 
-        document.body.appendChild(mainContainer);
-        mainContainer.appendChild(windowDiv);
+            document.body.appendChild(mainContainer);
+            mainContainer.appendChild(windowDiv);
 
 
-        // --- 4. 交互逻辑初始化 ---
-        const list = document.getElementById('gemini-element-list');
-        const iframeList = document.getElementById('gemini-iframe-list');
-        const savedList = document.getElementById('gemini-saved-list');
-        const statusBar = document.getElementById('gemini-status-bar');
-        const selectorToggle = document.getElementById('selector-toggle');
-        const blacklistToggle = document.getElementById('blacklist-toggle');
+            // --- 4. 交互逻辑初始化 ---
+            const list = document.getElementById('gemini-element-list');
+            const iframeList = document.getElementById('gemini-iframe-list');
+            const savedList = document.getElementById('gemini-saved-list');
+            const statusBar = document.getElementById('gemini-status-bar');
+            const selectorToggle = document.getElementById('selector-toggle');
+            const blacklistToggle = document.getElementById('blacklist-toggle');
 
-        const debugClickToggle = document.getElementById('debug-click-toggle');
-        const debugLocationToggle = document.getElementById('debug-location-toggle');
+            const debugClickToggle = document.getElementById('debug-click-toggle');
+            const debugLocationToggle = document.getElementById('debug-location-toggle');
 
-        document.getElementById('gemini-close-btn').onclick = () => {
-            mainContainer.remove();
-            toggleSelectionMode(false);
-            if (typeof body_build === 'function') { /* try { body_build('true'); } catch (e) {} */ }
-        };
+            document.getElementById('gemini-close-btn').onclick = () => {
+                mainContainer.remove();
+                toggleSelectionMode(false);
+                if (typeof body_build === 'function') { /* try { body_build('true'); } catch (e) {} */ }
+            };
 
-        const tabCurrent = document.getElementById('tab-current');
-        const tabIframe = document.getElementById('tab-iframe');
-        const tabSaved = document.getElementById('tab-saved');
+            const tabCurrent = document.getElementById('tab-current');
+            const tabIframe = document.getElementById('tab-iframe');
+            const tabSaved = document.getElementById('tab-saved');
 
-        const contentCurrent = document.getElementById('content-current');
-        const contentIframe = document.getElementById('content-iframe');
-        const contentSaved = document.getElementById('content-saved');
+            const contentCurrent = document.getElementById('content-current');
+            const contentIframe = document.getElementById('content-iframe');
+            const contentSaved = document.getElementById('content-saved');
 
-        function updateSavedListContent() {
-            const savedRemovalsHtml = renderSavedRemovalsList(getSavedRemovals());
-            const iframeRemovalsHtml = renderSavedIframeRemovalsList(getIframeRemovals()); // V26.39 New
-            const blacklistHtml = renderBlacklist(getPageBlacklist());
+            function updateSavedListContent() {
+                const savedRemovalsHtml = renderSavedRemovalsList(getSavedRemovals());
+                const iframeRemovalsHtml = renderSavedIframeRemovalsList(getIframeRemovals()); // V26.39 New
+                const blacklistHtml = renderBlacklist(getPageBlacklist());
 
-            const totalRemovals = getSavedRemovals().length + getIframeRemovals().length;
-            const totalSaved = totalRemovals + getPageBlacklist().length;
+                const totalRemovals = getSavedRemovals().length + getIframeRemovals().length;
+                const totalSaved = totalRemovals + getPageBlacklist().length;
 
-            savedList.innerHTML = `
+                savedList.innerHTML = `
                  <li style="padding: 10px; background: #ffe6e6; font-weight: bold; color: #dc3545; border-bottom: 1px solid #ffcccc;">🚫 黑名单页面记录 (${getPageBlacklist().length})</li>
                  ${blacklistHtml}
                  <li style="padding: 10px; background: #fafafa; font-weight: bold; color: #666; border-top: 1px solid #eee; border-bottom: 1px solid #eee;">🛡️ 元素永久移除记录 (${getSavedRemovals().length})</li>
@@ -6214,659 +6336,713 @@
                  <li style="padding: 10px; background: #e6f7ff; font-weight: bold; color: #007bff; border-top: 1px solid #cceeff; border-bottom: 1px solid #cceeff;">🖼️ Iframe 永久移除记录 (${getIframeRemovals().length})</li>
                  ${iframeRemovalsHtml}
              `;
-            tabSaved.innerHTML = `记录管理 (${totalSaved})`;
-        }
-
-        function switchTab(currentTab) {
-            // Reset all tabs/content
-            [tabCurrent, tabIframe, tabSaved].forEach(btn => btn.style.background = '#f0f0f0');
-            [contentCurrent, contentIframe, contentSaved].forEach(cont => cont.style.display = 'none');
-
-            if (currentTab === 'current') {
-                tabCurrent.style.background = '#fff';
-                contentCurrent.style.display = 'block';
-            } else if (currentTab === 'iframe') {
-                tabIframe.style.background = '#fff';
-                contentIframe.style.display = 'block';
-            } else { // saved
-                tabSaved.style.background = '#fff';
-                contentSaved.style.display = 'block';
-                updateSavedListContent();
-            }
-        }
-        tabCurrent.onclick = () => switchTab('current');
-        tabIframe.onclick = () => switchTab('iframe');
-        tabSaved.onclick = () => switchTab('saved');
-        // Initial tab state:
-        switchTab('current');
-
-
-        blacklistToggle.onclick = () => {
-            const shouldAdd = !isBlacklisted;
-            if (togglePageBlacklist(shouldAdd)) {
-                statusBar.textContent = shouldAdd
-                    ? '🛡️ 已标记当前页面为黑名单。请刷新页面使**严格沙箱**策略生效。'
-                    : '✅ 已取消标记。请刷新页面以恢复**默认不沙箱**策略。';
-            } else {
-                statusBar.textContent = shouldAdd
-                    ? '⚠️ 标记失败：当前页面已在黑名单中。'
-                    : '⚠️ 取消标记失败：当前页面不在黑名单中。';
+                tabSaved.innerHTML = `记录管理 (${totalSaved})`;
             }
 
-            isBlacklisted = isCurrentPageBlacklisted();
-            blacklistToggle.style.background = isBlacklisted ? '#dc3545' : '#007bff';
-            blacklistToggle.textContent = isBlacklisted ? '🛡️ 当前为黑名单页 (启用严格沙箱)' : '➕ 标记为黑名单页 (启用严格沙箱)';
-        };
+            function switchTab(currentTab) {
+                // Reset all tabs/content
+                [tabCurrent, tabIframe, tabSaved].forEach(btn => btn.style.background = '#f0f0f0');
+                [contentCurrent, contentIframe, contentSaved].forEach(cont => cont.style.display = 'none');
 
-        let isSelectionMode = false;
-        let currentHoverElement = null;
-        let lastHighlightedElement = null;
-
-        const handleSelectionClick = (e) => {
-            const target = e.target;
-            if (isSelectionMode && target === selectorToggle) {
-                e.stopPropagation();
-                e.preventDefault();
-                toggleSelectionMode(false);
-                return;
-            }
-
-            if (target.closest(`#${containerId}`)) {
-                e.stopPropagation();
-                return;
-            }
-
-            e.preventDefault();
-            e.stopPropagation();
-
-            if (target.tagName === 'HTML' || target.tagName === 'BODY') {
-                statusBar.textContent = "不能屏蔽整个页面，请选择具体元素。";
-                toggleSelectionMode(false);
-                return;
-            }
-
-            const xpath = getElementXPath(target);
-            if (xpath) {
-                // 使用普通元素移除记录
-                saveRemovalChoice(xpath);
-            } else {
-                statusBar.textContent = "无法获取该元素的唯一路径，屏蔽失败。";
-                toggleSelectionMode(false);
-                return;
-            }
-
-            target.remove();
-
-            statusBar.textContent = `🎉 已永久屏蔽元素: ${target.tagName}。请刷新页面查看效果。`;
-            updateSavedListContent();
-
-            toggleSelectionMode(false);
-        };
-
-        const handleSelectionMouseMove = (e) => {
-            const target = e.target;
-            if (target.closest(`#${containerId}`) || target.tagName === 'HTML' || target.tagName === 'BODY') {
-                if (currentHoverElement) {
-                    currentHoverElement.style.outline = '';
-                    currentHoverElement = null;
+                if (currentTab === 'current') {
+                    tabCurrent.style.background = '#fff';
+                    contentCurrent.style.display = 'block';
+                } else if (currentTab === 'iframe') {
+                    tabIframe.style.background = '#fff';
+                    contentIframe.style.display = 'block';
+                } else { // saved
+                    tabSaved.style.background = '#fff';
+                    contentSaved.style.display = 'block';
+                    updateSavedListContent();
                 }
-                return;
             }
+            tabCurrent.onclick = () => switchTab('current');
+            tabIframe.onclick = () => switchTab('iframe');
+            tabSaved.onclick = () => switchTab('saved');
+            // Initial tab state:
+            switchTab('current');
 
-            if (currentHoverElement && currentHoverElement !== target) {
-                currentHoverElement.style.outline = '';
-            }
 
-            if (currentHoverElement !== target) {
-                currentHoverElement = target;
-                currentHoverElement.style.outline = '2px dashed orange';
-            }
-        };
-
-        function toggleSelectionMode(forceState) {
-            isSelectionMode = (forceState !== undefined) ? forceState : !isSelectionMode;
-
-            targetDocs.forEach(doc => {
-                if (isSelectionMode) {
-                    doc.addEventListener('click', handleSelectionClick, true);
-                    doc.addEventListener('mousemove', handleSelectionMouseMove);
+            blacklistToggle.onclick = () => {
+                const shouldAdd = !isBlacklisted;
+                if (togglePageBlacklist(shouldAdd)) {
+                    statusBar.textContent = shouldAdd
+                        ? '🛡️ 已标记当前页面为黑名单。请刷新页面使**严格沙箱**策略生效。'
+                        : '✅ 已取消标记。请刷新页面以恢复**默认不沙箱**策略。';
                 } else {
-                    doc.removeEventListener('click', handleSelectionClick, true);
-                    doc.removeEventListener('mousemove', handleSelectionMouseMove);
-                }
-            });
-
-            if (isSelectionMode) {
-                selectorToggle.textContent = '❌ 退出屏蔽模式';
-                selectorToggle.style.background = '#dc3545';
-                statusBar.textContent = '🖱️ 选择模式已启用：请点击需要屏蔽的元素。';
-                mainContainer.style.cursor = 'default';
-
-                if (localStorage.getItem('gemini_debug_element_click_mode') == 'true') { // 如果元素点击调试模式开启，必须关掉
-                    document.getElementById('debug-click-toggle').click()
+                    statusBar.textContent = shouldAdd
+                        ? '⚠️ 标记失败：当前页面已在黑名单中。'
+                        : '⚠️ 取消标记失败：当前页面不在黑名单中。';
                 }
 
-            } else {
-                if (currentHoverElement) {
-                    currentHoverElement.style.outline = '';
-                    currentHoverElement = null;
-                }
-                selectorToggle.textContent = '🖱️ 启用选择并屏蔽模式';
-                selectorToggle.style.background = '#007bff';
-                statusBar.textContent = '选择模式已禁用。';
-            }
-        }
+                isBlacklisted = isCurrentPageBlacklisted();
+                blacklistToggle.style.background = isBlacklisted ? '#dc3545' : '#007bff';
+                blacklistToggle.textContent = isBlacklisted ? '🛡️ 当前为黑名单页 (启用严格沙箱)' : '➕ 标记为黑名单页 (启用严格沙箱)';
+            };
 
-        selectorToggle.onclick = () => toggleSelectionMode();
+            let isSelectionMode = false;
+            let currentHoverElement = null;
+            let lastHighlightedElement = null;
 
-
-        debugClickToggle.onclick = () => {
-            isDebuggingElementClick = !isDebuggingElementClick;
-
-            localStorage.setItem(DEBUG_CLICK_KEY, isDebuggingElementClick ? 'true' : 'false');
-
-            // V26.39.3 NEW: 处理用户覆盖逻辑
-            const isHostInDebugList = DEBUG_WEBLIST.some(domain => getCurrentHost().includes(domain));
-            if (isHostInDebugList) {
-                if (isDebuggingElementClick) {
-                    // 如果在调试域名列表内，且用户手动开启，则移除覆盖记录
-                    toggleDebugOverride(false);
-                } else {
-                    // 如果在调试域名列表内，且用户手动关闭，则添加覆盖记录
-                    toggleDebugOverride(true);
-                }
-            }
-
-            // 更新 UI 和状态栏
-            if (isDebuggingElementClick) {
-                debugClickToggle.style.background = '#00c853';
-                debugClickToggle.style.color = 'white';
-                debugClickToggle.textContent = '🛠️ 元素点击调试 (开)';
-                statusBar.textContent = '✅ 元素点击拦截已开启，**立即生效**。请点击可疑按钮。';
-            } else {
-                debugClickToggle.style.background = '#ffc107';
-                debugClickToggle.style.color = '#333';
-                debugClickToggle.textContent = '🛠️ 元素点击调试 (关)';
-                statusBar.textContent = '❌ 元素点击拦截已关闭，**立即生效**。';
-            }
-            statusBar.textContent += "（💡 建议：切换模式后刷新页面，以确保 Iframe 和 Hook 状态完全同步）";
-        };
-
-        debugLocationToggle.onclick = () => {
-            isDebuggingLocationHooks = !isDebuggingLocationHooks;
-
-            localStorage.setItem(DEBUG_LOCATION_KEY, isDebuggingLocationHooks ? 'true' : 'false');
-
-            // V26.39.3 NEW: 处理用户覆盖逻辑
-            const isHostInDebugList = DEBUG_WEBLIST.some(domain => getCurrentHost().includes(domain));
-            if (isHostInDebugList) {
-                if (isDebuggingLocationHooks) {
-                    // 如果在调试域名列表内，且用户手动开启，则移除覆盖记录
-                    toggleDebugOverride(false);
-                } else {
-                    // 如果在调试域名列表内，且用户手动关闭，则添加覆盖记录
-                    toggleDebugOverride(true);
-                }
-            }
-
-
-            if (isDebuggingLocationHooks) {
-                debugLocationToggle.style.background = '#00c853';
-                debugLocationToggle.style.color = 'white';
-                debugLocationToggle.textContent = '⚙️ JS 重定向调试 (开)';
-                statusBar.textContent = '⚠️ JS Hook 模式已开启。**必须刷新页面**才能开始捕获 URL 赋值操作。';
-            } else {
-                debugLocationToggle.style.background = '#ffc107';
-                debugLocationToggle.style.color = '#333';
-                debugLocationToggle.textContent = '⚙️ JS 重定向调试 (关)';
-                statusBar.textContent = 'JS 重定向调试已关闭。**必须刷新页面**才能解除 Hook。';
-            }
-        };
-
-
-        list.addEventListener('click', (e) => {
-            let listItem = e.target.closest('li');
-            if (!listItem) return;
-
-            const xpath = listItem.getAttribute('data-xpath');
-            const elementEntry = zeroOpacityElements.find(i => i.xpath === xpath);
-            if (!elementEntry) return;
-            const element = elementEntry.element;
-
-            if (e.target.classList.contains('remove-btn')) {
-                if (element && element.parentNode) {
-                    // 使用普通元素移除记录
-                    saveRemovalChoice(xpath);
-
-                    if (lastHighlightedElement) {
-                        lastHighlightedElement.style.border = '';
-                    }
-
-                    element.remove();
-                    listItem.remove();
-                    statusBar.textContent = `✅ 元素 ${elementEntry.tagName} 已永久移除并保存。`;
-                    updateSavedListContent();
-                }
-                return;
-            }
-
-            if (e.target.closest('.element-info')) {
-                if (lastHighlightedElement) {
-                    lastHighlightedElement.style.border = '';
+            const handleSelectionClick = (e) => {
+                const target = e.target;
+                if (isSelectionMode && target === selectorToggle) {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    toggleSelectionMode(false);
+                    return;
                 }
 
-                element.style.border = '2px solid red';
-                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-                lastHighlightedElement = element;
-                statusBar.textContent = `选中元素: [${elementEntry.document === document ? '主页' : 'Iframe'}] ${elementEntry.tagName} (${elementEntry.width}x${elementEntry.height}px)`;
-            }
-        });
-
-        // V26.38: Iframe list listener
-        iframeList.addEventListener('click', (e) => {
-            let listItem = e.target.closest('li');
-            if (!listItem) return;
-
-            const xpath = listItem.getAttribute('data-xpath');
-            const elementEntry = allIframes.find(i => i.xpath === xpath);
-            if (!elementEntry) return;
-            const element = elementEntry.element;
-
-            if (e.target.classList.contains('remove-iframe-btn')) {
-                if (element && element.parentNode) {
-                    // V26.39 NEW: 使用 Iframe 专用移除记录
-                    saveIframeRemovalChoice(xpath);
-
-                    if (lastHighlightedElement) {
-                        lastHighlightedElement.style.border = '';
-                    }
-
-                    element.remove();
-                    listItem.remove();
-                    // Update tab counter
-                    tabIframe.textContent = `当前 Iframe 记录 (${document.querySelectorAll('iframe').length})`;
-                    statusBar.textContent = `✅ Iframe 元素已永久移除并保存。请刷新页面查看效果。`;
-                    updateSavedListContent();
-                }
-                return;
-            }
-
-            if (e.target.closest('.iframe-info')) {
-                if (lastHighlightedElement) {
-                    lastHighlightedElement.style.border = '';
-                }
-                // Use a noticeable border color for iframes
-                element.style.border = '3px solid #dc3545';
-                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-                lastHighlightedElement = element;
-                statusBar.textContent = `选中 Iframe: ${elementEntry.isCrossDomain ? '跨域' : '同源'} | Src: ${safeTruncate(elementEntry.src, 50)}`;
-            }
-        });
-
-
-        savedList.addEventListener('click', (e) => {
-            // 取消普通元素移除记录
-            if (e.target.classList.contains('undo-btn')) {
-                const xpath = e.target.getAttribute('data-xpath');
-                if (removeRemovalChoice(xpath)) {
-                    statusBar.textContent = `🚫 元素移除记录已取消。请刷新页面以恢复元素。`;
-                    updateSavedListContent();
-                }
-            }
-
-            // V26.39 NEW: 取消 Iframe 移除记录
-            if (e.target.classList.contains('undo-iframe-btn')) {
-                const xpath = e.target.getAttribute('data-xpath');
-                if (removeIframeRemovalChoice(xpath)) {
-                    statusBar.textContent = `🚫 Iframe 移除记录已取消。请刷新页面以恢复 Iframe。`;
-                    updateSavedListContent();
-                }
-            }
-
-
-            if (e.target.classList.contains('remove-blacklist-btn')) {
-                const pageKey = e.target.getAttribute('data-page-key');
-                if (togglePageBlacklist(false, pageKey)) {
-                    if (pageKey === getCurrentPageKey()) {
-                        isBlacklisted = false;
-                        blacklistToggle.style.background = '#007bff';
-                        blacklistToggle.textContent = '➕ 标记为黑名单页 (启用严格沙箱)';
-                    }
-                    statusBar.textContent = `✅ 已移除黑名单 ${safeTruncate(pageKey, 15)}。请刷新页面。`;
-                    updateSavedListContent();
-                }
-            }
-        });
-
-        // --- 拖拽逻辑 (保持不变) ---
-        let isDragging = false;
-        let dragStartX = 0;
-        let dragStartY = 0;
-        let containerOffsetX = 0;
-        let containerOffsetY = 0;
-
-        function getEventXY(e) {
-            if (e.touches && e.touches.length > 0) {
-                return { x: e.touches[0].clientX, y: e.touches[0].clientY };
-            }
-            return { x: e.clientX, y: e.clientY };
-        }
-
-        function getTranslateXY(element) {
-            const style = window.getComputedStyle(element);
-            const transform = style.transform || style.webkitTransform || style.mozTransform;
-
-            let mat = transform.match(/^matrix3d\((.+)\)$/);
-            if (mat) {
-                const values = mat[1].split(', ');
-                return { x: parseFloat(values[12]) || 0, y: parseFloat(values[13]) || 0 };
-            }
-
-            mat = transform.match(/^matrix\((.+)\)$/);
-            if (mat) {
-                const values = mat[1].split(', ');
-                return { x: parseFloat(values[4]) || 0, y: parseFloat(values[5]) || 0 };
-            }
-            return { x: 0, y: 0 };
-        }
-
-        function isDragTarget(target) {
-            if (isSelectionMode) return false;
-
-            if (target === mainContainer) return true;
-
-            if (target.closest(`#${windowId}`)) {
-                const dragTargets = target.closest('#gemini-header, #gemini-status-bar, .gemini-tip-text');
-
-                if (dragTargets && !target.closest('button, span[id$="close-btn"], a')) {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        const dragStart = (e) => {
-            if (!isDragTarget(e.target)) { return; }
-
-            isDragging = true;
-            e.preventDefault();
-
-            const { x, y } = getEventXY(e);
-
-            const currentTranslate = getTranslateXY(mainContainer);
-            containerOffsetX = currentTranslate.x;
-            containerOffsetY = currentTranslate.y;
-
-            dragStartX = x;
-            dragStartY = y;
-        };
-
-        const dragMove = (e) => {
-            if (!isDragging) return;
-            e.preventDefault();
-
-            const { x, y } = getEventXY(e);
-
-            const dx = x - dragStartX;
-            const dy = y - dragStartY;
-
-            const newX = containerOffsetX + dx;
-            const newY = containerOffsetY + dy;
-
-            mainContainer.style.transform = `translate3d(${newX}px, ${newY}px, 0)`;
-        };
-
-        const dragEnd = () => {
-            isDragging = false;
-        };
-
-        mainContainer.addEventListener('mousedown', dragStart);
-        document.addEventListener('mousemove', dragMove);
-        document.addEventListener('mouseup', dragEnd);
-
-        mainContainer.addEventListener('touchstart', dragStart);
-        document.addEventListener('touchmove', dragMove);
-        document.addEventListener('touchend', dragEnd);
-
-    }
-
-
-    // =================================================================
-    // 元素点击过滤/调试函数 (V26.39.5 更新)
-    // =================================================================
-
-    const AD_DOMAINS = [
-        'ad.twinrdengine.com',
-        'adtrack.',
-        'popads.',
-        'clickdealer.',
-        'a-ads.',
-        'adcash.',
-        'popunder.',
-        'exoclick.',
-        'adnetwork.',
-    ];
-    const ALLOW_ONCE_ATTRIBUTE = 'data-gemini-allow';
-
-    function applyClickDebugFilter(doc) {
-        if (!doc || doc.gemini_click_debug_listener_attached) {
-            return;
-        }
-
-        const eventListenerFunction = async (e) => {
-            const targetElement = e.target;
-
-            // 注意：closest() 方法只会查找祖先元素，所以最好使用 id 匹配。
-            if (doc.defaultView === window && targetElement.closest('[id*="gemini"], #ellCloseX, #dh_buttonContainer, #dh_pageContainer')) {
-                return; // 排除逻辑
-            }
-
-            const isLink = targetElement.closest('a');
-            const href = isLink ? isLink.href : '';
-            const opensNewTab = isLink ? isLink.target === '_blank' : false;
-            const isAdLink = AD_DOMAINS.some(domain => href.includes(domain));
-
-            const currentIsDebuggingElementClick = localStorage.getItem(DEBUG_CLICK_KEY) === 'true';
-            let shouldIntercept = isAdLink || (opensNewTab && href && href !== '#') || currentIsDebuggingElementClick;
-
-            if (shouldIntercept && targetElement.tagName !== 'HTML' && targetElement.tagName !== 'BODY') {
-
-                if (targetElement.hasAttribute(ALLOW_ONCE_ATTRIBUTE)) {
-                    targetElement.removeAttribute(ALLOW_ONCE_ATTRIBUTE);
-                    console.log(`[Gemini屏蔽 V26.39.5] ➡️ 临时放行标记生效，允许原始事件继续。`);
+                if (target.closest(`#${containerId}`)) {
+                    e.stopPropagation();
                     return;
                 }
 
                 e.preventDefault();
-                e.stopImmediatePropagation();
-
-                const xpath = getElementXPath(targetElement);
-                // 🚀 V26.39.4 新增：获取 TagName 和 CSS Selector
-                const tagName = targetElement.tagName;
-                const cssSelector = getElementCssSelector(targetElement);
-
-                let message = `此元素点击已被调试模式捕获。请选择操作：`;
-
-                const elementInfo = {
-                    href: href || '[非链接元素]',
-                    tagName: tagName,
-                    cssSelector: cssSelector,
-                };
-
-
-                const confirmBlock = await showCustomConfirm(
-                    message,
-                    elementInfo, // <-- Pass the elementInfo object (V26.39.4)
-                    xpath || "XPath 获取失败"
-                );
-
-                if (confirmBlock) {
-                    if (xpath && targetElement.parentNode) {
-                        // Element Click Debugging is for general elements (not Iframes)
-                        if (targetElement.tagName === 'IFRAME') {
-                            saveIframeRemovalChoice(xpath);
-                            console.log("✅ Iframe 已永久屏蔽，请刷新页面。");
-                        } else {
-                            saveRemovalChoice(xpath);
-                            console.log("✅ 元素已永久屏蔽，请刷新页面。");
-                        }
-                        targetElement.remove();
-                    } else {
-                        console.error('❌ 屏蔽失败：XPath 获取失败，无法进行永久屏蔽。');
-                    }
-                } else {
-                    targetElement.setAttribute(ALLOW_ONCE_ATTRIBUTE, 'true');
-                    console.log("🚫 已取消永久屏蔽。请**再次点击**此元素，点击将在第二次被放行。");
-                }
-                return;
-            }
-        };
-
-        doc.addEventListener('click', eventListenerFunction, true);
-        doc.gemini_click_debug_listener_attached = true;
-
-        let logMessage = `[Gemini屏蔽 V26.39.5] 元素点击调试监听器已附加到 `;
-
-        const isTopWindow = window === window.top;
-
-        if (doc === document) {
-
-            if (isTopWindow) {
-                logMessage += `主页 (Top Document)。`;
-            } else {
-                let iframeSrc = doc.URL || '[无法获取 URL]';
-                const displaySrc = safeTruncate(iframeSrc, 77);
-                logMessage += `Iframe 文档 (自身上下文)。Src: ${displaySrc}`;
-            }
-        } else {
-            let iframeSrc = '[无法获取 src]';
-            let iframeElement = null;
-
-            try {
-                iframeElement = doc.defaultView ? doc.defaultView.frameElement : null;
-            } catch (e) {
-            }
-
-            if (iframeElement && iframeElement.tagName === 'IFRAME') {
-                iframeSrc = iframeElement.src || '[无 src 属性]';
-            } else if (doc.URL) {
-                iframeSrc = doc.URL;
-            }
-
-            const displaySrc = safeTruncate(iframeSrc, 77);
-            logMessage += `Iframe 文档 (主页检测)。Src: ${displaySrc}`;
-        }
-
-        console.log(logMessage);
-    }
-
-    function setupAdLinkFilter() {
-        const targetDocuments = getTargetDocuments();
-        targetDocuments.forEach(doc => {
-            applyClickDebugFilter(doc);
-        });
-        console.log('[Gemini屏蔽] 元素点击过滤/调试功能已协调完成 (V26.37 Modified)。');
-    }
-
-
-    // =================================================================
-    // 核心启动函数 
-    // =================================================================
-    function initScript() {
-
-        const currentHost = getCurrentHost();
-        const isHostInDebugList = DEBUG_WEBLIST.some(domain => currentHost.includes(domain));
-
-        // 1. 读取用户自定义的调试状态
-        let clickDebugState = localStorage.getItem(DEBUG_CLICK_KEY) === 'true';
-        let locationDebugState = localStorage.getItem(DEBUG_LOCATION_KEY) === 'true';
-
-        // 2. V26.39.3 核心逻辑：判断是否在调试列表中 且 没有被用户覆盖
-        if (isHostInDebugList) {
-            const isOverridden = isCurrentHostOverridden();
-
-            if (!isOverridden) {
-                // 如果在调试列表中，且用户从未手动关闭过（即没有覆盖记录）
-                clickDebugState = true;
-                locationDebugState = true;
-                localStorage.setItem(DEBUG_CLICK_KEY, 'true');
-                localStorage.setItem(DEBUG_LOCATION_KEY, 'true');
-                console.log(`[Gemini屏蔽 V26.39.3] 🎯 域名 ${currentHost} 匹配调试列表，强制开启调试模式。`);
-            } else {
-                // 存在覆盖记录，保留用户上次设置的状态（即 clickDebugState/locationDebugState 保持为从 localStorage 读取的值，可能是 false）
-                console.log(`[Gemini屏蔽 V26.39.3] ⚠️ 域名 ${currentHost} 匹配调试列表，但因存在用户覆盖记录，本次不自动开启。`);
-            }
-        }
-
-        // 3. 将最终确定的状态赋值给全局变量
-        isDebuggingElementClick = clickDebugState;
-        isDebuggingLocationHooks = locationDebugState;
-
-
-        injectStyles(containerId, windowId);
-
-        blockMetaRefresh(document);
-
-        const targetDocuments = getTargetDocuments();
-
-        enableWindowOpenHook();
-        interceptWindowLocation();
-        setupAdLinkFilter();
-
-        targetDocuments.forEach(doc => {
-            loadAndRemoveSavedElements(doc);
-        });
-
-        if (window === window.top) {
-            observeDynamicIframes();
-        }
-
-        // 4. 根据最终状态决定是否自动打开浮窗
-        if (isDebuggingElementClick || isDebuggingLocationHooks) {
-            if (!document.getElementById(containerId)) {
-
-                const activationSource = isHostInDebugList && !isCurrentHostOverridden() ? '域名匹配（自动）' : '本地存储（手动开启）';
-                console.log(`[Gemini屏蔽 V26.39.5] 🎯 调试模式已开启 (${activationSource})，自动打开浮窗。`);
-
-                // 由于 targetDocuments 已经在前面获取，这里直接使用
-                renderFloatWindow(targetDocuments);
-
-                // 仅当 body_build 存在时调用（兼容其他环境）
-                if (typeof body_build === 'function') {
-                    try { body_build('false'); } catch (e) { }
-                }
-            }
-        }
-
-
-        document.addEventListener('click', (e) => {
-            const target = e.target;
-            if (target.id === 'tmyszzq') {
-                e.preventDefault();
                 e.stopPropagation();
 
+                if (target.tagName === 'HTML' || target.tagName === 'BODY') {
+                    statusBar.textContent = "不能屏蔽整个页面，请选择具体元素。";
+                    toggleSelectionMode(false);
+                    return;
+                }
+
+                const xpath = getElementXPath(target);
+                if (xpath) {
+                    // 使用普通元素移除记录
+                    saveRemovalChoice(xpath);
+                } else {
+                    statusBar.textContent = "无法获取该元素的唯一路径，屏蔽失败。";
+                    toggleSelectionMode(false);
+                    return;
+                }
+
+                target.remove();
+
+                statusBar.textContent = `🎉 已永久屏蔽元素: ${target.tagName}。请刷新页面查看效果。`;
+                updateSavedListContent();
+
+                toggleSelectionMode(false);
+            };
+
+            const handleSelectionMouseMove = (e) => {
+                const target = e.target;
+                if (target.closest(`#${containerId}`) || target.tagName === 'HTML' || target.tagName === 'BODY') {
+                    if (currentHoverElement) {
+                        currentHoverElement.style.outline = '';
+                        currentHoverElement = null;
+                    }
+                    return;
+                }
+
+                if (currentHoverElement && currentHoverElement !== target) {
+                    currentHoverElement.style.outline = '';
+                }
+
+                if (currentHoverElement !== target) {
+                    currentHoverElement = target;
+                    currentHoverElement.style.outline = '2px dashed orange';
+                }
+            };
+
+            function toggleSelectionMode(forceState) {
+                isSelectionMode = (forceState !== undefined) ? forceState : !isSelectionMode;
+
+                targetDocs.forEach(doc => {
+                    if (isSelectionMode) {
+                        doc.addEventListener('click', handleSelectionClick, true);
+                        doc.addEventListener('mousemove', handleSelectionMouseMove);
+                    } else {
+                        doc.removeEventListener('click', handleSelectionClick, true);
+                        doc.removeEventListener('mousemove', handleSelectionMouseMove);
+                    }
+                });
+
+                if (isSelectionMode) {
+                    selectorToggle.textContent = '❌ 退出屏蔽模式';
+                    selectorToggle.style.background = '#dc3545';
+                    statusBar.textContent = '🖱️ 选择模式已启用：请点击需要屏蔽的元素。';
+                    mainContainer.style.cursor = 'default';
+
+                    if (localStorage.getItem('gemini_debug_element_click_mode') == 'true') { // 如果元素点击调试模式开启，必须关掉
+                        document.getElementById('debug-click-toggle').click()
+                    }
+
+                } else {
+                    if (currentHoverElement) {
+                        currentHoverElement.style.outline = '';
+                        currentHoverElement = null;
+                    }
+                    selectorToggle.textContent = '🖱️ 启用选择并屏蔽模式';
+                    selectorToggle.style.background = '#007bff';
+                    statusBar.textContent = '选择模式已禁用。';
+                }
+            }
+
+            selectorToggle.onclick = () => toggleSelectionMode();
+
+
+            debugClickToggle.onclick = () => {
+                isDebuggingElementClick = !isDebuggingElementClick;
+
+                localStorage.setItem(DEBUG_CLICK_KEY, isDebuggingElementClick ? 'true' : 'false');
+
+                // V26.39.3 NEW: 处理用户覆盖逻辑
+                const isHostInDebugList = DEBUG_WEBLIST.some(domain => getCurrentHost().includes(domain));
+                if (isHostInDebugList) {
+                    if (isDebuggingElementClick) {
+                        // 如果在调试域名列表内，且用户手动开启，则移除覆盖记录
+                        toggleDebugOverride(false);
+                    } else {
+                        // 如果在调试域名列表内，且用户手动关闭，则添加覆盖记录
+                        toggleDebugOverride(true);
+                    }
+                }
+
+                // 更新 UI 和状态栏
+                if (isDebuggingElementClick) {
+                    debugClickToggle.style.background = '#00c853';
+                    debugClickToggle.style.color = 'white';
+                    debugClickToggle.textContent = '🛠️ 元素点击调试 (开)';
+                    statusBar.textContent = '✅ 元素点击拦截已开启，**立即生效**。请点击可疑按钮。';
+                } else {
+                    debugClickToggle.style.background = '#ffc107';
+                    debugClickToggle.style.color = '#333';
+                    debugClickToggle.textContent = '🛠️ 元素点击调试 (关)';
+                    statusBar.textContent = '❌ 元素点击拦截已关闭，**立即生效**。';
+                }
+                statusBar.textContent += "（💡 建议：切换模式后刷新页面，以确保 Iframe 和 Hook 状态完全同步）";
+            };
+
+            debugLocationToggle.onclick = () => {
+                isDebuggingLocationHooks = !isDebuggingLocationHooks;
+
+                localStorage.setItem(DEBUG_LOCATION_KEY, isDebuggingLocationHooks ? 'true' : 'false');
+
+                // V26.39.3 NEW: 处理用户覆盖逻辑
+                const isHostInDebugList = DEBUG_WEBLIST.some(domain => getCurrentHost().includes(domain));
+                if (isHostInDebugList) {
+                    if (isDebuggingLocationHooks) {
+                        // 如果在调试域名列表内，且用户手动开启，则移除覆盖记录
+                        toggleDebugOverride(false);
+                    } else {
+                        // 如果在调试域名列表内，且用户手动关闭，则添加覆盖记录
+                        toggleDebugOverride(true);
+                    }
+                }
+
+
+                if (isDebuggingLocationHooks) {
+                    debugLocationToggle.style.background = '#00c853';
+                    debugLocationToggle.style.color = 'white';
+                    debugLocationToggle.textContent = '⚙️ JS 重定向调试 (开)';
+                    statusBar.textContent = '⚠️ JS Hook 模式已开启。**必须刷新页面**才能启用**同步中断**捕获。';
+                } else {
+                    debugLocationToggle.style.background = '#ffc107';
+                    debugLocationToggle.style.color = '#333';
+                    debugLocationToggle.textContent = '⚙️ JS 重定向调试 (关)';
+                    statusBar.textContent = 'JS 重定向调试已关闭。**必须刷新页面**才能解除 Hook。';
+                }
+            };
+
+
+            list.addEventListener('click', (e) => {
+                let listItem = e.target.closest('li');
+                if (!listItem) return;
+
+                const xpath = listItem.getAttribute('data-xpath');
+                const elementEntry = zeroOpacityElements.find(i => i.xpath === xpath);
+                if (!elementEntry) return;
+                const element = elementEntry.element;
+
+                if (e.target.classList.contains('remove-btn')) {
+                    if (element && element.parentNode) {
+                        // 使用普通元素移除记录
+                        saveRemovalChoice(xpath);
+
+                        if (lastHighlightedElement) {
+                            lastHighlightedElement.style.border = '';
+                        }
+
+                        element.remove();
+                        listItem.remove();
+                        statusBar.textContent = `✅ 元素 ${elementEntry.tagName} 已永久移除并保存。`;
+                        updateSavedListContent();
+                    }
+                    return;
+                }
+
+                if (e.target.closest('.element-info')) {
+                    if (lastHighlightedElement) {
+                        lastHighlightedElement.style.border = '';
+                    }
+
+                    element.style.border = '2px solid red';
+                    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                    lastHighlightedElement = element;
+                    statusBar.textContent = `选中元素: [${elementEntry.document === document ? '主页' : 'Iframe'}] ${elementEntry.tagName} (${elementEntry.width}x${elementEntry.height}px)`;
+                }
+            });
+
+            // V26.38: Iframe list listener
+            iframeList.addEventListener('click', (e) => {
+                let listItem = e.target.closest('li');
+                if (!listItem) return;
+
+                const xpath = listItem.getAttribute('data-xpath');
+                const elementEntry = allIframes.find(i => i.xpath === xpath);
+                if (!elementEntry) return;
+                const element = elementEntry.element;
+
+                if (e.target.classList.contains('remove-iframe-btn')) {
+                    if (element && element.parentNode) {
+                        // V26.39 NEW: 使用 Iframe 专用移除记录
+                        saveIframeRemovalChoice(xpath);
+
+                        if (lastHighlightedElement) {
+                            lastHighlightedElement.style.border = '';
+                        }
+
+                            element.remove();
+                        listItem.remove();
+                        // Update tab counter
+                        tabIframe.textContent = `当前 Iframe 记录 (${document.querySelectorAll('iframe').length})`;
+                        statusBar.textContent = `✅ Iframe 元素已永久移除并保存。请刷新页面查看效果。`;
+                        updateSavedListContent();
+                    }
+                    return;
+                }
+
+                if (e.target.closest('.iframe-info')) {
+                    if (lastHighlightedElement) {
+                        lastHighlightedElement.style.border = '';
+                    }
+                    // Use a noticeable border color for iframes
+                    element.style.border = '3px solid #dc3545';
+                    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                    lastHighlightedElement = element;
+                    statusBar.textContent = `选中 Iframe: ${elementEntry.isCrossDomain ? '跨域' : '同源'} | Src: ${safeTruncate(elementEntry.src, 50)}`;
+                }
+            });
+
+
+            savedList.addEventListener('click', (e) => {
+                // 取消普通元素移除记录
+                if (e.target.classList.contains('undo-btn')) {
+                    const xpath = e.target.getAttribute('data-xpath');
+                    if (removeRemovalChoice(xpath)) {
+                        statusBar.textContent = `🚫 元素移除记录已取消。请刷新页面以恢复元素。`;
+                        updateSavedListContent();
+                    }
+                }
+
+                // V26.39 NEW: 取消 Iframe 移除记录
+                if (e.target.classList.contains('undo-iframe-btn')) {
+                    const xpath = e.target.getAttribute('data-xpath');
+                    if (removeIframeRemovalChoice(xpath)) {
+                        statusBar.textContent = `🚫 Iframe 移除记录已取消。请刷新页面以恢复 Iframe。`;
+                        updateSavedListContent();
+                    }
+                }
+
+
+                if (e.target.classList.contains('remove-blacklist-btn')) {
+                    const pageKey = e.target.getAttribute('data-page-key');
+                    if (togglePageBlacklist(false, pageKey)) {
+                        if (pageKey === getCurrentPageKey()) {
+                            isBlacklisted = false;
+                            blacklistToggle.style.background = '#007bff';
+                            blacklistToggle.textContent = '➕ 标记为黑名单页 (启用严格沙箱)';
+                        }
+                        statusBar.textContent = `✅ 已移除黑名单 ${safeTruncate(pageKey, 15)}。请刷新页面。`;
+                        updateSavedListContent();
+                    }
+                }
+            });
+
+            // --- 拖拽逻辑 (保持不变) ---
+            let isDragging = false;
+            let dragStartX = 0;
+            let dragStartY = 0;
+            let containerOffsetX = 0;
+            let containerOffsetY = 0;
+
+            function getEventXY(e) {
+                if (e.touches && e.touches.length > 0) {
+                    return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+                }
+                return { x: e.clientX, y: e.clientY };
+            }
+
+            function getTranslateXY(element) {
+                const style = window.getComputedStyle(element);
+                const transform = style.transform || style.webkitTransform || style.mozTransform;
+
+                let mat = transform.match(/^matrix3d\((.+)\)$/);
+                if (mat) {
+                    const values = mat[1].split(', ');
+                    return { x: parseFloat(values[12]) || 0, y: parseFloat(values[13]) || 0 };
+                }
+
+                mat = transform.match(/^matrix\((.+)\)$/);
+                if (mat) {
+                    const values = mat[1].split(', ');
+                    return { x: parseFloat(values[4]) || 0, y: parseFloat(values[5]) || 0 };
+                }
+                return { x: 0, y: 0 };
+            }
+
+            function isDragTarget(target) {
+                if (isSelectionMode) return false;
+
+                if (target === mainContainer) return true;
+
+                if (target.closest(`#${windowId}`)) {
+                    const dragTargets = target.closest('#gemini-header, #gemini-status-bar, .gemini-tip-text');
+
+                    if (dragTargets && !target.closest('button, span[id$="close-btn"], a')) {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+
+            const dragStart = (e) => {
+                if (!isDragTarget(e.target)) { return; }
+
+                isDragging = true;
+                e.preventDefault();
+
+                const { x, y } = getEventXY(e);
+
+                const currentTranslate = getTranslateXY(mainContainer);
+                containerOffsetX = currentTranslate.x;
+                containerOffsetY = currentTranslate.y;
+
+                dragStartX = x;
+                dragStartY = y;
+            };
+
+            const dragMove = (e) => {
+                if (!isDragging) return;
+                e.preventDefault();
+
+                const { x, y } = getEventXY(e);
+
+                const dx = x - dragStartX;
+                const dy = y - dragStartY;
+
+                const newX = containerOffsetX + dx;
+                const newY = containerOffsetY + dy;
+
+                mainContainer.style.transform = `translate3d(${newX}px, ${newY}px, 0)`;
+            };
+
+            const dragEnd = () => {
+                isDragging = false;
+            };
+
+            mainContainer.addEventListener('mousedown', dragStart);
+            document.addEventListener('mousemove', dragMove);
+            document.addEventListener('mouseup', dragEnd);
+
+            mainContainer.addEventListener('touchstart', dragStart);
+            document.addEventListener('touchmove', dragMove);
+            document.addEventListener('touchend', dragEnd);
+
+        }
+
+
+        // =================================================================
+        // 元素点击过滤/调试函数 (V26.39.7 更新 - 拦截 mousedown/touchstart)
+        // =================================================================
+
+        const AD_DOMAINS = [
+            'ad.twinrdengine.com',
+            'adtrack.',
+            'popads.',
+            'clickdealer.',
+            'a-ads.',
+            'adcash.',
+            'popunder.',
+            'exoclick.',
+            'adnetwork.',
+        ];
+        const ALLOW_ONCE_ATTRIBUTE = 'data-gemini-allow';
+
+        function applyClickDebugFilter(doc) {
+            if (!doc || doc.gemini_click_debug_listener_attached) {
+                return;
+            }
+
+            const eventListenerFunction = async (e) => {
+                const targetElement = e.target;
+                
+                // V26.39.7 新增：只拦截 click, mousedown, touchstart
+                if (e.type !== 'click' && e.type !== 'mousedown' && e.type !== 'touchstart') {
+                    return;
+                }
+
+                // 注意：closest() 方法只会查找祖先元素，所以最好使用 id 匹配。
+                if (doc.defaultView === window && targetElement.closest('[id*="gemini"], #ellCloseX, #dh_buttonContainer, #dh_pageContainer')) {
+                    return; // 排除逻辑
+                }
+
+                const isLink = targetElement.closest('a');
+                const href = isLink ? isLink.href : '';
+                const opensNewTab = isLink ? isLink.target === '_blank' : false;
+                const isAdLink = AD_DOMAINS.some(domain => href.includes(domain));
+
+                const currentIsDebuggingElementClick = localStorage.getItem(DEBUG_CLICK_KEY) === 'true';
+                let shouldIntercept = isAdLink || (opensNewTab && href && href !== '#') || currentIsDebuggingElementClick;
+
+                if (shouldIntercept && targetElement.tagName !== 'HTML' && targetElement.tagName !== 'BODY') {
+
+                    if (targetElement.hasAttribute(ALLOW_ONCE_ATTRIBUTE)) {
+                        targetElement.removeAttribute(ALLOW_ONCE_ATTRIBUTE);
+                        console.log(`[Gemini屏蔽 V26.39.7] ➡️ 临时放行标记生效，允许原始事件继续。`);
+                        return;
+                    }
+
+                    // ⚠️ 核心修复：在 mousedown/touchstart 阶段就阻止传播，防止异步重定向
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                    
+                    // 只有在 Click 事件时才弹窗，避免 mousedown/touchstart 频繁弹窗
+                    if (e.type !== 'click') {
+                         console.log(`[Gemini屏蔽 V26.39.7] 🛡️ ${e.type} 已被阻止，等待 Click 事件触发调试模态框...`);
+                         return;
+                    }
+
+                    const xpath = getElementXPath(targetElement);
+                    // 🚀 V26.39.4 新增：获取 TagName 和 CSS Selector
+                    const tagName = targetElement.tagName;
+                    const cssSelector = getElementCssSelector(targetElement); 
+                    
+                    let message = `此元素点击已被调试模式捕获。请选择操作：`;
+
+                    // ⬇️ V26.39.6 增强信息
+                    const rect = targetElement.getBoundingClientRect();
+                    const computedStyle = targetElement.ownerDocument.defaultView.getComputedStyle(targetElement);
+                    const parentElement = targetElement.parentElement;
+                    const parentInfo = parentElement 
+                        ? `${parentElement.tagName}#${parentElement.id || ''}.${parentElement.className.split(' ')[0] || ''}` 
+                        : '[无父级]';
+                    // 检查主要的内联事件处理器
+                    const inlineClick = targetElement.getAttribute('onclick') || 
+                                        targetElement.getAttribute('onmousedown') || 
+                                        targetElement.getAttribute('onmouseup') ||
+                                        targetElement.getAttribute('onpointerdown');
+
+
+                    const elementInfo = {
+                        href: href || '[非链接元素]',
+                        tagName: tagName,
+                        cssSelector: cssSelector,
+                        // V26.39.6 增强信息
+                        width: rect.width.toFixed(0),
+                        height: rect.height.toFixed(0),
+                        zIndex: computedStyle.zIndex,
+                        opacity: computedStyle.opacity,
+                        position: computedStyle.position,
+                        parent: parentInfo,
+                        inlineClick: inlineClick,
+                    };
+
+
+                    const confirmBlock = await showCustomConfirm(
+                        message,
+                        elementInfo, // <-- Pass the elementInfo object (V26.39.6)
+                        xpath || "XPath 获取失败"
+                    );
+
+                    if (confirmBlock) {
+                        if (xpath && targetElement.parentNode) {
+                            // Element Click Debugging is for general elements (not Iframes)
+                            if (targetElement.tagName === 'IFRAME') {
+                                saveIframeRemovalChoice(xpath);
+                                console.log("✅ Iframe 已永久屏蔽，请刷新页面。");
+                            } else {
+                                saveRemovalChoice(xpath);
+                                console.log("✅ 元素已永久屏蔽，请刷新页面。");
+                            }
+                            targetElement.remove();
+                        } else {
+                            console.error('❌ 屏蔽失败：XPath 获取失败，无法进行永久屏蔽。');
+                        }
+                    } else {
+                        targetElement.setAttribute(ALLOW_ONCE_ATTRIBUTE, 'true');
+                        console.log("🚫 已取消永久屏蔽。请**再次点击**此元素，点击将在第二次被放行。");
+                    }
+                    return;
+                }
+            };
+
+            // ⭐️ V26.39.7 核心修复：Hook 早期事件以阻止异步调度
+            doc.addEventListener('click', eventListenerFunction, true);
+            doc.addEventListener('mousedown', eventListenerFunction, true); 
+            doc.addEventListener('touchstart', eventListenerFunction, true); 
+            
+            doc.gemini_click_debug_listener_attached = true;
+
+            let logMessage = `[Gemini屏蔽 V26.39.7] 元素点击调试监听器已附加到 `;
+            
+            const isTopWindow = window === window.top;
+
+            if (doc === document) {
+
+                if (isTopWindow) {
+                    logMessage += `主页 (Top Document)。`;
+                } else {
+                    let iframeSrc = doc.URL || '[无法获取 URL]';
+                    const displaySrc = safeTruncate(iframeSrc, 77);
+                    logMessage += `Iframe 文档 (自身上下文)。Src: ${displaySrc}`;
+                }
+            } else {
+                let iframeSrc = '[无法获取 src]';
+                let iframeElement = null;
+
+                try {
+                    iframeElement = doc.defaultView ? doc.defaultView.frameElement : null;
+                } catch (e) {
+                }
+
+                if (iframeElement && iframeElement.tagName === 'IFRAME') {
+                    iframeSrc = iframeElement.src || '[无 src 属性]';
+                } else if (doc.URL) {
+                    iframeSrc = doc.URL;
+                }
+
+                const displaySrc = safeTruncate(iframeSrc, 77);
+                logMessage += `Iframe 文档 (主页检测)。Src: ${displaySrc}`;
+            }
+
+            console.log(logMessage);
+        }
+
+        function setupAdLinkFilter() {
+            const targetDocuments = getTargetDocuments();
+            targetDocuments.forEach(doc => {
+                applyClickDebugFilter(doc);
+            });
+            console.log('[Gemini屏蔽] 元素点击过滤/调试功能已协调完成 (V26.39.7 Modified)。');
+        }
+
+
+        // =================================================================
+        // 核心启动函数 
+        // =================================================================
+        function initScript() {
+
+            const currentHost = getCurrentHost();
+            const isHostInDebugList = DEBUG_WEBLIST.some(domain => currentHost.includes(domain));
+
+            // 1. 读取用户自定义的调试状态
+            let clickDebugState = localStorage.getItem(DEBUG_CLICK_KEY) === 'true';
+            let locationDebugState = localStorage.getItem(DEBUG_LOCATION_KEY) === 'true';
+
+            // 2. V26.39.3 核心逻辑：判断是否在调试列表中 且 没有被用户覆盖
+            if (isHostInDebugList) {
+                const isOverridden = isCurrentHostOverridden();
+
+                if (!isOverridden) {
+                    // 如果在调试列表中，且用户从未手动关闭过（即没有覆盖记录）
+                    clickDebugState = true;
+                    locationDebugState = true;
+                    localStorage.setItem(DEBUG_CLICK_KEY, 'true');
+                    localStorage.setItem(DEBUG_LOCATION_KEY, 'true');
+                    console.log(`[Gemini屏蔽 V26.39.9] 🎯 域名 ${currentHost} 匹配调试列表，强制开启调试模式。`);
+                } else {
+                    // 存在覆盖记录，保留用户上次设置的状态（即 clickDebugState/locationDebugState 保持为从 localStorage 读取的值，可能是 false）
+                    console.log(`[Gemini屏蔽 V26.39.9] ⚠️ 域名 ${currentHost} 匹配调试列表，但因存在用户覆盖记录，本次不自动开启。`);
+                }
+            }
+
+            // 3. 将最终确定的状态赋值给全局变量
+            isDebuggingElementClick = clickDebugState;
+            isDebuggingLocationHooks = locationDebugState;
+
+
+            injectStyles(containerId, windowId);
+
+            blockMetaRefresh(document);
+
+            const targetDocuments = getTargetDocuments();
+
+            enableWindowOpenHook();
+            interceptWindowLocation();
+
+            // ⬇️⬇️⬇️ Hook 所有重定向相关 API (V26.39.9 核心：同步中断) ⬇️⬇️⬇️
+
+            // 1. Hook History API
+            interceptHistoryAPI(window, 'window');
+            if (window.parent !== window) { interceptHistoryAPI(window.parent, 'parent'); }
+            if (window.top !== window) { interceptHistoryAPI(window.top, 'top'); }
+
+            // 2. Hook Form 表单提交
+            interceptFormSubmission();
+            
+            // 3. 终极拦截：Hook document.write
+            interceptDocumentWrite();
+
+            // ⬆️⬆️⬆️ Hook 所有重定向相关 API ⬆️⬆️⬆️
+            
+            setupAdLinkFilter(); // 元素点击调试监听器放在这里
+
+            targetDocuments.forEach(doc => {
+                loadAndRemoveSavedElements(doc);
+            });
+
+            if (window === window.top) {
+                observeDynamicIframes();
+            }
+
+            // 4. 根据最终状态决定是否自动打开浮窗
+            if (isDebuggingElementClick || isDebuggingLocationHooks) {
                 if (!document.getElementById(containerId)) {
-                    const updatedTargetDocuments = getTargetDocuments();
-                    renderFloatWindow(updatedTargetDocuments);
+
+                    const activationSource = isHostInDebugList && !isCurrentHostOverridden() ? '域名匹配（自动）' : '本地存储（手动开启）';
+                    console.log(`[Gemini屏蔽 V26.39.9] 🎯 调试模式已开启 (${activationSource})，自动打开浮窗。`);
+
+                    // 由于 targetDocuments 已经在前面获取，这里直接使用
+                    renderFloatWindow(targetDocuments);
+
+                    // 仅当 body_build 存在时调用（兼容其他环境）
                     if (typeof body_build === 'function') {
                         try { body_build('false'); } catch (e) { }
                     }
                 }
             }
-        }, true);
 
-        console.log(`[Gemini屏蔽] 脚本已初始化 (V26.39.5)。当前页面在黑名单中: ${isCurrentPageBlacklisted() ? '是' : '否'}。`);
-    }
 
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initScript);
-    } else {
-        initScript();
-    }
-})();
+            document.addEventListener('click', (e) => {
+                const target = e.target;
+                if (target.id === 'tmyszzq') {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    if (!document.getElementById(containerId)) {
+                        const updatedTargetDocuments = getTargetDocuments();
+                        renderFloatWindow(updatedTargetDocuments);
+                        if (typeof body_build === 'function') {
+                            try { body_build('false'); } catch (e) { }
+                        }
+                    }
+                }
+            }, true);
+
+            console.log(`[Gemini屏蔽] 脚本已初始化 (V26.39.9)。当前页面在黑名单中: ${isCurrentPageBlacklisted() ? '是' : '否'}。`);
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initScript);
+        } else {
+            initScript();
+        }
+    })();
 
     // 元素屏蔽器 END
 

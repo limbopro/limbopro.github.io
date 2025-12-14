@@ -1,8 +1,8 @@
 /* 视频页广告加速跳过 */
 
-alert('w')
 
-window.videoAds_accelerateSkip = function videoAds_accelerateSkip(fasterx) {
+
+function videoAds_accelerateSkip(fasterx) {
     // https://github.com/gorhill/uBlock/wiki
     /// nano-setInterval-booster.js
     /// alias nano-sib.js
@@ -42,4 +42,4 @@ window.videoAds_accelerateSkip = function videoAds_accelerateSkip(fasterx) {
 };
 
 
-setTimeout(() => { videoAds_accelerateSkip('0.2') })
+videoAds_accelerateSkip('0.2')

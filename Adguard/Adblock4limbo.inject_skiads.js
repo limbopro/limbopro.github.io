@@ -21,7 +21,7 @@ const injectionCode = '<script src="http://limbopro.com/Adguard/SkiAds.js"></scr
 //    - 匹配所有 </head> 标签（包括 </HEAD>, </Head> 等，因为有 /i 标志）
 //    - 将匹配到的内容替换为：注入的代码 + 小写的 </head> 标签
 //    - /g: 全局匹配，/i: 忽略大小写
-modifiedBody = modifiedBody.replace(/<\/body>/gi, `</body>${injectionCode}`);
+modifiedBody = modifiedBody.replace(/<\/body>/gi, `${injectionCode}</body>`);
 
 // --- 结束和返回逻辑 ---
 
