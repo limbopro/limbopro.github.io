@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Adblock4limbo.[github]
 // @namespace    https://github.com/limbopro/Adblock4limbo/raw/main/Adguard/Adblock4limbo.user.js
-// @version      0.2025.12.13
+// @version      0.2025.12.14
 // @license      CC BY-NC-SA 4.0
 // @description  毒奶去网页广告计划用户脚本 For Quantumult X & Surge & Shadowrocket & Loon & Stash & 油猴 ；1.新增页面右下角导航；2.通过 JavaScript 移除特定网站网页广告 —— 搜索引擎（Bing/Google）广告及内容农场结果清除/低端影视/欧乐影院/iyf爱壹帆/哔滴影视/Pornhub/Javbus/Supjav/Jable(支持抓取M3U8链接)/MissAv/91porn(支持视频下载)/hitomi/紳士漫畫/禁漫天堂/等视频&ACG&小说&漫画网站上的弹窗广告&视频广告&Gif图片广告等，保持网页清爽干净无打扰！ P.S. 欢迎提交issue
 // @author       limbopro
@@ -5478,6 +5478,10 @@ document.addEventListener('keydown', (event) => {
 
         if (escPressTimestamps.length >= 2) {
 
+            if (document.getElementById('dh_pageContainer') !== null && typeof (body_build) == 'function') {
+                body_build('true');
+            }
+
             badEventCount++;
 
             console.log(`💥 事件已发生，累积次数: ${badEventCount}`);
@@ -5485,10 +5489,12 @@ document.addEventListener('keydown', (event) => {
             const isButtonPresent = checkButtonExistence();
 
             if (badEventCount > 3 && badEventCount < 5 && !isButtonPresent) {
-
-                showFloatingWarning(); // 显示悬浮窗
-
-                console.warn(`🚨 警告触发！累积次数为 ${badEventCount} 且 ID 为 'dh_button' 的元素不存在。`);
+                
+                if (document.getElementById('dh_pageContainer') !== null && typeof (body_build) == 'function') {
+                } else {
+                    showFloatingWarning(); // 显示悬浮窗
+                    console.warn(`🚨 警告触发！累积次数为 ${badEventCount} 且 ID 为 'dh_button' 的元素不存在。`);
+                }
             }
 
             escPressTimestamps = [];
@@ -5499,8 +5505,6 @@ document.addEventListener('keydown', (event) => {
 console.log(`脚本已运行，监听 Esc 键。`);
 console.log(`⚠️ 事件时间窗口和悬浮窗自动关闭时间均设置为 ${TIME_WINDOW_MS / 1000} 秒 (2 分钟)。`);
 console.log(`警告将在累积次数恰好为 6 且 dh_button 元素不存在时触发。`);
-
-
 
 
 /**
