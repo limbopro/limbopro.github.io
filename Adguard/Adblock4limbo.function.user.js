@@ -591,12 +591,12 @@
     <div class="title_global">工具箱//</div>
     <ul class="ul_global">
       <li class="li_global"><a class="a_global" id="itimer">计时器⏱️</a></li>
-      <li class="li_global"><a class="a_global" id="Adblock4limbo" href="https://limbopro.com/archives/12904.html" target="_blank" style="background:#5a4771;box-shadow:inset 0 0 15px 3px #16191f00">广告拦截大全</a></li>
-      <li class="li_global"><a class="a_global" id="software_skills" href="https://limbopro.com/category/software-skills/" target="_blank">软件百科</a></li>
-      <li class="li_global"><a class="a_global special yellow" id="websiteStatus" href="https://limbopro.com/status/" target="_blank" style="background:#5a4771">网站实时状态</a></li>
-      <li class="li_global"><a class="a_global special yellow" id="毒奶搜索" href="https://limbopro.com/search.html" target="_blank" style="border-radius:4px;background:#c53f3f">毒奶搜索</a></li>
-      <li class="li_global"><a class="a_global special yellow" id="番号搜索" href="https://limbopro.com/btsearch.html" target="_blank" style="border-radius:4px;background:#c53f3f">番号搜索</a></li>
-      <li class="li_global"><button class="a_global special yellow" id="mtzyczq"  style="border-radius:4px;background:#c53f3f" onclick="mtzyczq()">媒体资源查找器</button></li>
+      <li class="li_global"><a class="a_global" id="Adblock4limbo" href="https://limbopro.com/archives/12904.html" target="_blank" style="background:#5a4771;box-shadow:inset 0 0 15px 3px #16191f00">🚫广告拦截大全</a></li>
+      <li class="li_global"><a class="a_global" id="software_skills" href="https://limbopro.com/category/software-skills/" target="_blank">⚒️软件百科</a></li>
+      <li class="li_global"><a class="a_global special yellow" id="websiteStatus" href="https://limbopro.com/status/" target="_blank" style="background:#5a4771">✅网站实时状态</a></li>
+      <li class="li_global"><a class="a_global special yellow" id="毒奶搜索" href="https://limbopro.com/search.html" target="_blank" style="border-radius:4px;background:#c53f3f">🎬毒奶搜索</a></li>
+      <li class="li_global"><a class="a_global special yellow" id="番号搜索" href="https://limbopro.com/btsearch.html" target="_blank" style="border-radius:4px;background:#c53f3f">🔞番号搜索</a></li>
+      <li class="li_global"><button class="a_global special yellow" id="mtzyczq"  style="border-radius:4px;background:#c53f3f" onclick="mtzyczq()">🎦媒体资源查找器</button></li>
       <li class="li_global"><button class="a_global special yellow" id="tmyszzq"  style="border-radius:4px;background:#c53f3f">🔍 元素屏蔽/追踪器</button></li>
       <li class="li_global">
     <button 
@@ -606,7 +606,7 @@
         onclick="window.initWebDebugger()"> ⚙️ Web 存储调试器
     </button>
 </li>
-      <li class="li_global"><button class="a_global special yellow" id="zhixingjs"  style="border-radius:4px;background:#c53f3f">执行JS代码</button></li>
+      <li class="li_global"><button class="a_global special yellow" id="zhixingjs"  style="border-radius:4px;background:#c53f3f">🧑‍💻执行JS代码</button></li>
      <li class="li_global"><button id="adsSkip" class="a_global special yellow ads_skip_on" title="自动跳过广告已开启 (点击关闭)" style="
     width: 106px !important;
     height: 50px !important;
@@ -2058,8 +2058,14 @@
                 <h3 style="margin-top: 0; color: #0056b3;">请输入要执行的 JavaScript 代码</h3>
                 
                 <div id="input-controls">
-                    <button id="${pasteBtnId}" class="tool-btn">粘贴</button>
-                    <button id="${clearBtnId}" class="tool-btn">清空</button>
+                    <button id="${pasteBtnId}" class="tool-btn" style="
+        color: white;
+        background: green;
+    ">粘贴</button>
+                    <button id="${clearBtnId}" class="tool-btn" style="
+    color: white;
+    background: red;
+">清空</button>
                 </div>
                 
                 <textarea id="${textareaId}" placeholder="例如: document.title = 'Executed!'" value="console.log('Hello'); return 1 + 1;"></textarea>
