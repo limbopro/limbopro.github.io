@@ -4835,10 +4835,10 @@
 
 
     // ==UserScript==
-// @name         元素屏蔽/追踪器 (V26.39.3 - 用户选择优先)
+// @name         元素屏蔽/追踪器 (V26.39.5 - 修复重复声明)
 // @namespace    http://tampermonkey.net/
-// @version      26.39.3
-// @description  V26.39.3：新增用户覆盖逻辑。当域名在 DEBUG_WEBLIST 中时，如果用户手动关闭过调试，则以用户的选择为准，不再自动强制开启。
+// @version      26.39.5
+// @description  V26.39.5：修复了 renderFloatWindow 函数中 mainContainer/windowDiv/existingContainer 的重复声明错误。
 // @author       Gemini
 // @match        *://*/*
 // @grant        none
@@ -4869,6 +4869,8 @@
     let isDebuggingElementClick = false;
     let isDebuggingLocationHooks = false;
     let isWindowOpenHooked = false;
+    // V26.39.4 NEW: 全局选择模式状态
+    let isSelectionMode = false; 
     
     // V26.39.2: 调试域名列表 - 如果当前页面域名在列表中，自动开启调试模式 (除非被用户覆盖)
     const DEBUG_WEBLIST = ['supjav.com', 'javbus.com']; 
@@ -5351,7 +5353,6 @@
 
             /* 模态框样式 */
             #gemini-custom-modal-overlay, #gemini-location-modal {
-                overflow:auto;
                 position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
                 background: rgba(0, 0, 0, 0.7); z-index: 2147483648; 
                 display: flex; justify-content: center; align-items: center;
@@ -5819,7 +5820,7 @@
 
 
     // =================================================================
-    // 核心函数：渲染和事件绑定 (V26.39 更新)
+    // 核心函数：渲染和事件绑定 (V26.39.5 修复重复声明)
     // =================================================================
 
     function getIframeData() {
@@ -5928,6 +5929,7 @@
 
         const allIframes = getIframeData();
 
+        // V26.39.5 修复：保留此块，处理清理和创建变量
         const existingContainer = document.getElementById(containerId);
         if (existingContainer) existingContainer.remove();
 
@@ -6027,10 +6029,20 @@
         let isBlacklisted = isCurrentPageBlacklisted();
         const totalSavedCount = getSavedRemovals().length + getIframeRemovals().length + getPageBlacklist().length;
 
+        // V26.39.5 修复：删除重复的 existingContainer, mainContainer, windowDiv 声明块
+        /* const existingContainer = document.getElementById(containerId);
+        if (existingContainer) existingContainer.remove();
+
+        const mainContainer = document.createElement('div');
+        mainContainer.id = containerId;
+
+        const windowDiv = document.createElement('div');
+        windowDiv.id = windowId; 
+        */
 
         windowDiv.innerHTML = `
             <div id="gemini-header">
-                <strong>🔍 元素屏蔽/追踪器 (V26.39.3)</strong>
+                <strong>🔍 元素屏蔽/追踪器 (V26.39.5)</strong>
                 <span id="gemini-close-btn">&times;</span>
             </div>
             
@@ -6044,8 +6056,8 @@
                     ${isBlacklisted ? '🛡️ 当前为黑名单页 (启用严格沙箱)' : '➕ 标记为黑名单页 (启用严格沙箱)'}
                 </button>
                 
-                <button id="selector-toggle" style="background: #007bff; color: white; border: none; padding: 8px 15px; cursor: pointer; border-radius: 4px; font-weight: bold; width: 100%; margin-bottom: 5px;">
-                    🖱️ 启用选择并屏蔽模式
+                <button id="selector-toggle" style="background: ${isSelectionMode ? '#dc3545' : '#007bff'}; color: white; border: none; padding: 8px 15px; cursor: pointer; border-radius: 4px; font-weight: bold; width: 100%; margin-bottom: 5px;">
+                    🖱️ 启用选择并屏蔽模式 (${isSelectionMode ? '开' : '关'})
                 </button>
                 <div style="display: flex; gap: 5px;">
                     <button id="debug-click-toggle" style="background: ${isDebuggingElementClick ? '#00c853' : '#ffc107'}; color: ${isDebuggingElementClick ? 'white' : '#333'}; border: none; padding: 8px 5px; cursor: pointer; border-radius: 4px; font-weight: bold; flex: 1; font-size: 12px;">
@@ -6199,27 +6211,26 @@
             blacklistToggle.textContent = isBlacklisted ? '🛡️ 当前为黑名单页 (启用严格沙箱)' : '➕ 标记为黑名单页 (启用严格沙箱)';
         };
 
-        let isSelectionMode = false;
+        // let isSelectionMode = false; // <--- REMOVED (Now using global isSelectionMode)
         let currentHoverElement = null;
         let lastHighlightedElement = null;
 
         const handleSelectionClick = (e) => {
             const target = e.target;
-            if (isSelectionMode && target === selectorToggle) {
-                e.stopPropagation();
-                e.preventDefault();
-                toggleSelectionMode(false);
-                return;
-            }
-
+            
+            // 确保只有在 SelectionMode 开启时才执行
+            if (!isSelectionMode) return;
+            
             if (target.closest(`#${containerId}`)) {
+                // 如果点击了浮窗内部，忽略
                 e.stopPropagation();
                 return;
             }
 
+            // 阻止原始点击事件和传播
             e.preventDefault();
             e.stopPropagation();
-
+            
             if (target.tagName === 'HTML' || target.tagName === 'BODY') {
                 statusBar.textContent = "不能屏蔽整个页面，请选择具体元素。";
                 toggleSelectionMode(false);
@@ -6245,6 +6256,8 @@
         };
 
         const handleSelectionMouseMove = (e) => {
+            if (!isSelectionMode) return; // 确保只在 SelectionMode 开启时执行
+            
             const target = e.target;
             if (target.closest(`#${containerId}`) || target.tagName === 'HTML' || target.tagName === 'BODY') {
                 if (currentHoverElement) {
@@ -6265,31 +6278,35 @@
         };
 
         function toggleSelectionMode(forceState) {
-            isSelectionMode = (forceState !== undefined) ? forceState : !isSelectionMode;
+            isSelectionMode = (forceState !== undefined) ? forceState : !isSelectionMode; // 使用全局变量
 
             targetDocs.forEach(doc => {
                 if (isSelectionMode) {
+                    // 添加事件监听器
                     doc.addEventListener('click', handleSelectionClick, true);
                     doc.addEventListener('mousemove', handleSelectionMouseMove);
                 } else {
+                    // 移除事件监听器
                     doc.removeEventListener('click', handleSelectionClick, true);
                     doc.removeEventListener('mousemove', handleSelectionMouseMove);
                 }
             });
 
+            // 更新 UI
             if (isSelectionMode) {
-                selectorToggle.textContent = '❌ 退出屏蔽模式';
+                selectorToggle.textContent = '❌ 退出屏蔽模式 (开)';
                 selectorToggle.style.background = '#dc3545';
                 statusBar.textContent = '🖱️ 选择模式已启用：请点击需要屏蔽的元素。';
-                mainContainer.style.cursor = 'default';
+                mainContainer.style.cursor = 'crosshair'; // 更改光标提示
             } else {
                 if (currentHoverElement) {
                     currentHoverElement.style.outline = '';
                     currentHoverElement = null;
                 }
-                selectorToggle.textContent = '🖱️ 启用选择并屏蔽模式';
+                selectorToggle.textContent = '🖱️ 启用选择并屏蔽模式 (关)';
                 selectorToggle.style.background = '#007bff';
                 statusBar.textContent = '选择模式已禁用。';
+                mainContainer.style.cursor = 'default';
             }
         }
 
@@ -6571,7 +6588,7 @@
 
 
     // =================================================================
-    // 元素点击过滤/调试函数 (保持不变)
+    // 元素点击过滤/调试函数 (V26.39.4 修复优先级)
     // =================================================================
 
     const AD_DOMAINS = [
@@ -6593,6 +6610,13 @@
         }
 
         const eventListenerFunction = async (e) => {
+            
+            // V26.39.4 NEW: 检查选择并屏蔽模式的优先级
+            if (isSelectionMode) { 
+                console.log('[Gemini屏蔽 V26.39.4] ⚠️ 选择并屏蔽模式激活中，忽略元素点击调试捕获。');
+                return; 
+            }
+            
             const targetElement = e.target;
 
             if (doc.defaultView === window && targetElement.closest('[id*="gemini"]')) {
@@ -6782,7 +6806,7 @@
             }
         }, true);
 
-        console.log(`[Gemini屏蔽] 脚本已初始化 (V26.39.3)。当前页面在黑名单中: ${isCurrentPageBlacklisted() ? '是' : '否'}。`);
+        console.log(`[Gemini屏蔽] 脚本已初始化 (V26.39.5)。当前页面在黑名单中: ${isCurrentPageBlacklisted() ? '是' : '否'}。`);
     }
 
     if (document.readyState === 'loading') {
