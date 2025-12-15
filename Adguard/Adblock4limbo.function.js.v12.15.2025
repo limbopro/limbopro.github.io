@@ -181,82 +181,38 @@
 
 
     // 重设导航/成人保护模式设置
-    // 定义一个正则表达式，用于匹配 URL 中是否包含特定的成人/视频/图片网站关键词
     var weblist_regex = new RegExp(/\b(xiaobaotv|iyf|gimy|ddrk|ddys|olevod|hitomi|hltv|javlibrary|thisav|njav|missav|javlib|javbus|attackers|18comic|javday|hamnime|takara|tameikegoro|deeps|moodyz|s1s1s1|nagae|ideapocket|dasdas|oppai|kawaii|satsu|mgstage|manji-group|rocket|muku|dmm|beauty|gloryquest|javbus|supjav|jable|xvideos|pornhub|porn|wnacg|av)\b/i);
-
-    // **逻辑块 1: 针对特定域名 (limbopro.com) 的设置**
     if (window.location.href.match('limbopro.com')) {
-        // 如果当前网址是 limbopro.com，强制设置导航模式为“显示/启用”
         setCookie('daohangMode_global', 'true', '400');
-        // 强制设置成人模式为“关闭/禁用”
         setCookie('adultMode', 'false', '400');
-
-        // **逻辑块 2: 匹配成人网站列表 且 全局导航设置为空**
     } else if (weblist_regex.test(window.location.href.toLowerCase()) && getCookie('daohangMode_global') == '') {
-        // 如果当前网址匹配到成人/视频列表，并且“全局导航模式”Cookie尚未设置
-        // 则将全局导航模式默认设置为“隐藏/禁用”
         setCookie('daohangMode_global', 'false', '400');
-
-        // **逻辑块 3: 匹配成人网站列表 (非首次加载，或 Cookie 已设置)**
     } else if (weblist_regex.test(window.location.href.toLowerCase())) {
-        // 如果当前网址匹配到成人/视频列表，但“全局导航模式”Cookie已经存在
-        // 此时不改变 Cookie 设置，而是按现有全局设置执行操作
         console.log('该网址被匹配，将按全局设置执行相关操作...！')
     }
 
-
-
-
-
-
-    /**
- * function wtf()
- * 这是一个定时执行的函数，主要职责是：
- * 1. 每 2.5 秒将 dh_buttonMain 元素的高度存储到浏览器的 localStorage 中，实现状态持久化。
- * 2. 根据本地存储的导航器类型（移动端/PC端），管理 dh_button 元素的垂直位置 (top) 的存储。
- */
     function wtf() {
-        // 设置一个定时器，每 2500 毫秒（2.5 秒）执行一次内部的逻辑
         setInterval(() => {
 
-            // --- 逻辑 1: dh_buttonMain 高度持久化 ---
-            // 检查 'dh_buttonMain' 元素是否存在，并且其 style.height 属性值不为空
-            if (document.getElementById('dh_buttonMain') !== null &&
-                document.getElementById('dh_buttonMain').style !== null &&
-                document.getElementById('dh_buttonMain').style.height !== null) {
-                // 将当前 dh_buttonMain 的高度值存储到 localStorage，键名为 'dh_buttonMain'
-                localStorage.setItem('dh_buttonMain', document.getElementById('dh_buttonMain').style.height);
+            // dh_buttonMain
+            if (document.getElementById('dh_buttonMain') !== null && document.getElementById('dh_buttonMain').style !== null && document.getElementById('dh_buttonMain').style.height !== null) {
+                localStorage.setItem('dh_buttonMain', document.getElementById('dh_buttonMain').style.height)
                 // console.log("当前导航按钮高度[dh_buttonMain]" + localStorage.getItem('dh_buttonMain'))
             }
 
-            // --- 逻辑 2: dh_button 位置 (top) 管理 ---
+            // _button
 
-            // 检查是否为移动端环境，且非 PC 端 (localStorage.getItem('navigator_pc') == '')
-            if (localStorage.getItem('navigator_mobile') == 'mobile' && localStorage.getItem('navigator_pc') == '') {
-                // 移动端top (记录垂直位置)
-
-                // 将当前 dh_button 的 top 样式值存储到 localStorage，键名为 'dh_button'
-                localStorage.setItem('dh_button', document.getElementById('dh_button').style.top);
-
-                // 原代码中有一个被注释掉的判断条件：
-                // //if (localStorage.getItem('dh_button') !== 'px') {
-
-                // 检查是否为移动端环境 (但上一条件未满足)
+            if (localStorage.getItem('navigator_mobile') == 'mobile' && localStorage.getItem('navigator_pc') == '') { // 移动端top
+                //if (localStorage.getItem('dh_button') !== 'px') {
+                localStorage.setItem('dh_button', document.getElementById('dh_button').style.top)
+                //}
             } else if (localStorage.getItem('navigator_mobile') == 'mobile') {
-                // 这可能是从 PC 切换到移动端时的清理/重置逻辑
-
-                // 清除 PC 标识
-                localStorage.setItem('navigator_pc', '');
-                // 重置 dh_button 的 top 位置为 'px' (一个无效值，可能是作为清除标识)
-                localStorage.setItem('dh_button', 'px');
-
-                // 递归调用 wtf()，但由于 wtf() 内部已经设置了 setInterval，
-                // 再次调用 wtf() 会创建一个新的定时器，可能导致重复执行和资源浪费。
-                // ⚠️ 建议：这个递归调用通常是不需要的，除非开发者有意让它在重置后立即启动一个新的定时器。
-                wtf();
+                localStorage.setItem('navigator_pc', '')
+                localStorage.setItem('dh_button', 'px')
+                wtf()
             }
 
-        }, 2500);
+        }, 2500)
     }
 
     wtf()
@@ -338,7 +294,7 @@
 
 
     // 先新建一个按钮
-    function initializeFloatingNavigationButton(x, csp) {
+    function adblock4limbo(x, csp) {
 
         if (document.getElementById('dh_buttonContainer')) return;
 
@@ -424,64 +380,35 @@
 
     }
 
-
-
-
-
     // 定义按钮尺寸
-    /**
- * getResponsiveButtonSize
- * 根据浏览器窗口宽度返回按钮的尺寸（CSS值）。
- * * @returns {string} - 按钮的尺寸（例如 '45px'）。
- */
-    function getResponsiveButtonSize() {
+    function _button_button_width() {
+        //const userAgent = navigator.userAgent.toLowerCase();
         const window_innerWidth = window.innerWidth;
-        let size; // 使用 let 声明变量，避免在 if/else 块中重复声明 var
-
         if (window_innerWidth <= 920) {
-            // 窗口宽度小于等于 920px (通常视为移动端/平板或小窗口)
-            size = '45px';
-            // 原始注释: 40px
+            //if (/\b(android|iphone|ipad|ipod)\b/i.test(userAgent)) {
+            var size = '45px'; // 40px
+            return size;
         } else {
-            // 窗口宽度大于 920px (通常视为 PC 端或大窗口)
-            size = '45px';
-            // 原始注释: 55px
+            var size = '45px'; // 55px
+            return size;
         }
-
-        // 注意：尽管在 if 和 else 分支中返回的值都是 '45px'，
-        // 但保留 if/else 结构有助于未来根据注释 (40px 和 55px) 轻松调整响应式逻辑。
-        return size;
     }
 
 
 
+    // 长时间不动则隐藏按钮
+    function _button_button(x) { // 显示导航按钮
+        if (document.getElementById('dh_button') !== null) {
+            const _button = document.getElementById('dh_button');
+            const new_div = document.getElementById('dh_buttonMain');
 
-
-
-    /**
-     * updateNavigationButtonDisplay
-     * 根据传入的参数控制导航按钮的尺寸和 z-index。
-     * @param {number} x - 控制显示逻辑的参数 (1 表示执行显示/尺寸调整)。
-     */
-    function updateNavigationButtonDisplay(x) {
-        // 检查导航按钮主容器是否存在
-        const buttonContainer = document.getElementById('dh_button');
-        if (buttonContainer !== null) {
-            const buttonMain = document.getElementById('dh_buttonMain');
-
-            // 当 x 等于 1 并且导航按钮主容器存在时，执行尺寸和 z-index 的设置
-            if (x == 1) {
-                // 注意: 原代码中的 ! (document.getElementById('dh_button') === null) 已经通过外层的 if (buttonContainer !== null) 保证，因此可以简化。
-
-                buttonContainer.style.height = getResponsiveButtonSize();
-                buttonContainer.style.width = getResponsiveButtonSize();
-                // 确保按钮层级最高，处于“显示”状态
-                if (buttonMain) {
-                    buttonMain.style.zIndex = '114154';
-                }
-                console.log('显示导航按钮🔘');
+            if (x == 1 && !(document.getElementById('dh_button') === null)) {
+                _button.style.height = _button_button_width();
+                _button.style.width = _button_button_width();
+                new_div.style.zIndex = '114154';
+                console.log('显示导航按钮🔘')
+            } else {
             }
-            // else 分支为空，可以移除以简化代码
         }
     }
 
@@ -554,11 +481,11 @@
     var number_x = 0;
     if (/\b(google|bing)\b/i.test(window.location.href.toLowerCase())) { // 谷歌和必应均不插入导航按钮
     } else if (csp_regex.test(window.location.href.toLowerCase()) && !(/\b(mobile)\b/i.test(navigator.userAgent.toLowerCase()))) { // 如果是带有CSP的网站则带上参数 csp // 2333
-        initializeFloatingNavigationButton(getResponsiveButtonSize(), 'csp');
+        adblock4limbo(_button_button_width(), 'csp');
         _onclick_button();
     }
     else {
-        initializeFloatingNavigationButton(getResponsiveButtonSize(), 'nocsp'); // 反之则不带
+        adblock4limbo(_button_button_width(), 'nocsp'); // 反之则不带
         _onclick_button();
     }
 
@@ -1650,8 +1577,9 @@
             // document.querySelector('button#dh_button').classList.add('cms_opacity');
             document.querySelector('button#dh_button').setAttribute("class", "cmsnone " + bottom());
             document.querySelector('#dh_buttonContainer').setAttribute("class", "cmsnone");
-            updateNavigationButtonDisplay('hidden'); // 隐藏按钮
+            _button_button('hidden'); // 隐藏按钮
             document.querySelector('button#hidedaohang').textContent = "导航按钮(OFF)"
+            // document.querySelector('button#hidedaohang').textContent = "点击显示导航按钮"
             document.querySelector('button#hidedaohang').style.background = 'red'
 
             if (click_sum++ == -1) { // 引导用户使用快捷方式唤起导航🧭详情页
@@ -1670,7 +1598,7 @@
             document.querySelector('button#hidedaohang').textContent = "导航按钮(ON)"
             // document.querySelector('button#hidedaohang').textContent = "点击隐藏导航按钮"
             document.querySelector('button#hidedaohang').style.background = 'green'
-            updateNavigationButtonDisplay('1') // 显示按钮
+            _button_button('1') // 显示按钮
 
             setTimeout(() => {
                 body_build('false')
@@ -3834,13 +3762,6 @@
             {
                 "name": "hanime1",
                 "url": "https://hanime1.me/comics",
-                "target": "_blank",
-                "level": "common"
-            }
-            ,
-            {
-                "name": "Porn Dude",
-                "url": "https://theporndude.com/zh",
                 "target": "_blank",
                 "level": "common"
             }
@@ -7849,7 +7770,6 @@
             }
             #storage-control-panel button.delete-btn {
                 background-color: #dc3545 !important; 
-                pointer-events: none !important;
             }
             .key-tooltip {
                 position: fixed !important; 
