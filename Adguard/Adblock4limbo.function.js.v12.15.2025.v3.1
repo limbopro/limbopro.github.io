@@ -34,8 +34,6 @@
 
 (function () {
 
-    fcsetCookie('daohangMode_global', 'true',400);
-
     // 您的防御性检查逻辑现在是安全的
     if (document.getElementById('dh_pageContainer') !== null) {
         return; // ✅ 合法的 return 语句，退出这个匿名函数
@@ -190,15 +188,15 @@
     // **逻辑块 1: 针对特定域名 (limbopro.com) 的设置**
     if (window.location.href.match('limbopro.com')) {
         // 如果当前网址是 limbopro.com，强制设置导航模式为“显示/启用”
-        fcsetCookie('daohangMode_global', 'true', '400');
+        setCookie('daohangMode_global', 'true', '400');
         // 强制设置成人模式为“关闭/禁用”
-        fcsetCookie('adultMode', 'false', '400');
+        setCookie('adultMode', 'false', '400');
 
         // **逻辑块 2: 匹配成人网站列表 且 全局导航设置为空**
     } else if (weblist_regex.test(window.location.href.toLowerCase()) && getCookie('daohangMode_global') == '') {
         // 如果当前网址匹配到成人/视频列表，并且“全局导航模式”Cookie尚未设置
         // 则将全局导航模式默认设置为“隐藏/禁用”
-        fcsetCookie('daohangMode_global', 'true', '400');
+        setCookie('daohangMode_global', 'false', '400');
 
         // **逻辑块 3: 匹配成人网站列表 (非首次加载，或 Cookie 已设置)**
     } else if (weblist_regex.test(window.location.href.toLowerCase())) {
@@ -351,6 +349,8 @@
         let body = document.body;
 
         document.querySelector('html').appendChild(dh_buttonContainer)
+
+        // document.querySelector('html').insertBefore(dh_buttonContainer, body);
 
         // 新建 dh_buttonMain
         let dh_buttonMain = document.createElement('div'); // body 换为 div
@@ -521,7 +521,7 @@
                         document.getElementById('dh_buttonMain').style.height = '420px'
                     }
 
-                    fcsetCookie("daohangMode_yourChoice", 'show', 400) // 显示按钮
+                    setCookie("daohangMode_yourChoice", 'show', 400) // 显示按钮
 
                     cookiesRemove()
 
@@ -672,14 +672,14 @@
       <li class="li_global"><a class="a_global special yellow" id="番号搜索" href="https://limbopro.com/btsearch.html" target="_blank" style="border-radius:4px;background:#c53f3f">🔞番号搜索</a></li>
       <li class="li_global"><button class="a_global special yellow" id="mtzyczq"  style="border-radius:4px;background:#c53f3f" onclick="mtzyczq()">🎦媒体资源查找器</button></li>
       <li class="li_global"><button class="a_global special yellow" id="tmyszzq"  style="border-radius:4px;background:#c53f3f">🔍 元素屏蔽/追踪器</button></li>
-      <!--<li class="li_global">
+      <li class="li_global">
     <button 
         class="a_global special yellow" 
         id="carolPanel"  
         style="border-radius:4px;background:#c53f3f"
         onclick="window.initWebDebugger()"> ⚙️ Web 存储调试器
     </button>
-</li>--!>
+</li>
 
 <li class="li_global">
     <button 
@@ -1589,19 +1589,19 @@
 
     function nsfwmode(x) { // 是否开启
         if (x == 'false') {
-            fcsetCookie('nsfwmode', 'false', '400');
+            setCookie('nsfwmode', 'false', '400');
             setTimeout(() => { nsfwmode_check() }, 100)
         } else if (x == 'true') {
-            fcsetCookie('nsfwmode', 'true', '400');
+            setCookie('nsfwmode', 'true', '400');
             setTimeout(() => { nsfwmode_check() }, 100)
         } else if (getCookie('nsfwmode') == 'false') {
-            fcsetCookie('nsfwmode', 'true', '400');
+            setCookie('nsfwmode', 'true', '400');
             setTimeout(() => { nsfwmode_check() }, 100)
         } else if (getCookie('nsfwmode') == 'true') {
-            fcsetCookie('nsfwmode', 'false', '400');
+            setCookie('nsfwmode', 'false', '400');
             setTimeout(() => { nsfwmode_check() }, 100)
         } else if (getCookie('nsfwmode') == '') {
-            fcsetCookie('nsfwmode', 'false', '400');
+            setCookie('nsfwmode', 'false', '400');
             setTimeout(() => { nsfwmode_check() }, 100)
         }
     }
@@ -1667,7 +1667,7 @@
 
 
     // 设置 cookie 饼
-    window.fcsetCookie = function fcsetCookie(cname, cvalue, exdays) { var d = new Date(); d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000)); var expires = "expires=" + d.toGMTString(); document.cookie = cname + "=" + cvalue + "; path=/;" + expires; }
+    function setCookie(cname, cvalue, exdays) { var d = new Date(); d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000)); var expires = "expires=" + d.toGMTString(); document.cookie = cname + "=" + cvalue + "; path=/;" + expires; }
 
     function getCookie(cname) {
         var name = cname + "="; var ca = document.cookie.split(';'); for (var i = 0; i < ca.length; i++) { var c = ca[i].trim(); if (c.indexOf(name) == 0) return c.substring(name.length, c.length); }
@@ -1678,7 +1678,7 @@
 
     function daohangMode_switch(x) {
         if (x == 'hidden') {
-            fcsetCookie("daohangMode_yourChoice", 'hidden', 400);
+            setCookie("daohangMode_yourChoice", 'hidden', 400);
             // document.querySelector('button#dh_button').classList.add('cms_opacity');
             document.querySelector('button#dh_button').setAttribute("class", "cmsnone " + bottom());
             document.querySelector('#dh_buttonContainer').setAttribute("class", "cmsnone");
@@ -1695,7 +1695,7 @@
             }, 1500)
 
         } else if (x == 'show') {
-            fcsetCookie("daohangMode_yourChoice", 'show', 400);
+            setCookie("daohangMode_yourChoice", 'show', 400);
             document.querySelector('button#dh_button').setAttribute("class", "cms " + bottom());
             document.querySelector('#dh_buttonContainer').setAttribute("class", "cms pointer-events-none");
             document.querySelector('button#hidedaohang').textContent = "导航按钮(ON)"
@@ -8325,7 +8325,7 @@ window.initWebDebugger = function showDebuggerPanel() {
         });
     }
 
-    window.fcsetCookie = function fcsetCookie(key, value) {
+    window.setCookie = function setCookie(key, value) {
         document.cookie = `${encodeURIComponent(key)}=${encodeURIComponent(value)}; path=/`;
     }
 
@@ -8502,10 +8502,10 @@ window.initWebDebugger = function showDebuggerPanel() {
     cookieListWrapper.className = 'data-list-wrapper';
     cookieSection.appendChild(cookieListWrapper);
 
-    window.renderCookies = function renderCookies() {
+   window.renderCookies=  function renderCookies() {
         try {
             const cookies = getCookieswebDebug();
-            renderStorage(cookieListWrapper, cookies, fcsetCookie, deleteCookie, renderCookies);
+            renderStorage(cookieListWrapper, cookies, setCookie, deleteCookie, renderCookies);
         } catch (error) {
             cookieListWrapper.innerHTML = '<p style="color:red;">读取 Cookie 失败。</p>';
         }
@@ -8542,7 +8542,7 @@ window.initWebDebugger = function showDebuggerPanel() {
     sessionListWrapper.className = 'data-list-wrapper';
     sessionSection.appendChild(sessionListWrapper);
 
-    window.renderSessionStorage = function renderSessionStorage() {
+    window.renderSessionStorage= function renderSessionStorage() {
         try {
             const sessionStorageData = getSessionStorage();
             renderStorage(sessionListWrapper, sessionStorageData, setSessionStorage, deleteSessionStorage, renderSessionStorage);

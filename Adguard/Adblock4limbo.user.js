@@ -2522,7 +2522,8 @@ function daohang_build() { // 如果导航按钮不存在，则引入外部脚�
                 // 检查外部文件是否已经引用成功（通过检查两个关键DOM元素是否存在）
                 var isFunctionxLoaded = (
                     document.querySelector("div#dh_pageContainer") &&
-                    document.querySelector("script[src*='Adblock4limbo.function.js']")
+                    //document.querySelector("script[src*='Adblock4limbo.function.js']")
+                    typeof body_build == 'function'
                 );
 
                 // 检查是否已经存在导航容器 (dh_pageContainer)
@@ -3778,7 +3779,7 @@ loadCSS('https://limbopro.com/CSS/Adblock4limbo.user.css', () => {
 */
 
 // 动态创建并引用外部资源 外部样式表 外部脚本
-function third_party_fileX(tagname, url, where) {
+window.third_party_fileX = function third_party_fileX(tagname, url, where) {
     var ele_NewX = document.createElement(tagname);
     // script
     if (tagname == "script") {
@@ -5030,8 +5031,6 @@ function aopr() {
 
 // 设置 cookie 饼
 function settingCookie(cname, cvalue, exdays) { var d = new Date(); d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000)); var expires = "expires=" + d.toGMTString(); document.cookie = cname + "=" + cvalue + "; path=/;" + expires; }
-
-
 
 // 注入 prevent-setTimeout scriptlet
 function injectPreventSetTimeout() {

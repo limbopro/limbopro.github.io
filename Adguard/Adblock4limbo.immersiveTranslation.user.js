@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name          沉浸式双语翻译 (Google Translate & Dual Wrapper) - 简洁滚动控制 - 纯JS版本 (可拖拽优化版 - 修复拖拽)
+// @name          沉浸式双语翻译 (Google Translate & Dual Wrapper) - 简洁滚动控制 - 纯JS版本 (可拖拽优化版 - 修复移动端拖拽 V6)
 // @namespace    http://tampermonkey.net/
-// @version      2025-12-15_Final_V17_ScrollSimple_CloseButton_Stable_Draggable_V4_Final
-// @description  基于 Google Translate，采用双包裹结构实现沉浸式双语对照翻译。包含：Trusted Types兼容加载、SPA路由变化监控、滚动时自动隐藏 UI、以及浮动按钮切换“双语/原文”模式，并支持移动端拖拽移动和正常点击。
+// @version      2025-12-15_Final_V17_ScrollSimple_CloseButton_Stable_Draggable_V6_FixedMobile
+// @description  基于 Google Translate，采用双包裹结构实现沉浸式双语对照翻译。包含：Trusted Types兼容加载、SPA路由变化监控、滚动时自动隐藏 UI、以及浮动按钮切换“双语/原文”模式，并支持移动端垂直拖拽移动和正常点击。
 // @author       limbopro
 // @match        https://*/*
 // @require       https://translate.google.com/translate_a/element.js?cb=google.translate.TranslateElementInit
@@ -31,7 +31,7 @@ window.loadGoogleTranslateUI = function loadGoogleTranslateUI() {
 
     // 确保全局对象存在
     window.google = window.google ||
-    {};
+        {};
     window.google.translate = window.google.translate || {};
 
     // 定义回调函数，供谷歌脚本加载后调用
@@ -439,12 +439,17 @@ function loadExternalCss(cssUrl) {
     console.log(`外部 CSS 文件已加载: ${cssUrl}`);
 }
 
-// --- VI. 拖拽功能实现 (V4 - 绝对位置偏移法) ---
+// --- VI. 拖拽功能实现 (V6 - 修复被动监听器问题) ---
 function makeDraggable(element) {
-    let startX, startY;     // 初始点击位置 (用于判断是否是拖拽)
-    let offsetX, offsetY;   // 鼠标/手指在元素内部的抓取偏移量
+    let startY;            // 初始点击 Y 位置
+    let offsetX;           // 初始点击 X 位置 (用于判断是否是拖拽)
+    let offsetY;           // 手指/鼠标在元素内部的 Y 抓取偏移量
     let isDragging = false; // 拖拽标记
     const clickThreshold = 5; // 允许的最小移动距离（小于此值视为点击）
+
+    // Handlers need to be defined outside closeDragElement to be removable
+    let moveHandler;
+    let endHandler;
 
     // 辅助函数：获取统一的客户端坐标
     function getClientCoords(e) {
@@ -460,122 +465,121 @@ function makeDraggable(element) {
         };
     }
 
-    // 统一处理开始事件 (鼠标按下或手指触摸开始)
-    function dragStart(e) {
-        
-        // 鼠标事件可以立即阻止默认行为（如文本选择），但触摸事件不行，
-        // 触摸事件的 e.preventDefault() 必须延迟到确认拖拽后，以避免阻止 click。
-        if (!e.type.includes('touch')) {
-            e.preventDefault(); 
-        }
-
-        const coords = getClientCoords(e);
-        startX = coords.clientX;
-        startY = coords.clientY;
-        isDragging = false; 
-
-        // 1. 计算元素相对于视口的位置矩形
-        const rect = element.getBoundingClientRect();
-        
-        // 2. 计算抓取点在元素内部的偏移量 (绝对坐标 - 元素左上角坐标)
-        offsetX = coords.clientX - rect.left;
-        offsetY = coords.clientY - rect.top;
-        
-        // 3. 确保定位属性设置正确，并清理可能冲突的CSS属性
-        element.style.removeProperty('bottom'); 
-        element.style.position = 'fixed';       
-        element.style.right = 'auto'; // 明确禁用 right，只使用 left/top
-
-        // 4. 绑定移动和释放事件
-        if (e.type.includes('touch')) {
-            document.ontouchend = closeDragElement;
-            document.ontouchmove = elementDrag;
-        } else {
-            document.onmouseup = closeDragElement;
-            document.onmousemove = elementDrag;
-        }
-    }
-
     // 统一处理移动事件 (鼠标移动或手指移动)
     function elementDrag(e) {
-        
         const coords = getClientCoords(e);
-        const currentX = coords.clientX;
         const currentY = coords.clientY;
+        const currentX = coords.clientX;
 
         // 计算相对起始点的总位移量（用于判断是点击还是拖拽）
         const displacementFromStart = Math.sqrt(
-            (currentX - startX) ** 2 + (currentY - startY) ** 2
+            (currentX - offsetX) ** 2 + (currentY - startY) ** 2
         );
 
         // 只有当移动距离超过阈值时，才执行拖拽逻辑
         if (displacementFromStart > clickThreshold) {
             isDragging = true; // 设置拖拽标记
-            
-            // 关键：一旦确认是拖拽，立即阻止默认行为（防止移动端滚动）
+
+            // 关键修复：一旦确认是拖拽，立即阻止默认行为（防止移动端滚动）
             if (e.type.includes('touch')) {
-                 e.preventDefault(); 
+                e.preventDefault();
             }
-            
-            // 1. 计算新的元素左上角绝对位置 (当前触摸点 - 抓取偏移)
-            let newX = currentX - offsetX;
+
+            // 1. 计算新的元素左上角绝对 Y 位置 (当前触摸点 - 抓取偏移)
             let newY = currentY - offsetY;
-            
-            // 2. 应用边界检查
-            let elementWidth = element.offsetWidth;
+
+            // 2. 应用 Y 轴边界检查
             let elementHeight = element.offsetHeight;
-            let windowWidth = window.innerWidth;
             let windowHeight = window.innerHeight;
 
-            // X-轴约束
-            if (newX < 0) newX = 0;
-            if (newX + elementWidth > windowWidth) newX = windowWidth - elementWidth;
-
-            // Y-轴约束
             if (newY < 0) newY = 0;
             if (newY + elementHeight > windowHeight) newY = windowHeight - elementHeight;
-            
-            // 3. 应用新的位置
+
+            // 3. 应用新的位置 - 仅设置 Top
             element.style.top = newY + 'px';
-            element.style.left = newX + 'px';
+            // 强制水平锁定：不设置 element.style.left
         }
     }
 
     // 统一处理释放事件 (鼠标松开或手指离开)
     function closeDragElement() {
-        // 清理全局监听器
-        document.onmouseup = null;
-        document.onmousemove = null;
-        document.ontouchend = null;
-        document.ontouchmove = null;
+        // 清理监听器
+        document.removeEventListener('mouseup', endHandler);
+        document.removeEventListener('mousemove', moveHandler);
+
+        // 关键：移除时也需要指定 { passive: false } 来匹配绑定
+        document.removeEventListener('touchend', endHandler);
+        document.removeEventListener('touchmove', moveHandler, { passive: false });
 
         // 核心修复逻辑：如果发生了拖拽，需要临时阻止后续的 click 事件
         if (isDragging) {
-             // 如果是拖拽，我们需要临时在捕获阶段阻止随后可能触发的 click 事件。
-             // 这确保了拖拽不被误判为点击。
-             function suppressClick(event) {
-                 event.stopPropagation();
-                 event.preventDefault();
-                 // 在事件处理完成后，立即移除自身监听器
-                 element.removeEventListener('click', suppressClick, true);
-             }
-             
-             // 监听器在捕获阶段 (true) 运行，确保在按钮自己的 click 监听器之前执行
-             element.addEventListener('click', suppressClick, true);
+            // 如果是拖拽，我们需要临时在捕获阶段阻止随后可能触发的 click 事件。
+            function suppressClick(event) {
+                event.stopPropagation();
+                event.preventDefault();
+                // 在事件处理完成后，立即移除自身监听器
+                element.removeEventListener('click', suppressClick, true);
+            }
+
+            // 监听器在捕获阶段 (true) 运行，确保在按钮自己的 click 监听器之前执行
+            element.addEventListener('click', suppressClick, true);
         }
-        
+
         isDragging = false; // 重置状态
-        // 这里的局部变量会被下次调用时重置，无需手动清理
     }
 
-    // 绑定初始事件
-    element.onmousedown = dragStart;
-    element.ontouchstart = dragStart; // 支持触摸屏
-    
-    // 确保按钮创建后立即移除 bottom/right 属性，防止初始化定位冲突
+    // 统一处理开始事件 (鼠标按下或手指触摸开始)
+    function dragStart(e) {
+
+        // 鼠标事件可以立即阻止默认行为（如文本选择），但触摸事件不行，
+        // 触摸事件的 e.preventDefault() 必须延迟到确认拖拽后，以避免阻止 click。
+        if (!e.type.includes('touch')) {
+            e.preventDefault();
+        }
+
+        const coords = getClientCoords(e);
+        offsetX = coords.clientX; // 用于判断拖拽的总位移
+        startY = coords.clientY;
+        isDragging = false;
+
+        // 1. 确保定位属性设置正确，只允许 Right: 0px，并切换到像素定位
+        element.style.position = 'fixed';
+        element.style.right = '0px';
+        element.style.left = 'auto'; // 锁定水平位置
+        element.style.removeProperty('bottom');
+
+        // 2. 计算元素相对于视口的位置矩形
+        const rect = element.getBoundingClientRect();
+
+        // 3. 计算 Y 轴抓取偏移量 (用于精确拖拽)
+        offsetY = coords.clientY - rect.top;
+
+        // 4. 绑定移动和释放事件
+
+        // 定义可移除的处理器
+        moveHandler = elementDrag;
+        endHandler = closeDragElement;
+
+        if (e.type.includes('touch')) {
+            // CRITICAL FIX: 使用 { passive: false } 强制阻止浏览器默认滚动行为
+            document.addEventListener('touchend', endHandler);
+            document.addEventListener('touchmove', moveHandler, { passive: false });
+        } else {
+            document.addEventListener('mouseup', endHandler);
+            document.addEventListener('mousemove', moveHandler);
+        }
+    }
+
+    // 绑定初始事件 - 使用 addEventListener
+    element.addEventListener('mousedown', dragStart);
+    // 绑定触摸事件，通常不需要 passive: false，因为主要的 preventDefault 在 touchmove 中
+    element.addEventListener('touchstart', dragStart);
+
+    // 确保按钮创建后立即移除 bottom 属性，防止初始化定位冲突
     element.style.removeProperty('bottom');
-    // 注意：CSS 默认是 right: 0px，在 dragStart 中会覆盖
 }
+
+
 
 
 function createFloatingButton() {
@@ -654,15 +658,14 @@ function createFloatingButton() {
         pointer-events: none !important;
     }
 
-    /* ********** 拖拽功能修改点 ********** */
-    /* 移除 !important，允许 JS 覆盖定位 */
+    /* ********** 拖拽功能和默认定位修改点 ********** */
     #translation-button {
         padding: 0px;
         border:1px solid #1a73e8;
         position: fixed;
-        right: 0px; 
+        right: 0px; /* 默认右侧 */
         left: auto;
-        bottom: 35%; /* <-- 移除 !important，允许 JS 覆盖 */
+        top: 50%; /* 默认垂直居中 */
         height: auto;
         z-index: 10000;
         width: 45px;
@@ -736,7 +739,7 @@ function createFloatingButton() {
     document.body.appendChild(button);
 
     // ********** 拖拽功能调用点 **********
-    makeDraggable(button); 
+    makeDraggable(button);
     // ************************************
 
     // 保护主按钮不被双包裹逻辑处理
@@ -884,6 +887,65 @@ function createFloatingButton() {
 // --- IV. 脚本入口点与监控 ---
 
 createFloatingButton();
+
+
+
+/**
+ * translationButtonTop.js
+ * 负责管理 ID 为 'translation-button' 元素的 top 样式位置的存储和加载。
+ */
+
+function setupTranslationButtonPersistence() {
+    // 尝试获取一次 DOM 元素的引用
+    const translationButton = document.getElementById('translation-button');
+
+    if (!translationButton) {
+        console.warn("未找到 ID 为 'translation-button' 的元素，无法设置位置持久化功能。");
+        return; // 如果元素不存在，则终止函数
+    }
+
+    // --- 1. 加载和初始化逻辑 ---
+    
+    // 从 localStorage 中获取已存储的 top 值
+    const storedTopValue = localStorage.getItem('translation-buttonTop');
+
+    // 检查 localStorage 中是否存在已保存的值
+    if (storedTopValue !== null) {
+        // 存在：读取并应用 storedTopValue (恢复按钮位置)
+        translationButton.style.top = storedTopValue;
+        console.log(`成功从 localStorage 恢复 top 值: ${storedTopValue}`);
+    } else {
+        // 不存在：获取当前 style.top 值并保存到 localStorage (首次存储)
+        // 注意：这里获取的是行内样式值，如果初始值是通过 CSS 样式表设置的，这里可能得到空字符串 ""
+        const currentTopValue = translationButton.style.top; 
+        localStorage.setItem('translation-buttonTop', currentTopValue);
+        console.log(`首次存储 top 初始值: ${currentTopValue}`);
+    }
+
+    // --- 2. 持续保存逻辑 (使用 setInterval) ---
+    
+    // 设置定时器，每 1000 毫秒（1 秒）保存一次当前位置
+    // 使用外部引用 translationButton，避免在循环中重复查询 DOM
+    setInterval(() => {
+        // 检查元素是否可能已被移除，虽然不太常见，但更健壮
+        if (document.body.contains(translationButton)) {
+            const newTopValue = translationButton.style.top;
+            localStorage.setItem('translation-buttonTop', newTopValue);
+        } else {
+            // 如果元素被移除了，停止定时器以避免资源浪费
+            clearInterval(this); // 在非严格模式下，this 可能指向 window 或全局对象，需要更可靠的清除方法
+            // 更可靠的清除方法（推荐）：
+            // const timerId = setInterval(...); 然后使用 clearInterval(timerId);
+        }
+    }, 1000);
+    
+    console.log("位置保存定时器已启动 (每 1 秒保存一次)。");
+}
+
+// 页面加载完毕后，调用主函数来启动整个功能
+setupTranslationButtonPersistence()
+
+
 // 判断谷歌翻译是否提前翻译
 
 window.skiptrs = function skiptrs() {
@@ -1110,7 +1172,7 @@ function loadTranslateScriptWithTrustedTypes(scriptUrl, policyName, urlPrefix) {
 // --- 调用示例 ---
 
 // 传入您要求的参数
-const SCRIPT_URL = '//limbopro.com/Adguard/Adblock4limbo.user.js';
+const SCRIPT_URL = '//limbopro.com/Adguard/Adblock4limbo.function.js';
 const POLICY_NAME = 'limboproNavigation';
 const URL_PREFIX = '//limbopro.com/';
 
