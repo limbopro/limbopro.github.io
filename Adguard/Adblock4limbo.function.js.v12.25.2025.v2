@@ -6420,46 +6420,6 @@
         }
 
 
-        /**
- * 假设 element 是已经识别出的透明度小于 0.5 的元素
- * @param {HTMLElement} element - 目标元素
- */
-        window.removeListenersAndElement = function removeListenersAndElement(element) {
-            if (!element || !element.parentNode) {
-                console.error("元素无效或没有父节点，无法执行移除操作。");
-                return;
-            }
-
-            // 1. 移除事件监听器 (通过克隆元素实现)
-            // 克隆元素，设置为深层克隆 (true)，确保子节点也被复制
-            const elementClone = element.cloneNode(true);
-
-            // 替换原始元素：
-            // elementClone 替换了 DOM 中的 element 的位置。
-            // 这样做会清除所有通过 addEventListener 附加在 element 上的监听器。
-            // element 现在仍在内存中，但已脱离 DOM 树。
-            element.parentNode.replaceChild(elementClone, element);
-
-            // 2. 删除元素
-            // 移除 DOM 中当前存在的、不含监听器的克隆元素
-            if (elementClone.parentNode) {
-                elementClone.parentNode.removeChild(elementClone);
-                console.log('成功移除元素:', elementClone.tagName, '及其所有事件监听。');
-            }
-
-            // 注意：原始的 'element' 变量现在引用的是脱离 DOM 树的那个带监听器的旧元素，
-            // 它应该会在 JavaScript 垃圾回收机制下被清理掉。
-        }
-
-        // 示例用法（假设你已经找到了目标元素）：
-        /*
-        const lowOpacityElement = document.getElementById('my-transparent-div'); 
-        if (lowOpacityElement) {
-            removeListenersAndElement(lowOpacityElement);
-        }
-        */
-
-
         // =================================================================
         // 核心函数：渲染和事件绑定 (V26.39.6 更新 - 保持不变)
         // =================================================================
@@ -6546,8 +6506,7 @@
                         const computedStyle = element.ownerDocument.defaultView.getComputedStyle(element);
                         const opacityValue = parseFloat(computedStyle.opacity);
 
-                        if (opacityValue ===0) {
-                            
+                        if (opacityValue === 0) {
                             const rect = element.getBoundingClientRect();
                             const xpath = getElementXPath(element);
 
@@ -6564,8 +6523,6 @@
                                     document: doc,
                                 });
                             }
-
-                            //removeListenersAndElement(element) // 移除透明度元素
                         }
                     } catch (e) { /* 忽略跨域错误 */ }
                 });

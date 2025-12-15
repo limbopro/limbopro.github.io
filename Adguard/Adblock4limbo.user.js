@@ -5242,10 +5242,10 @@ const TIME_WINDOW_MS = 120000;
 const WARNING_TIMEOUT_MS = 120000;
 // 要检查的脚本文件名列表
 const TARGET_SCRIPTS = [
-    'Adblock4limbo.user.js',
-    'Adblock4limbo.function.js',
-    'Adblock4limbo.immersiveTranslation.user.js',
-    'isAgent.js'
+    'https://limbopro.com/Adguard/Adblock4limbo.user.js',
+    'https://limbopro.com/Adguard/Adblock4limbo.function.js',
+    'https://limbopro.com/Adguard/Adblock4limbo.immersiveTranslation.user.js',
+    'https://limbopro.com/Adguard/isAgent.js'
 ];
 
 // --- 悬浮窗函数 ---
