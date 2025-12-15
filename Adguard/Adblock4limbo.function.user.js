@@ -34,7 +34,7 @@
 
 (function () {
 
-    localStorage.setItem('daohangMode_global', 'true');
+    fcsetCookie('daohangMode_global', 'true',400);
 
     // 您的防御性检查逻辑现在是安全的
     if (document.getElementById('dh_pageContainer') !== null) {
@@ -672,14 +672,14 @@
       <li class="li_global"><a class="a_global special yellow" id="番号搜索" href="https://limbopro.com/btsearch.html" target="_blank" style="border-radius:4px;background:#c53f3f">🔞番号搜索</a></li>
       <li class="li_global"><button class="a_global special yellow" id="mtzyczq"  style="border-radius:4px;background:#c53f3f" onclick="mtzyczq()">🎦媒体资源查找器</button></li>
       <li class="li_global"><button class="a_global special yellow" id="tmyszzq"  style="border-radius:4px;background:#c53f3f">🔍 元素屏蔽/追踪器</button></li>
-      <li class="li_global">
+      <!--<li class="li_global">
     <button 
         class="a_global special yellow" 
         id="carolPanel"  
         style="border-radius:4px;background:#c53f3f"
         onclick="window.initWebDebugger()"> ⚙️ Web 存储调试器
     </button>
-</li>
+</li>--!>
 
 <li class="li_global">
     <button 
