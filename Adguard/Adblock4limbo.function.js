@@ -134,7 +134,9 @@
 
         function tripleClick_check(x) {
             setTimeout(() => {
-                if (x >= 4) {
+                if (x >= 4 && /android|iphone|ipad|ipod|webos|iemobile/i.test(navigator.userAgent)) {
+                    // 逻辑成立时的代码
+                    console.log("条件成立：x >= 4 且为移动设备");
                     console.log('连续点击超过' + x + "次")
                     body_build('true')  // 如果按钮出现，且其他如搜索不存在则可唤出导航页面
                 } else {
@@ -143,7 +145,6 @@
                     //hiddencjsfy()
                     showcjsfy()
                 }
-
             }, 850)
         }
 
@@ -679,7 +680,6 @@
         onclick="window.initWebDebugger()"> ⚙️ Web 存储调试器
     </button>
 </li>
-
 
 <li class="li_global">
     <button 
@@ -1696,11 +1696,9 @@
 
         } else if (x == 'show') {
             setCookie("daohangMode_yourChoice", 'show', 400);
-            // document.querySelector('button#dh_button').classList.remove('cms_opacity');
             document.querySelector('button#dh_button').setAttribute("class", "cms " + bottom());
             document.querySelector('#dh_buttonContainer').setAttribute("class", "cms pointer-events-none");
             document.querySelector('button#hidedaohang').textContent = "导航按钮(ON)"
-            // document.querySelector('button#hidedaohang').textContent = "点击隐藏导航按钮"
             document.querySelector('button#hidedaohang').style.background = 'green'
             updateNavigationButtonDisplay('1') // 显示按钮
 
@@ -6546,8 +6544,7 @@
                         const computedStyle = element.ownerDocument.defaultView.getComputedStyle(element);
                         const opacityValue = parseFloat(computedStyle.opacity);
 
-                        if (opacityValue ===0) {
-                            
+                        if (opacityValue === 0) {
                             const rect = element.getBoundingClientRect();
                             const xpath = getElementXPath(element);
 
@@ -6564,8 +6561,6 @@
                                     document: doc,
                                 });
                             }
-
-                            //removeListenersAndElement(element) // 移除透明度元素
                         }
                     } catch (e) { /* 忽略跨域错误 */ }
                 });
@@ -7886,7 +7881,8 @@
 
 
 
-
+/* WebDebugger.js 开始 START
+*/
 
 
 
@@ -7900,51 +7896,39 @@
  * 2. 执行: window.initWebDebugger();
  */
 
+// --- 固定功能常量和状态管理 ---
+const PIN_KEY = 'webDebuggerPinned';
 
 /**
- * WebDebugger.js
- * * 独立函数：Web 存储调试器 (Cookies/Local/Session/Config)
- * * 描述: 创建一个悬浮可拖拽的面板，用于实时查看和编辑 Cookie, LocalStorage, SessionStorage，
- * 并提取内嵌的 JSON 配置数据。
- * * 调用方法: 
- * 1. 引入文件: <script src="path/to/WebDebugger.js"></script>
- * 2. 执行: window.initWebDebugger(); (手动显示)
- * * 修复: 自动检查 localStorage 中的固定状态，如果已固定则自动显示面板。
+ * 获取固定状态 (默认为 true，即显示)
+ */
+window.getPinState = function getPinState() {
+    // 在浏览器环境中，直接使用 localStorage
+    const state = localStorage.getItem(PIN_KEY);
+    // 默认首次加载为 true，即显示
+    return state === null ? true : state === 'true';
+}
+
+/**
+ * 核心渲染和面板创建函数
  */
 
-(function () {
-    'use strict';
 
-    // --- 固定功能常量和状态管理 ---
-    const PIN_KEY = 'webDebuggerPinned';
-
-    /**
-     * 获取固定状态 (默认为 true，即显示)
-     */
-    function getPinState() {
-        // 在浏览器环境中，直接使用 localStorage
-        const state = localStorage.getItem(PIN_KEY);
-        // 默认首次加载为 true，即显示
-        return state === null ? true : state === 'true';
+// 暴露初始化函数到全局
+window.initWebDebugger = function showDebuggerPanel() {
+    if (typeof body_build == 'function') {
+        body_build('false')
+    }
+    // 如果面板已存在，则刷新内容并退出
+    if (document.getElementById('storage-control-panel')) {
+        if (window.__debugRender) {
+            window.__debugRender();
+        }
+        return;
     }
 
-    /**
-     * 核心渲染和面板创建函数
-     */
-    function showDebuggerPanel() {
-        if (typeof body_build == 'function') {
-            body_build('false')
-        }
-        // 如果面板已存在，则刷新内容并退出
-        if (document.getElementById('storage-control-panel')) {
-            if (window.__debugRender) {
-                window.__debugRender();
-            }
-            return;
-        }
-
-        // --- 样式定义 ---
-        const panelStyle = `
+    // --- 样式定义 ---
+    const panelStyle = `
             #storage-control-panel {
                 position: fixed !important; 
                 top: 10px;    
@@ -8180,463 +8164,441 @@
             }
         `;
 
-        // --- DOM 结构创建 和 拖拽功能 ---
-        const panel = document.createElement('div');
-        panel.id = 'storage-control-panel';
+    // --- DOM 结构创建 和 拖拽功能 ---
+    const panel = document.createElement('div');
+    panel.id = 'storage-control-panel';
 
-        const header = document.createElement('h3');
-        header.innerHTML = '⚙️ Web 存储调试器 (Cookies/Local/Session/Config)';
+    const header = document.createElement('h3');
+    header.innerHTML = '⚙️ Web 存储调试器 (Cookies/Local/Session/Config)';
 
-        const controlsContainer = document.createElement('div');
-        controlsContainer.className = 'header-controls';
+    const controlsContainer = document.createElement('div');
+    controlsContainer.className = 'header-controls';
 
-        // 固定按钮逻辑
-        let isCurrentlyPinned = getPinState();
-        const pinBtn = document.createElement('button');
-        pinBtn.className = 'pin-btn';
+    // 固定按钮逻辑
+    let isCurrentlyPinned = getPinState();
+    const pinBtn = document.createElement('button');
+    pinBtn.className = 'pin-btn';
 
-        const updatePinButtonVisual = () => {
-            pinBtn.textContent = isCurrentlyPinned ? '📌' : '📍';
-            pinBtn.title = isCurrentlyPinned ? '点击取消固定 (关闭后隐藏)' : '点击固定 (下次刷新页面显示)';
-            if (isCurrentlyPinned) {
-                pinBtn.classList.add('pinned');
-            } else {
-                pinBtn.classList.remove('pinned');
-            }
-        };
-
-        updatePinButtonVisual();
-
-        pinBtn.onclick = () => {
-            isCurrentlyPinned = !isCurrentlyPinned;
-            localStorage.setItem(PIN_KEY, isCurrentlyPinned.toString());
-            updatePinButtonVisual();
-        };
-
-        // 关闭按钮逻辑
-        const closeBtn = document.createElement('button');
-        closeBtn.className = 'close-btn';
-        closeBtn.innerHTML = '×';
-        closeBtn.title = '关闭调试器';
-        closeBtn.onclick = () => {
-            if (!isCurrentlyPinned) {
-                // 只有在非固定状态下，关闭才意味着下次刷新时不显示
-                localStorage.setItem(PIN_KEY, 'false');
-            }
-            panel.remove();
-            document.getElementById('storage-control-style')?.remove();
-            document.getElementById('key-tooltip')?.remove();
-            document.removeEventListener('click', hideTooltipOutside);
-        };
-
-        controlsContainer.appendChild(pinBtn);
-        controlsContainer.appendChild(closeBtn);
-
-        header.appendChild(controlsContainer);
-        panel.appendChild(header);
-
-        const content = document.createElement('div');
-        content.className = 'content';
-        panel.appendChild(content);
-
-        // 样式注入
-        let style = document.getElementById('storage-control-style');
-        if (!style) {
-            style = document.createElement('style');
-            style.id = 'storage-control-style';
-            document.head.appendChild(style);
-        }
-        style.innerHTML = panelStyle;
-
-        // 确保 body 存在
-        if (document.body) {
-            document.body.appendChild(panel);
+    const updatePinButtonVisual = () => {
+        pinBtn.textContent = isCurrentlyPinned ? '📌' : '📍';
+        pinBtn.title = isCurrentlyPinned ? '点击取消固定 (关闭后隐藏)' : '点击固定 (下次刷新页面显示)';
+        if (isCurrentlyPinned) {
+            pinBtn.classList.add('pinned');
         } else {
-            console.error("无法找到 body 元素来插入调试器面板。请确保在 body 加载后调用 initWebDebugger()。");
+            pinBtn.classList.remove('pinned');
+        }
+    };
+
+    updatePinButtonVisual();
+
+    pinBtn.onclick = () => {
+        isCurrentlyPinned = !isCurrentlyPinned;
+        localStorage.setItem(PIN_KEY, isCurrentlyPinned.toString());
+        updatePinButtonVisual();
+    };
+
+    // 关闭按钮逻辑
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'close-btn';
+    closeBtn.innerHTML = '×';
+    closeBtn.title = '关闭调试器';
+    closeBtn.onclick = () => {
+        if (!isCurrentlyPinned) {
+            // 只有在非固定状态下，关闭才意味着下次刷新时不显示
+            localStorage.setItem(PIN_KEY, 'false');
+        }
+        panel.remove();
+        document.getElementById('storage-control-style')?.remove();
+        document.getElementById('key-tooltip')?.remove();
+        document.removeEventListener('click', hideTooltipOutside);
+    };
+
+    controlsContainer.appendChild(pinBtn);
+    controlsContainer.appendChild(closeBtn);
+
+    header.appendChild(controlsContainer);
+    panel.appendChild(header);
+
+    const content = document.createElement('div');
+    content.className = 'content';
+    panel.appendChild(content);
+
+    // 样式注入
+    let style = document.getElementById('storage-control-style');
+    if (!style) {
+        style = document.createElement('style');
+        style.id = 'storage-control-style';
+        document.head.appendChild(style);
+    }
+    style.innerHTML = panelStyle;
+
+    // 确保 body 存在
+    if (document.body) {
+        document.body.appendChild(panel);
+    } else {
+        console.error("无法找到 body 元素来插入调试器面板。请确保在 body 加载后调用 initWebDebugger()。");
+        return;
+    }
+
+    // --- 拖拽功能实现 ---
+    let isDragging = false;
+    let offsetX, offsetY;
+
+    header.addEventListener('mousedown', (e) => {
+        if (window.innerWidth <= 450) return;
+        isDragging = true;
+
+        const rect = panel.getBoundingClientRect();
+
+        offsetX = e.clientX - rect.left;
+        offsetY = e.clientY - rect.top;
+
+        panel.style.right = 'auto';
+        panel.style.bottom = 'auto';
+        panel.style.left = rect.left + 'px';
+        panel.style.top = rect.top + 'px';
+
+        panel.style.cursor = 'grabbing';
+        e.preventDefault();
+        e.stopPropagation();
+    });
+
+    document.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+
+        let newX = e.clientX - offsetX;
+        let newY = e.clientY - offsetY;
+
+        panel.style.left = Math.max(0, Math.min(window.innerWidth - panel.offsetWidth, newX)) + 'px';
+        panel.style.top = Math.max(0, Math.min(window.innerHeight - panel.offsetHeight, newY)) + 'px';
+    });
+
+    document.addEventListener('mouseup', () => {
+        isDragging = false;
+        if (window.innerWidth > 450) {
+            panel.style.cursor = 'grab';
+        }
+    });
+
+    // --- 浮窗逻辑 (保持不变) ---
+    let tooltip = document.getElementById('key-tooltip');
+    if (!tooltip) {
+        tooltip = document.createElement('div');
+        tooltip.id = 'key-tooltip';
+        tooltip.className = 'key-tooltip';
+        document.body.appendChild(tooltip);
+    }
+
+    const hideTooltipOutside = (e) => {
+        if (tooltip.classList.contains('visible') &&
+            !tooltip.contains(e.target) &&
+            e.target.className !== 'key-label') {
+            tooltip.classList.remove('visible');
+        }
+    };
+
+    document.removeEventListener('click', hideTooltipOutside);
+    document.addEventListener('click', hideTooltipOutside);
+
+    window.showTooltip = function showTooltip(fullText, targetEl) {
+        tooltip.textContent = fullText;
+        const rect = targetEl.getBoundingClientRect();
+        let top = rect.top + rect.height / 2 - 10;
+        let left = rect.right + 10;
+
+        if (left + tooltip.offsetWidth > window.innerWidth - 10) {
+            left = rect.left;
+            top = rect.bottom + 5;
+        }
+
+        tooltip.style.top = `${top}px`;
+        tooltip.style.left = `${left}px`;
+        tooltip.classList.add('visible');
+    }
+
+    // --- 核心存储操作函数 (保持不变) ---
+    window.getCookieswebDebug = function getCookieswebDebug() {
+        const cookies = document.cookie.split('; ').filter(c => c);
+        return cookies.map(cookie => {
+            const [key, ...rest] = cookie.split('=');
+            return { key: decodeURIComponent(key), value: decodeURIComponent(rest.join('=')) };
+        });
+    }
+
+    window.setCookie = function setCookie(key, value) {
+        document.cookie = `${encodeURIComponent(key)}=${encodeURIComponent(value)}; path=/`;
+    }
+
+    window.deleteCookie = function deleteCookie(key) {
+        document.cookie = `${encodeURIComponent(key)}=; Max-Age=0; path=/`;
+    }
+
+    window.getLocalStorage = function getLocalStorage() {
+        const items = [];
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            items.push({ key: key, value: localStorage.getItem(key) });
+        }
+        return items;
+    }
+
+    window.setLocalStorage = function setLocalStorage(key, value) {
+        localStorage.setItem(key, value);
+    }
+
+    window.deleteLocalStorage = function deleteLocalStorage(key) {
+        localStorage.removeItem(key);
+    }
+
+    window.getSessionStorage = function getSessionStorage() {
+        const items = [];
+        for (let i = 0; i < sessionStorage.length; i++) {
+            const key = sessionStorage.key(i);
+            items.push({ key: key, value: sessionStorage.getItem(key) });
+        }
+        return items;
+    }
+
+    window.setSessionStorage = function setSessionStorage(key, value) {
+        sessionStorage.setItem(key, value);
+    }
+
+    window.deleteSessionStorage = function deleteSessionStorage(key) {
+        sessionStorage.removeItem(key);
+    }
+
+    window.getEmbeddedData = function getEmbeddedData() {
+        const scripts = document.querySelectorAll('script[type="application/json"]');
+        const data = [];
+
+        scripts.forEach((script, index) => {
+            const content = script.textContent.trim();
+            if (content) {
+                let parsedData;
+                let error = null;
+
+                try {
+                    parsedData = JSON.parse(content);
+                } catch (e) {
+                    error = '解析失败：不是有效的 JSON 格式';
+                }
+
+                const formattedJson = parsedData
+                    ? JSON.stringify(parsedData, null, 2)
+                    : content;
+
+                data.push({
+                    id: script.id || `(script-${index + 1})`,
+                    content: formattedJson,
+                    error: error
+                });
+            }
+        });
+        return data;
+    }
+
+    // --- 渲染存储项目列表 (保持不变) ---
+    window.renderStorage = function renderStorage(container, data, setter, deleter, renderer) {
+        container.innerHTML = '';
+
+        if (data.length === 0) {
+            container.innerHTML = '<p style="text-align:center; color:#999; padding: 10px 0;">(当前没有存储数据)</p>';
             return;
         }
 
-        // --- 拖拽功能实现 ---
-        let isDragging = false;
-        let offsetX, offsetY;
+        data.forEach(item => {
+            const row = document.createElement('div');
+            row.className = 'storage-item';
 
-        header.addEventListener('mousedown', (e) => {
-            if (window.innerWidth <= 450) return;
-            isDragging = true;
+            const keyLabel = document.createElement('div');
+            keyLabel.className = 'key-label';
+            keyLabel.title = item.key;
+            keyLabel.textContent = item.key;
 
-            const rect = panel.getBoundingClientRect();
-
-            offsetX = e.clientX - rect.left;
-            offsetY = e.clientY - rect.top;
-
-            panel.style.right = 'auto';
-            panel.style.bottom = 'auto';
-            panel.style.left = rect.left + 'px';
-            panel.style.top = rect.top + 'px';
-
-            panel.style.cursor = 'grabbing';
-            e.preventDefault();
-            e.stopPropagation();
-        });
-
-        document.addEventListener('mousemove', (e) => {
-            if (!isDragging) return;
-
-            let newX = e.clientX - offsetX;
-            let newY = e.clientY - offsetY;
-
-            panel.style.left = Math.max(0, Math.min(window.innerWidth - panel.offsetWidth, newX)) + 'px';
-            panel.style.top = Math.max(0, Math.min(window.innerHeight - panel.offsetHeight, newY)) + 'px';
-        });
-
-        document.addEventListener('mouseup', () => {
-            isDragging = false;
-            if (window.innerWidth > 450) {
-                panel.style.cursor = 'grab';
-            }
-        });
-
-        // --- 浮窗逻辑 (保持不变) ---
-        let tooltip = document.getElementById('key-tooltip');
-        if (!tooltip) {
-            tooltip = document.createElement('div');
-            tooltip.id = 'key-tooltip';
-            tooltip.className = 'key-tooltip';
-            document.body.appendChild(tooltip);
-        }
-
-        const hideTooltipOutside = (e) => {
-            if (tooltip.classList.contains('visible') &&
-                !tooltip.contains(e.target) &&
-                e.target.className !== 'key-label') {
-                tooltip.classList.remove('visible');
-            }
-        };
-
-        document.removeEventListener('click', hideTooltipOutside);
-        document.addEventListener('click', hideTooltipOutside);
-
-        function showTooltip(fullText, targetEl) {
-            tooltip.textContent = fullText;
-            const rect = targetEl.getBoundingClientRect();
-            let top = rect.top + rect.height / 2 - 10;
-            let left = rect.right + 10;
-
-            if (left + tooltip.offsetWidth > window.innerWidth - 10) {
-                left = rect.left;
-                top = rect.bottom + 5;
-            }
-
-            tooltip.style.top = `${top}px`;
-            tooltip.style.left = `${left}px`;
-            tooltip.classList.add('visible');
-        }
-
-        // --- 核心存储操作函数 (保持不变) ---
-        function getCookies() {
-            const cookies = document.cookie.split('; ').filter(c => c);
-            return cookies.map(cookie => {
-                const [key, ...rest] = cookie.split('=');
-                return { key: decodeURIComponent(key), value: decodeURIComponent(rest.join('=')) };
+            keyLabel.addEventListener('click', (e) => {
+                e.stopPropagation();
+                showTooltip(item.key, keyLabel);
             });
-        }
 
-        function setCookie(key, value) {
-            document.cookie = `${encodeURIComponent(key)}=${encodeURIComponent(value)}; path=/`;
-        }
+            const valueInput = document.createElement('input');
+            valueInput.type = 'text';
+            valueInput.value = item.value;
+            valueInput.title = item.value;
 
-        function deleteCookie(key) {
-            document.cookie = `${encodeURIComponent(key)}=; Max-Age=0; path=/`;
-        }
+            const buttonGroup = document.createElement('div');
+            buttonGroup.className = 'action-buttons';
 
-        function getLocalStorage() {
-            const items = [];
-            for (let i = 0; i < localStorage.length; i++) {
-                const key = localStorage.key(i);
-                items.push({ key: key, value: localStorage.getItem(key) });
-            }
-            return items;
-        }
+            const saveBtn = document.createElement('button');
+            saveBtn.className = 'action-btn save-btn';
+            saveBtn.innerHTML = '✔';
+            saveBtn.title = '修改/保存';
+            saveBtn.onclick = () => { setter(item.key, valueInput.value); renderer(); };
 
-        function setLocalStorage(key, value) {
-            localStorage.setItem(key, value);
-        }
-
-        function deleteLocalStorage(key) {
-            localStorage.removeItem(key);
-        }
-
-        function getSessionStorage() {
-            const items = [];
-            for (let i = 0; i < sessionStorage.length; i++) {
-                const key = sessionStorage.key(i);
-                items.push({ key: key, value: sessionStorage.getItem(key) });
-            }
-            return items;
-        }
-
-        function setSessionStorage(key, value) {
-            sessionStorage.setItem(key, value);
-        }
-
-        function deleteSessionStorage(key) {
-            sessionStorage.removeItem(key);
-        }
-
-        function getEmbeddedData() {
-            const scripts = document.querySelectorAll('script[type="application/json"]');
-            const data = [];
-
-            scripts.forEach((script, index) => {
-                const content = script.textContent.trim();
-                if (content) {
-                    let parsedData;
-                    let error = null;
-
-                    try {
-                        parsedData = JSON.parse(content);
-                    } catch (e) {
-                        error = '解析失败：不是有效的 JSON 格式';
-                    }
-
-                    const formattedJson = parsedData
-                        ? JSON.stringify(parsedData, null, 2)
-                        : content;
-
-                    data.push({
-                        id: script.id || `(script-${index + 1})`,
-                        content: formattedJson,
-                        error: error
-                    });
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'action-btn delete-btn';
+            deleteBtn.innerHTML = '🗑️';
+            deleteBtn.title = '删除';
+            deleteBtn.onclick = () => {
+                if (confirm(`确定要删除键名为 "${item.key}" 的项目吗?`)) {
+                    deleter(item.key);
+                    renderer();
                 }
-            });
-            return data;
+            };
+
+            buttonGroup.appendChild(saveBtn);
+            buttonGroup.appendChild(deleteBtn);
+
+            row.appendChild(keyLabel);
+            row.appendChild(valueInput);
+            row.appendChild(buttonGroup);
+            container.appendChild(row);
+        });
+    }
+
+    window.renderEmbeddedData = function renderEmbeddedData() {
+        const configData = getEmbeddedData();
+        const container = embeddedListWrapper;
+        container.innerHTML = '';
+
+        if (configData.length === 0) {
+            container.innerHTML = '<p style="text-align:center; color:#999; padding: 10px 0;">(未找到内嵌的 JSON 配置数据)</p>';
+            return;
         }
 
-        // --- 渲染存储项目列表 (保持不变) ---
-        function renderStorage(container, data, setter, deleter, renderer) {
-            container.innerHTML = '';
+        configData.forEach(item => {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'json-item';
 
-            if (data.length === 0) {
-                container.innerHTML = '<p style="text-align:center; color:#999; padding: 10px 0;">(当前没有存储数据)</p>';
-                return;
+            const title = document.createElement('span');
+            title.className = 'json-title';
+            title.textContent = `标签 ID: ${item.id}`;
+            itemDiv.appendChild(title);
+
+            const pre = document.createElement('pre');
+            pre.className = 'json-display';
+
+            if (item.error) {
+                pre.style.color = 'red';
+                pre.textContent = item.error + ':\n' + item.content;
+            } else {
+                pre.textContent = item.content;
             }
 
-            data.forEach(item => {
-                const row = document.createElement('div');
-                row.className = 'storage-item';
+            itemDiv.appendChild(pre);
+            container.appendChild(itemDiv);
+        });
+    }
 
-                const keyLabel = document.createElement('div');
-                keyLabel.className = 'key-label';
-                keyLabel.title = item.key;
-                keyLabel.textContent = item.key;
+    // --- DOM 渲染和初始化 ---
 
-                keyLabel.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    showTooltip(item.key, keyLabel);
-                });
+    // 1. Cookies Section
+    const cookieSection = document.createElement('div');
+    cookieSection.className = 'section';
+    cookieSection.innerHTML = '<h4>🍪 站点 Cookies</h4>';
+    content.appendChild(cookieSection);
 
-                const valueInput = document.createElement('input');
-                valueInput.type = 'text';
-                valueInput.value = item.value;
-                valueInput.title = item.value;
+    const cookieListWrapper = document.createElement('div');
+    cookieListWrapper.id = 'cookie-list';
+    cookieListWrapper.className = 'data-list-wrapper';
+    cookieSection.appendChild(cookieListWrapper);
 
-                const buttonGroup = document.createElement('div');
-                buttonGroup.className = 'action-buttons';
-
-                const saveBtn = document.createElement('button');
-                saveBtn.className = 'action-btn save-btn';
-                saveBtn.innerHTML = '✔';
-                saveBtn.title = '修改/保存';
-                saveBtn.onclick = () => { setter(item.key, valueInput.value); renderer(); };
-
-                const deleteBtn = document.createElement('button');
-                deleteBtn.className = 'action-btn delete-btn';
-                deleteBtn.innerHTML = '🗑️';
-                deleteBtn.title = '删除';
-                deleteBtn.onclick = () => {
-                    if (confirm(`确定要删除键名为 "${item.key}" 的项目吗?`)) {
-                        deleter(item.key);
-                        renderer();
-                    }
-                };
-
-                buttonGroup.appendChild(saveBtn);
-                buttonGroup.appendChild(deleteBtn);
-
-                row.appendChild(keyLabel);
-                row.appendChild(valueInput);
-                row.appendChild(buttonGroup);
-                container.appendChild(row);
-            });
+   window.renderCookies=  function renderCookies() {
+        try {
+            const cookies = getCookieswebDebug();
+            renderStorage(cookieListWrapper, cookies, setCookie, deleteCookie, renderCookies);
+        } catch (error) {
+            cookieListWrapper.innerHTML = '<p style="color:red;">读取 Cookie 失败。</p>';
         }
+    }
 
-        function renderEmbeddedData() {
-            const configData = getEmbeddedData();
-            const container = embeddedListWrapper;
-            container.innerHTML = '';
+    // 2. LocalStorage Section
+    const localSection = document.createElement('div');
+    localSection.className = 'section';
+    localSection.innerHTML = '<h4>💾 LocalStorage</h4>';
+    content.appendChild(localSection);
 
-            if (configData.length === 0) {
-                container.innerHTML = '<p style="text-align:center; color:#999; padding: 10px 0;">(未找到内嵌的 JSON 配置数据)</p>';
-                return;
-            }
+    const localListWrapper = document.createElement('div');
+    localListWrapper.id = 'local-list';
+    localListWrapper.className = 'data-list-wrapper';
+    localSection.appendChild(localListWrapper);
 
-            configData.forEach(item => {
-                const itemDiv = document.createElement('div');
-                itemDiv.className = 'json-item';
-
-                const title = document.createElement('span');
-                title.className = 'json-title';
-                title.textContent = `标签 ID: ${item.id}`;
-                itemDiv.appendChild(title);
-
-                const pre = document.createElement('pre');
-                pre.className = 'json-display';
-
-                if (item.error) {
-                    pre.style.color = 'red';
-                    pre.textContent = item.error + ':\n' + item.content;
-                } else {
-                    pre.textContent = item.content;
-                }
-
-                itemDiv.appendChild(pre);
-                container.appendChild(itemDiv);
-            });
+    window.renderLocalStorage = function renderLocalStorage() {
+        try {
+            const localStorageData = getLocalStorage();
+            renderStorage(localListWrapper, localStorageData, setLocalStorage, deleteLocalStorage, renderLocalStorage);
+        } catch (error) {
+            localListWrapper.innerHTML = '<p style="color:red;">读取 LocalStorage 失败。</p>';
         }
+    }
 
-        // --- DOM 渲染和初始化 ---
+    // 3. SessionStorage Section
+    const sessionSection = document.createElement('div');
+    sessionSection.className = 'section';
+    sessionSection.innerHTML = '<h4>⏱️ Session Storage</h4>';
+    content.appendChild(sessionSection);
 
-        // 1. Cookies Section
-        const cookieSection = document.createElement('div');
-        cookieSection.className = 'section';
-        cookieSection.innerHTML = '<h4>🍪 站点 Cookies</h4>';
-        content.appendChild(cookieSection);
+    const sessionListWrapper = document.createElement('div');
+    sessionListWrapper.id = 'session-list';
+    sessionListWrapper.className = 'data-list-wrapper';
+    sessionSection.appendChild(sessionListWrapper);
 
-        const cookieListWrapper = document.createElement('div');
-        cookieListWrapper.id = 'cookie-list';
-        cookieListWrapper.className = 'data-list-wrapper';
-        cookieSection.appendChild(cookieListWrapper);
-
-        function renderCookies() {
-            try {
-                const cookies = getCookies();
-                renderStorage(cookieListWrapper, cookies, setCookie, deleteCookie, renderCookies);
-            } catch (error) {
-                cookieListWrapper.innerHTML = '<p style="color:red;">读取 Cookie 失败。</p>';
-            }
+    window.renderSessionStorage= function renderSessionStorage() {
+        try {
+            const sessionStorageData = getSessionStorage();
+            renderStorage(sessionListWrapper, sessionStorageData, setSessionStorage, deleteSessionStorage, renderSessionStorage);
+        } catch (error) {
+            sessionListWrapper.innerHTML = '<p style="color:red;">读取 Session Storage 失败。</p>';
         }
+    }
 
-        // 2. LocalStorage Section
-        const localSection = document.createElement('div');
-        localSection.className = 'section';
-        localSection.innerHTML = '<h4>💾 LocalStorage</h4>';
-        content.appendChild(localSection);
+    // 4. Embedded Config Data Section
+    const embeddedSection = document.createElement('div');
+    embeddedSection.className = 'section';
+    embeddedSection.innerHTML = '<h4>⚙️ 内嵌配置数据 (JSON-Scripts)</h4>';
+    content.appendChild(embeddedSection);
 
-        const localListWrapper = document.createElement('div');
-        localListWrapper.id = 'local-list';
-        localListWrapper.className = 'data-list-wrapper';
-        localSection.appendChild(localListWrapper);
-
-        function renderLocalStorage() {
-            try {
-                const localStorageData = getLocalStorage();
-                renderStorage(localListWrapper, localStorageData, setLocalStorage, deleteLocalStorage, renderLocalStorage);
-            } catch (error) {
-                localListWrapper.innerHTML = '<p style="color:red;">读取 LocalStorage 失败。</p>';
-            }
-        }
-
-        // 3. SessionStorage Section
-        const sessionSection = document.createElement('div');
-        sessionSection.className = 'section';
-        sessionSection.innerHTML = '<h4>⏱️ Session Storage</h4>';
-        content.appendChild(sessionSection);
-
-        const sessionListWrapper = document.createElement('div');
-        sessionListWrapper.id = 'session-list';
-        sessionListWrapper.className = 'data-list-wrapper';
-        sessionSection.appendChild(sessionListWrapper);
-
-        function renderSessionStorage() {
-            try {
-                const sessionStorageData = getSessionStorage();
-                renderStorage(sessionListWrapper, sessionStorageData, setSessionStorage, deleteSessionStorage, renderSessionStorage);
-            } catch (error) {
-                sessionListWrapper.innerHTML = '<p style="color:red;">读取 Session Storage 失败。</p>';
-            }
-        }
-
-        // 4. Embedded Config Data Section
-        const embeddedSection = document.createElement('div');
-        embeddedSection.className = 'section';
-        embeddedSection.innerHTML = '<h4>⚙️ 内嵌配置数据 (JSON-Scripts)</h4>';
-        content.appendChild(embeddedSection);
-
-        const embeddedListWrapper = document.createElement('div');
-        embeddedListWrapper.id = 'embedded-list';
-        embeddedListWrapper.className = 'data-list-wrapper';
-        embeddedSection.appendChild(embeddedListWrapper);
+    const embeddedListWrapper = document.createElement('div');
+    embeddedListWrapper.id = 'embedded-list';
+    embeddedListWrapper.className = 'data-list-wrapper';
+    embeddedSection.appendChild(embeddedListWrapper);
 
 
-        // --- 核心渲染函数 ---
-        function globalRenderAll() {
-            renderCookies();
-            renderLocalStorage();
-            renderSessionStorage();
-            renderEmbeddedData();
-            console.log("Web Debugger 已刷新所有存储数据。");
-        }
+    // --- 核心渲染函数 ---
+    window.globalRenderAll = function globalRenderAll() {
+        renderCookies();
+        renderLocalStorage();
+        renderSessionStorage();
+        renderEmbeddedData();
+        console.log("Web Debugger 已刷新所有存储数据。");
+    }
 
-        // 首次初始化渲染
-        globalRenderAll();
+    // 首次初始化渲染
+    globalRenderAll();
 
-        // **将渲染函数暴露给宿主页面**
-        const script = document.createElement('script');
-        script.textContent = `
+    // **将渲染函数暴露给宿主页面**
+    const script = document.createElement('script');
+    script.textContent = `
             // 确保 window.__debugRender 存在，用于外部调用刷新
             window.__debugRender = () => {
                 document.dispatchEvent(new CustomEvent('GM_DEBUG_RENDER_ALL'));
             };
         `;
-        document.head.appendChild(script);
+    document.head.appendChild(script);
 
-        // **监听宿主页面事件，并在沙盒中执行渲染**
-        document.removeEventListener('GM_DEBUG_RENDER_ALL', globalRenderAll);
-        document.addEventListener('GM_DEBUG_RENDER_ALL', globalRenderAll);
-    }
+    // **监听宿主页面事件，并在沙盒中执行渲染**
+    document.removeEventListener('GM_DEBUG_RENDER_ALL', globalRenderAll);
+    document.addEventListener('GM_DEBUG_RENDER_ALL', globalRenderAll);
+}
 
-    // 暴露初始化函数到全局
-    window.initWebDebugger = showDebuggerPanel;
-
-    // --- 恢复固定功能的自执行逻辑 ---
-
-    // 等待 DOMContentLoaded 确保 body 存在，并检查固定状态
-    document.addEventListener('DOMContentLoaded', () => {
-        const isCurrentlyPinned = getPinState();
-
-        // 如果面板被固定，且当前没有显示，则自动显示面板
-        if (isCurrentlyPinned && !document.getElementById('storage-control-panel')) {
-            showDebuggerPanel();
-            console.log("Web Debugger: 检测到固定状态，自动显示面板。");
-        }
-    });
-
-})();
-
-
-setTimeout(() => {
-    if (localStorage.getItem('webDebuggerPinned') == 'true') {
-        window.initWebDebugger()
-    }
-
-}, 1000)
 
 
 
 /* WebDebugger.js 结束 END
 */
 
+
+
+// 查看页面上的脚本
 window.showPageScriptsFloatWindow = function showPageScriptsFloatWindow() {
     if (typeof body_build == 'function') {
         body_build('false')
