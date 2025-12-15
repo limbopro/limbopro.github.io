@@ -5129,7 +5129,6 @@ function injectStyles(containerId, windowId) {
 
 // 元素屏蔽器开始  START
 
-
 // ==UserScript==
 // @name         元素屏蔽/追踪器 (V26.39.10 - 拦截程序化点击和 PostMessage)
 // @namespace    http://tampermonkey.net/
@@ -5151,8 +5150,6 @@ function injectStyles(containerId, windowId) {
     const ELEMENT_REMOVAL_KEY = 'gemini_zero_opacity_removals';
     // Iframe 永久移除记录
     const IFRAME_REMOVAL_KEY = 'gemini_iframe_permanent_removals';
-    // 【V27 NEW】CSS 选择器永久移除记录
-    const CSS_REMOVAL_KEY = 'gemini_css_selectors_removals';
 
     const PAGE_BLACKLIST_KEY = 'gemini_page_blacklist';
 
@@ -5466,43 +5463,6 @@ function injectStyles(containerId, windowId) {
 
 
     // =================================================================
-    // 【V27 NEW】CSS 选择器持久化管理函数
-    // =================================================================
-    function getSavedCssRemovals() {
-        try {
-            return JSON.parse(localStorage.getItem(CSS_REMOVAL_KEY) || '[]');
-        } catch (e) {
-            console.error('[持久化] CSS记录读取失败:', e);
-            return [];
-        }
-    }
-
-    function saveCssRemovalChoice(selector) {
-        const trimmed = selector.trim();
-        if (!trimmed) return false;
-        let removals = getSavedCssRemovals();
-        if (!removals.includes(trimmed)) {
-            removals.push(trimmed);
-            localStorage.setItem(CSS_REMOVAL_KEY, JSON.stringify(removals));
-            console.log(`[Gemini屏蔽 V27] 🎨 已保存 CSS 选择器: ${trimmed}`);
-            return true;
-        }
-        return false;
-    }
-
-    function removeCssRemovalChoice(selector) {
-        let removals = getSavedCssRemovals();
-        const index = removals.indexOf(selector);
-        if (index > -1) {
-            removals.splice(index, 1);
-            localStorage.setItem(CSS_REMOVAL_KEY, JSON.stringify(removals));
-            return true;
-        }
-        return false;
-    }
-
-
-    // =================================================================
     // 持久化存储工具函数 (保持不变)
     // =================================================================
 
@@ -5564,23 +5524,18 @@ function injectStyles(containerId, windowId) {
         return false;
     }
 
-
-    // =================================================================
-    // 加载并移除函数（增强：支持 CSS 选择器）
-    // =================================================================
+    // --- 加载并移除函数 (Load and Remove) ---
     function loadAndRemoveSavedElements(doc) {
         const elementRemovals = getSavedRemovals();
         const iframeRemovals = getIframeRemovals();
-        const cssRemovals = getSavedCssRemovals(); // 【V27 NEW】
         const allRemovals = [...elementRemovals, ...iframeRemovals];
 
         let removedCount = 0;
-
-        // XPath 移除
         allRemovals.forEach(xpath => {
             try {
                 const result = doc.evaluate(xpath, doc, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
                 const element = result.singleNodeValue;
+
                 if (element && element.parentNode) {
                     element.remove();
                     removedCount++;
@@ -5588,32 +5543,13 @@ function injectStyles(containerId, windowId) {
             } catch (e) { }
         });
 
-        // 【V27 NEW】CSS 选择器移除
-        cssRemovals.forEach(selector => {
-            try {
-                setTimeout(() => {
-                    const elements = doc.querySelectorAll(selector);
-                    elements.forEach(el => {
-                        if (el.parentNode) {
-                            el.remove();
-                            removedCount++;
-                        }
-                    });
-                }, 1500)
-            } catch (e) {
-                console.warn(`[Gemini屏蔽 V27] CSS 选择器匹配失败: ${selector}`);
-            }
-        });
-
         const isTopWindow = window === window.top;
         const docName = (isTopWindow && doc === document) ? '主页' :
             (!isTopWindow && doc === document) ? 'Iframe (自身)' :
                 'Iframe (同源)';
-        console.log(`[Gemini屏蔽] 已在 ${docName} 自动移除 ${removedCount} 个元素（含 CSS 选择器）。`);
+        console.log(`[Gemini屏蔽] 已在 ${docName} 自动移除 ${removedCount} 个元素/Iframe。`);
         return removedCount;
     }
-
-
 
 
     // =================================================================
@@ -5924,152 +5860,6 @@ function injectStyles(containerId, windowId) {
             }
         });
     }
-
-
-    // =================================================================
-    // 渲染保存的 CSS 移除记录列表
-    // =================================================================
-    function renderSavedCssRemovalsList(removals) {
-        if (removals.length === 0) {
-            return '<li style="padding: 10px; text-align: center; color: #888; background: #fff;">暂无 CSS 选择器移除记录。</li>';
-        }
-        return removals.map((selector) => `
-            <li style="display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; border-bottom: 1px dashed #ddd; background: #fff;">
-                <span title="${selector}" style="flex-grow: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: #9c27b0; font-weight: bold;">
-                    🎨 ${safeTruncate(selector, 50)}
-                </span>
-                <button class="undo-css-btn" style="
-                    background: #ff9800; color: white; border: none; padding: 2px 6px; 
-                    margin-left: 10px; cursor: pointer; border-radius: 3px; font-size: 11px;
-                " data-selector="${selector}">取消移除</button>
-            </li>
-        `).join('');
-    }
-
-
-    // =================================================================
-    // 【V27 NEW】CSS 选择器输入窗口
-    // =================================================================
-    const CSS_INPUT_WINDOW_ID = 'gemini-css-input-modal';
-
-    window.showCssInputWindow = function showCssInputWindow() {
-        let modal = document.getElementById(CSS_INPUT_WINDOW_ID);
-        if (modal) {
-            modal.style.display = 'flex';
-            return;
-        }
-
-        modal = document.createElement('div');
-        modal.id = CSS_INPUT_WINDOW_ID;
-        modal.style.cssText = `
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(0, 0, 0, 0.7); z-index: 100000000;
-            display: flex; justify-content: center; align-items: center;
-        `;
-
-        const content = document.createElement('div');
-        content.style.cssText = `
-            background-color: #fff; padding: 20px; border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5); width: 90%; max-width: 420px;
-            color: #333; font-family: Arial, sans-serif;
-        `;
-
-        content.innerHTML = `
-            <h3 style="margin-top: 0; border-bottom: 1px solid #ddd; padding-bottom: 10px; color: #9c27b0;">
-                🎨 手动添加 CSS 选择器屏蔽
-            </h3>
-            <p style="margin-bottom: 10px; font-size: 14px; color: #555;">
-                直接从开发者工具右键 → Copy → selector 粘贴即可。<br>
-                支持多个选择器，用逗号或换行分隔。
-            </p>
-            <p style="margin: 5px 0 10px; font-size: 12px; color: #777;">
-                示例：#ad-banner, .popup-overlay, div[data-ad], [class*="advert"]
-            </p>
-        `;
-
-        const utilityButtonContainer = document.createElement('div');
-        utilityButtonContainer.style.cssText = 'display: flex; gap: 10px; margin-bottom: 10px;';
-
-        const pasteButton = document.createElement('button');
-        pasteButton.textContent = '📋 粘贴选择器';
-        pasteButton.style.cssText = 'padding: 8px 15px; background-color: #9c27b0; color: white; border: none; border-radius: 4px; cursor: pointer; flex: 1;';
-
-        const clearButton = document.createElement('button');
-        clearButton.textContent = '🗑️ 清空';
-        clearButton.style.cssText = 'padding: 8px 15px; background-color: #9E9E9E; color: white; border: none; border-radius: 4px; cursor: pointer; flex: 1;';
-
-        utilityButtonContainer.appendChild(pasteButton);
-        utilityButtonContainer.appendChild(clearButton);
-        content.appendChild(utilityButtonContainer);
-
-        const textarea = document.createElement('textarea');
-        textarea.id = 'css-input-field';
-        textarea.rows = 4;
-        textarea.placeholder = '#example-ad, .sidebar-banner, div[aria-label="Advertisement"]';
-        textarea.style.cssText = 'width: 100%; padding: 8px; margin-bottom: 15px; border: 1px solid #ccc; box-sizing: border-box; resize: vertical; font-family: monospace;';
-        content.appendChild(textarea);
-
-        const buttonContainer = document.createElement('div');
-        buttonContainer.style.cssText = 'display: flex; justify-content: flex-end; gap: 10px;';
-
-        const saveButton = document.createElement('button');
-        saveButton.textContent = '保存并屏蔽 (需刷新)';
-        saveButton.style.cssText = 'padding: 8px 15px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;';
-
-        const cancelButton = document.createElement('button');
-        cancelButton.textContent = '取消';
-        cancelButton.style.cssText = 'padding: 8px 15px; background-color: #f44336; color: white; border: none; border-radius: 4px; cursor: pointer;';
-
-        buttonContainer.appendChild(cancelButton);
-        buttonContainer.appendChild(saveButton);
-        content.appendChild(buttonContainer);
-        modal.appendChild(content);
-        document.body.appendChild(modal);
-
-        clearButton.onclick = () => {
-            textarea.value = '';
-            textarea.focus();
-        };
-
-        pasteButton.onclick = () => {
-            navigator.clipboard.readText().then(text => {
-                textarea.value = text.trim();
-                textarea.focus();
-            }).catch(err => {
-                alert('无法自动粘贴，请手动粘贴或检查剪贴板权限。');
-            });
-        };
-
-        saveButton.onclick = () => {
-            const input = textarea.value.trim();
-            if (!input) {
-                alert('请输入至少一个 CSS 选择器。');
-                return;
-            }
-
-            const selectors = input.split(/\s*[\n,]\s*/).filter(s => s.length > 0);
-
-            let savedCount = 0;
-            selectors.forEach(sel => {
-                try {
-                    document.querySelector(sel); // 简单校验
-                    if (saveCssRemovalChoice(sel)) savedCount++;
-                } catch (e) {
-                    console.warn(`[Gemini屏蔽 V27] 无效选择器（忽略）: ${sel}`);
-                }
-            });
-
-            if (savedCount > 0) {
-                alert(`✅ 成功保存 ${savedCount} 个 CSS 选择器！请刷新页面生效。`);
-            } else {
-                alert('⚠️ 未保存任何有效选择器，请检查格式。');
-            }
-            modal.remove();
-        };
-
-        cancelButton.onclick = () => modal.remove();
-    };
-
 
     // V26.39.9: 移除 showCustomConfirmLocation
 
@@ -6460,8 +6250,6 @@ function injectStyles(containerId, windowId) {
     }
 
 
-
-
     // =================================================================
     // DOM 遍历/观察/拦截函数 (其余保持不变)
     // =================================================================
@@ -6723,7 +6511,7 @@ function injectStyles(containerId, windowId) {
         }).join('');
     }
 
-    window.renderFloatWindow = function renderFloatWindow(targetDocs) {
+    function renderFloatWindow(targetDocs) {
         if (!document.body) {
             console.error('[Gemini屏蔽] 无法渲染浮窗：document.body 不可用。');
             return;
@@ -6775,8 +6563,6 @@ function injectStyles(containerId, windowId) {
         const windowDiv = document.createElement('div');
         windowDiv.className = 'notranslate'
         windowDiv.id = windowId;
-
-
 
         function renderBlacklist(blacklist) {
             if (blacklist.length === 0) {
@@ -6866,8 +6652,7 @@ function injectStyles(containerId, windowId) {
         }
 
         let isBlacklisted = isCurrentPageBlacklisted();
-        // const totalSavedCount = getSavedRemovals().length + getIframeRemovals().length + getPageBlacklist().length;
-        const totalSavedCount = getSavedRemovals().length + getIframeRemovals().length + getPageBlacklist().length + getSavedCssRemovals().length;
+        const totalSavedCount = getSavedRemovals().length + getIframeRemovals().length + getPageBlacklist().length;
 
 
         windowDiv.innerHTML = `
@@ -6924,11 +6709,6 @@ function injectStyles(containerId, windowId) {
     ">
         ⌨️ 输入 XPath 屏蔽
     </button>
-
-     <!-- 【V27 NEW】CSS 按钮 -->
-                <button id="manual-css-add" onclick="showCssInputWindow()" style="background: #9c27b0; color: white; border: none; padding: 8px 15px; cursor: pointer; border-radius: 4px; font-weight: bold; width: 100%;">
-                    🎨 输入 CSS 选择器屏蔽
-                </button>
     </div>
                 
             </div>
@@ -6972,12 +6752,6 @@ function injectStyles(containerId, windowId) {
 
                          <li style="padding: 10px; background: #e6f7ff; font-weight: bold; color: #007bff; border-top: 1px solid #cceeff; border-bottom: 1px solid #cceeff;">🖼️ Iframe 永久移除记录 (${getIframeRemovals().length})</li>
                          ${renderSavedIframeRemovalsList(getIframeRemovals())}
-
-                         <!-- 【V27 NEW】CSS 记录分区 -->
-                         <li style="padding: 10px; background: #f3e5f5; font-weight: bold; color: #9c27b0; border-top: 1px solid #e1bee7; border-bottom: 1px solid #e1bee7;">
-                             🎨 CSS 选择器永久移除记录 (${getSavedCssRemovals().length})
-                         </li>
-                         ${renderSavedCssRemovalsList(getSavedCssRemovals())}
 
                     </ul>
                 </div>
@@ -7026,7 +6800,6 @@ function injectStyles(containerId, windowId) {
             const savedRemovalsHtml = renderSavedRemovalsList(getSavedRemovals());
             const iframeRemovalsHtml = renderSavedIframeRemovalsList(getIframeRemovals()); // V26.39 New
             const blacklistHtml = renderBlacklist(getPageBlacklist());
-            const cssRemovalsHtml = renderSavedCssRemovalsList(getSavedCssRemovals()); // NEW
 
             const totalRemovals = getSavedRemovals().length + getIframeRemovals().length;
             const totalSaved = totalRemovals + getPageBlacklist().length;
@@ -7038,26 +6811,9 @@ function injectStyles(containerId, windowId) {
                  ${savedRemovalsHtml}
                  <li style="padding: 10px; background: #e6f7ff; font-weight: bold; color: #007bff; border-top: 1px solid #cceeff; border-bottom: 1px solid #cceeff;">🖼️ Iframe 永久移除记录 (${getIframeRemovals().length})</li>
                  ${iframeRemovalsHtml}
-                 <li style="padding: 10px; background: #f3e5f5; font-weight: bold; color: #9c27b0; border-top: 1px solid #e1bee7; border-bottom: 1px solid #e1bee7;">
-                     🎨 CSS 选择器永久移除记录 (${getSavedCssRemovals().length})
-                 </li>
-                 ${cssRemovalsHtml}
              `;
             tabSaved.innerHTML = `记录管理 (${totalSaved})`;
         }
-
-        // 【V27 NEW】取消 CSS 记录事件
-        savedList.addEventListener('click', (e) => {
-            // 原有 undo-btn、undo-iframe-btn、remove-blacklist-btn 保持不变
-
-            if (e.target.classList.contains('undo-css-btn')) {
-                const selector = e.target.getAttribute('data-selector');
-                if (removeCssRemovalChoice(selector)) {
-                    statusBar.textContent = `🚫 CSS 选择器移除记录已取消：${safeTruncate(selector, 30)}。请刷新页面恢复元素。`;
-                    updateSavedListContent();
-                }
-            }
-        });
 
         function switchTab(currentTab) {
             // Reset all tabs/content
@@ -7076,8 +6832,6 @@ function injectStyles(containerId, windowId) {
                 updateSavedListContent();
             }
         }
-
-
         tabCurrent.onclick = () => switchTab('current');
         tabIframe.onclick = () => switchTab('iframe');
         tabSaved.onclick = () => switchTab('saved');
@@ -7244,38 +6998,6 @@ function injectStyles(containerId, windowId) {
             // V26.39.3 NEW: 处理用户覆盖逻辑
             const isHostInDebugList = DEBUG_WEBLIST.some(domain => getCurrentHost().includes(domain));
             if (isHostInDebugList) {
-                if (isDebuggingElementClick) {
-                    // 如果在调试域名列表内，且用户手动开启，则移除覆盖记录
-                    toggleDebugOverride(false);
-                } else {
-                    // 如果在调试域名列表内，且用户手动关闭，则添加覆盖记录
-                    toggleDebugOverride(true);
-                }
-            }
-
-            // 更新 UI 和状态栏
-            if (isDebuggingElementClick) {
-                debugClickToggle.style.background = '#00c853';
-                debugClickToggle.style.color = 'white';
-                debugClickToggle.textContent = '🛠️ 元素点击调试 (开)';
-                statusBar.textContent = '✅ 元素点击拦截已开启，**立即生效**。请点击可疑按钮。';
-            } else {
-                debugClickToggle.style.background = '#ffc107';
-                debugClickToggle.style.color = '#333';
-                debugClickToggle.textContent = '🛠️ 元素点击调试 (关)';
-                statusBar.textContent = '❌ 元素点击拦截已关闭，**立即生效**。';
-            }
-            statusBar.textContent += "（💡 建议：切换模式后刷新页面，以确保 Iframe 和 Hook 状态完全同步）";
-        };
-
-        debugLocationToggle.onclick = () => {
-            isDebuggingLocationHooks = !isDebuggingLocationHooks;
-
-            localStorage.setItem(DEBUG_LOCATION_KEY, isDebuggingLocationHooks ? 'true' : 'false');
-
-            // V26.39.3 NEW: 处理用户覆盖逻辑
-            const isHostInDebugList = DEBUG_WEBLIST.some(domain => getCurrentHost().includes(domain));
-            if (isHostInDebugList) {
                 if (isDebuggingLocationHooks) {
                     // 如果在调试域名列表内，且用户手动开启，则移除覆盖记录
                     toggleDebugOverride(false);
@@ -7298,6 +7020,7 @@ function injectStyles(containerId, windowId) {
                 statusBar.textContent = 'JS 重定向调试已关闭。**必须刷新页面**才能解除 Hook。';
             }
         };
+
 
         list.addEventListener('click', (e) => {
             let listItem = e.target.closest('li');
@@ -7382,7 +7105,7 @@ function injectStyles(containerId, windowId) {
 
 
         savedList.addEventListener('click', (e) => {
-            // 取消普通元素移除记录  
+            // 取消普通元素移除记录
             if (e.target.classList.contains('undo-btn')) {
                 const xpath = e.target.getAttribute('data-xpath');
                 if (removeRemovalChoice(xpath)) {
@@ -7544,7 +7267,7 @@ function injectStyles(containerId, windowId) {
                 return; // 排除逻辑
             }
 
-            const isLink = targetElement.closest(' a');
+            const isLink = targetElement.closest('a');
             const href = isLink ? isLink.href : '';
             const opensNewTab = isLink ? isLink.target === '_blank' : false;
             const isAdLink = AD_DOMAINS.some(domain => href.includes(domain));
@@ -7586,7 +7309,7 @@ function injectStyles(containerId, windowId) {
                     : '[无父级]';
                 // 检查主要的内联事件处理器
                 const inlineClick = targetElement.getAttribute('onclick') ||
-                    targetElement.getAttribute('onmous edown') ||
+                    targetElement.getAttribute('onmousedown') ||
                     targetElement.getAttribute('onmouseup') ||
                     targetElement.getAttribute('onpointerdown');
 
@@ -7858,7 +7581,7 @@ function injectStyles(containerId, windowId) {
         let clickDebugState = localStorage.getItem(DEBUG_CLICK_KEY) === 'true';
         let locationDebugState = localStorage.getItem(DEBUG_LOCATION_KEY) === 'true';
 
-        // 2. V26.39.3 核心逻辑：判断是否在试列表中 且 没有被用户覆盖
+        // 2. V26.39.3 核心逻辑：判断是否在调试列表中 且 没有被用户覆盖
         if (isHostInDebugList) {
             const isOverridden = isCurrentHostOverridden();
 
@@ -7878,6 +7601,7 @@ function injectStyles(containerId, windowId) {
         // 3. 将最终确定的状态赋值给全局变量
         isDebuggingElementClick = clickDebugState;
         isDebuggingLocationHooks = locationDebugState;
+
 
         injectStyles(containerId, windowId);
 
@@ -7926,10 +7650,10 @@ function injectStyles(containerId, windowId) {
                 const activationSource = isHostInDebugList && !isCurrentHostOverridden() ? '域名匹配（自动）' : '本地存储（手动开启）';
                 console.log(`[Gemini屏蔽 V26.39.10] 🎯 调试模式已开启 (${activationSource})，自动打开浮窗。`);
 
-                // 由于 targetDocuments 已经在前面获取，这里直接使用   
+                // 由于 targetDocuments 已经在前面获取，这里直接使用
                 renderFloatWindow(targetDocuments);
 
-                // 仅当 body_build 在时调 用（兼容其他环境） 
+                // 仅当 body_build 存在时调用（兼容其他环境）
                 if (typeof body_build === 'function') {
                     try { body_build('false'); } catch (e) { }
                 }
