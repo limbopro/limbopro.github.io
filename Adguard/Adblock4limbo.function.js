@@ -6983,6 +6983,7 @@ onclick="toggleDebugAndRefresh()"
  <button id="showXPath" onclick="showXPathInputWindow()" style="
         background: #6c1a7bff; /* 使用紫色突出手动操作 */
         color: white;
+        font-size:xx-small;
         border: none;
         padding: 8px 15px;
         cursor: pointer;
@@ -6995,7 +6996,7 @@ onclick="toggleDebugAndRefresh()"
     </button>
 
      <!-- 【V27 NEW】CSS 按钮 -->
-                <button id="manual-css-add" onclick="showCssInputWindow()" style="background:#6c1a7bff; color: white; border: none; padding: 8px 15px; cursor: pointer; border-radius: 4px; font-weight: bold; width: 100%;">
+                <button id="manual-css-add" onclick="showCssInputWindow()" style="font-size:xx-small;background:#6c1a7bff; color: white; border: none; padding: 8px 15px; cursor: pointer; border-radius: 4px; font-weight: bold; width: 100%;">
                     🎨 输入 CSS 选择器屏蔽
                 </button>
     </div>
@@ -7058,7 +7059,7 @@ onclick="toggleDebugAndRefresh()"
 
             <div class="gemini-tip-text">
                 🌟**提示:** “选择并屏蔽模式”可屏蔽任何元素。取消移除后请**手动刷新**。
-                🛠️ 元素点击调试/选择并屏蔽模式不要🙅同时开启。⛔标记为黑名单意味着对当前页面的iframe进行沙箱化处理。💡一切结束后记得关闭所有调试。
+                🛠️ 元素点击调试/选择并屏蔽模式不要🙅同时开启。⛔标记为黑名单意味着对当前页面的iframe进行沙箱化处理。💡一切结束后记得关闭所有调试，否则🔍 元素屏蔽/追踪器会一直随着页面刷新后打开。
             </div>
         `;
 
