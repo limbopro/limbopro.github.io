@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Adblock4limbo——导航及各类功能函数合集.[github]
 // @namespace    https://limbopro.com/Adguard/Adblock4limbo.function.js
-// @version      0.2025.12.15
+// @version      0.2025.12.17
 // @license      CC BY-NC-SA 4.0
 // @description  实用网站导航 —— 沉浸式翻译纯JS版本；M3U8/MP4资源链接提取；广告元素屏蔽器；费在线影视/前端学习/开发者社区/新闻/建站/下载工具/格式转换工具/电子书/新闻/写作/免费漫画等；
 // @author       limbopro
@@ -2076,6 +2076,7 @@ function createFloatingOutputDiv() {
     // --- 1. 创建容器 DIV ---
     container = document.createElement('div');
     container.id = containerId;
+    container.className = 'notranslate'
 
     // --- 2. 创建头部和关闭按钮 ---
     const header = document.createElement('div');
@@ -2095,6 +2096,7 @@ function createFloatingOutputDiv() {
     // --- 3. 创建内容 DIV (实际的输出区域) ---
     contentDiv = document.createElement('div');
     contentDiv.id = contentId;
+    contentDiv.className = 'notranslate'
     container.appendChild(contentDiv);
 
     // --- 4. 将容器添加到 body ---
@@ -2184,6 +2186,7 @@ function createInputPrompt() {
         // --- 1. 创建容器 ---
         container = document.createElement('div');
         container.id = containerId;
+        container.className = 'notranslate'
         container.innerHTML = `
                 <h3 style="margin-top: 0; color: #0056b3;">请输入要执行的 JavaScript 代码</h3>
                 
@@ -5773,7 +5776,7 @@ function injectStyles(containerId, windowId) {
             #gemini-custom-modal-overlay {
                 overflow:auto;
                 position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-                background: rgba(0, 0, 0, 0.7); z-index: 2147483648; 
+                background: rgba(0, 0, 0, 0.7); z-index: 114122; 
                 display: flex; justify-content: center; align-items: center;
                 backdrop-filter: blur(2px);
                 font-family: 'Helvetica Neue', Arial, sans-serif;
@@ -5786,11 +5789,12 @@ function injectStyles(containerId, windowId) {
             }
             /* 通用按钮样式 */
             #gemini-custom-modal-overlay button {
-                padding: 10px 15px; 
-                border-radius: 6px; 
+                padding: 5px 5px 5px 5px;
+                border-radius: 5px; 
                 cursor: pointer !important; 
                 font-weight: bold; 
-                margin: 5px;
+                margin: 3px 0px 0px 3px;
+                font-size:x-small;
                 transition: background 0.2s, box-shadow 0.2s;
             }
             
@@ -5874,7 +5878,7 @@ function injectStyles(containerId, windowId) {
                         font-size: 13px; padding: 5px 10px; 
                         background: #f1f8ff; border-left: 3px solid #007bff;
                     ">
-                        <strong>🛡️ [永久屏蔽]</strong> 将此元素永久添加到屏蔽列表并移除。
+                        <strong>🛡️ [永久屏蔽]</strong> 将此元素永久添加到屏蔽列表并移除。（基于xPath）
                     </p>
                     <p style="
                         font-size: 13px; padding: 5px 10px; 
@@ -5884,8 +5888,9 @@ function injectStyles(containerId, windowId) {
                     </p>
                 </div>
                 
-                <div style="color:black;font-size: 12px; background: #f8f9fa; padding: 12px; border-radius: 6px; margin-bottom: 20px; border-left: 4px solid #007bff;">
+                <div style="color:black;font-size: 12px; background: #f8f9fa; padding: 12px; border-radius: 6px; margin-bottom: 10px; border-left: 4px solid #007bff;">
                     <strong style="color: #007bff; display: block; margin-bottom: 5px;">🚀 目标信息 (V26.39.6 - 增强):</strong>
+                    <button onclick="window.showLinkTipsModalOnce()" id="tips" style="padding: 5px 5px 5px 5px; margin: 5px 5px 5px 0px; ">如何利用目标信息</button>
                     
                     <div style="word-break: break-all; margin-bottom: 5px;">
                         <span style="font-weight: bold;">目标类型 (Tag):</span> ${elementInfo.tagName} 
@@ -5938,6 +5943,9 @@ onclick="toggleDebugAndRefresh()"
                 </div>
             `;
 
+
+            setTimeout(() => { initializeLinkTipsModal() }, 1000)
+
             const closeAndResolve = (result) => {
                 modalOverlay.remove();
                 resolve(result);
@@ -5955,13 +5963,13 @@ onclick="toggleDebugAndRefresh()"
                 debugPanel?.click()
 
                 const debugToggle = document.getElementById('debug-click-toggle');
-                if (debugToggle) {
+                if (debugToggle && localStorage.gemini_debug_element_click_mode == 'true') {
                     // 1. 触发目标元素的点击事件
                     debugToggle.click();
                     clickedElement.textContent = '🔰 元素点击调试(已关闭)'
                 } else {
                     // 4. 如果目标元素不存在，则提示
-                    clickedElement.textContent = '元素点击调试(未找到目标)';
+                    clickedElement.textContent = '元素点击调试(未找到目标) 或已关闭';
                     console.warn("未找到 ID 为 'debug-click-toggle' 的目标元素。");
                 }
             }
@@ -5977,8 +5985,278 @@ onclick="toggleDebugAndRefresh()"
                 resolve(false);
             }
         });
+
     }
 
+
+
+    /**
+ * 初始化网页元素信息提示板。
+ * 样式已优化，更现代化，并针对移动端进行了响应式处理。
+ * @param {string} triggerButtonId - 触发模态框的按钮的 ID。默认为 'tips'。
+ */
+    window.initializeLinkTipsModal = function initializeLinkTipsModal(triggerButtonId = 'tips') {
+
+        // 1. 定义 CSS 样式 (现代化和移动端适配)
+        const styles = `
+        /* 全局重置和字体优化 */
+        .modal-content, .info-table, .code-example {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            box-sizing: border-box;
+        }
+
+        /* 模态框背景样式 */
+        .modal-overlay {
+            display: none; 
+            position: fixed; 
+            z-index: 114122; /* 确保置顶 */
+            left: 0;
+            top: 0;
+            width: 100%; 
+            height: 100%; 
+            background-color: rgba(18, 24, 40, 0.8); /* 深色半透明背景 */
+            backdrop-filter: blur(4px); /* 更明显的背景模糊 */
+            overflow-y: auto; /* 允许滚动 */
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        /* 模态框内容容器 */
+        .modal-content {
+            background-color: #ffffff;
+            margin: 5vh auto; /* 顶部/底部使用视口高度，更适合移动端 */
+            padding: 20px;
+            border-radius: 12px; /* 更圆润的边角 */
+            width: 95%; /* 移动端更宽 */
+            max-width: 750px; /* 桌面端最大宽度 */
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2); /* 柔和深邃的阴影 */
+            animation: fadeIn 0.3s ease-out;
+            border: none; /* 移除旧边框 */
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 标题和段落 */
+        .modal-content h2 {
+            color: #1a2a4b; 
+            font-size: 24px;
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #e9f0ff;
+        }
+        .modal-content p {
+            line-height: 1.6;
+            color: #555;
+            margin-bottom: 10px;
+        }
+
+
+        /* 关闭按钮 */
+        .close-btn {
+            color: #888;
+            float: right;
+            font-size: 36px;
+            font-weight: 300; /* 字体更细，更现代 */
+            line-height: 1;
+            margin-left: 10px;
+        }
+
+        .close-btn:hover,
+        .close-btn:focus {
+            color: #333;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        /* 提示板内的表格样式 */
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 13px; /* 移动端略小 */
+            border-radius: 6px;
+            overflow: hidden; /* 确保圆角有效 */
+        }
+
+        .info-table th, .info-table td {
+            border: none; 
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .info-table th {
+            background-color: #007bff; /* 主题蓝色 */
+            color: white;
+            font-weight: 600;
+        }
+        
+        .info-table tr:nth-child(odd) {
+            background-color: #fafafa;
+        }
+        .info-table tr:hover {
+             background-color: #e6f7ff; /* 悬停效果 */
+        }
+
+        /* 突出显示关键用途 */
+        .usage-section h3 {
+            color: #007bff;
+            border-bottom: none;
+            padding-bottom: 0;
+            margin-top: 30px;
+            font-size: 18px;
+        }
+
+        /* 代码块样式 */
+        .code-example {
+            background-color: #f0f3f8; /* 浅灰色背景 */
+            color: #2c3e50;
+            padding: 10px 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            margin-top: 10px;
+            border-left: 4px solid #007bff; /* 左侧强调线 */
+            font-size: 14px;
+        }
+        
+        /* 移动端特殊调整 */
+        @media (max-width: 600px) {
+            .modal-content {
+                margin: 3vh auto;
+                padding: 15px;
+            }
+            .info-table th, .info-table td {
+                padding: 8px;
+                font-size: 12px;
+            }
+        }
+    `;
+
+        // 2. 将样式添加到 <head>
+        const styleSheet = document.createElement("style");
+        styleSheet.type = "text/css";
+        styleSheet.innerText = styles;
+        document.head.appendChild(styleSheet);
+
+
+        // 3. 创建模态框元素和内容
+
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        modal.id = 'gemini-tips-modal-overlay';
+
+        const content = document.createElement('div');
+        content.className = 'modal-content';
+        content.id = 'gemini-tips-modal-content';
+
+        // 参照信息表格
+        const referenceTable = `
+        <table class="info-table">
+            <thead>
+                <tr>
+                    <th style="width: 30%;">信息项</th>
+                    <th style="width: 70%;">参照信息 (文章链接 Tag: A)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>**目标类型 / Tag**</td>
+                    <td>A (超链接)</td>
+                </tr>
+                <tr>
+                    <td>**CSS 选择器**</td>
+                    <td>a.loop-card__title-link</td>
+                </tr>
+                <tr>
+                    <td>**链接 / Href**</td>
+                    <td>https://techcrunch.com/...</td>
+                </tr>
+                <tr>
+                    <td>**父级简述**</td>
+                    <td>H3#.loop-card__title</td>
+                </tr>
+                <tr>
+                    <td>**XPath**</td>
+                    <td>//*[@id='wp--skip-link--target']/div[1]/...</td>
+                </tr>
+            </tbody>
+        </table>
+    `;
+
+        // 提示内容 HTML
+        content.innerHTML = `
+        <span class="close-btn" id="gemini-modal-close-top">&times;</span>
+        <h2>📰 如何利用目标信息</h2>
+        <p>以下是可供您参照的目标信息：</p>
+        
+        ${referenceTable}
+
+        <div class="usage-section">
+            <h3>🔗 如何通过这些信息进行定位 (核心步骤)</h3>
+            
+            <table class="info-table">
+                <thead>
+                    <tr>
+                        <th style="width: 35%;">定位方法</th>
+                        <th style="width: 30%;">定位表达式</th>
+                        <th>适用性与优势</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>**CSS 选择器**</td>
+                        <td><code>a.loop-card__title-link</code></td>
+                        <td>**首选**：简洁、快速、易维护，适合批量操作。</td>
+                    </tr>
+                    <tr>
+                        <td>**XPath (相对)**</td>
+                        <td><code>//a[@class='loop-card__title-link']</code></td>
+                        <td>**备选**：定位最灵活，可向上查找父节点，但执行速度略慢。 </td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <p style="margin-top: 15px;">**利用父级信息增强定位：** 结合父级简述（H3#.loop-card__title）可构建更精确的 CSS 选择器：</p>
+            <div class="code-example">h3#loop-card__title > a.loop-card__title-link</div>
+
+            <p style="margin-top: 25px; font-weight: bold; color: #cc3300;">🔑 总结：您的工具或脚本需要利用 **CSS 选择器** 或 **XPath** 精确找到元素。</p>
+        </div>
+    `;
+
+        // 组合元素并添加到 body
+        modal.appendChild(content);
+        document.body.appendChild(modal);
+
+
+        // 4. 添加事件监听器 (Logic)
+
+        const triggerButton = document.getElementById(triggerButtonId);
+        const modalCloseBtn = document.getElementById('gemini-modal-close-top');
+
+        if (!triggerButton) {
+            console.error(`错误：未找到 ID 为 '${triggerButtonId}' 的按钮。请检查您的 HTML。`);
+            return;
+        }
+
+        const closeModal = () => {
+            modal.style.display = 'none';
+        };
+
+        triggerButton.addEventListener('click', () => {
+            modal.style.display = 'block';
+        });
+
+        modalCloseBtn.addEventListener('click', closeModal);
+
+        modal.addEventListener('click', (event) => {
+            if (event.target === modal) {
+                closeModal();
+            }
+        });
+    }
 
     // =================================================================
     // 渲染保存的 CSS 移除记录列表
@@ -6967,7 +7245,7 @@ onclick="toggleDebugAndRefresh()"
         border-radius: 4px;
         font-weight: bold;
         width: 100%;
-    ">📟 查看脚本</button>
+    ">📟 查看页面脚本</button>
 
     <button id="manual-xpath-runCode" onclick="window.promptAndExecute()" style="
         background: green; /* 使用紫色突出手动操作 */
@@ -7536,7 +7814,7 @@ onclick="toggleDebugAndRefresh()"
             if (target === mainContainer) return true;
 
             if (target.closest(`#${windowId}`)) {
-                const dragTargets = target.closest('[class*="confirm"],[id*="script-viewer"],div.script-item, #script-viewer-float-window-Gemini, #gemini-header, #gemini-status-bar, .gemini-tip-text');
+                const dragTargets = target.closest('[class*="confirm"],.notranslate,[id*="script-viewer"],div.script-item, #script-viewer-float-window-Gemini, #gemini-header, #gemini-status-bar, .gemini-tip-text');
 
                 if (dragTargets && !target.closest('button, span[id$="close-btn"], a')) {
                     return true;
@@ -7623,7 +7901,7 @@ onclick="toggleDebugAndRefresh()"
             }
 
             // 注意：closest() 方法只会查找祖先元素，所以最好使用 id 匹配。
-            if (doc.defaultView === window && targetElement.closest('[class*="confirm"],[id*="script-viewer"],[id*="gemini"], #ellCloseX, #dh_buttonContainer, #dh_pageContainer')) {
+            if (doc.defaultView === window && targetElement.closest('[class*="confirm"],.notranslate,[id*="script-viewer"],[id*="gemini"], #ellCloseX, #dh_buttonContainer, #dh_pageContainer')) {
                 return; // 排除逻辑
             }
 
@@ -8051,6 +8329,8 @@ onclick="toggleDebugAndRefresh()"
         initScript();
     }
 })();
+
+
 
 // 元素屏蔽器 END
 
@@ -9729,16 +10009,16 @@ function findAndDisplayExternalLinks(excludeContainerId = 'dh_pageContainer') {
  * 状态管理、循环清理与计数器显示脚本 (支持动态切换模式)
  * 排除条件：不移除包含 'notranslate' 类名、ID 包含 'gemini' 或 Class 包含 'confirm' 的元素。
  */
-(function() {
+(function () {
     const KEY = 'repeatClear';
     const buttonId = 'manual-css-switchClear';
     const intervalTime = 1000;      // 清理循环间隔 (1秒)
     const buttonCheckTime = 500;    // 按钮检查间隔 (0.5秒)
-    
+
     let totalRemovedCount = 0;
     let intervalId = null;          // 清理循环的 ID
     let buttonCheckIntervalId = null; // 按钮检查循环的 ID
-    
+
     // --- 核心：清理逻辑 (不变) ---
     const runClearProcess = (isSilent = false) => {
         const allElements = document.body ? document.body.querySelectorAll('*') : [];
@@ -9746,8 +10026,8 @@ function findAndDisplayExternalLinks(excludeContainerId = 'dh_pageContainer') {
 
         allElements.forEach(el => {
             try {
-                if (el.nodeType === 1) { 
-                    
+                if (el.nodeType === 1) {
+
                     // 【排除条件 1】: .notranslate
                     if (el.classList.contains('notranslate')) {
                         return;
@@ -9757,14 +10037,14 @@ function findAndDisplayExternalLinks(excludeContainerId = 'dh_pageContainer') {
                     if (el.id && el.id.toLowerCase().includes('gemini')) {
                         return;
                     }
-                    
+
                     // 【排除条件 3】: Class 包含 'confirm'
                     if (el.className && el.className.toLowerCase().includes('confirm')) {
-                         return;
+                        return;
                     }
 
                     const opacity = window.getComputedStyle(el).opacity;
-                    
+
                     if (parseFloat(opacity) < 1.0) {
                         el.remove();
                         currentRunCount++;
@@ -9772,16 +10052,16 @@ function findAndDisplayExternalLinks(excludeContainerId = 'dh_pageContainer') {
                 }
             } catch (e) { /* 忽略错误 */ }
         });
-        
+
         totalRemovedCount += currentRunCount;
-        
+
         const button = document.getElementById(buttonId);
         if (!isSilent && button) {
-            updateButtonText(true); 
+            updateButtonText(true);
         }
 
         if (currentRunCount > 0 && !isSilent) {
-             console.log(`[AutoClear] 本次移除了 ${currentRunCount} 个透明元素。累计移除: ${totalRemovedCount}`);
+            console.log(`[AutoClear] 本次移除了 ${currentRunCount} 个透明元素。累计移除: ${totalRemovedCount}`);
         } else if (currentRunCount > 0 && isSilent) {
             console.log(`[Silent Clear] 移除了 ${currentRunCount} 个透明元素。`);
         }
@@ -9812,9 +10092,9 @@ function findAndDisplayExternalLinks(excludeContainerId = 'dh_pageContainer') {
     function updateButtonText(isRepeating) {
         const button = document.getElementById(buttonId);
         if (!button) return;
-        
+
         const isLooping = intervalId !== null;
-        
+
         // ⭐️ 优化后的文本：强调“透明元素”
         if (isLooping) {
             // 运行中状态：提示用户点击即可停止，并显示累计清理数
@@ -9830,46 +10110,46 @@ function findAndDisplayExternalLinks(excludeContainerId = 'dh_pageContainer') {
     function toggleClearState() {
         const isCurrentlyRepeating = intervalId !== null;
         const newState = !isCurrentlyRepeating;
-        
+
         if (newState) {
-            startLoop(false); 
+            startLoop(false);
         } else {
             stopLoop();
         }
 
         localStorage.setItem(KEY, newState ? 'true' : 'false');
-        updateButtonText(newState); 
+        updateButtonText(newState);
     }
 
     // --- 初始化交互模式 (不变) ---
     function initInteractiveMode() {
         console.log("⚙️ 检测到按钮，已切换至交互模式。");
-        stopLoop(); 
-        clearInterval(buttonCheckIntervalId); 
+        stopLoop();
+        clearInterval(buttonCheckIntervalId);
 
         const button = document.getElementById(buttonId);
         if (!button) return;
 
         button.addEventListener('click', toggleClearState);
-        
-        updateButtonText(false); 
+
+        updateButtonText(false);
 
         const initialRepeating = localStorage.getItem(KEY) === 'true';
         if (initialRepeating) {
-            startLoop(false); 
+            startLoop(false);
         }
     }
 
     // --- 按钮检查轮询函数 (不变) ---
     function checkForButton() {
         const button = document.getElementById(buttonId);
-        
+
         if (button) {
             initInteractiveMode();
         } else {
             const initialRepeating = localStorage.getItem(KEY) === 'true';
             if (initialRepeating && intervalId === null) {
-                startLoop(true); 
+                startLoop(true);
             } else if (!initialRepeating && intervalId !== null) {
                 stopLoop();
             }
@@ -9879,15 +10159,301 @@ function findAndDisplayExternalLinks(excludeContainerId = 'dh_pageContainer') {
     // --- 脚本主入口 (不变) ---
 
     const initialButton = document.getElementById(buttonId);
-    
+
     if (initialButton) {
         initInteractiveMode();
     } else {
         console.warn(`[Silent Mode] 按钮 #${buttonId} 不存在。启动静默清理和按钮轮询 (每 ${buttonCheckTime / 1000} 秒)。`);
-        
+
         checkForButton();
 
         buttonCheckIntervalId = setInterval(checkForButton, buttonCheckTime);
     }
 
 })();
+
+
+
+
+
+/**
+ * 自动生成并显示网页元素信息提示板一次。
+ * 在创建前会检查 ID 为 'gemini-tips-modal-overlay' 的元素是否已存在，
+ * 以防止重复生成。
+ */
+function showLinkTipsModalOnce() {
+
+    // **[新增] 1. 存在性检查：防止重复创建**
+    if (document.getElementById('gemini-tips-modal-overlay')) {
+        console.warn("Gemini Tips: 提示板已存在，阻止重复创建。");
+        return;
+    }
+    // 检查通过，继续创建...
+
+
+    // 2. 定义 CSS 样式
+    const styles = `
+        /* 全局重置和字体优化 */
+        .gemini-tips-modal-content, .gemini-tips-info-table, .gemini-tips-code-example {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif !important;
+            box-sizing: border-box !important;
+        }
+
+        /* 模态框背景样式 */
+        .gemini-tips-modal-overlay {
+            display: none; 
+            position: fixed !important; 
+            z-index: 114122 !important; 
+            left: 0 !important;
+            top: 0 !important;
+            width: 100% !important; 
+            height: 100% !important; 
+            background-color: rgba(18, 24, 40, 0.8) !important; 
+            backdrop-filter: blur(4px) !important; 
+            overflow-y: auto !important; 
+            -webkit-overflow-scrolling: touch !important;
+        }
+        
+        /* 模态框内容容器 */
+        .gemini-tips-modal-content {
+            background-color: #ffffff !important;
+            margin: 5vh auto !important; 
+            padding: 20px !important;
+            border-radius: 12px !important; 
+            width: 95% !important; 
+            max-width: 750px !important; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2) !important; 
+            border: none !important; 
+        }
+
+        /* 动画 */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .gemini-tips-modal-content { animation: fadeIn 0.3s ease-out !important; }
+
+        /* 标题和段落 */
+        .gemini-tips-modal-content h2 {
+            color: #1a2a4b !important; 
+            font-size: 24px !important;
+            margin-bottom: 15px !important;
+            padding-bottom: 5px !important;
+            border-bottom: 2px solid #e9f0ff !important;
+        }
+        .gemini-tips-modal-content p {
+            line-height: 1.6 !important;
+            color: #555 !important;
+            margin-bottom: 10px !important;
+        }
+
+
+        /* 关闭按钮 */
+        .gemini-tips-close-btn {
+            color: #888 !important;
+            float: right !important;
+            font-size: 36px !important;
+            font-weight: 300 !important; 
+            line-height: 1 !important;
+            margin-left: 10px !important;
+        }
+
+        .gemini-tips-close-btn:hover,
+        .gemini-tips-close-btn:focus {
+            color: #333 !important;
+            text-decoration: none !important;
+            cursor: pointer !important;
+        }
+
+        /* 提示板内的表格样式 */
+        .gemini-tips-info-table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+            margin-top: 20px !important;
+            font-size: 13px !important;
+            border-radius: 6px !important;
+            overflow: hidden !important;
+        }
+
+        .gemini-tips-info-table th, .gemini-tips-info-table td {
+            border: none !important; 
+            padding: 12px !important;
+            text-align: left !important;
+            border-bottom: 1px solid #f0f0f0 !important;
+        }
+
+        .gemini-tips-info-table th {
+            background-color: #007bff !important; 
+            color: white !important;
+            font-weight: 600 !important;
+        }
+        
+        .gemini-tips-info-table tr:nth-child(odd) {
+            background-color: #fafafa !important;
+        }
+        .gemini-tips-info-table tr:hover {
+             background-color: #e6f7ff !important; 
+        }
+
+        /* 突出显示关键用途 */
+        .gemini-tips-usage-section h3 {
+            color: #007bff !important;
+            border-bottom: none !important;
+            padding-bottom: 0 !important;
+            margin-top: 30px !important;
+            font-size: 18px !important;
+        }
+
+        /* 代码块样式 */
+        .gemini-tips-code-example {
+            background-color: #f0f3f8 !important; 
+            color: #2c3e50 !important;
+            padding: 10px 15px !important;
+            border-radius: 6px !important;
+            font-family: 'Courier New', monospace !important;
+            white-space: pre-wrap !important;
+            margin-top: 10px !important;
+            border-left: 4px solid #007bff !important; 
+            font-size: 14px !important;
+        }
+        
+        /* 移动端特殊调整 */
+        @media (max-width: 600px) {
+            .gemini-tips-modal-content {
+                margin: 3vh auto !important;
+                padding: 15px !important;
+            }
+            .gemini-tips-info-table th, .gemini-tips-info-table td {
+                padding: 8px !important;
+                font-size: 12px !important;
+            }
+        }
+    `;
+
+    // 3. 将样式添加到 <head>
+    const styleSheet = document.createElement("style");
+    styleSheet.type = "text/css";
+    styleSheet.innerText = styles;
+    document.head.appendChild(styleSheet);
+
+
+    // 4. 创建模态框元素和内容
+    
+    const modal = document.createElement('div');
+    modal.className = 'gemini-tips-modal-overlay notranslate'; 
+    modal.id = 'gemini-tips-modal-overlay'; 
+    
+    const content = document.createElement('div');
+    content.className = 'gemini-tips-modal-content notranslate'; 
+    content.id = 'gemini-tips-modal-content'; 
+    
+    // 参照信息表格 (内容)
+    const referenceTable = `
+        <table class="gemini-tips-info-table notranslate">
+            <thead>
+                <tr>
+                    <th style="width: 30%;">信息项</th>
+                    <th style="width: 70%;">参照信息 (文章链接 Tag: A)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>**目标类型 / Tag**</td>
+                    <td>A (超链接)</td>
+                </tr>
+                <tr>
+                    <td>**CSS 选择器**</td>
+                    <td>a.loop-card__title-link</td>
+                </tr>
+                <tr>
+                    <td>**链接 / Href**</td>
+                    <td>https://techcrunch.com/...</td>
+                </tr>
+                <tr>
+                    <td>**父级简述**</td>
+                    <td>H3#.loop-card__title</td>
+                </tr>
+                <tr>
+                    <td>**XPath**</td>
+                    <td>//*[@id='wp--skip-link--target']/div[1]/...</td>
+                </tr>
+            </tbody>
+        </table>
+    `;
+
+    // 提示内容 HTML
+    content.innerHTML = `
+        <span class="gemini-tips-close-btn notranslate" id="gemini-tips-modal-close-top">&times;</span>
+        <h2>📰 如何利用目标信息</h2>
+        <p>以下是可供您参照的目标信息：</p>
+        
+        ${referenceTable}
+
+        <div class="gemini-tips-usage-section notranslate">
+            <h3>🔗 如何通过这些信息进行定位 (核心步骤)</h3>
+            
+            <table class="gemini-tips-info-table notranslate">
+                <thead>
+                    <tr>
+                        <th style="width: 35%;">定位方法</th>
+                        <th style="width: 30%;">定位表达式</th>
+                        <th>适用性与优势</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>**CSS 选择器**</td>
+                        <td class="notranslate"><code>a.loop-card__title-link</code></td>
+                        <td>**首选**：简洁、快速、易维护，适合批量操作。</td>
+                    </tr>
+                    <tr>
+                        <td>**XPath (相对)**</td>
+                        <td class="notranslate"><code>//a[@class='loop-card__title-link']</code></td>
+                        <td>**备选**：定位最灵活，可向上查找父节点，但执行速度略慢。</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <p style="margin-top: 15px;">**利用父级信息增强定位：** 结合父级简述（H3#.loop-card__title）可构建更精确的 CSS 选择器：</p>
+            <div class="gemini-tips-code-example notranslate">h3#loop-card__title > a.loop-card__title-link</div>
+
+            <p style="margin-top: 25px; font-weight: bold; color: #cc3300 !important;">🔑 总结：您的工具或脚本需要利用 **CSS 选择器** 或 **XPath** 精确找到元素。</p>
+        </div>
+    `;
+
+    // 将元素添加到 DOM
+    document.body.appendChild(modal);
+    modal.appendChild(content); 
+
+    
+    // 5. 添加事件监听器 (Logic)
+    
+    // 获取关闭按钮元素
+    const modalCloseBtn = document.getElementById('gemini-tips-modal-close-top'); 
+    
+    // 严格定义关闭函数
+    const closeModal = () => {
+        // 使用 ID 引用来确保关闭的是正确的元素
+        const modalElement = document.getElementById('gemini-tips-modal-overlay');
+        if (modalElement) {
+             modalElement.style.display = 'none';
+        }
+    };
+
+    if (modalCloseBtn) {
+        modalCloseBtn.addEventListener('click', closeModal);
+    } else {
+        console.warn("Gemini Tips: 未找到关闭按钮 ID 'gemini-tips-modal-close-top'。");
+    }
+
+    // 点击背景时关闭模态框
+    modal.addEventListener('click', (event) => {
+        // 检查点击目标的 ID 是否等于模态框的 ID
+        if (event.target.id === 'gemini-tips-modal-overlay') {
+            closeModal();
+        }
+    });
+    
+    // 6. 显示模态框
+    modal.style.display = 'block';
+}
