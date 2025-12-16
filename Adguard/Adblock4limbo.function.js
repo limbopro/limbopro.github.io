@@ -5963,7 +5963,7 @@ function injectStyles(containerId, windowId) {
         modal.id = CSS_INPUT_WINDOW_ID;
         modal.style.cssText = `
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(0, 0, 0, 0.7); z-index: 100000000;
+            background-color: rgba(0, 0, 0, 0.7); z-index: 114115;
             display: flex; justify-content: center; align-items: center;
         `;
 
@@ -6043,7 +6043,8 @@ function injectStyles(containerId, windowId) {
         saveButton.onclick = () => {
             const input = textarea.value.trim();
             if (!input) {
-                alert('请输入至少一个 CSS 选择器。');
+                // alert('请输入至少一个 CSS 选择器。');
+                confirmndExecuteFC('请输入至少一个 CSS 选择器。')
                 return;
             }
 
@@ -6060,9 +6061,11 @@ function injectStyles(containerId, windowId) {
             });
 
             if (savedCount > 0) {
-                alert(`✅ 成功保存 ${savedCount} 个 CSS 选择器！请刷新页面生效。`);
+                // alert(`✅ 成功保存 ${savedCount} 个 CSS 选择器！请刷新页面生效。`);
+                confirmndExecuteFC(`✅ 成功保存 ${savedCount} 个 CSS 选择器！请刷新页面生效。`)
             } else {
-                alert('⚠️ 未保存任何有效选择器，请检查格式。');
+                //alert('⚠️ 未保存任何有效选择器，请检查格式。');
+                confirmndExecuteFC('⚠️ 未保存任何有效选择器，请检查格式。')
             }
             modal.remove();
         };
@@ -6900,7 +6903,7 @@ function injectStyles(containerId, windowId) {
 
                 <div style="grid-template-columns: 1fr 1fr;margin-bottom:5px;display: grid;gap: 5px;">
                 <button id="manual-xpath-add" onclick="window.showPageScriptsFloatWindow()" style="
-        background: #b532ccff; /* 使用紫色突出手动操作 */
+        background: green; /* 使用紫色突出手动操作 */
         color: white;
         border: none;
         padding: 8px 15px;
@@ -6911,7 +6914,7 @@ function injectStyles(containerId, windowId) {
         width: 100%;
     ">📟 页面脚本查看器</button>
 
- <button id="manual-xpath-add" onclick="showXPathInputWindow()" style="
+ <button id="showXPath" onclick="showXPathInputWindow()" style="
         background: #6c1a7bff; /* 使用紫色突出手动操作 */
         color: white;
         border: none;
@@ -6926,7 +6929,7 @@ function injectStyles(containerId, windowId) {
     </button>
 
      <!-- 【V27 NEW】CSS 按钮 -->
-                <button id="manual-css-add" onclick="showCssInputWindow()" style="background: #9c27b0; color: white; border: none; padding: 8px 15px; cursor: pointer; border-radius: 4px; font-weight: bold; width: 100%;">
+                <button id="manual-css-add" onclick="showCssInputWindow()" style="background:#6c1a7bff; color: white; border: none; padding: 8px 15px; cursor: pointer; border-radius: 4px; font-weight: bold; width: 100%;">
                     🎨 输入 CSS 选择器屏蔽
                 </button>
     </div>
@@ -7115,9 +7118,13 @@ function injectStyles(containerId, windowId) {
                 return;
             }
 
-            if (target.closest(`#${containerId}`)) {
-                e.stopPropagation();
-                return;
+
+            // 检查事件是否发生在任一容器内部
+            // 如果 target.closest 找到匹配元素，则条件为真
+            if (target.closest(`#${containerId}`) || target.closest('[id*="script-viewe"],[class*="confirm]') || target.closest('#confirmMask')) {
+                // 事件发生在受保护的容器内部
+                e.stopPropagation(); // 阻止其冒泡到父元素
+                return;              // 退出函数，不执行后续的阻止默认行为
             }
 
             e.preventDefault();
@@ -7453,7 +7460,7 @@ function injectStyles(containerId, windowId) {
             if (target === mainContainer) return true;
 
             if (target.closest(`#${windowId}`)) {
-                const dragTargets = target.closest('#gemini-header, #gemini-status-bar, .gemini-tip-text');
+                const dragTargets = target.closest('#confirmMask,[id*="script-viewer"],div.script-item, #script-viewer-float-window-Gemini, #gemini-header, #gemini-status-bar, .gemini-tip-text');
 
                 if (dragTargets && !target.closest('button, span[id$="close-btn"], a')) {
                     return true;
@@ -7540,7 +7547,7 @@ function injectStyles(containerId, windowId) {
             }
 
             // 注意：closest() 方法只会查找祖先元素，所以最好使用 id 匹配。
-            if (doc.defaultView === window && targetElement.closest('[id*="gemini"], #ellCloseX, #dh_buttonContainer, #dh_pageContainer')) {
+            if (doc.defaultView === window && targetElement.closest('[id*="script-viewer"],[id*="gemini"], #ellCloseX, #dh_buttonContainer, #dh_pageContainer')) {
                 return; // 排除逻辑
             }
 
@@ -7697,7 +7704,8 @@ function injectStyles(containerId, windowId) {
      */
     function handleManualXPathSubmission(xpath) {
         if (!xpath || typeof xpath !== 'string' || xpath.trim() === '') {
-            alert('错误：请输入一个有效的 XPath。');
+            //alert('错误：请输入一个有效的 XPath。');
+            confirmndExecuteFC('错误：请输入一个有效的 XPath。')
             return;
         }
 
@@ -8875,7 +8883,7 @@ window.showPageScriptsFloatWindow = function showPageScriptsFloatWindow() {
     if (typeof body_build == 'function') {
         body_build('false')
     } // 关闭导航页以便查看
-    const WINDOW_ID = 'script-viewer-float-window';
+    const WINDOW_ID = 'script-viewer-float-window-Gemini';
     const STYLE_ID = 'script-viewer-style';
     const floatWindow = document.getElementById(WINDOW_ID);
 
@@ -9216,4 +9224,194 @@ window.showPageScriptsFloatWindow = function showPageScriptsFloatWindow() {
     document.addEventListener('touchend', endDrag);
 
     console.log(`脚本查看悬浮窗已创建，共发现 ${scripts.length} 个脚本。`);
+}
+
+
+
+
+//  更友好的确认框
+
+
+/* 悬浮窗  Start*/
+
+
+/* 悬浮窗  Start*/
+
+// 1. 注入 CMSNONE 样式
+const fccmsNoneCSS = `
+
+/* 给到悬浮窗用 Adblock4limbo */
+/* 遮罩层 */
+.confirm-mask {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, .5);
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center;
+    z-index: 114120;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity .2s, visibility .2s;
+}
+
+.confirm-mask.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* 弹窗本体 */
+.confirm-dialog {
+    background: #fff;
+    border-radius: 8px;
+    width: 320px;
+    max-width: 90vw;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, .2);
+    animation: pop .2s ease-out;
+}
+
+@keyframes pop {
+    from {
+        transform: scale(.8);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.confirm-header {
+    padding: 16px 20px 8px;
+    font-weight: 600;
+    font-size: 18px;
+}
+
+.confirm-body {
+    padding: 0 20px 16px;
+    color: #555;
+}
+
+.confirm-footer {
+    padding: 0 20px 16px;
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+.confirm-footer button {
+    min-width: 72px;
+    padding: 6px 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.confirm-footer .cancel {
+    background: #f0f0f0;
+    color: #333;
+}
+
+.confirm-footer .ok {
+    background: #007bff;
+    color: #fff;
+}
+
+.confirm-footer .ok:hover {
+    background: #0056b3;
+}
+
+.confirm-footer .cancel:hover {
+    background: #e0e0e0;
+}
+
+    .cmsnone {
+      z-index: -111;
+      display: none !important;
+      opacity: 0 !important;
+      pointer-events: none !important;
+    }
+  `;
+
+const fcstyleElement = document.createElement('style');
+fcstyleElement.type = 'text/css';
+
+if (fcstyleElement.styleSheet) {
+    fcstyleElement.styleSheet.cssText = fccmsNoneCSS;
+} else {
+    fcstyleElement.appendChild(document.createTextNode(fccmsNoneCSS));
+}
+
+document.head.appendChild(fcstyleElement);
+
+// 后续用于显示：fc_mask.classList.remove('cmsnone');
+// 后续用于隐藏：fc_mask.classList.add('cmsnone');
+
+const fc_mask = document.createElement('div');
+fc_mask.id = 'confirmMask';
+fc_mask.className = 'confirm-mask cmsnone';
+fc_mask.innerHTML = `
+    <div class="confirm-dialog">
+      <div class="confirm-header">确认操作</div>
+      <div class="confirm-body"></div>
+      <div class="confirm-footer">
+        <button class="cancel">取消</button>
+        <button class="ok">确认</button>
+      </div>
+    </div>
+  `;
+
+document.body.appendChild(fc_mask);
+
+/* ---------- 自定义弹窗逻辑 ---------- */
+const fcmask = document.getElementById('confirmMask');
+const fccancel = fcmask.querySelector('.cancel');
+const fcok = fcmask.querySelector('.ok');
+const fcmaskText = document.querySelector('div.confirm-body');
+
+let fcresolvePromise;   // 用于 await 方式（可选）
+
+function showConfirmFC() {
+    fcmask.classList.remove('cmsnone')
+    fcmask.classList.add('show');
+
+    return new Promise(resolve => {
+        fcresolvePromise = resolve;
+
+        // 点击遮罩关闭（可选）
+        fcmask.onclick = e => {
+            if (e.target === mask) closeConfirmFC(false);
+        };
+        fccancel.onclick = () => closeConfirmFC(false);
+        fcok.onclick = () => closeConfirmFC(true);
+    });
+}
+
+function closeConfirmFC(result) {
+    fcmask.classList.remove('show');
+    fcmask.onclick = cancel.onclick = ok.onclick = null;
+    resolvePromise(result);
+}
+
+/* ---------- 确认后执行原逻辑 ---------- */
+window.confirmndExecuteFC = async function confirmndExecuteFC(itext = '', fun) {
+    // 更新提示文字
+    if (itext !== '') {
+        fcmaskText.textContent = itext;
+    }
+
+    // 弹出确认框
+    const fcconfirmed = await showConfirmFC();
+    if (!fcconfirmed) return;   // 用户取消，直接退出
+
+    // 执行传入的回调（若有）
+    if (typeof fun === 'function') {
+        try {
+            await fun();   // 支持同步或异步回调
+        } catch (err) {
+            console.error('confirmndExecuteFC callback error:', err);
+        }
+    }
 }
