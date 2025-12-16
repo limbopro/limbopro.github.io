@@ -3,7 +3,7 @@
 // @namespace    https://limbopro.com/Adguard/Adblock4limbo.function.js
 // @version      0.2025.12.15
 // @license      CC BY-NC-SA 4.0
-// @description  实用网站导航 —— 免费在线影视/前端学习/开发者社区/新闻/建站/下载工具/格式转换工具/电子书/新闻/写作/免费漫画等；
+// @description  实用网站导航 —— 沉浸式翻译纯JS版本；M3U8/MP4资源链接提取；广告元素屏蔽器；费在线影视/前端学习/开发者社区/新闻/建站/下载工具/格式转换工具/电子书/新闻/写作/免费漫画等；
 // @author       limbopro
 // @match        https://*/*
 // @match        https://twitter.com/*
@@ -35,7 +35,6 @@
 
 // 设置 cookie 饼
 window.fcsetCookie = function fcsetCookie(cname, cvalue, exdays) { var d = new Date(); d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000)); var expires = "expires=" + d.toGMTString(); document.cookie = cname + "=" + cvalue + "; path=/;" + expires; }
-
 
 
 fcsetCookie('daohangMode_global', 'true', 400);
@@ -394,6 +393,7 @@ function initializeFloatingNavigationButton(x, csp) {
 `.replace(/\s+/g, ' ').trim() + ';';
 
         _button.style.cssText = BUTTON_CSS;
+        _button.setAttribute("onclick", "body_build('true')");
         document.getElementById('dh_buttonMain').appendChild(_button); // 在 dh_buttonMain 下添加按钮
 
     } else if (csp == 'csp') {
@@ -496,27 +496,11 @@ function updateNavigationButtonDisplay(x) {
 
 // 为按钮添加监听事件 防止被破坏
 function _onclick_button() {
-    if (document.querySelector('button#dh_button')) {
-        document.querySelector('button#dh_button').addEventListener("click", function () {
-            body_build('true'); // 添加监听事件
-        })
-    }
     setTimeout(() => {
-        if (document.querySelector("button#xX")) {
-            document.querySelector('button#xX').addEventListener("click", function () {
-                body_build('false'); // 添加监听事件
-            })
-        }
 
-        if (document.querySelector('button#hidedaohang')) {
-            document.querySelector('button#hidedaohang').addEventListener("click", function () {
-                daohangMode_switch(); // 添加监听事件
-            })
-        }
 
         if (document.querySelector('button#resetting')) {
             document.querySelector('button#resetting').addEventListener("click", function () {
-
 
                 // 移动端 重置导航按钮高度记忆
                 localStorage.setItem('dh_buttonMain', '')
@@ -554,9 +538,9 @@ var nsfw_regex = new RegExp(/\b(javlibrary|thisav|njav|missav|javlib|javbus|atta
 var csp_regex = new RegExp(/\b(twitter|xvideos|google)\b/i);
 
 // 判断是否需要在当前页面插入导航按钮
-let fc_str_ua = navigator.userAgent.toLowerCase();
-let regexp = /(.*)(iphone\sos\s)(\d{2})(.*)/;
-let ios_version = fc_str_ua.replace(regexp, '$3');
+window.fc_str_ua = navigator.userAgent.toLowerCase();
+window.regexp = /(.*)(iphone\sos\s)(\d{2})(.*)/;
+window.ios_version = fc_str_ua.replace(regexp, '$3');
 
 var csp = ['twitter', 'xvideos'];
 var number_x = 0;
@@ -617,7 +601,7 @@ function getNavigationHTML() {
   <div class="div_title tips" style="width:100%">
     <div class="closeX_W">
       <div class="ellCloseX">
-        <button style="border-radius:50%;opacity:.5" id="xX"></button>
+        <button style="border-radius:50%;opacity:.5" id="xX" onclick="body_build('false')"></button>
       </div>
     </div>
     <div class="_header4tips">
@@ -638,7 +622,7 @@ function getNavigationHTML() {
     <button class="a_global special yellow" id="admin" onclick="alFeedback_showPanel()">联系博主/反馈</button>
 </li>
             <li class="li_global"><a class="a_global" id="ifeedback" href="https://limbopro.com/feedback/" target="_blank">匿名留言</a></li>
-      <li class="li_global"><button class="crbhms" id="hidedaohang">导航按钮(OFF)</button></li>
+      <li class="li_global"><button class="crbhms" onclick='daohangMode_switch()' id="hidedaohang">导航按钮(OFF)</button></li>
       <li class="li_global"><button class="crbhms" id="cjsfy" data-state="off" style="background-color:red">沉浸式翻译(OFF)</button></li>
             <li class="li_global"><button class="crbhms" id="huacisousuo" data-state="off" style="background-color:red">划词搜索(OFF)</button></li>
       <li class="li_global">
@@ -679,14 +663,14 @@ function getNavigationHTML() {
       <li class="li_global"><a class="a_global special yellow" id="番号搜索" href="https://limbopro.com/btsearch.html" target="_blank" style="border-radius:4px;background:#c53f3f">🔞番号搜索</a></li>
       <li class="li_global"><button class="a_global special yellow" id="mtzyczq"  style="border-radius:4px;background:#c53f3f" onclick="mtzyczq()">🎦媒体资源查找器</button></li>
       <li class="li_global"><button class="a_global special yellow" id="tmyszzq"  style="border-radius:4px;background:#c53f3f">🔍 元素屏蔽/追踪器</button></li>
-      <!--<li class="li_global">
+      <li class="li_global">
     <button 
         class="a_global special yellow" 
         id="carolPanel"  
         style="border-radius:4px;background:#c53f3f"
         onclick="window.initWebDebugger()"> ⚙️ Web 存储调试器
     </button>
-</li>--!>
+</li>
 
 <li class="li_global">
     <button 
@@ -1005,7 +989,7 @@ window.body_build = function body_build(x) { // 判断导航显示与否
     if (x == "true") {
         ////console.log("// body_build() 输入为 true，开始创建导航...")
 
-        initFloatingNav(1, 114154, 1, 'auto')
+        initFloatingNav(1, 114118, 1, 'auto')
 
     } else if (x == "false") {
         initFloatingNav(0, -114154, 1, 'none')
@@ -1478,23 +1462,26 @@ document.getElementById('resetSort')?.addEventListener('click', () => {
     // 2. 清空自定义拖拽顺序数据 (新增)
     localStorage.removeItem('customMenuOrder');
 
-    alert('所有排序数据已重置，即将重新载入...');
+    confirmndExecuteFC('所有排序数据已重置，即将重新载入...');
     location.reload();
 });
+
+
+
 
 
 // ==================== 拖拽排序系统开始 ====================
 
 // 用于存储被拖拽的元素
-let draggedItem = null;
+window.draggedItem = null;
 // 用于存储拖拽目标上方的元素
-let dragOverItem = null;
+window.dragOverItem = null;
 
-const container = document.querySelector('.echo');
+window.rankContainer = document.querySelector('.echo');
 
-if (container) {
+if (rankContainer) {
     // 监听拖拽开始事件 (在拖拽的元素上触发)
-    container.addEventListener('dragstart', function (e) {
+    rankContainer.addEventListener('dragstart', function (e) {
         // 确保只有 .div_global 可以被拖拽
         if (e.target.classList.contains('div_global')) {
             draggedItem = e.target;
@@ -1505,7 +1492,7 @@ if (container) {
     });
 
     // 监听拖拽结束事件 (在拖拽的元素上触发)
-    container.addEventListener('dragend', function (e) {
+    rankContainer.addEventListener('dragend', function (e) {
         e.target.classList.remove('dragging');
         draggedItem = null;
         dragOverItem = null;
@@ -1514,7 +1501,7 @@ if (container) {
     });
 
     // 监听拖拽进入目标区域的事件 (在目标元素上触发)
-    container.addEventListener('dragover', function (e) {
+    rankContainer.addEventListener('dragover', function (e) {
         e.preventDefault(); // 必须调用，以允许放置 (drop)
         if (!draggedItem || !e.target.closest('.div_global') || e.target.closest('.div_global') === draggedItem) return;
 
@@ -1528,12 +1515,12 @@ if (container) {
             const isAfter = e.clientY > rect.top + rect.height / 2;
 
             target.classList.add('drag-over');
-            container.insertBefore(draggedItem, isAfter ? target.nextElementSibling : target);
+            rankContainer.insertBefore(draggedItem, isAfter ? target.nextElementSibling : target);
         }
     });
 
     // 监听拖拽离开目标区域的事件 (在目标元素上触发)
-    container.addEventListener('dragleave', function (e) {
+    rankContainer.addEventListener('dragleave', function (e) {
         const target = e.target.closest('.div_global');
         if (target && target === dragOverItem) {
             target.classList.remove('drag-over');
@@ -1545,7 +1532,7 @@ if (container) {
 
 // 保存当前 DOM 顺序的函数
 function saveCustomOrder() {
-    const order = Array.from(container.querySelectorAll('.div_global'))
+    const order = Array.from(rankContainer.querySelectorAll('.div_global'))
         .map(div => div.dataset.category)
         .filter(category => category); // 过滤掉没有 category 的元素
 
@@ -1554,9 +1541,8 @@ function saveCustomOrder() {
 }
 
 // ==================== 拖拽排序系统结束 ====================
-
-
 // ==================== 智能排序系统结束 ====================
+
 
 
 // 监听事件
@@ -1566,9 +1552,9 @@ window.addEventListener('load', function () {
         const buttonText = this.textContent.trim();
 
         if (buttonText.includes('非成人')) {
-            alert('似乎该网站不是成人网站！去网页广告计划的一些功能不会在该网站执行！');
+            confirmndExecuteFC('似乎该网站不是成人网站！去网页广告计划的一些功能不会在该网站执行！');
         } else {
-            alert('该网站似乎是成人网站！去网页广告计划的一些功能将在该网站执行！');
+            confirmndExecuteFC('该网站似乎是成人网站！去网页广告计划的一些功能将在该网站执行！');
         }
     });
 
@@ -1665,14 +1651,14 @@ function daohangMode_switch(x) {
     if (x == 'hidden') {
         fcsetCookie("daohangMode_yourChoice", 'hidden', 400);
         // document.querySelector('button#dh_button').classList.add('cms_opacity');
-        document.querySelector('button#dh_button').setAttribute("class", "cmsnone " + bottom());
-        document.querySelector('#dh_buttonContainer').setAttribute("class", "cmsnone");
+        document.querySelector('button#dh_button')?.setAttribute("class", "cmsnone " + bottom());
+        document.querySelector('#dh_buttonContainer')?.setAttribute("class", "cmsnone");
         updateNavigationButtonDisplay('hidden'); // 隐藏按钮
         document.querySelector('button#hidedaohang').textContent = "导航按钮(OFF)"
         document.querySelector('button#hidedaohang').style.background = 'red'
 
         if (click_sum++ == -1) { // 引导用户使用快捷方式唤起导航🧭详情页
-            alert('已隐藏页面右下角的导航按钮；(快捷唤起导航🧭页面)的方法? -> 1秒内，电脑用户(连续敲击2次ESC键)，iOS用户(在页面空白处连续点击4次及以上)')
+            confirmndExecuteFC('已隐藏页面右下角的导航按钮；(快捷唤起导航🧭页面)的方法? -> 1秒内，电脑用户(连续敲击2次ESC键)，iOS用户(在页面空白处连续点击4次及以上)')
         }
 
         setTimeout(() => {
@@ -1699,11 +1685,14 @@ function daohangMode_switch(x) {
     }
 }
 
+
+
 // 划词搜索状态切换
 // 获取按钮
 // Start of huacisousuo toggle code
-const btn = document.getElementById('huacisousuo'); // 划词切换按钮
 
+
+window.huacibtn = document.getElementById('huacisousuo'); // 划词切换按钮
 // 状态切换函数
 function toggleSearchState(x) {
     const searchPro = document.getElementById('limbopro-search-pro'); // 搜索框容器
@@ -1711,13 +1700,13 @@ function toggleSearchState(x) {
         initLimoProSearch()// 如果不存在，则立即创建
         document.getElementById('limbopro-search-pro').className = 'cmsnone'
     }
-    const isOn = btn.dataset.state === 'on';
+    const isOn = huacibtn.dataset.state === 'on';
     if (x !== 'false') {
         if (isOn) {
             // 关闭：OFF + 红色 + false
-            btn.textContent = '划词搜索(OFF)';
-            btn.style.backgroundColor = 'red';
-            btn.dataset.state = 'off';
+            huacibtn.textContent = '划词搜索(OFF)';
+            huacibtn.style.backgroundColor = 'red';
+            huacibtn.dataset.state = 'off';
             localStorage.setItem('huacisousuo', 'false');
             searchPro.setAttribute("class", "cmsnone"); // 隐藏
             setTimeout(() => {
@@ -1725,9 +1714,9 @@ function toggleSearchState(x) {
             }, 1500)
         } else {
             // 开启：ON + 绿色 + true
-            btn.textContent = '划词搜索(ON)';
-            btn.style.backgroundColor = 'green';
-            btn.dataset.state = 'on';
+            huacibtn.textContent = '划词搜索(ON)';
+            huacibtn.style.backgroundColor = 'green';
+            huacibtn.dataset.state = 'on';
             localStorage.setItem('huacisousuo', 'true');
             searchPro.setAttribute("class", "cms"); // 显示
             setTimeout(() => {
@@ -1736,9 +1725,9 @@ function toggleSearchState(x) {
         }
     } else if (x === 'false') {
         // 关闭：OFF + 红色 + false
-        btn.textContent = '划词搜索(OFF)';
-        btn.style.backgroundColor = 'red';
-        btn.dataset.state = 'off';
+        huacibtn.textContent = '划词搜索(OFF)';
+        huacibtn.style.backgroundColor = 'red';
+        huacibtn.dataset.state = 'off';
         // localStorage.setItem('huacisousuo', 'false');
         searchPro.setAttribute("class", "cmsnone"); // 隐藏
         setTimeout(() => {
@@ -1749,8 +1738,8 @@ function toggleSearchState(x) {
 
 // 点击事件
 
-if (btn) {
-    btn.addEventListener('click', toggleSearchState);
+if (huacibtn) {
+    huacibtn.addEventListener('click', toggleSearchState);
 }
 
 // 页面加载时恢复状态
@@ -1773,22 +1762,28 @@ waitForElement('#limbopro-search-pro', (el) => {
     const saved = localStorage.getItem('huacisousuo');
 
     if (saved === 'true' || saved === null) {
-        btn.textContent = '划词搜索(ON)';
-        btn.style.backgroundColor = 'green';
-        btn.dataset.state = 'on';
+        huacibtn.textContent = '划词搜索(ON)';
+        huacibtn.style.backgroundColor = 'green';
+        huacibtn.dataset.state = 'on';
         searchPro.setAttribute("class", "cms");
         console.log('划词搜索已开启');
     } else {
         // 默认或 saved === 'false' 或 null
-        btn.textContent = '划词搜索(OFF)';
-        btn.style.backgroundColor = 'red';
-        btn.dataset.state = 'off';
+        huacibtn.textContent = '划词搜索(OFF)';
+        huacibtn.style.backgroundColor = 'red';
+        huacibtn.dataset.state = 'off';
         searchPro.setAttribute("class", "cmsnone");
         console.log('划词搜索已关闭');
     }
 });
 
+
+
+// 划词搜索切换按钮结束
 // End of huacisousuo toggle code
+
+
+
 
 
 // 隐藏按钮选项
@@ -1805,7 +1800,7 @@ if (getCookie("daohangMode_yourChoice") == 'hidden' && document.querySelector('b
     console.log(click_sum--)
 }
 
-let ads_css = '.ad_img {display:none! important; pointer-events: none !important;}\
+window.ads_css = '.ad_img {display:none! important; pointer-events: none !important;}\
 '
 function ads_remove(selector) {
     document.querySelectorAll(selector).forEach((x) => { x.remove() })
@@ -2229,7 +2224,7 @@ function createInputPrompt() {
                 codeTextarea.value = clipboardText;
             } catch (err) {
                 // 如果权限被拒绝或不支持
-                alert('无法访问剪贴板，请检查浏览器权限设置或手动粘贴。错误: ' + err.message);
+                confirmndExecuteFC('无法访问剪贴板，请检查浏览器权限设置或手动粘贴。错误: ' + err.message);
             }
             codeTextarea.focus();
         };
@@ -2294,7 +2289,7 @@ function promptAndExecute() {
 injectFloatingWindowStyles();
 
 // 2. 获取按钮并绑定事件监听器
-const runButton = document.getElementById('zhixingjs');
+window.runButton = document.getElementById('zhixingjs');
 if (runButton) {
     runButton.addEventListener('click', promptAndExecute);
 }
@@ -2379,7 +2374,7 @@ function ele_dynamicAppend(selector, attribute, txt, style, func, id, array, tag
 
 
 function closeP() {
-    alert("部分页面可能无法正常关闭...!届时请手动关闭！请点击确定！");
+    confirmndExecuteFC("部分页面可能无法正常关闭...!届时请手动关闭！请点击确定！");
     window.close()
 }
 
@@ -2748,8 +2743,8 @@ window.showcjsfy = function showcjsfy() {
 }
 
 // 沉浸式翻译切换按钮
-const cjsfybtn = document.getElementById('cjsfy');
-const isLimbopro_STORAGE_KEY = 'cjsfy_translation_state'; // 用于 localStorage 的键名
+window.cjsfybtn = document.getElementById('cjsfy');
+window.isLimbopro_STORAGE_KEY = 'cjsfy_translation_state'; // 用于 localStorage 的键名
 
 // 这是一个统一的函数，用于根据目标状态更新 UI、执行功能并保存状态
 window.applyState = function applyState(targetState) {
@@ -2820,7 +2815,6 @@ window.applyState = function applyState(targetState) {
 
 
 if (cjsfybtn) {
-
     if (localStorage.getItem('cjsfy_translation_state') == null && document.getElementById('translation-button') !== null) {
         // 如果 translation-button 已经存在
         // B.更新 UI
@@ -4833,7 +4827,7 @@ function alFeedback_copyDebugInfo(infoBlockId) { // 重命名函数
             }
         }).catch(err => {
             console.error('复制失败:', err);
-            alert('复制失败，请手动选择复制。');
+            confirmndExecuteFC('复制失败，请手动选择复制。');
         });
     } else {
         // 降级处理
@@ -5052,6 +5046,7 @@ function injectStyles(containerId, windowId) {
 
         /* 头部样式 */
         #${windowId} #gemini-header {
+            color:black;
             padding: 10px 15px;
             background: #f8f8f8; /* 浅色背景 */
             border-bottom: 1px solid #ececec;
@@ -5128,6 +5123,7 @@ function injectStyles(containerId, windowId) {
 
 
 // 元素屏蔽器开始  START
+
 
 
 // ==UserScript==
@@ -5588,18 +5584,34 @@ function injectStyles(containerId, windowId) {
             } catch (e) { }
         });
 
+
+
         // 【V27 NEW】CSS 选择器移除
         cssRemovals.forEach(selector => {
             try {
+                var selector = ':not(#gemini-main-container *):not(.notranslate *):not(#dh_buttonContainer *):not(#dh_pageContainer *):not(.echo *):not(.notranslate *):not(#dh_buttonContainer *)';
+
+                // 执行查询
+                var targetButtons = doc.querySelectorAll(selector);
+                var thatYouWantEle = []
                 setTimeout(() => {
-                    const elements = doc.querySelectorAll(selector);
-                    elements.forEach(el => {
-                        if (el.parentNode) {
-                            el.remove();
-                            removedCount++;
-                        }
-                    });
-                }, 1500)
+
+                    targetButtons.forEach((x) => {
+                        var thatYouWant = x.querySelectorAll('div')
+                        thatYouWant.forEach((thatYouWant) => {
+                            thatYouWantEle.push(thatYouWant)
+                            // 使用克隆替换：清除所有事件监听器（包括子元素），然后移除原元素
+                            const clone = thatYouWant.cloneNode(true); // deep clone，保留内容和子元素
+                            thatYouWant.replaceWith(clone);           // 替换后，原元素的所有监听自动失效
+                            // 原元素已被替换，可选：进一步确保移除
+                            thatYouWant.remove(); // 不需要，replaceWith 已处理
+                            //thatYouWant.remove()
+                        })
+                    })
+
+
+                }, 1000)
+                console.log(`匹配到 ${thatYouWantEle.length} 个元素,并删除`);
             } catch (e) {
                 console.warn(`[Gemini屏蔽 V27] CSS 选择器匹配失败: ${selector}`);
             }
@@ -5669,6 +5681,7 @@ function injectStyles(containerId, windowId) {
 
             /* 头部样式 */
             #${windowId} #gemini-header {
+            color:black;
                 padding: 10px 15px;
                 background: #f8f8f8; 
                 border-bottom: 1px solid #ececec;
@@ -5894,7 +5907,14 @@ function injectStyles(containerId, windowId) {
                 </div>
                 
                 <div style="display: flex; justify-content: space-around; margin-top: 10px; gap: 10px;">
-                    <button id="gemini-modal-confirm" style="
+                
+                <button id="gemini-modal-protect" style="background: green; color: white; border: none; flex: 1;"
+onclick="toggleDebugAndRefresh()"
+                >
+                        🔰 关闭元素点击调试
+                    </button>
+
+                <button id="gemini-modal-confirm" style="
                         background: #dc3545; color: white; border: none; flex: 1;
                     ">
                         🛡️ 永久屏蔽并移除
@@ -5911,6 +5931,29 @@ function injectStyles(containerId, windowId) {
                 modalOverlay.remove();
                 resolve(result);
             };
+
+
+            /**
+ * 查找并触发 ID 为 'debug-click-toggle' 的点击事件，
+ * 并根据其状态（假设通过 'active' 类判断）更新当前点击按钮的文本。
+ * * @param {HTMLElement} clickedElement - 当前被点击的 HTML 元素 (使用 this 传递)。
+ */
+            window.toggleDebugAndRefresh = function toggleDebugAndRefresh() {
+                const clickedElement = document.getElementById('gemini-modal-protect')
+                const debugPanel = document.getElementById('tmyszzq');
+                debugPanel?.click()
+
+                const debugToggle = document.getElementById('debug-click-toggle');
+                if (debugToggle) {
+                    // 1. 触发目标元素的点击事件
+                    debugToggle.click();
+                    clickedElement.textContent = '🔰 元素点击调试(已关闭)'
+                } else {
+                    // 4. 如果目标元素不存在，则提示
+                    clickedElement.textContent = '元素点击调试(未找到目标)';
+                    console.warn("未找到 ID 为 'debug-click-toggle' 的目标元素。");
+                }
+            }
 
             modalBox.querySelector('#gemini-modal-confirm').onclick = () => closeAndResolve(true);
             modalBox.querySelector('#gemini-modal-cancel').onclick = () => closeAndResolve(false);
@@ -5961,6 +6004,7 @@ function injectStyles(containerId, windowId) {
 
         modal = document.createElement('div');
         modal.id = CSS_INPUT_WINDOW_ID;
+        modal.className = 'notranslate'
         modal.style.cssText = `
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-color: rgba(0, 0, 0, 0.7); z-index: 114115;
@@ -6036,14 +6080,14 @@ function injectStyles(containerId, windowId) {
                 textarea.value = text.trim();
                 textarea.focus();
             }).catch(err => {
-                alert('无法自动粘贴，请手动粘贴或检查剪贴板权限。');
+                confirmndExecuteFC('无法自动粘贴，请手动粘贴或检查剪贴板权限。');
             });
         };
 
         saveButton.onclick = () => {
             const input = textarea.value.trim();
             if (!input) {
-                // alert('请输入至少一个 CSS 选择器。');
+                // confirmndExecuteFC('请输入至少一个 CSS 选择器。');
                 confirmndExecuteFC('请输入至少一个 CSS 选择器。')
                 return;
             }
@@ -6061,10 +6105,10 @@ function injectStyles(containerId, windowId) {
             });
 
             if (savedCount > 0) {
-                // alert(`✅ 成功保存 ${savedCount} 个 CSS 选择器！请刷新页面生效。`);
+                // confirmndExecuteFC(`✅ 成功保存 ${savedCount} 个 CSS 选择器！请刷新页面生效。`);
                 confirmndExecuteFC(`✅ 成功保存 ${savedCount} 个 CSS 选择器！请刷新页面生效。`)
             } else {
-                //alert('⚠️ 未保存任何有效选择器，请检查格式。');
+                //confirmndExecuteFC('⚠️ 未保存任何有效选择器，请检查格式。');
                 confirmndExecuteFC('⚠️ 未保存任何有效选择器，请检查格式。')
             }
             modal.remove();
@@ -7121,7 +7165,7 @@ function injectStyles(containerId, windowId) {
 
             // 检查事件是否发生在任一容器内部
             // 如果 target.closest 找到匹配元素，则条件为真
-            if (target.closest(`#${containerId}`) || target.closest('[id*="script-viewe"],[class*="confirm]') || target.closest('#confirmMask')) {
+            if (target.closest(`#${containerId}`) || target.closest('[id*="script-viewer"],[class*="confirm]') || target.closest('#confirmMask')) {
                 // 事件发生在受保护的容器内部
                 e.stopPropagation(); // 阻止其冒泡到父元素
                 return;              // 退出函数，不执行后续的阻止默认行为
@@ -7460,7 +7504,7 @@ function injectStyles(containerId, windowId) {
             if (target === mainContainer) return true;
 
             if (target.closest(`#${windowId}`)) {
-                const dragTargets = target.closest('#confirmMask,[id*="script-viewer"],div.script-item, #script-viewer-float-window-Gemini, #gemini-header, #gemini-status-bar, .gemini-tip-text');
+                const dragTargets = target.closest('[class*="confirm"],[id*="script-viewer"],div.script-item, #script-viewer-float-window-Gemini, #gemini-header, #gemini-status-bar, .gemini-tip-text');
 
                 if (dragTargets && !target.closest('button, span[id$="close-btn"], a')) {
                     return true;
@@ -7547,7 +7591,7 @@ function injectStyles(containerId, windowId) {
             }
 
             // 注意：closest() 方法只会查找祖先元素，所以最好使用 id 匹配。
-            if (doc.defaultView === window && targetElement.closest('[id*="script-viewer"],[id*="gemini"], #ellCloseX, #dh_buttonContainer, #dh_pageContainer')) {
+            if (doc.defaultView === window && targetElement.closest('[class*="confirm"],[id*="script-viewer"],[id*="gemini"], #ellCloseX, #dh_buttonContainer, #dh_pageContainer')) {
                 return; // 排除逻辑
             }
 
@@ -7704,7 +7748,7 @@ function injectStyles(containerId, windowId) {
      */
     function handleManualXPathSubmission(xpath) {
         if (!xpath || typeof xpath !== 'string' || xpath.trim() === '') {
-            //alert('错误：请输入一个有效的 XPath。');
+            //confirmndExecuteFC('错误：请输入一个有效的 XPath。');
             confirmndExecuteFC('错误：请输入一个有效的 XPath。')
             return;
         }
@@ -7726,13 +7770,16 @@ function injectStyles(containerId, windowId) {
                 localStorage.setItem(REMOVAL_KEY, updatedRemovalListJSON);
 
                 console.log(`[Gemini屏蔽] 成功手动添加 XPath: ${trimmedXPath}`);
-                alert(`✅ XPath 已成功保存！\n路径: ${trimmedXPath}\n请刷新页面生效。`);
+                //confirmndExecuteFC(`✅ XPath 已成功保存！\n路径: ${trimmedXPath}\n请刷新页面生效。`);
+                confirmndExecuteFC(`✅ XPath 已成功保存！\n路径: ${trimmedXPath}\n请刷新页面生效。`)
             } else {
-                alert(`提示：该 XPath (${trimmedXPath}) 已存在于屏蔽列表中。`);
+                //confirmndExecuteFC(`提示：该 XPath (${trimmedXPath}) 已存在于屏蔽列表中。`);
+                confirmndExecuteFC(`提示：该 XPath (${trimmedXPath}) 已存在于屏蔽列表中。`)
             }
         } catch (e) {
             console.error('[Gemini屏蔽] 保存 XPath 时发生错误:', e);
-            alert('❌ 保存 XPath 失败。请检查控制台获取详细信息。');
+            //confirmndExecuteFC('❌ 保存 XPath 失败。请检查控制台获取详细信息。');
+            confirmndExecuteFC('❌ 保存 XPath 失败。请检查控制台获取详细信息。')
         }
     }
 
@@ -7755,6 +7802,7 @@ function injectStyles(containerId, windowId) {
         // 1. 创建模态容器 (Z-index 已修复)
         modal = document.createElement('div');
         modal.id = XPATH_INPUT_WINDOW_ID;
+        modal.className = 'notranslate'
         modal.style.cssText = `
         position: fixed; top: 0; left: 0; width: 100%; height: 100%;
         background-color: rgba(0, 0, 0, 0.7); 
@@ -7836,7 +7884,8 @@ function injectStyles(containerId, windowId) {
                 textarea.focus();
             }).catch(err => {
                 console.error('[Gemini屏蔽] 无法读取剪贴板，可能是权限问题:', err);
-                alert('无法自动粘贴。请确保已授予浏览器剪贴板读取权限，或手动粘贴。');
+                confirmndExecuteFC('无法自动粘贴。请确保已授予浏览器剪贴板读取权限，或手动粘贴。');
+
             });
         };
 
@@ -8161,10 +8210,6 @@ function injectStyles(containerId, windowId) {
 
 
 
-/* WebDebugger.js 开始 START
-*/
-
-
 
 /**
  * WebDebugger.js 开始 START
@@ -8393,9 +8438,22 @@ window.initWebDebugger = function showDebuggerPanel() {
                 background-color: #007bff !important;
             }
             #storage-control-panel button.delete-btn {
-                background-color: #dc3545 !important; 
-                pointer-events: none !important;
-            }
+    background-color: #dc3545 !important; 
+    /* 删除或注释掉 pointer-events: none */
+    /* pointer-events: none !important; */
+    pointer-events: auto !important;  /* 或者显式开启 */
+}
+
+
+#storage-control-panel button.delete-btn:hover {
+    background-color: #c82333 !important;
+    transform: scale(1.1) !important;
+}
+#storage-control-panel button.save-btn:hover {
+    background-color: #0069d9 !important;
+    transform: scale(1.1) !important;
+}
+
             .key-tooltip {
                 position: fixed !important; 
                 max-width: 400px !important;
@@ -8714,6 +8772,13 @@ window.initWebDebugger = function showDebuggerPanel() {
             saveBtn.title = '修改/保存';
             saveBtn.onclick = () => { setter(item.key, valueInput.value); renderer(); };
 
+
+            saveBtn.onclick = () => {
+                console.log('保存:', item.key, valueInput.value);
+                setter(item.key, valueInput.value);
+                renderer();
+            };
+
             const deleteBtn = document.createElement('button');
             deleteBtn.className = 'action-btn delete-btn';
             deleteBtn.innerHTML = '🗑️';
@@ -8869,8 +8934,6 @@ window.initWebDebugger = function showDebuggerPanel() {
     document.removeEventListener('GM_DEBUG_RENDER_ALL', globalRenderAll);
     document.addEventListener('GM_DEBUG_RENDER_ALL', globalRenderAll);
 }
-
-
 
 
 /* WebDebugger.js 结束 END
@@ -9249,7 +9312,7 @@ const fccmsNoneCSS = `
     display: flex !important;
     justify-content: center !important;
     align-items: center;
-    z-index: 114120;
+    z-index: 114120 !important;
     opacity: 0;
     visibility: hidden;
     transition: opacity .2s, visibility .2s;
@@ -9351,7 +9414,7 @@ document.head.appendChild(fcstyleElement);
 
 const fc_mask = document.createElement('div');
 fc_mask.id = 'confirmMask';
-fc_mask.className = 'confirm-mask cmsnone';
+fc_mask.className = 'confirm-mask notranslate cmsnone';
 fc_mask.innerHTML = `
     <div class="confirm-dialog">
       <div class="confirm-header">确认操作</div>
