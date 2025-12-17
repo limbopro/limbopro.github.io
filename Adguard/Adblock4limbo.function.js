@@ -6172,7 +6172,7 @@ onclick="toggleDebugAndRefresh()"
                 </tr>
                 <tr>
                     <td>**链接 / Href**</td>
-                    <td>https://techcrunch.com/...</td>
+                    <td>https://techcrunch.com/category/artificial-intelligence/</td>
                 </tr>
                 <tr>
                     <td>**父级简述**</td>
@@ -6190,12 +6190,12 @@ onclick="toggleDebugAndRefresh()"
         content.innerHTML = `
         <span class="close-btn" id="gemini-modal-close-top">&times;</span>
         <h2>📰 如何利用目标信息</h2>
-        <p>以下是可供您参照的目标信息：</p>
+        <p>假设目标信息如下：</p>
         
         ${referenceTable}
 
         <div class="usage-section">
-            <h3>🔗 如何通过这些信息进行定位 (核心步骤)</h3>
+            <h3>🔗 如何通过目标信息进行定位 (核心步骤)</h3>
             
             <table class="info-table">
                 <thead>
@@ -6209,18 +6209,18 @@ onclick="toggleDebugAndRefresh()"
                     <tr>
                         <td>**CSS 选择器**</td>
                         <td><code>a.loop-card__title-link</code></td>
-                        <td>**首选**：简洁、快速、易维护，适合批量操作。</td>
+                        <td>**首选**：当前被点击元素对应的CSS选择器。</td>
                     </tr>
                     <tr>
                         <td>**XPath (相对)**</td>
                         <td><code>//a[@class='loop-card__title-link']</code></td>
-                        <td>**备选**：定位最灵活，可向上查找父节点，但执行速度略慢。 </td>
+                        <td>**备选**：当前被点击元素对应的xPath，更适用于静态页面元素定位，可向上查找父节点，但执行速度略慢。 </td>
                     </tr>
                 </tbody>
             </table>
             
             <p style="margin-top: 15px;">**利用父级信息增强定位：** 结合父级简述（H3#.loop-card__title）可构建更精确的 CSS 选择器：</p>
-            <div class="code-example">h3#loop-card__title > a.loop-card__title-link</div>
+            <div class="code-example">h3#loop-card__title > a.loop-card__title-link[href*='https://techcrunch.com/category/artificial-intelligence/']</div>
 
             <p style="margin-top: 25px; font-weight: bold; color: #cc3300;">🔑 总结：您的工具或脚本需要利用 **CSS 选择器** 或 **XPath** 精确找到元素。</p>
         </div>
@@ -10367,7 +10367,7 @@ function showLinkTipsModalOnce() {
                 </tr>
                 <tr>
                     <td>**链接 / Href**</td>
-                    <td>https://techcrunch.com/...</td>
+                    <td>https://techcrunch.com/category/artificial-intelligence/</td>
                 </tr>
                 <tr>
                     <td>**父级简述**</td>
@@ -10415,7 +10415,7 @@ function showLinkTipsModalOnce() {
             </table>
             
             <p style="margin-top: 15px;">**利用父级信息增强定位：** 结合父级简述（H3#.loop-card__title）可构建更精确的 CSS 选择器：</p>
-            <div class="gemini-tips-code-example notranslate">h3#loop-card__title > a.loop-card__title-link</div>
+            <div class="gemini-tips-code-example notranslate">h3#loop-card__title > a.loop-card__title-link[href*='https://techcrunch.com/category/artificial-intelligence/']</div>
 
             <p style="margin-top: 25px; font-weight: bold; color: #cc3300 !important;">🔑 总结：您的工具或脚本需要利用 **CSS 选择器** 或 **XPath** 精确找到元素。</p>
         </div>
