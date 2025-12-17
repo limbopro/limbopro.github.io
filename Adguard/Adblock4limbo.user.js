@@ -5600,3 +5600,9 @@ setInterval(() => {
         attemptFixScrolling();
     }
 }, 5000)
+
+
+
+
+
+// 动态移除鸟鸟韩漫透明弹窗
