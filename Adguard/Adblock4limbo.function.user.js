@@ -586,8 +586,6 @@ function initNavigationContainer() { // 初始化导航容器
 }
 
 
-
-
 /**
  * 导航所有 HTML（集中管理，便于后期修改）
  * 使用模板字面量 + 换行保持可读性
@@ -1974,6 +1972,7 @@ function createFloatingOutputDiv() {
     // --- 1. 创建容器 DIV ---
     container = document.createElement('div');
     container.id = containerId;
+    container.className = 'notranslate'
 
 
     // --- 2. 创建头部和关闭按钮 ---
@@ -2368,7 +2367,6 @@ function hiddencjsfy() {
         iframeEl.classList.add('translate-hidden');
     }
 }
-
 
 window.showcjsfy = function showcjsfy() {
     const iframeEl = document.querySelector('div.skiptranslate')
