@@ -461,6 +461,11 @@
         // 【V27 NEW】CSS 选择器移除
         // 1. 定义清理函数（保持独立，避免全局冲突）
         const performCleanupAction = (doc, selectors) => {
+
+            if (selectors == '') {
+                return;
+            }
+
             // 1. 定义查询的目标元素（选择器）
             const targetSelector = selectors;
 
@@ -470,11 +475,13 @@
                 '#gemini-main-containe',  // 建议检查是否应为 #gemini-main-container
                 '[id*="gimini"]',         // 模糊匹配 ID 中包含 "gimini" 的元素
                 '.notranslate',           // 排除带有此类的元素（常用于翻译插件保护区）
-                '#dh_buttonContaine',     // 建议检查是否应为 #dh_buttonContainer
-                '#dh_button',
-                '#dh_pageContainer',
-                '.echo',
-                '#dh_buttonMain'
+                "[id*='dh_']", // 导航相关
+                '.echo', // 导航详情页
+                '#storage-control-panel',
+                '#script-viewer-float-window-Gemini',
+                "[id*='Genimi']", // 
+                "[class*='confirm']", // 确认框
+                '.skiptranslate' // 谷歌翻译
             ].join(',');
 
             // 3. 执行查询并过滤掉位于“排除名单”内部或本身的元素
@@ -486,6 +493,12 @@
                  * - 都不匹配则返回 null
                  * 只有返回 null 时，说明该元素不在排除范围内
                  */
+
+                // 如果 excludeSelectors 为空，直接返回 true（不拦截任何元素）
+                // 只有当 excludeSelectors 有值时，才执行 closest 检查
+                if (!excludeSelectors || excludeSelectors.trim() === "") {
+                    return true;
+                }
                 return !el.closest(excludeSelectors);
             });
 
@@ -520,7 +533,6 @@
 
         // 调用
         startDynamicCleanup(cssRemovals);
-
 
         const isTopWindow = window === window.top;
         const docName = (isTopWindow && doc === document) ? '主页' :
@@ -1964,8 +1976,7 @@ onclick="toggleDebugAndRefresh()"
             </div>
 
             <div class="gemini-tip-text">
-                🌟**提示:** “选择并屏蔽模式”可屏蔽任何元素。取消移除后请**手动刷新**。
-                🛠️ 元素点击调试/选择并屏蔽模式不要🙅同时开启。⛔标记为黑名单意味着对当前页面的iframe进行沙箱化处理。💡一切结束后记得关闭所有调试，否则🔍 元素屏蔽/追踪器会一直随着页面刷新后打开。
+                🌟**提示:** “选择并屏蔽模式”可屏蔽任何元素。取消移除后请**手动刷新**。⛔标记为黑名单页意味着对当前页面存在的iframe进行沙箱化处理。💡一切结束后记得关闭所有调试，否则🔍 元素屏蔽/追踪器会一直随着页面刷新后打开。
             </div>
         `;
 
@@ -2148,8 +2159,11 @@ onclick="toggleDebugAndRefresh()"
         };
 
         function toggleSelectionMode(forceState) {
-            isSelectionMode = (forceState !== undefined) ? forceState : !isSelectionMode;
+            if (localStorage.gemini_debug_element_click_mode == 'true') { // 元素调试模式跟选择并屏蔽模式只能开一个
+                return;
+            }
 
+            isSelectionMode = (forceState !== undefined) ? forceState : !isSelectionMode;
             targetDocs.forEach(doc => {
                 if (isSelectionMode) {
                     doc.addEventListener('click', handleSelectionClick, true);
@@ -2518,8 +2532,8 @@ onclick="toggleDebugAndRefresh()"
                 return;
             }
 
-            // 注意：closest() 方法只会查找祖先元素，所以最好使用 id 匹配。 // 真
-            if (doc.defaultView === window && targetElement.closest('#storage-control-panel,[id="input-prompt-container"],[class*="confirm"],[id*="script-viewer"],[id*="gemini"], #ellCloseX, #dh_buttonContainer, #dh_pageContainer')) {
+            // 注意：closest() 方法只会查找祖先元素，所以最好使用 id 匹配。 // 真 / 元素调试模式不抓这里
+            if (doc.defaultView === window && targetElement.closest('.notranslate, #storage-control-panel,[id="input-prompt-container"],[class*="confirm"],[id*="script-viewer"],[id*="gemini"], #ellCloseX, #dh_buttonContainer, #dh_pageContainer')) {
                 return; // 排除逻辑
             }
 
@@ -2947,3 +2961,6 @@ onclick="toggleDebugAndRefresh()"
         initScript();
     }
 })();
+
+
+

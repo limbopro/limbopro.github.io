@@ -17,7 +17,6 @@
 // Tg: https://t.me/limboprossr
 
 function initLimoProSearch() {
-
     if (window.limboproSearchPro) {
         console.log('划词搜索已存在');
         return;
@@ -326,11 +325,6 @@ function toggleSearchState(x) {
     }
 }
 
-// 点击事件
-
-if (huacibtn) {
-    huacibtn.addEventListener('click', toggleSearchState);
-}
 
 // 页面加载时恢复状态
 function waitForElement(selector, callback) {

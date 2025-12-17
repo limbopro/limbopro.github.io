@@ -291,6 +291,8 @@ window.alFeedback_showPanel = function alFeedback_showPanel() { // 重命名函�
             }, 500);
         }
     }, AL_FEEDBACK_TIMEOUT_MS); // 使用新的变量名
+
+    updateFeedbackLink("a.al-contact-link[href*='feedback']")
 }
 
 // ⚠️ 将 alFeedback_copyDebugInfo 函数暴露到全局
@@ -333,14 +335,14 @@ function generateFeedbackUrlWithContext() {
 /**
  * 查找 ID 为 'ifeedback' 的链接元素，并用动态生成的 URL 替换其 href 属性。
  */
-function updateFeedbackLink() {
-    const linkElementId = 'ifeedback';
+
+window.updateFeedbackLink = function updateFeedbackLink(linkElementId) {
 
     // 1. 生成带有上下文的 URL
     const newHref = generateFeedbackUrlWithContext();
 
     // 2. 获取目标链接元素
-    const feedbackLink = document.getElementById(linkElementId);
+    const feedbackLink = document.querySelector(linkElementId);
 
     if (feedbackLink && feedbackLink.tagName === 'A') {
         // 3. 替换 href 属性
@@ -498,3 +500,7 @@ function injectStyles(containerId, windowId) {
     `;
     document.head.appendChild(style);
 }
+
+
+
+updateFeedbackLink('#ifeedback');
