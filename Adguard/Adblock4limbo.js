@@ -168,7 +168,7 @@ function main() {
         
         // 动态组合最终的注入内容
         const FINAL_TITLE_INJECTION = `</title>\n${TITLE_INJECTION_BASE}${domainCSS_Injection}${domainCSS_Injection_byHand}`;
-        const FINAL_BODY_INJECTION = `\n${BODY_INJECTION_BASE}${domainCSS_Injection}${domainCSS_Injection_byHand}`;
+        const FINAL_BODY_INJECTION = `\n${domainCSS_Injection}${domainCSS_Injection_byHand}${BODY_INJECTION_BASE}`;
         // --- 动态 CSS 注入逻辑结束 ---
 
 

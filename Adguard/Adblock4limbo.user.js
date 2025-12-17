@@ -1636,7 +1636,7 @@ function adsDomain_switch(x) { // 匹配参数值 执行相应函数
             break;
         case "supjav":
             css_adsRemove(adsMax.css.supjav, 0, "superjav");
-
+            localStorage.setItem('asgsl', '222427=uuid:oCLIHmT61enl9i8kpCI2,noloop:true,shows_limit:1,keep_looping:false,tabunder:false,n:0,global_rr:176591527659411,s:0,shows:1');
             window.onload = function () {
                 if (document.location.href.search('/?s\=') !== -1) {
                     let regex = /.*\/\?s=/;

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Adblock4limbo——导航及各类功能函数合集.[github]
 // @namespace    https://limbopro.com/Adguard/Adblock4limbo.function.js
-// @version      0.2025.12.17
+// @version      0.2025.12.15
 // @license      CC BY-NC-SA 4.0
 // @description  实用网站导航 —— 沉浸式翻译纯JS版本；M3U8/MP4资源链接提取；广告元素屏蔽器；费在线影视/前端学习/开发者社区/新闻/建站/下载工具/格式转换工具/电子书/新闻/写作/免费漫画等；
 // @author       limbopro
@@ -6979,7 +6979,7 @@ onclick="toggleDebugAndRefresh()"
         border-radius: 4px;
         font-weight: bold;
         width: 100%;
-    ">📟 查看页面上的脚本</button>
+    ">📟 查看脚本</button>
 
     <button id="manual-xpath-runCode" onclick="window.promptAndExecute()" style="
         background: green; /* 使用紫色突出手动操作 */
@@ -7009,14 +7009,14 @@ onclick="toggleDebugAndRefresh()"
     </button>
 
      <!-- 【V27 NEW】CSS 按钮 -->
-<button id="manual-css-add" onclick="showCssInputWindow()" style="font-size:xx-small;background:#6c1a7bff; color: white; border: none; padding: 8px 15px; cursor: pointer; border-radius: 4px; font-weight: bold; width: 100%;">
- 🎨 输入 CSS 选择器屏蔽
-</button>
+                <button id="manual-css-add" onclick="showCssInputWindow()" style="font-size:xx-small;background:#6c1a7bff; color: white; border: none; padding: 8px 15px; cursor: pointer; border-radius: 4px; font-weight: bold; width: 100%;">
+                    🎨 输入 CSS 选择器屏蔽
+                </button>
 <button id="manual-css-webdebug" style="font-size:xx-small;background:#6c1a7bff; color: white; border: none; padding: 8px 15px; cursor: pointer; border-radius: 4px; font-weight: bold; width: 100%;" onclick="window.initWebDebugger()"> ⚙️ Web 存储调试器
     </button>
     <button id="manual-css-switchClear"
     style="font-size:xx-small;background:#6c1a7bff; color: white; border: none; padding: 8px 8px;font-size:xx-small; cursor: pointer; border-radius: 4px; font-weight: bold; width: 100%;">
-    ▶️启动清理透明元素🔴
+    🧹 循环清理透明元素 
 </button>
     </div>
 
@@ -7548,6 +7548,7 @@ onclick="toggleDebugAndRefresh()"
 
             if (target.closest(`#${windowId}`)) { // 假
                 const dragTargets = target.closest('[class*="confirm"],[id*="script-viewer"],div.script-item, #script-viewer-float-window-Gemini, #gemini-header, #gemini-status-bar, .gemini-tip-text');
+
                 if (dragTargets && !target.closest('button, span[id$="close-btn"], a')) {
                     return true;
                 }
@@ -8264,7 +8265,7 @@ onclick="toggleDebugAndRefresh()"
  */
 
 // --- 固定功能常量和状态管理 ---
-window.PIN_KEY = 'webDebuggerPinned';
+const PIN_KEY = 'webDebuggerPinned';
 
 /**
  * 获取固定状态 (默认为 true，即显示)
@@ -9623,7 +9624,7 @@ function findAndDisplayExternalLinks(excludeContainerId = 'dh_pageContainer') {
         border: 2px solid #3498db;
         border-radius: 8px;
         box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-        z-index: 114122;
+        z-index: 99999;
         font-family: Arial, sans-serif;
         color: #333;
         transition: opacity 0.3s;
@@ -9763,22 +9764,6 @@ function findAndDisplayExternalLinks(excludeContainerId = 'dh_pageContainer') {
                         return;
                     }
 
-                    // 【排除条件】: .cjsfy-translated 或 font[dir]
-                    if (el.classList.contains('cjsfy-translated') || el.matches('font[dir]')) {
-                        return;
-                    }
-
-
-                    // 【排除条件 1.3】: .skiptranslate
-                    if (el.classList.contains('skiptranslate')) {
-                        return;
-                    }
-
-                    // 【排除条件 2】: .notranslate
-                    if (el.classList.contains('notranslate')) {
-                        return;
-                    }
-
                     // 【排除条件 2】: ID 包含 'gemini'
                     if (el.id && el.id.toLowerCase().includes('gemini')) {
                         return;
@@ -9844,13 +9829,12 @@ function findAndDisplayExternalLinks(excludeContainerId = 'dh_pageContainer') {
         // ⭐️ 优化后的文本：强调“透明元素”
         if (isLooping) {
             // 运行中状态：提示用户点击即可停止，并显示累计清理数
-            button.textContent = `⏸正在清理(已清${totalRemovedCount}个)🟢`;
+            button.textContent = `⏸ 正在清理透明元素 (已清 ${totalRemovedCount} 个) 🟢`;
             button.style.backgroundColor = '#28a745'; // 绿色
         } else {
             // 未运行状态：提示用户点击即可启动，并显示累计清理数
-            // button.textContent = `▶️启动清理透明元素(累计${totalRemovedCount}个)🔴`;
-            button.textContent = `▶️启动清理透明元素🔴`;
-            button.style.backgroundColor = 'rgb(220 53 69)'; // 原始紫色/红色
+            button.textContent = `▶️ 启动清理透明元素 (累计 ${totalRemovedCount} 个) 🔴`;
+            button.style.backgroundColor = '#6c1a7bff'; // 原始紫色/红色
         }
     }
 
@@ -10137,12 +10121,12 @@ function showLinkTipsModalOnce() {
     content.innerHTML = `
         <span class="gemini-tips-close-btn notranslate" id="gemini-tips-modal-close-top">&times;</span>
         <h2>📰 如何利用目标信息</h2>
-        <p>目标信息举例：</p>
+        <p>以下是可供您参照的目标信息：</p>
         
         ${referenceTable}
 
         <div class="gemini-tips-usage-section notranslate">
-            <h3>🔗 如何通过目标信息进行定位 (核心步骤)</h3>
+            <h3>🔗 如何通过这些信息进行定位 (核心步骤)</h3>
             
             <table class="gemini-tips-info-table notranslate">
                 <thead>
@@ -10169,7 +10153,7 @@ function showLinkTipsModalOnce() {
             <p style="margin-top: 15px;">**利用父级信息增强定位：** 结合父级简述（H3#.card__title）可构建更精确的 CSS 选择器：</p>
             <div class="gemini-tips-code-example notranslate">h3#card__title > a.title-link[href*='https://techcrunch.com/category/artificial-intelligence/']</div>
 
-            <p style="margin-top: 25px; font-weight: bold; color: #cc3300 !important;">🔑 总结：工具或脚本需要利用 **CSS 选择器** 或 **XPath** 精确找到元素。</p>
+            <p style="margin-top: 25px; font-weight: bold; color: #cc3300 !important;">🔑 总结：您的工具或脚本需要利用 **CSS 选择器** 或 **XPath** 精确找到元素。</p>
         </div>
     `;
 
@@ -10209,8 +10193,3 @@ function showLinkTipsModalOnce() {
     // 6. 显示模态框
     modal.style.display = 'block';
 }
-
-
-
-
-
