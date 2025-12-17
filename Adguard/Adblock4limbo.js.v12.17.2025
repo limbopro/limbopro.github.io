@@ -51,12 +51,12 @@ const BODY_INJECTION_BASE = `<link rel="stylesheet" href="${CSS_URL}" type="text
 
 // 正则表达式 (不变)
 const TARGET_SITES_REGEX = /(missav|netflav|hitomi|supjav|njav|javday|91porna|lk1\.supremejav\.com|turbovidhls\.com|trailerhg\.xyz|turbovidhls\.com|turboplayers\.xyz|javggvideo\.xyz|turtleviplay\.xyz|findjav\.com|stbturbo\.xyz|emturbovid\.com)/i;
-const JAVBUS_REGEX = /(javbus)/i;
+const JAVBUS_REGEX = /javbus/i;
 const DMM_REGEX = /dmm\.co/i;
 const MDSP_REGEX = /d1skbu98kuldnf\.cloudfront\.net/i;
 const HUARENLIVE_REGEX = /(huaren|huavod)\.(live|top)\/player\/ec\.php/i;
 
-const TITLE_REGEX = /<head>/i;
+const TITLE_REGEX = /<\/title>/i;
 const BODY_REGEX = /<\/body>/i;
 const WINDOW_OPEN_REGEX = /window\.open\s*\(/g; 
 
@@ -167,7 +167,7 @@ function main() {
         }
         
         // 动态组合最终的注入内容
-        const FINAL_TITLE_INJECTION = `<head>\n${TITLE_INJECTION_BASE}${domainCSS_Injection}${domainCSS_Injection_byHand}`;
+        const FINAL_TITLE_INJECTION = `</title>\n${TITLE_INJECTION_BASE}${domainCSS_Injection}${domainCSS_Injection_byHand}`;
         const FINAL_BODY_INJECTION = `\n${domainCSS_Injection}${domainCSS_Injection_byHand}${BODY_INJECTION_BASE}`;
         // --- 动态 CSS 注入逻辑结束 ---
 
