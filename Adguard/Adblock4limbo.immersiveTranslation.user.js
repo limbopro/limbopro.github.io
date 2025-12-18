@@ -25,7 +25,7 @@ window.loadGoogleTranslateUI = async function () {
         const ybyfyvalue = translationButton?.classList?.contains('translated');
 
         // --- 1. 预检查：如果 UI 已存在且符合状态，直接返回成功 ---
-        if (document.getElementById(uiContainerId) && document.querySelector(successSelector) && ybyfyvalue) {
+        if (document.getElementById(uiContainerId) && document.querySelector(successSelector) /*&& ybyfyvalue*/) {
             console.log("翻译组件已在运行中，跳过初始化。");
             return resolve(true);
         }
@@ -400,6 +400,8 @@ function loadExternalCss(cssUrl) {
 
 
 function createFloatingButton() {
+
+if(document.getElementById('translation-button')) {return}
 
     // 调用函数，传入您提供的 CSS 文件 URL
     const cssFileUrl = 'https://limbopro.com/CSS/Adblock4limbo.user.css'; // 含 Adguard 通用广告元素选择器 看外网网页会非常干净
@@ -807,12 +809,25 @@ window.ybyfy = async function () { // ybyfy()Í
 
     // 检查本地存储配置
     if (localStorage.getItem('immersiveTranslate') !== 'true') return;
-    skiptrans()
+    
+skiptrans()
+
+/*
     if (document.getElementById('translation-button')?.className.indexOf('translated') == -1) {
         document.getElementById('translation-button').click()
     }
+*/
 
-    // 2. 检查锁状态
+applyDualWrapperProtection()
+
+createFloatingButton()
+const button = document.getElementById('translation-button');
+if(button){
+button.textContent = '原文';
+button.classList.add('translated');}
+
+    /*
+// 2. 检查锁状态
     if (isTranslating) {
         console.log("检测到 loadGoogleTranslateUI 正在运行中，跳过重复触发。");
         return;
@@ -821,6 +836,8 @@ window.ybyfy = async function () { // ybyfy()Í
     // --- 开始执行逻辑 ---
     isTranslating = true; // 上锁
     console.log("准备加载翻译 UI...");
+
+*/
 
     try {
         // 确保 loadGoogleTranslateUI 被 await
@@ -835,7 +852,7 @@ window.ybyfy = async function () { // ybyfy()Í
         console.error("加载翻译时出错:", error);
     } finally {
         // 无论成功还是报错，最终都要释放锁
-        isTranslating = false;
+        /*isTranslating = false;*/
         console.log("锁已释放");
     }
 };
@@ -887,7 +904,7 @@ window.keepYbyfyAlive = function keepYbyfyAlive(waitTime = 2000) {
 };
 
 // 立即启动
-keepYbyfyAlive(2000);
+keepYbyfyAlive(1000);
 
 
 
