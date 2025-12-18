@@ -703,7 +703,7 @@ createFloatingButton();
 window.skiptrans = function () {
     const googletraLength = document.querySelectorAll("font[dir] > font[dir]").length;
     const cjsfytraLength = document.querySelectorAll(".notranslate.ori").length;
-    if (googletraLength > 0 && (googletraLength / cjsfytraLength) > 1) {
+    if (googletraLength > 0 && (googletraLength / cjsfytraLength) > 1.5) {
         console.log('正在重载🔃...' + "googletraLength: " + googletraLength + "; cjsfytraLength: " + cjsfytraLength)
         forceHardReload()
     } else {
