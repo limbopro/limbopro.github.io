@@ -712,3 +712,13 @@ window.initWebDebugger = function showDebuggerPanel() {
     document.removeEventListener('GM_DEBUG_RENDER_ALL', globalRenderAll);
     document.addEventListener('GM_DEBUG_RENDER_ALL', globalRenderAll);
 }
+
+
+
+window.addEventListener('load', (event) => {
+    console.log('页面所有资源已加载完成');
+    // 在这里执行你的核心函数，例如你之前提到的悬浮窗初始化
+    if (localStorage.getItem('webDebuggerPinned') == 'true') {
+        initWebDebugger()
+    }
+});
