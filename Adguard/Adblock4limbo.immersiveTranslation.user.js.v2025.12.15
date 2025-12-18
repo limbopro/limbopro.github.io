@@ -18,8 +18,9 @@
 document.cookie = "googtrans=/auto/zh-CN; path=/";
 
 
-
 window.loadGoogleTranslateUI = function loadGoogleTranslateUI() {
+
+
 
     // 如果 UI 已存在，直接返回
     const uiContainerId = 'google_translate_element';
@@ -145,6 +146,10 @@ window.loadGoogleTranslateUI = function loadGoogleTranslateUI() {
 // --- II. 双包裹体创建逻辑 ---
 
 window.applyDualWrapperProtection = function applyDualWrapperProtection() {
+    if (localStorage.getItem('immersiveTranslate') !== 'true') {
+        return;
+    }
+    
     (() => {
         console.clear();
 
@@ -250,8 +255,6 @@ window.applyDualWrapperProtection = function applyDualWrapperProtection() {
 
                 results.push({ target });
             } // 打包函数结束
-
-
 
 
             // 克隆函数开始
@@ -401,23 +404,6 @@ window.applyDualWrapperProtection = function applyDualWrapperProtection() {
             'background:#ff9800;color:#fff;padding:6px 12px;border-radius:4px;');
 
         console.log("[Immersive Translate] Google Translate UI 加载已触发。");
-
-        // **【修改点 A: 条件启动和存储 ID】**
-
-        loadGoogleTranslateUI()
-
-        setTimeout(() => {
-            if (wtfIntervalId === null) {
-                wtfIntervalId = setInterval(() => {
-                    skiptrs()
-                    loadGoogleTranslateUI()
-                }, 4000);
-                console.log(`[Immersive Translate] Google Translate UI 循环加载已启动 (ID: ${wtfIntervalId})。`);
-            } else {
-                console.log(`[Immersive Translate] Google Translate UI 循环加载已在运行中 (ID: ${wtfIntervalId})。`);
-            }
-        }, 4000)
-
     })();
 }
 
@@ -435,6 +421,7 @@ function initiateTranslationFlow() {
     console.log("[Immersive Translate] 翻译流程开始...");
     // 如果 按钮 已存在，直接返回
     protectPreTags();
+    localStorage.setItem('immersiveTranslate', 'true')
     applyDualWrapperProtection();
     //loadGoogleTranslateUI();
     console.log("[Immersive Translate] 翻译流程执行完毕。");
@@ -701,7 +688,6 @@ function createFloatingButton() {
             showElements() // 显示谷歌翻译小工具组件
             translatedElements.forEach((e) => { e.classList.remove('dual-wrapper-hidden') });
             console.log('切换成双语模式...')
-            localStorage.setItem('immersiveTranslate', 'true')
         }
     });
 
@@ -757,49 +743,15 @@ createFloatingButton();
 window.skiptrs = function skiptrs() {
     const googletraLength = document.querySelectorAll("font[dir] > font[dir]").length;
     const cjsfytraLength = document.querySelectorAll(".notranslate.ori, .cjsfy-translated").length;
-    if (cjsfytraLength > 0 && googletraLength > 0 && (googletraLength / cjsfytraLength) > 0.8) {
+    if (googletraLength > 0 && (googletraLength / cjsfytraLength) > 0.5) {
+        console.log('正在重载🔃...')
         forceHardReload()
+    } else {
+        console.log('无需重载🔃...')
     }
 }
 
 
-function monitorClickAndUrlChange() {
-    console.log("URL 变化监控已启动...");
-
-    document.addEventListener('click', (event) => {
-        const originalUrl = window.location.href;
-        const checkDelay = 3000;
-
-        setTimeout(() => {
-            const currentUrl = window.location.href;
-
-            if (currentUrl !== originalUrl) {
-                setTimeout(() => {
-
-
-                    const googletraLength = document.querySelectorAll("font[dir] > font[dir]").length;
-                    const cjsfytraLength = document.querySelectorAll(".notranslate.ori, .cjsfy-translated").length;
-
-                    if (cjsfytraLength > 0 && googletraLength > 0 && (googletraLength / cjsfytraLength) > 0.8) {
-
-                        console.warn('翻译元素数量可能不匹配，建议重新加载。');
-                        const userAction = confirm(
-                            '⚠️ 提示：\n\n存在的问题：\n当前页面未按预期进行双语对照翻译；\n\n可能的原因：\n单页应用路由跳转导致（如网站使用了PJAX/AJAX技术）\n\n是否需要重新加载页面以便正确执行翻译请求？\n\n如仍不能按预期进行双语对照翻译，请手动刷新页面。更多问题请进入导航->设置-反馈/留言。'
-                        );
-
-                        if (userAction) {
-                            forceHardReload()
-                        }
-                    }
-
-
-                }, 3000);
-
-            }
-        }, checkDelay);
-
-    }, true);
-}
 
 /**
  * 使用 MutationObserver 监控 DOM 变化，以检测 SPA 导航加载新内容。
@@ -830,7 +782,6 @@ function monitorDomAndUrlChanges() {
             // 替代原脚本中的 alert/confirm 逻辑
             // ----------------------------------------------------
             setTimeout(() => {
-
                 /*
                                 const userAction = confirm(
                                     '⚠️ 提示：\n\n存在的问题：\n当前页面未按预期进行双语对照翻译；\n\n可能的原因：\n单页应用路由跳转导致（如网站使用了PJAX/AJAX技术）\n\n需要重新加载页面以便正确执行翻译请求？\n\n（如仍不能按预期进行双语对照翻译，请手动刷新页面。更多问题请进入导航->设置-反馈/留言。）\n\n'
@@ -850,9 +801,8 @@ function monitorDomAndUrlChanges() {
                                 }
                 */
 
-                forceHardReload()
-
-            }, 500); // 给浏览器一个短暂的时间来完成渲染新内容
+                //forceHardReload()
+            }, 5000); // 给浏览器一个短暂的时间来完成渲染新内容
 
         }
         // 如果 URL 未变，但 DOM 变动了 (例如，弹窗或懒加载内容)，通常不需要刷新。
@@ -866,7 +816,7 @@ function monitorDomAndUrlChanges() {
  * 强制重新加载当前页面，通过附加时间戳参数来绕过浏览器缓存，
  * 达到模拟用户“硬刷新”的效果。
  */
-function forceHardReload() {
+window.forceHardReload = function forceHardReload() {
     const currentUrl = new URL(window.location.href);
     const timestamp = Date.now();
 
@@ -882,10 +832,8 @@ function forceHardReload() {
     window.location.href = currentUrl.toString();
 }
 
-// 替换或补充您原有的 monitorClickAndUrlChange(); 调用
 // monitorDomAndUrlChanges();
 
-// monitorClickAndUrlChange();
 monitorDomAndUrlChanges()
 
 // ==========================================================
@@ -893,50 +841,68 @@ monitorDomAndUrlChanges()
 // ==========================================================
 let wtfIntervalId = null;
 
+
 window.ybyfy = function ybyfy() {
 
     // --- V. 脚本入口点与监控 (最终优化后的自动点击部分) ---
-
     if (localStorage.getItem('immersiveTranslate') == 'true') {
         setTimeout(() => {
-            const button = document.getElementById('translation-button');
-            const googleWidget = document.querySelector('.skiptranslate.goog-te-gadget');
-            const isTranslatedMode = button && button.classList.contains('translated');
-
-            if (button && !isTranslatedMode) {
-                // 场景 1: 按钮存在，且处于原文/初始模式 (需要切换到双语)
-                console.log("[Auto-Translate] 检测到存储状态为 '双语'，且按钮未激活，触发模拟点击。");
-                button.click();
-
-            } else if (isTranslatedMode) {
-                // 场景 2: 按钮存在，且已处于 '双语' 模式 (translated)
-
-                if (!googleWidget) {
-                    // 进一步检查：处于双语模式，但谷歌翻译组件缺失
-                    console.warn("%c[Auto-Translate] 警告: 处于 '双语' 模式，但谷歌翻译组件 (.goog-te-gadget) 缺失。",
-                        'color: #FF5722; font-weight: bold;');
-
-                    // 强制重新执行初始化流程，这会重新触发 applyDualWrapperProtection 和 loadGoogleTranslateUI
-                    // 模拟点击按钮会安全地重新尝试初始化
-
-                    console.log("[Auto-Translate] 尝试通过模拟点击重新加载翻译组件...");
-                    loadGoogleTranslateUI()
-                    //button.click();
-                } else {
-                    // 状态正常：处于双语模式，且谷歌翻译组件已加载
-                    console.log("[Auto-Translate] 按钮已存在且已处于 '双语' 模式 (translated)，谷歌组件正常。跳过模拟点击。");
-                }
-            } else {
-                // 场景 3: 浮动按钮尚未渲染
-                console.log("[Auto-Translate] 浮动按钮尚未渲染，无法执行自动点击。");
-            }
+            loadGoogleTranslateUI()
         }, 250);
     }
 
 }
 
 
-setTimeout(() => { ybyfy() }, 1250)
+
+/**
+ * 监听 DOM 停止变动并执行 ybyfy   ybyfy()
+ * @param {number} waitTime - 设定的静默等待时间（毫秒）
+ */
+function autoTriggerAfterLoad(waitTime = 1500) {
+
+    console.log("已启动监控：等待页面元素生成停止...");
+
+    let timer = null;
+    const observer = new MutationObserver((mutations) => {
+        // 每当有新元素生成，重置定时器
+        if (timer) {
+
+            clearTimeout(timer);
+            applyDualWrapperProtection();
+        }
+
+        timer = setTimeout(() => {
+            // 停止观察
+            observer.disconnect();
+            console.log(`页面已持续 ${waitTime}ms 未产生新元素，准备执行 ybyfy()`);
+            // 执行你的目标函数
+            if (typeof ybyfy === "function") {
+                ybyfy()
+            } else {
+                console.error("错误：未找到 ybyfy() 函数定义");
+            }
+        }, waitTime);
+    });
+
+    // 监听 body 及其所有子孙节点的变动
+    observer.observe(document.body, {
+        childList: true,
+        subtree: true
+    });
+
+    // 初始计时：防止页面本来就是静止的
+    timer = setTimeout(() => {
+        observer.disconnect();
+        if (typeof ybyfy === "function") ybyfy();
+    }, waitTime);
+
+
+}
+
+// 立即启动监控
+autoTriggerAfterLoad(1500);
+
 
 
 // 其他函数
@@ -1097,6 +1063,8 @@ window.getRootDomain = function getRootDomain(hostname) {
     // e.g., ["google", "com"] -> slice(-2) -> "google.com"
     return parts.slice(-2).join('.');
 }
+
+
 
 /**
  * 初始化广告拦截 CSS 加载器。
