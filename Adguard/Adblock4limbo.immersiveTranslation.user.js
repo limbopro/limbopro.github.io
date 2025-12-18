@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         沉浸式双语翻译 (Google Translate & Dual Wrapper) - 简洁滚动控制 - 纯JS版本
 // @namespace    http://tampermonkey.net/
-// @version      2025-12-13_Final_V17_ScrollSimple_CloseButton_Stable
+// @version      2025-12-18_Final_V17.1_ScrollSimple_CloseButton_Stable
 // @description  基于 Google Translate，采用双包裹结构实现沉浸式双语对照翻译。包含：Trusted Types兼容加载、SPA路由变化监控、滚动时自动隐藏 UI、以及浮动按钮切换“双语/原文”模式。
 // @author       limbopro
 // @match        https://*/*
@@ -15,8 +15,7 @@
  * 兼容 Trusted Types 环境，以避免 'TrustedScriptURL' 错误。
  */
 
-document.cookie = "googtrans=/auto/zh-CN; path=/";
-
+//document.cookie = "googtrans=/auto/zh-CN; path=/";
 
 window.loadGoogleTranslateUI = async function () {
     return new Promise((resolve) => {
@@ -405,7 +404,6 @@ function createFloatingButton() {
     // 调用函数，传入您提供的 CSS 文件 URL
     const cssFileUrl = 'https://limbopro.com/CSS/Adblock4limbo.user.css'; // 含 Adguard 通用广告元素选择器 看外网网页会非常干净
     loadExternalCss(cssFileUrl);
-    document.cookie = "googtrans=/auto/zh-CN; path=/";
     const css = `
 
     /* 该死的广告 */
@@ -787,10 +785,6 @@ window.forceHardReload = function forceHardReload() {
 
     // 2. 添加新的时间戳参数
     currentUrl.searchParams.set('cachebuster', timestamp);
-
-    // 3. 导航到新的 URL
-    loadTranslateScriptWithTrustedTypes(SCRIPT_URL, POLICY_NAME, URL_PREFIX);
-    //loadGoogleTranslateUI()
     window.location.href = currentUrl.toString();
 }
 
@@ -831,6 +825,7 @@ window.ybyfy = async function () { // ybyfy()Í
     try {
         // 确保 loadGoogleTranslateUI 被 await
         // 注意：如果这个函数本身不返回 Promise，await 会立即跳过
+        document.cookie = "googtrans=/auto/zh-CN; path=/";
         await loadGoogleTranslateUI();
 
         // 如果这里还有后续逻辑，可以继续写

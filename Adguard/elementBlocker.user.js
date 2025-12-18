@@ -1719,12 +1719,32 @@ onclick="toggleDebugAndRefresh()"
         }).join('');
     }
 
+
+    // Pin按钮
+    window.toggleGeminiPin = function () {
+        const pinBtn = document.getElementById('gemini-pin-btn');
+        if (!pinBtn) return;
+
+        // 1. 获取当前状态（如果不存在则默认为 'unpinned'）
+        const currentState = localStorage.getItem('gemini-pin') === 'pinned' ? 'pinned' : 'unpinned';
+
+        // 2. 切换逻辑
+        if (currentState === 'unpinned') {
+            // 切换到已固定状态
+            pinBtn.textContent = '📍'; // 修改标签内容
+            localStorage.setItem('gemini-pin', 'pinned'); // 更新本地存储
+        } else {
+            // 切换到未固定状态
+            pinBtn.textContent = '📌';
+            localStorage.setItem('gemini-pin', 'unpinned');
+        }
+    }
+
     window.renderFloatWindow = function renderFloatWindow(targetDocs) {
 
         /*
         新增
         */
-
 
         if (document.getElementById(containerId)) return;
 
@@ -1889,7 +1909,7 @@ onclick="toggleDebugAndRefresh()"
         windowDiv.innerHTML = `
             <div id="gemini-header">
                 <strong>🔍 元素屏蔽/追踪器 (V26.39.10)</strong>
-                <button id="gemini-pin-btn" onclick="window.toggleGeminiPin()">📍</button>
+                <button id="gemini-pin-btn">📌</button>
                 <span id="gemini-close-btn">&times;</span>
             </div>
             
@@ -1926,7 +1946,7 @@ onclick="toggleDebugAndRefresh()"
         border-radius: 4px;
         font-weight: bold;
         width: 100%;
-    ">📟 查看页面上的脚本</button>
+    ">📟 查看脚本</button>
 
     <button id="manual-xpath-runCode" onclick="window.promptAndExecute()" style="
         background: green; /* 使用紫色突出手动操作 */
@@ -1981,6 +2001,8 @@ onclick="toggleDebugAndRefresh()"
                     记录管理 (${totalSavedCount})
                 </button>
             </div>
+
+
 
             <div id="content-current">
                 <div class="gemini-list-scroll-area">
@@ -2051,29 +2073,11 @@ onclick="toggleDebugAndRefresh()"
         };
 
 
-
-        // Pin按钮
-        function toggleGeminiPin() {
-            const pinBtn = document.getElementById('gemini-pin-btn');
-            if (!pinBtn) return;
-
-            // 1. 获取当前状态（如果不存在则默认为 'unpinned'）
-            const currentState = localStorage.getItem('gemini-pin') === 'pinned' ? 'pinned' : 'unpinned';
-
-            // 2. 切换逻辑
-            if (currentState === 'unpinned') {
-                // 切换到已固定状态
-                pinBtn.textContent = '📍'; // 修改标签内容
-                localStorage.setItem('gemini-pin', 'pinned'); // 更新本地存储
-            } else {
-                // 切换到未固定状态
-                pinBtn.textContent = '📌';
-                localStorage.setItem('gemini-pin', 'unpinned');
-            }
-        }
-
-        // 3. 为按钮绑定点击事件
+        // 3. 为Pin按钮绑定点击事件
         document.getElementById('gemini-pin-btn').addEventListener('click', toggleGeminiPin);
+        if (localStorage.getItem('gemini-pin') == 'pinned') {
+            document.getElementById('gemini-pin-btn').textContent = '📍'
+        }
 
         const tabCurrent = document.getElementById('tab-current');
         const tabIframe = document.getElementById('tab-iframe');
@@ -2995,7 +2999,7 @@ onclick="toggleDebugAndRefresh()"
         }
 
         // 4. 根据最终状态决定是否自动打开浮窗
-        if (isDebuggingElementClick || isDebuggingLocationHooks) {
+        if (isDebuggingElementClick || isDebuggingLocationHooks || localStorage.getItem('gemini-pin') == 'pinned') {
             if (!document.getElementById(containerId)) {
 
                 const activationSource = isHostInDebugList && !isCurrentHostOverridden() ? '域名匹配（自动）' : '本地存储（手动开启）';
@@ -3008,6 +3012,10 @@ onclick="toggleDebugAndRefresh()"
                 if (typeof body_build === 'function') {
                     try { body_build('false'); } catch (e) { }
                 }
+
+
+
+
             }
         }
 
@@ -3037,6 +3045,3 @@ onclick="toggleDebugAndRefresh()"
         initScript();
     }
 })();
-
-
-

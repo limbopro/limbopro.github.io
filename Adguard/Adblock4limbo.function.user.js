@@ -527,6 +527,7 @@ function _onclick_button() {
         if (document.getElementById('nsfwmode_switch')) {
             document.getElementById('nsfwmode_switch').addEventListener('click', function () {
                 nsfwmode(); // 开始或关闭成人模式
+                confirmndExecuteFC('已无该模式！')
             })
         }
 
@@ -621,8 +622,8 @@ function getNavigationHTML() {
 </li>
             <li class="li_global"><a class="a_global" id="ifeedback" href="https://limbopro.com/feedback/" target="_blank">匿名留言</a></li>
       <li class="li_global"><button class="crbhms" onclick='daohangMode_switch()' id="hidedaohang">导航按钮(OFF)</button></li>
-      <li class="li_global"><button class="crbhms" id="cjsfy" data-state="off" style="background-color:red">沉浸式翻译(OFF)</button></li>
-            <li class="li_global"><button class="crbhms" id="huacisousuo" data-state="off" style="background-color:red">划词搜索(OFF)</button></li>
+      <li class="li_global"><button class="crbhms" id="cjsfy" onclick='window.checkcjsfybtn()' data-state="off" style="background-color:red">沉浸式翻译(OFF)</button></li>
+            <li class="li_global"><button class="crbhms" id="huacisousuo" onclick='window.toggleSearchState()' data-state="off" style="background-color:red">划词搜索(OFF)</button></li>
       <li class="li_global">
     <button style="background: black;"class="crbhms" id="resetSort">重置排序</button></li>
       <li class="li_global"><button class="crbhms" id="nsfwmode_switch">WTF!</button></li>
@@ -2344,7 +2345,7 @@ loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/filter
 // end filter
 
 
-loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/huacisousuo.user.js', 'head', 'huacisousuoa') // 加载过滤脚本
+loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/huacisousuo.user.js', 'head', 'huacisearch') // 加载过滤脚本
 // 划词搜索结束 END
 
 
@@ -2478,22 +2479,20 @@ if (cjsfybtn) {
     // ===========================================
     // 步骤 2: 添加点击事件监听器 (用于切换)
     // ===========================================
-    cjsfybtn.addEventListener('click', () => {
+
+    window.checkcjsfybtn = function checkcjsfybtn() {
         const currentState = cjsfybtn.getAttribute('data-state');
         // 根据当前状态，确定下一个目标状态
         const nextState = currentState === 'off' ? 'on' : 'off';
         // 切换到下一个状态
         applyState(nextState);
-    });
+    }
 }
 
 // 沉浸式翻译结束 End
 
-
-
-
 // 其他函数 媒体资源查找器 mtzyczq 开始 START
-loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/m3u8Andmp4Finder.user.js', 'head', 'm3u8Andmp4Finder') 
+loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/m3u8Andmp4Finder.user.js', 'head', 'm3u8Andmp4Finder')
 // 媒体资源M3U8&MP4资源链接查找器结束 END
 
 
@@ -2503,17 +2502,18 @@ loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/m3u8An
 /* 用户反馈信息展示脚本 (重命名版) */
 // Feedback 开始 START
 /* 反馈信息展示脚本 (重命名版 - 已增强) */
-loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/feedBackLinkMake.user.js', 'head', 'feedBackLinkMake') 
+loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/feedBackLinkMake.user.js', 'head', 'feedBackLinkMake')
+// updateFeedbackLink()
 // Feedback 结束 END
 
 
 // 元素屏蔽器开始  START
-loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/elementBlocker.user.js', 'head', 'elementBlocker') 
+loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/elementBlocker.user.js', 'head', 'elementBlocker')
 // 元素屏蔽器 END
 
 
 // 视频广告加速跳过 Start
-loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/skipVideoAds.user.js', 'head', 'skipVideoAds') 
+loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/skipVideoAds.user.js', 'head', 'skipVideoAds')
 // 视频广告加速跳过 END
 
 
@@ -2529,31 +2529,29 @@ loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/skipVi
  * 2. 执行: window.initWebDebugger();
  */
 
-loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/WebDebugger.user.js', 'head', 'WebDebugger') 
+loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/WebDebugger.user.js', 'head', 'WebDebugger')
 /* WebDebugger.js 结束 END
 */
 
 
 // 查看页面上的脚本
-loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/ScriptFind.user.js', 'head', 'ScriptFind') 
+loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/ScriptFind.user.js', 'head', 'ScriptFind')
 //  查看页面上的脚本
 
 
 //  更友好的确认框
-loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/confirmndExecute.user.js', 'head', 'confirmndExecute') 
+loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/confirmndExecute.user.js', 'head', 'confirmndExecute')
 
 
-loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/findAndDisplayExternalLinks.user.js', 'head', 'findAndDisplayExternalLinks') 
+loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/findAndDisplayExternalLinks.user.js', 'head', 'findAndDisplayExternalLinks')
 // 示例调用：
 // findAndDisplayExternalLinks();
 
 // 循环清理透明元素
-loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/clearLoop.user.js', 'head', 'clearLoop') 
+loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/clearLoop.user.js', 'head', 'clearLoop')
 
 // 如何利用目标信息
-loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/showLinkTipsModalOnce.user.js', 'head', 'showLinkTipsModalOnce') 
-
-
+loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/showLinkTipsModalOnce.user.js', 'head', 'showLinkTipsModalOnce')
 
 
 
