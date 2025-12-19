@@ -617,6 +617,12 @@
                 cursor: move; 
                 touch-action: none; 
             }
+
+            #${containerId}  button {
+            font-size:xx-small;
+            }
+
+
             
             /* 阻止内部可点击元素继承 move 光标 */
             #${windowId} * {
@@ -1900,46 +1906,61 @@ onclick="toggleDebugAndRefresh()"
         const isCurrentInTopWindow = window === window.top;
 
 
+        // 重构
+
         function renderZeroOpacityList(elements) {
+            // 1. 基础空值判断
             if (!elements || elements.length === 0) {
                 return '<li style="padding: 10px; text-align: center; color: #888;">当前页面没有透明元素。</li>';
             }
 
             return elements.map(item => {
-                // 健壮性检查：确保 item 是 DOM 元素
-                const isValid = item && typeof item.getAttribute === 'function';
+                // 2. 确保 item 存在，防止 map 报错
+                if (!item) return '';
 
-                if (!isValid) {
-                    console.warn('发现无效元素对象:', item);
-                    return ''; // 过滤掉无效项
+                // 3. 确定文档标签 (增加 ownerDocument 兼容性处理)
+                const itemDoc = item.document || item.ownerDocument || {};
+                let docLabel = '未知';
+
+                if (typeof isCurrentInTopWindow !== 'undefined') {
+                    docLabel = isCurrentInTopWindow ?
+                        (itemDoc === document ? '主页' : 'Iframe') :
+                        'Iframe (自身)';
                 }
 
-                let docLabel = isCurrentInTopWindow ?
-                    (item.document === document ? '主页' : 'Iframe') :
-                    'Iframe (自身)';
+                // 4. 安全获取类名
+                let className = 'N/A';
+                if (item.className && typeof item.className === 'string') {
+                    className = item.className.split(/\s+/)[0];
+                } else if (item.getAttribute) {
+                    className = (item.getAttribute('class') || '').split(/\s+/)[0];
+                }
 
-                // 获取类名，兼容 SVG 和常规 HTML
-                const classAttr = item.getAttribute('class');
-                // 如果 classAttr 是对象（SVGAnimatedString），getAttribute 仍会返回字符串
-                const firstClass = (classAttr || '').split(/\s+/)[0];
+                // 5. 提取文件名用于标识
+                const docUrlTail = itemDoc.URL ? itemDoc.URL.split('/').pop() : 'unknown';
 
                 return `
-        <li style="display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; border-bottom: 1px solid #eee;" 
+        <li style="display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; border-bottom: 1px solid #eee; transition: background 0.2s;" 
             data-xpath="${item.xpath || ''}"
+            data-doc-url="${docUrlTail}"
         >
-            <div class="element-info" style="cursor: pointer; flex-grow: 1;">
+            <div class="element-info" style="cursor: pointer; flex-grow: 1;" title="点击高亮">
                 <span style="color: #555; font-weight: bold;">[${docLabel}]</span>
-                <span style="color: #6a0dad;">${item.tagName || 'UNTYPED'}</span>
-                <span style="color: #007bff;">#${item.id || firstClass || 'N/A'}</span>
+                <span style="color: #6a0dad;">${item.tagName || 'ELEMENT'}</span>
+                <span style="color: #007bff;">#${item.id || className || 'N/A'}</span>
                 <span style="color: #333; margin-left: 10px;">${item.width || 0}x${item.height || 0}px</span>
             </div>
-            <button class="remove-btn" style="..." data-xpath="${item.xpath || ''}">移除</button>
+            <button class="remove-btn" style="
+                background: #dc3545; color: white; border: none; padding: 2px 6px; 
+                margin-left: 10px; cursor: pointer; border-radius: 3px; font-size: 11px;
+            " data-xpath="${item.xpath || ''}">移除</button>
         </li>`;
             }).join('');
         }
 
+
         /*
-        function renderZeroOpacityList(elements) {
+            function renderZeroOpacityList(elements) {
             if (elements.length === 0) {
                 return '<li style="padding: 10px; text-align: center; color: #888;">当前页面没有透明元素。</li>';
             }
@@ -1981,7 +2002,7 @@ onclick="toggleDebugAndRefresh()"
 
         windowDiv.innerHTML = `
             <div id="gemini-header">
-                <strong>🔍 元素屏蔽/追踪器 (V26.39.10)</strong>
+                <strong>🔍 元素屏蔽/追踪器 (V26.39.11)</strong>
                 <button id="gemini-pin-btn">📌</button>
                 <span id="gemini-close-btn">&times;</span>
             </div>
