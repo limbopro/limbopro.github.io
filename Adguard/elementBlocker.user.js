@@ -302,6 +302,35 @@
     // =================================================================
     // 基础工具函数：getElementCssSelector (V26.39.4 NEW)
     // =================================================================
+
+    // 已重构
+    function getElementCssSelector(element) {
+        if (!element || element.tagName === 'HTML' || element.tagName === 'BODY') {
+            return element.tagName ? element.tagName.toLowerCase() : '';
+        }
+
+        // 1. 优先使用 ID
+        if (element.id && typeof element.id === 'string') {
+            return `#${element.id}`;
+        }
+
+        // 2. 其次使用 TagName 和第一个 Class
+        const tag = element.tagName.toLowerCase();
+
+        // 关键修复：使用 Array.from 转换 classList，它兼容 SVG 且更安全
+        const classes = Array.from(element.classList || []);
+
+        if (classes.length > 0) {
+            // 返回 Tag.Class 形式
+            // 注意：如果类名包含特殊字符，CSS选择器可能需要转义，这里取第一个简单类名
+            return `${tag}.${classes[0]}`;
+        }
+
+        // 3. 最后退化为纯 TagName
+        return tag;
+    }
+
+    /*
     function getElementCssSelector(element) {
         if (!element || element.tagName === 'HTML' || element.tagName === 'BODY') return element.tagName ? element.tagName.toLowerCase() : '';
 
@@ -322,6 +351,7 @@
         // 3. 最后退化为纯 TagName
         return tag;
     }
+    */
 
     // =================================================================
     // 基础工具函数：safeTruncate (V26.39.5 NEW)
@@ -1868,6 +1898,47 @@ onclick="toggleDebugAndRefresh()"
 
         // V26.37 修复 Iframe 识别
         const isCurrentInTopWindow = window === window.top;
+
+
+        function renderZeroOpacityList(elements) {
+            if (!elements || elements.length === 0) {
+                return '<li style="padding: 10px; text-align: center; color: #888;">当前页面没有透明元素。</li>';
+            }
+
+            return elements.map(item => {
+                // 健壮性检查：确保 item 是 DOM 元素
+                const isValid = item && typeof item.getAttribute === 'function';
+
+                if (!isValid) {
+                    console.warn('发现无效元素对象:', item);
+                    return ''; // 过滤掉无效项
+                }
+
+                let docLabel = isCurrentInTopWindow ?
+                    (item.document === document ? '主页' : 'Iframe') :
+                    'Iframe (自身)';
+
+                // 获取类名，兼容 SVG 和常规 HTML
+                const classAttr = item.getAttribute('class');
+                // 如果 classAttr 是对象（SVGAnimatedString），getAttribute 仍会返回字符串
+                const firstClass = (classAttr || '').split(/\s+/)[0];
+
+                return `
+        <li style="display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; border-bottom: 1px solid #eee;" 
+            data-xpath="${item.xpath || ''}"
+        >
+            <div class="element-info" style="cursor: pointer; flex-grow: 1;">
+                <span style="color: #555; font-weight: bold;">[${docLabel}]</span>
+                <span style="color: #6a0dad;">${item.tagName || 'UNTYPED'}</span>
+                <span style="color: #007bff;">#${item.id || firstClass || 'N/A'}</span>
+                <span style="color: #333; margin-left: 10px;">${item.width || 0}x${item.height || 0}px</span>
+            </div>
+            <button class="remove-btn" style="..." data-xpath="${item.xpath || ''}">移除</button>
+        </li>`;
+            }).join('');
+        }
+
+        /*
         function renderZeroOpacityList(elements) {
             if (elements.length === 0) {
                 return '<li style="padding: 10px; text-align: center; color: #888;">当前页面没有透明元素。</li>';
@@ -1900,6 +1971,8 @@ onclick="toggleDebugAndRefresh()"
             `;
             }).join('');
         }
+       */
+
 
         let isBlacklisted = isCurrentPageBlacklisted();
         // const totalSavedCount = getSavedRemovals().length + getIframeRemovals().length + getPageBlacklist().length;

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         沉浸式双语翻译 (Google Translate & Dual Wrapper) - 简洁滚动控制 - 纯JS版本
 // @namespace    http://tampermonkey.net/
-// @version      2025-12-18_Final_V17.1_ScrollSimple_CloseButton_Stable
+// @version      2025-12-19_Final_V17.2_ScrollSimple_CloseButton_Stable
 // @description  基于 Google Translate，采用双包裹结构实现沉浸式双语对照翻译。包含：Trusted Types兼容加载、SPA路由变化监控、滚动时自动隐藏 UI、以及浮动按钮切换“双语/原文”模式。
 // @author       limbopro
 // @match        https://*/*
@@ -25,7 +25,7 @@ window.loadGoogleTranslateUI = async function () {
         const ybyfyvalue = translationButton?.classList?.contains('translated');
 
         // --- 1. 预检查：如果 UI 已存在且符合状态，直接返回成功 ---
-        if (document.getElementById(uiContainerId) && document.querySelector(successSelector) /*&& ybyfyvalue*/) {
+        if (document.getElementById(uiContainerId)/*&& document.querySelector(successSelector) && ybyfyvalue*/) {
             console.log("翻译组件已在运行中，跳过初始化。");
             return resolve(true);
         }
@@ -105,11 +105,14 @@ window.loadGoogleTranslateUI = async function () {
 
 // --- II. 双包裹体创建逻辑 ---
 
-window.applyDualWrapperProtection = function applyDualWrapperProtection() {
+window.applyDualWrapperProtection = function () {
 
     (() => {
         //console.clear();
         //document.querySelectorAll('.cjsfy-original, .cjsfy-translated, .spacer').forEach(e => e.remove());
+
+        // 检查本地存储配置
+        if (localStorage.getItem('immersiveTranslate') !== 'true') return;
 
         const targetsToProcess = [];
 
@@ -188,7 +191,6 @@ window.applyDualWrapperProtection = function applyDualWrapperProtection() {
                 separator.className = 'spacer';
 
                 // 2. 创建 译文包裹层
-                //// const translatedWrapper = document.createElement('font');
                 const translatedWrapper = originalWrapper.cloneNode(true)
                 translatedWrapper.className = 'cjsfy-translated';
 
@@ -362,6 +364,28 @@ window.applyDualWrapperProtection = function applyDualWrapperProtection() {
 
         console.log("[Immersive Translate] Google Translate UI 加载已触发。");
         localStorage.setItem('immersiveTranslate', 'true')
+
+
+        // 删除实际上需要被翻译的元素上的 notranslate 类
+        // 修正后的写法
+        document.querySelectorAll('.cjsfy-translated.skiptranslate.is-processing')?.forEach((x) => {
+            x.classList.remove('skiptranslate', 'is-processing');
+        });
+
+        document.querySelectorAll('.spacer.skiptranslate.is-processing')?.forEach((x) => {
+            x.classList.remove('is-processing'); // 去掉点号
+        });
+
+
+         document.querySelectorAll('.spacer.skiptranslate.is-processing')?.forEach((x) => {
+            x.classList.remove('is-processing'); // 去掉点号
+        });
+
+
+        document.querySelectorAll('.skiptranslate.is-processing')?.forEach((x) => {
+            x.classList.remove('skiptranslate', 'is-processing');
+        });
+
     })();
 }
 
@@ -401,7 +425,7 @@ function loadExternalCss(cssUrl) {
 
 function createFloatingButton() {
 
-if(document.getElementById('translation-button')) {return}
+    if (document.getElementById('translation-button')) { return }
 
     // 调用函数，传入您提供的 CSS 文件 URL
     const cssFileUrl = 'https://limbopro.com/CSS/Adblock4limbo.user.css'; // 含 Adguard 通用广告元素选择器 看外网网页会非常干净
@@ -703,7 +727,7 @@ createFloatingButton();
 window.skiptrans = function () {
     const googletraLength = document.querySelectorAll("font[dir] > font[dir]").length;
     const cjsfytraLength = document.querySelectorAll(".notranslate.ori").length;
-    if (googletraLength > 0 && (googletraLength / cjsfytraLength) > 1.5) {
+    if (googletraLength > 0 && (googletraLength / cjsfytraLength) > 3) {
         console.log('正在重载🔃...' + "googletraLength: " + googletraLength + "; cjsfytraLength: " + cjsfytraLength)
         forceHardReload()
     } else {
@@ -809,23 +833,18 @@ window.ybyfy = async function () { // ybyfy()Í
 
     // 检查本地存储配置
     if (localStorage.getItem('immersiveTranslate') !== 'true') return;
-    
-skiptrans()
 
-/*
-    if (document.getElementById('translation-button')?.className.indexOf('translated') == -1) {
-        document.getElementById('translation-button').click()
+    skiptrans()
+    applyDualWrapperProtection()
+
+    createFloatingButton()
+    const button = document.getElementById('translation-button');
+    if (button) {
+        button.textContent = '原文';
+        button.classList.add('translated');
     }
-*/
 
-applyDualWrapperProtection()
-
-createFloatingButton()
-const button = document.getElementById('translation-button');
-if(button){
-button.textContent = '原文';
-button.classList.add('translated');}
-
+    //startGoogleTranslate('zh-CN')
     /*
 // 2. 检查锁状态
     if (isTranslating) {
@@ -843,6 +862,7 @@ button.classList.add('translated');}
         // 确保 loadGoogleTranslateUI 被 await
         // 注意：如果这个函数本身不返回 Promise，await 会立即跳过
         document.cookie = "googtrans=/auto/zh-CN; path=/";
+
         await loadGoogleTranslateUI();
 
         // 如果这里还有后续逻辑，可以继续写
@@ -860,15 +880,104 @@ button.classList.add('translated');}
 
 
 /**
+ * 开启翻译
+ * @param {string} langCode - 语言代码 (如 'en', 'ja', 'ko')，默认为 'en'
+ */
+window.startGoogleTranslate = function startGoogleTranslate(langCode = 'en') {
+    // 1. 预设 Cookie，确保全站及后续加载生效
+    const domain = window.location.hostname;
+    document.cookie = `googtrans=/auto/${langCode}; path=/;`;
+    document.cookie = `googtrans=/auto/${langCode}; path=/; domain=.${domain};`;
+
+    // 2. 尝试寻找下拉框进行瞬时切换
+    const combo = document.querySelector('.goog-te-combo');
+    if (combo) {
+        combo.value = langCode;
+        combo.dispatchEvent(new Event('change'));
+    }
+    console.log(`[GoogleTranslate] 已尝试开启翻译至: ${langCode}`);
+}
+
+
+/**
+ * 关闭翻译并还原原文
+ */
+window.stopGoogleTranslate = function stopGoogleTranslate() {
+    // 1. 清除所有可能的 googtrans Cookie
+    const domain = window.location.hostname;
+    const expire = "expires=Thu, 01 Jan 1970 00:00:00 UTC";
+    document.cookie = `googtrans=; ${expire}; path=/;`;
+    document.cookie = `googtrans=; ${expire}; path=/; domain=.${domain};`;
+
+    // 2. 模拟切回原文
+    const combo = document.querySelector('.goog-te-combo');
+    if (combo) {
+        combo.value = '';
+        combo.dispatchEvent(new Event('change'));
+    }
+
+    // 3. 暴力清理谷歌留下的 UI 痕迹和样式
+    setTimeout(() => {
+        // 重置 body 位置和间距
+        document.body.style.top = '0px';
+        document.body.style.position = 'static';
+        document.documentElement.style.marginTop = '0px';
+
+        // 移除 HTML 上的 class
+        document.documentElement.classList.remove('translated-ltr', 'translated-rtl');
+
+        // 隐藏工具栏 iframe
+        const frames = ['.goog-te-banner-frame', '.goog-te-menu-frame', '.goog-tooltip'];
+        frames.forEach(s => {
+            const el = document.querySelector(s);
+            if (el) el.style.display = 'none';
+        });
+        console.log("[GoogleTranslate] 翻译已关闭并清理残留");
+    }, 300);
+}
+
+
+
+/**
  * 持久监听 DOM 变动：每当页面静止超过 waitTime 毫秒，执行 ybyfy()
  */
-window.keepYbyfyAlive = function keepYbyfyAlive(waitTime = 2000) {
+window.keepYbyfyAlive = function keepYbyfyAlive(waitTime = 1000) {
     console.log("🚀 持久监控已启动：将持续守护页面变动...");
 
     let timer = null;
     skiptrans()
+
     const observer = new MutationObserver((mutations) => {
         // 只要有变动，就清除旧的计时器
+
+        mutations.forEach((mutation) => {
+            mutation.addedNodes.forEach((node) => {
+                const hasCjsfy = node?.classList?.contains('cjsfy-translated');
+                const hasOriginal = node?.classList?.contains('Original');
+                const hasSpacer = node?.classList?.contains('spacer');
+                if (node.nodeType === 1 && !hasCjsfy && !hasOriginal && !hasSpacer) { // 元素节点
+                    // 1. 立即锁定：加上谷歌官方的禁止类和你的自定义处理类
+                    node.classList.add('skiptranslate', 'is-processing');
+
+                    // 2. 执行你的业务逻辑
+                    // 示例：获取原始属性或进行异步计算
+                    console.log("正在处理原始节点:", node.innerText);
+
+                    /*
+                    // 假设你的处理函数是 myCustomLogic
+                    handleMyBusiness(node).then(() => {
+                        // 3. 处理完毕：移除锁定
+                        // 移除 notranslate 后，谷歌翻译会自动监测到并进行翻译
+                        node.classList.remove('notranslate', 'is-processing');
+                        console.log("处理完成，移交给谷歌翻译");
+                    });
+                    */
+                }
+            });
+        });
+
+
+
         if (timer) {
             clearTimeout(timer)
         };
