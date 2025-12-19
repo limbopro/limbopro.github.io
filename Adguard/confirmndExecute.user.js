@@ -145,7 +145,7 @@ function showConfirmFC() {
 
         // 点击遮罩关闭（可选）
         fcmask.onclick = e => {
-            if (e.target === mask) closeConfirmFC(false);
+            if (e.target === fcmask) closeConfirmFC(false);
         };
         fccancel.onclick = () => closeConfirmFC(false);
         fcok.onclick = () => closeConfirmFC(true);
@@ -154,8 +154,8 @@ function showConfirmFC() {
 
 function closeConfirmFC(result) {
     fcmask.classList.remove('show');
-    fcmask.onclick = cancel.onclick = ok.onclick = null;
-    resolvePromise(result);
+    fcmask.onclick = fccancel.onclick = fcok.onclick = null;
+    fcresolvePromise(result);
 }
 
 /* ---------- 确认后执行原逻辑 ---------- */

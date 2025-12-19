@@ -23,12 +23,14 @@
     const CSS_REMOVAL_KEY = 'gemini_css_selectors_removals';
     // [V27.1 NEW] 浮窗固定状态记录
     const WINDOW_PINNED_KEY = 'gemini_float_window_pinned';
+
     const PAGE_BLACKLIST_KEY = 'gemini_page_blacklist';
+
     const containerId = 'gemini-main-container';
     const windowId = 'gemini-float-window';
+
     const DEBUG_CLICK_KEY = 'gemini_debug_element_click_mode';
     const DEBUG_LOCATION_KEY = 'gemini_debug_location_hook_mode';
-    const DEBUG_SELECTOR_CLICK_KEY = 'gemini_debug_preciseSelector_click_mode'
     // V26.39.3 NEW: 调试域名覆盖键 - 存储用户手动关闭调试的域名，以阻止自动开启
     const DEBUG_WEBLIST_OVERRIDE_KEY = 'gemini_debug_weblist_override';
 
@@ -383,7 +385,6 @@
             removals.push(trimmed);
             localStorage.setItem(CSS_REMOVAL_KEY, JSON.stringify(removals));
             console.log(`[Gemini屏蔽 V27] 🎨 已保存 CSS 选择器: ${trimmed}`);
-            confirmndExecuteFC(`[Gemini屏蔽 V27] 🎨 已保存 CSS 选择器: ${trimmed}`)
             return true;
         }
         return false;
@@ -592,9 +593,7 @@
                 box-shadow: 0 10px 30px rgba(0,0,0,0.1), 0 4px 6px rgba(0,0,0,0.05); 
                 width: 400px; 
                 background: #f7f7f7; 
-                
-               /* padding: 20px 23px 23px 20px;*/
-                padding: 0px 20px 0px 20px;
+                padding: 20px 23px 23px 20px;
                 cursor: default; 
                 user-select: none;
                 font-family: 'Helvetica Neue', Arial, sans-serif;
@@ -603,7 +602,7 @@
             /* 2. 内部浮窗：内容容器 */
             #${windowId} {
                 background: #fff; 
-                /* border: 1px solid #e0e0e0; */
+                border: 1px solid #e0e0e0; 
                 border-radius: 8px; 
                 font-size: 13px; 
                 max-height: 100vh; 
@@ -637,8 +636,7 @@
             /* 头部样式 */
             #${windowId} #gemini-header {
             color:black;
-                /*padding: 10px 15px;*/
-                padding: 10px 0px 0px 0px;
+                padding: 10px 15px;
                 background: #f8f8f8; 
                 border-bottom: 1px solid #ececec;
                 /*display: flex;*/
@@ -707,8 +705,7 @@
 
             /* 列表滚动容器样式 */
             #${windowId} .gemini-list-scroll-area {
-               /* max-height: 130px; */
-                max-height: 25vh;
+                max-height: 130px; 
                 overflow-y: auto; 
                 padding: 0;
                 margin: 0;
@@ -766,7 +763,7 @@
                     left: 5vw; 
                     top: 5px;
                     /* padding: 10px;*/ 
-                    /* padding: 15px;*/
+                    padding: 15px; 
                 }
             }
 
@@ -851,7 +848,7 @@
                         font-size: 13px; padding: 5px 10px; 
                         background: #f1f8ff; border-left: 3px solid #007bff;
                     ">
-                        <strong>🛡️ [永久屏蔽]</strong> 将此元素永久添加到屏蔽列表并移除。(基于xPath屏蔽)
+                        <strong>🛡️ [永久屏蔽]</strong> 将此元素永久添加到屏蔽列表并移除。
                     </p>
                     <p style="
                         font-size: 13px; padding: 5px 10px; 
@@ -934,7 +931,7 @@ onclick="toggleDebugAndRefresh()"
                 debugPanel?.click()
 
                 const debugToggle = document.getElementById('debug-click-toggle');
-                if (debugToggle && localStorage.getItem('gemini_debug_element_click_mode') == 'true') {
+                if (debugToggle && localStorage.gemini_debug_element_click_mode == 'true') {
                     // 1. 触发目标元素的点击事件
                     debugToggle.click();
                     clickedElement.textContent = '🔰 元素点击调试(已关闭)'
@@ -971,8 +968,6 @@ onclick="toggleDebugAndRefresh()"
                 <span title="${selector}" style="flex-grow: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: #9c27b0; font-weight: bold;">
                     🎨 ${safeTruncate(selector, 50)}
                 </span>
-                <button class="edit-css-btn" style="background: #2196F3; color: white; border: none; padding: 2px 6px; cursor: pointer; border-radius: 3px; font-size: 11px;" 
-                        data-selector="${selector}">修改</button>
                 <button class="undo-css-btn" style="
                     background: #ff9800; color: white; border: none; padding: 2px 6px; 
                     margin-left: 10px; cursor: pointer; border-radius: 3px; font-size: 11px;
@@ -1090,8 +1085,6 @@ onclick="toggleDebugAndRefresh()"
 
             let savedCount = 0;
             selectors.forEach(sel => {
-
-
                 /*
                 try {
                     document.querySelector(sel); // 简单校验
@@ -1100,15 +1093,14 @@ onclick="toggleDebugAndRefresh()"
                     console.warn(`[Gemini屏蔽 V27] 无效选择器（忽略）: ${sel}`);
                 }*/
 
-
                 // 重构
                 // 更严谨的 CSS 语法校验，不依赖页面是否存在该元素
+
                 try {
                     document.createDocumentFragment().querySelector(sel);
                     if (saveCssRemovalChoice(sel)) savedCount++;
                 } catch (e) {
                     console.warn(`[Gemini屏蔽 V27] 语法错误: ${sel}`);
-                    confirmndExecuteFC(`[Gemini屏蔽 V27] 语法错误: ${sel}`)
                 }
 
                 // 重构
@@ -1116,12 +1108,12 @@ onclick="toggleDebugAndRefresh()"
             });
 
             if (savedCount > 0) {
-                confirmndExecuteFC(`✅ 成功保存 ${savedCount} 个 CSS 选择器！是否刷新页面生效？`, () => { location.reload() })
+                // confirmndExecuteFC(`✅ 成功保存 ${savedCount} 个 CSS 选择器！请刷新页面生效。`);
+                confirmndExecuteFC(`✅ 成功保存 ${savedCount} 个 CSS 选择器！请刷新页面生效。`)
             } else {
                 //confirmndExecuteFC('⚠️ 未保存任何有效选择器，请检查格式。');
                 confirmndExecuteFC('⚠️ 未保存任何有效选择器，请检查格式。')
             }
-
             modal.remove();
         };
 
@@ -1178,7 +1170,7 @@ onclick="toggleDebugAndRefresh()"
 
 .sel-result-window { 
     position: fixed; top: 20%; left: 50%; transform: translateX(-50%); 
-    z-index: 114119; width: 90%; max-width: 420px; 
+    z-index: 2147483647; width: 90%; max-width: 420px; 
     background: #ffffff !important; border-radius: 12px !important;
     box-shadow: 0 10px 40px rgba(0,0,0,0.4) !important; font-family: sans-serif !important; 
     padding: 16px !important; border: 1px solid #ddd !important; display: none;
@@ -1230,66 +1222,21 @@ onclick="toggleDebugAndRefresh()"
         document.body.appendChild(overlay);
 
         const resultWin = document.createElement('div');
-        resultWin.className = 'sel-result-window notranslate';
+        resultWin.className = 'sel-result-window';
         resultWin.innerHTML = `
         <span class="sel-title">精准 CSS Selector 结果:</span>
         <code class="sel-code" id="sel-output"></code>
         <div class="sel-actions">
             <button class="sel-btn sel-copy-btn" id="sel-copy">复制</button>
-            <button class="sel-btn" style="background:#f39c12" id="sel-block">屏蔽</button>
             <button class="sel-btn sel-reset-btn" id="sel-reset">重新选择</button>
             <button class="sel-btn sel-exit-btn" id="sel-exit">退出工具</button>
         </div>
     `;
-
         document.body.appendChild(resultWin);
 
+        // 拖拽
 
-        // 新增屏蔽按钮 START
 
-
-        // 2. 绑定“屏蔽”按钮点击事件
-        document.getElementById('sel-block').onclick = () => {
-            const sel = document.getElementById('sel-output').innerText;
-
-            // 如果还没获取到选择器，不执行
-            if (!sel || sel === '点击页面元素获取...') {
-                alert('请先点击页面元素！');
-                return;
-            }
-
-            let savedCount = 0;
-            // --- 你提供的屏蔽逻辑核心 ---
-            try {
-                // 使用 DocumentFragment 验证 CSS 语法合法性，无需元素真实存在
-                document.createDocumentFragment().querySelector(sel);
-
-                // 调用你的存储/屏蔽函数 (请确保 saveCssRemovalChoice 已定义)
-                if (typeof saveCssRemovalChoice === 'function') {
-                    if (saveCssRemovalChoice(sel)) {
-                        savedCount++;
-                        //alert(`屏蔽成功！已加入规则库。`);
-
-                        confirmndExecuteFC(`✅ 成功保存 ${savedCount} 个 CSS 选择器！是否立即刷新页面应用新规则？`, () => { location.reload() })
-                    } else {
-                        confirmndExecuteFC(`${sel} 已屏蔽...`)
-                    }
-                } else {
-                    console.error('[错误] 找不到 saveCssRemovalChoice 函数');
-                    // 如果函数未定义，至少在控制台给你个提示
-                    console.log(`拟屏蔽的选择器: ${sel}`);
-                    confirmndExecuteFC(`${sel} 已屏蔽...`)
-                }
-            } catch (e) {
-                confirmndExecuteFC('生成的选择器语法有误，无法屏蔽。')
-                console.warn(`[Gemini屏蔽 V27] 语法错误: ${sel}`);
-                // alert('生成的选择器语法有误，无法屏蔽。');
-            }
-        };
-
-        // 新增屏蔽按钮 END
-
-        // 拖拽 START
 
 
 
@@ -2085,73 +2032,6 @@ onclick="toggleDebugAndRefresh()"
     }
 
 
-    /** // 修改记录管理
-     * 修改持久化记录
-     * @param {string} storageKey - localStorage 的键名 (ELEMENT_REMOVAL_KEY, CSS_REMOVAL_KEY等)
-     * @param {string} oldVal - 旧的记录值
-     * @param {string} newVal - 用户输入的新值
-     */
-    function updateRemovalChoice(storageKey, oldVal, newVal) {
-        if (!newVal || newVal.trim() === "" || oldVal === newVal) return false;
-        try {
-            let removals = JSON.parse(localStorage.getItem(storageKey) || '[]');
-            const index = removals.indexOf(oldVal);
-            if (index > -1) {
-                removals[index] = newVal.trim();
-                localStorage.setItem(storageKey, JSON.stringify(removals));
-                console.log(`[Gemini屏蔽] 记录已更新: ${oldVal} -> ${newVal}`);
-                return true;
-            }
-        } catch (e) {
-            console.error('[持久化] 修改失败:', e);
-        }
-        return false;
-    }
-
-    /** // 修改记录管理 */
-    window.showEditModal = function showEditModal(oldValue, storageKey) {
-        const modalOverlay = document.createElement('div');
-        modalOverlay.id = 'gemini-edit-modal-overlay';
-        // 复用已有的模态框样式逻辑
-        modalOverlay.style.cssText = `
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-        background: rgba(0, 0, 0, 0.7); z-index: 114120; 
-        display: flex; justify-content: center; align-items: center;
-        backdrop-filter: blur(2px);
-    `;
-
-        const modalBox = document.createElement('div');
-        modalBox.style.cssText = `
-        background: white; border-radius: 10px; padding: 20px; 
-        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3); width: 90%; max-width: 400px;
-    `;
-
-        modalBox.innerHTML = `
-        <h3 style="margin-top: 0; color: #2196F3; border-bottom: 2px solid #eee; padding-bottom: 10px;">📝 修改屏蔽规则</h3>
-        <p style="font-size: 12px; color: #666;">您正在修改当前的 CSS 选择器或路径：</p>
-        <textarea id="gemini-edit-input" style="width: 100%; height: 80px; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-family: monospace; font-size: 13px; box-sizing: border-box; resize: vertical;">${oldValue}</textarea>
-        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px;">
-            <button id="gemini-edit-cancel" style="padding: 8px 15px; border-radius: 5px; border: 1px solid #ccc; background: #fff; cursor: pointer;">取消</button>
-            <button id="gemini-edit-save" style="padding: 8px 15px; border-radius: 5px; border: none; background: #4CAF50; color: white; cursor: pointer;">保存修改</button>
-        </div>
-    `;
-
-        modalOverlay.appendChild(modalBox);
-        document.body.appendChild(modalOverlay);
-
-        // 绑定保存逻辑
-        modalBox.querySelector('#gemini-edit-save').onclick = () => {
-            const newValue = document.getElementById('gemini-edit-input').value;
-            if (updateRemovalChoice(storageKey, oldValue, newValue)) {
-                modalOverlay.remove();
-                // 提示并刷新页面应用新规则
-                confirmndExecuteFC("修改成功！是否立即刷新页面应用新规则？", () => { location.reload() })
-            }
-        };
-
-        modalBox.querySelector('#gemini-edit-cancel').onclick = () => modalOverlay.remove();
-    }
-
     // Pin按钮
     window.toggleGeminiPin = function () {
         const pinBtn = document.getElementById('gemini-pin-btn');
@@ -2392,7 +2272,9 @@ onclick="toggleDebugAndRefresh()"
 
 
         let isBlacklisted = isCurrentPageBlacklisted();
+        // const totalSavedCount = getSavedRemovals().length + getIframeRemovals().length + getPageBlacklist().length;
         const totalSavedCount = getSavedRemovals().length + getIframeRemovals().length + getPageBlacklist().length + getSavedCssRemovals().length;
+
 
         windowDiv.innerHTML = `
             <div id="gemini-header">
@@ -2538,7 +2420,7 @@ onclick="toggleDebugAndRefresh()"
             </div>
 
             <div class="gemini-tip-text">
-                🌟**提示:** “选择并屏蔽模式”及🛠️ 元素点击调试中的屏蔽原理基于<a href='https://www.google.com/search?q=xpath+%E6%98%AF%E4%BB%80%E4%B9%88' target='_blank' style='corlor:blue;'>xPath</a>。⛔标记为黑名单页意味着对当前页面存在的所有iframe进行<a href='https://www.google.com/search?q=iframe+sandbox%E5%B1%9E%E6%80%A7' target='_blank' style='corlor:blue;'>沙箱化</a>处理，严格限制其交互权限。
+                🌟**提示:** “选择并屏蔽模式”可屏蔽任何元素。取消移除后请**手动刷新**。⛔标记为黑名单页意味着对当前页面存在的iframe进行沙箱化处理。💡一切结束后记得关闭所有调试，否则🔍 元素屏蔽/追踪器会一直随着页面刷新后打开。
             </div>
         `;
 
@@ -2580,10 +2462,6 @@ onclick="toggleDebugAndRefresh()"
                 return;
             }
 
-            if (localStorage.getItem('gemini_debug_element_click_mode') == 'true') { // 如果元素点击调试模式已经开了，则无法开启 css 选择器获取
-                return;
-            }
-
             // 1. 修改按钮文字，告知用户已开启
             btn.innerText = `${originalText}(开)`;
             btn.style.background = 'rgb(0, 200, 83)'
@@ -2591,13 +2469,13 @@ onclick="toggleDebugAndRefresh()"
 
             // 2. 启动工具
             startSelectorTool();
-            localStorage.setItem(DEBUG_SELECTOR_CLICK_KEY, 'true')
+            localStorage.setItem('selector-debug-click-toggle', 'true')
 
             // 3. 增强：拦截工具内的“退出”按钮，点击时恢复按钮文字
             // 我们需要通过定时器或事件监听来捕获工具销毁的时机
             const checkExit = setInterval(() => {
                 if (!document.getElementById('selector-tool-style-final')) {
-                    localStorage.setItem(DEBUG_SELECTOR_CLICK_KEY, 'false')
+                    localStorage.setItem('selector-debug-click-toggle', 'false')
                     btn.innerText = `${originalText}(关)`;
                     btn.style.background = '#ffc107'
                     clearInterval(checkExit);
@@ -2616,7 +2494,6 @@ onclick="toggleDebugAndRefresh()"
         const contentSaved = document.getElementById('content-saved');
 
         function updateSavedListContent() {
-            const totalSavedCount = getSavedRemovals().length + getIframeRemovals().length + getPageBlacklist().length + getSavedCssRemovals().length;
             const savedRemovalsHtml = renderSavedRemovalsList(getSavedRemovals());
             const iframeRemovalsHtml = renderSavedIframeRemovalsList(getIframeRemovals()); // V26.39 New
             const blacklistHtml = renderBlacklist(getPageBlacklist());
@@ -2637,9 +2514,7 @@ onclick="toggleDebugAndRefresh()"
                  </li>
                  ${cssRemovalsHtml}
              `;
-            // tabSaved.innerHTML = `记录管理 (${totalSaved})`;
-            tabSaved.innerHTML = `记录管理 (${totalSavedCount})`;
-
+            tabSaved.innerHTML = `记录管理 (${totalSaved})`;
         }
 
         // 【V27 NEW】取消 CSS 记录事件
@@ -2770,7 +2645,7 @@ onclick="toggleDebugAndRefresh()"
 
 
         function toggleSelectionMode(forceState) {
-            if (localStorage.getItem('gemini_debug_element_click_mode') == 'true') { // 元素调试模式跟选择并屏蔽模式只能开一个
+            if (localStorage.gemini_debug_element_click_mode == 'true') { // 元素调试模式跟选择并屏蔽模式只能开一个
                 return;
             }
 
@@ -2812,7 +2687,7 @@ onclick="toggleDebugAndRefresh()"
         debugClickToggle.onclick = () => {
             isDebuggingElementClick = !isDebuggingElementClick;
 
-            localStorage.setItem('gemini_debug_element_click_mode', isDebuggingElementClick ? 'true' : 'false');
+            localStorage.setItem(DEBUG_CLICK_KEY, isDebuggingElementClick ? 'true' : 'false');
 
             // V26.39.3 NEW: 处理用户覆盖逻辑
             const isHostInDebugList = DEBUG_WEBLIST.some(domain => getCurrentHost().includes(domain));
@@ -3110,18 +2985,6 @@ onclick="toggleDebugAndRefresh()"
         document.addEventListener('touchmove', dragMove);
         document.addEventListener('touchend', dragEnd);
 
-        // 示例：处理 CSS 选择器的修改点击
-        document.addEventListener('click', (e) => {
-            const target = e.target;
-
-            if (target.classList.contains('edit-css-btn')) {
-                const selector = target.getAttribute('data-selector');
-                // 调用我们自定义的悬浮窗，传入当前值和 CSS 键名
-                showEditModal(selector, 'gemini_css_selectors_removals');
-            }
-
-        });
-
     }
 
 
@@ -3165,7 +3028,7 @@ onclick="toggleDebugAndRefresh()"
             const opensNewTab = isLink ? isLink.target === '_blank' : false;
             const isAdLink = AD_DOMAINS.some(domain => href.includes(domain));
 
-            const currentIsDebuggingElementClick = localStorage.getItem('gemini_debug_element_click_mode') === 'true';
+            const currentIsDebuggingElementClick = localStorage.getItem(DEBUG_CLICK_KEY) === 'true';
             let shouldIntercept = isAdLink || (opensNewTab && href && href !== '#') || currentIsDebuggingElementClick;
 
             if (shouldIntercept && targetElement.tagName !== 'HTML' && targetElement.tagName !== 'BODY') {
@@ -3252,7 +3115,11 @@ onclick="toggleDebugAndRefresh()"
 
         // ⭐️ V26.39.7 核心修复：Hook 早期事件以阻止异步调度
         doc.addEventListener('click', eventListenerFunction, true);
+        //doc.addEventListener('mousedown', eventListenerFunction, true); 
+        //doc.addEventListener('touchstart', eventListenerFunction, true); 
+
         doc.gemini_click_debug_listener_attached = true;
+
         let logMessage = `[Gemini屏蔽 V26.39.7] 元素点击调试监听器已附加到 `;
 
         const isTopWindow = window === window.top;
@@ -3297,6 +3164,8 @@ onclick="toggleDebugAndRefresh()"
     }
 
 
+
+
     // =================================================================
     // 核心函数：手动添加 XPath 到永久屏蔽列表
     // =================================================================
@@ -3329,6 +3198,7 @@ onclick="toggleDebugAndRefresh()"
                 localStorage.setItem(REMOVAL_KEY, updatedRemovalListJSON);
 
                 console.log(`[Gemini屏蔽] 成功手动添加 XPath: ${trimmedXPath}`);
+                //confirmndExecuteFC(`✅ XPath 已成功保存！\n路径: ${trimmedXPath}\n请刷新页面生效。`);
                 confirmndExecuteFC(`✅ XPath 已成功保存！\n路径: ${trimmedXPath}\n请刷新页面生效。`)
             } else {
                 //confirmndExecuteFC(`提示：该 XPath (${trimmedXPath}) 已存在于屏蔽列表中。`);
@@ -3340,6 +3210,9 @@ onclick="toggleDebugAndRefresh()"
             confirmndExecuteFC('❌ 保存 XPath 失败。请检查控制台获取详细信息。')
         }
     }
+
+
+
 
     // =================================================================
     // UI 函数：显示 XPath 输入悬浮窗 (已增加粘贴和清空按钮)
@@ -3467,7 +3340,7 @@ onclick="toggleDebugAndRefresh()"
         const isHostInDebugList = DEBUG_WEBLIST.some(domain => currentHost.includes(domain));
 
         // 1. 读取用户自定义的调试状态
-        let clickDebugState = localStorage.getItem('gemini_debug_element_click_mode') === 'true';
+        let clickDebugState = localStorage.getItem(DEBUG_CLICK_KEY) === 'true';
         let locationDebugState = localStorage.getItem(DEBUG_LOCATION_KEY) === 'true';
 
         // 2. V26.39.3 核心逻辑：判断是否在试列表中 且 没有被用户覆盖
@@ -3478,7 +3351,7 @@ onclick="toggleDebugAndRefresh()"
                 // 如果在调试列表中，且用户从未手动关闭过（即没有覆盖记录）
                 clickDebugState = true;
                 locationDebugState = true;
-                localStorage.setItem('gemini_debug_element_click_mode', 'true');
+                localStorage.setItem(DEBUG_CLICK_KEY, 'true');
                 localStorage.setItem(DEBUG_LOCATION_KEY, 'true');
                 console.log(`[Gemini屏蔽 V26.39.10] 🎯 域名 ${currentHost} 匹配调试列表，强制开启调试模式。`);
             } else {
@@ -3545,6 +3418,8 @@ onclick="toggleDebugAndRefresh()"
                 if (typeof body_build === 'function') {
                     try { body_build('false'); } catch (e) { }
                 }
+
+
 
 
             }
