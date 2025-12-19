@@ -865,6 +865,10 @@
                         <span style="font-weight: bold;">目标类型 (Tag):</span> ${elementInfo.tagName} 
                         <span style="font-weight: bold; margin-left: 10px;">尺寸:</span> ${elementInfo.width}x${elementInfo.height}px 
                     </div>
+
+                    <div style="word-break: break-all; margin-bottom: 5px;">
+                        <span style="font-weight: bold;">父级简述:</span> ${truncatedParent}
+                    </div>
                     
                     <div style="word-break: break-all; margin-bottom: 5px;">
                         <span style="font-weight: bold;">CSS 选择器:</span> ${truncatedCssSelector}
@@ -878,9 +882,7 @@
                         <span style="font-weight: bold;">Z/Opacity/Pos:</span> ${elementInfo.zIndex} / ${elementInfo.opacity} / ${elementInfo.position}
                     </div>
                     
-                    <div style="word-break: break-all; margin-bottom: 5px;">
-                        <span style="font-weight: bold;">父级简述:</span> ${truncatedParent}
-                    </div>
+                    
                     
                     <div style="word-break: break-all; margin-bottom: 5px;">
                         <span style="font-weight: bold;">内联 Click:</span> ${truncatedInlineClick}
@@ -1009,7 +1011,9 @@ onclick="toggleDebugAndRefresh()"
             </h3>
             <p style="margin-bottom: 10px; font-size: 14px; color: #555;">
                 直接从开发者工具右键 → Copy → selector 粘贴即可。<br>
-                支持多个选择器，用逗号或换行分隔。
+                支持多个选择器，用逗号或换行分隔。<a href="https://limbopro.com/archives/34813.html" target="_blank" style="
+    color: blue !important;
+">了解更多</a>
             </p>
             <p style="margin: 5px 0 10px; font-size: 12px; color: #777;">
                 示例：#ad-banner, .popup-overlay, div[data-ad], [class*="advert"]
@@ -1081,12 +1085,26 @@ onclick="toggleDebugAndRefresh()"
 
             let savedCount = 0;
             selectors.forEach(sel => {
+                /*
                 try {
                     document.querySelector(sel); // 简单校验
                     if (saveCssRemovalChoice(sel)) savedCount++;
                 } catch (e) {
                     console.warn(`[Gemini屏蔽 V27] 无效选择器（忽略）: ${sel}`);
+                }*/
+
+                // 重构
+                // 更严谨的 CSS 语法校验，不依赖页面是否存在该元素
+                
+                try {
+                    document.createDocumentFragment().querySelector(sel);
+                    if (saveCssRemovalChoice(sel)) savedCount++;
+                } catch (e) {
+                    console.warn(`[Gemini屏蔽 V27] 语法错误: ${sel}`);
                 }
+
+                // 重构
+
             });
 
             if (savedCount > 0) {
@@ -1101,6 +1119,156 @@ onclick="toggleDebugAndRefresh()"
 
         cancelButton.onclick = () => modal.remove();
     };
+
+
+    // === 1. 将工具封装为函数 ===
+    window.startSelectorTool = function () {
+        // 检查是否已经存在实例，防止重复启动
+        if (document.getElementById('selector-tool-style-final')) {
+            console.log("工具已在运行中");
+            return;
+        }
+
+        // --- 核心算法 ---
+        function getSmartSelector(el) {
+            if (!(el instanceof Element)) return "";
+            let path = [];
+            let current = el;
+            const MAX_DEPTH = 3;
+
+            while (current && path.length < MAX_DEPTH) {
+                let segment = current.nodeName.toLowerCase();
+                if (current.id) {
+                    segment += `#${CSS.escape(current.id)}`;
+                    path.unshift(segment);
+                    break;
+                }
+                if (current.classList.length > 0) {
+                    const classString = Array.from(current.classList)
+                        .map(cls => "." + CSS.escape(cls))
+                        .join("");
+                    segment += classString;
+                }
+                path.unshift(segment);
+                if (['body', 'html'].includes(current.nodeName.toLowerCase())) break;
+                current = current.parentElement;
+            }
+            return path.join(" > ");
+        }
+
+        // --- 强制样式注入 ---
+        const style = document.createElement('style');
+        style.id = 'selector-tool-style-final';
+        style.innerHTML = `
+        .sel-overlay { position: fixed; z-index: 2147483647; pointer-events: none; background: rgba(52, 152, 219, 0.2) !important; border: 2px dashed #3498db !important; transition: all 0.05s; display: none; }
+        .sel-result-window { 
+            position: fixed; top: 30%; left: 50%; transform: translateX(-50%); 
+            z-index: 2147483647; width: 420px; background: #ffffff !important; border-radius: 12px !important;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.4) !important; font-family: sans-serif !important; 
+            padding: 20px !important; border: 1px solid #ddd !important; display: none;
+        }
+        .sel-title { 
+    font-size: 14px !important; font-weight: bold !important; color: #333 !important; margin-bottom: 12px !important; display: block !important; 
+    }
+        .sel-code { 
+            background: #f8f9fa !important; color: #000 !important; padding: 12px !important; 
+            border-radius: 6px !important; font-family: monospace !important; word-break: break-all !important; 
+            font-size: 13px !important; border: 1px solid #ccc !important; max-height: 150px !important; 
+            overflow-y: auto !important; display: block !important; white-space: pre-wrap !important;
+        }
+        .sel-actions { margin-top: 15px !important; display: flex !important; flex-wrap: wrap !important; gap: 8px !important; }
+        .sel-btn { 
+            flex: 1; min-width: 80px; padding: 10px !important; border: none !important; border-radius: 6px !important; 
+            cursor: pointer !important; font-weight: bold !important; transition: 0.2s !important; font-size: 12px !important;
+        }
+        .sel-copy-btn { background: #3498db !important; color: #fff !important; flex: 2; }
+        .sel-reset-btn { background: #f39c12 !important; color: #fff !important; }
+        .sel-exit-btn { background: #e74c3c !important; color: #fff !important; }
+    `;
+        document.head.appendChild(style);
+
+        // --- UI 创建 ---
+        const overlay = document.createElement('div');
+        overlay.className = 'sel-overlay';
+        document.body.appendChild(overlay);
+
+        const resultWin = document.createElement('div');
+        resultWin.className = 'sel-result-window';
+        resultWin.innerHTML = `
+        <span class="sel-title">精准 Selector 结果:</span>
+        <code class="sel-code" id="sel-output"></code>
+        <div class="sel-actions">
+            <button class="sel-btn sel-copy-btn" id="sel-copy">复制</button>
+            <button class="sel-btn sel-reset-btn" id="sel-reset">重新选择</button>
+            <button class="sel-btn sel-exit-btn" id="sel-exit">退出工具</button>
+        </div>
+    `;
+        document.body.appendChild(resultWin);
+
+        // 拖拽
+
+
+        // 拖拽
+
+        const outputEl = resultWin.querySelector('#sel-output');
+
+        // --- 事件函数 ---
+        const onMove = (e) => {
+            if (resultWin.style.display === 'block') return;
+            const rect = e.target.getBoundingClientRect();
+            Object.assign(overlay.style, {
+                display: 'block', width: `${rect.width}px`, height: `${rect.height}px`,
+                top: `${rect.top}px`, left: `${rect.left}px`
+            });
+        };
+
+        const onClick = (e) => {
+            if (resultWin.style.display === 'block') return;
+            e.preventDefault(); e.stopPropagation();
+            outputEl.innerText = getSmartSelector(e.target);
+            overlay.style.borderStyle = 'solid';
+            resultWin.style.display = 'block';
+            document.body.style.cursor = 'default';
+        };
+
+        const destroyTool = () => {
+            document.removeEventListener('mousemove', onMove, true);
+            document.removeEventListener('click', onClick, true);
+            window.removeEventListener('keydown', handleKey);
+            document.body.style.cursor = 'default';
+            overlay.remove();
+            resultWin.remove();
+            style.remove(); // 同时移除样式
+        };
+
+        const resetMode = () => {
+            resultWin.style.display = 'none';
+            overlay.style.display = 'none';
+            overlay.style.borderStyle = 'dashed';
+            document.body.style.cursor = 'crosshair';
+        };
+
+        const handleKey = (e) => {
+            if (e.key === 'Escape') resetMode();
+        };
+
+        // --- 按钮绑定 ---
+        resultWin.querySelector('#sel-copy').onclick = () => {
+            navigator.clipboard.writeText(outputEl.innerText).then(() => {
+                const btn = resultWin.querySelector('#sel-copy');
+                btn.innerText = "已复制！";
+                setTimeout(() => btn.innerText = "复制", 1000);
+            });
+        };
+        resultWin.querySelector('#sel-reset').onclick = resetMode;
+        resultWin.querySelector('#sel-exit').onclick = destroyTool;
+
+        // --- 启动监听 ---
+        document.addEventListener('mousemove', onMove, true);
+        document.addEventListener('click', onClick, true);
+        window.addEventListener('keydown', handleKey);
+        document.body.style.cursor = 'crosshair';
+    }
 
 
     // V26.39.9: 移除 showCustomConfirmLocation
@@ -2024,6 +2192,9 @@ onclick="toggleDebugAndRefresh()"
                     <button id="debug-click-toggle" style="background: ${isDebuggingElementClick ? '#00c853' : '#ffc107'}; color: ${isDebuggingElementClick ? 'white' : '#333'}; border: none; padding: 8px 5px; cursor: pointer; border-radius: 4px; font-weight: bold; flex: 1; font-size: 12px;">
                         🛠️ 元素点击调试 (${isDebuggingElementClick ? '开' : '关'})
                     </button>
+                    <button id="selector-debug-click-toggle" style="background: #ffc107;color: #333;border: none;padding: 8px 5px;cursor: pointer;border-radius: 4px;font-weight: bold;flex: 1;font-size: 12px;">
+    ⚓ 元素CSS选择器获取(关)
+</button>
                     <button id="debug-location-toggle" style="background: ${isDebuggingLocationHooks ? '#00c853' : '#ffc107'}; color: ${isDebuggingLocationHooks ? 'white' : '#333'}; border: none; padding: 8px 5px; cursor: pointer; border-radius: 4px; font-weight: bold; flex: 1; font-size: 12px;">
                         ⚙️ JS 重定向调试 (${isDebuggingLocationHooks ? '开' : '关'})
                     </button>
@@ -2172,6 +2343,37 @@ onclick="toggleDebugAndRefresh()"
         if (localStorage.getItem('gemini-pin') == 'pinned') {
             document.getElementById('gemini-pin-btn').textContent = '📍'
         }
+
+        // === 2. 绑定到你的 HTML 按钮上并切换文本 ===
+        document.getElementById('selector-debug-click-toggle').addEventListener('click', function () {
+            const btn = this;
+            const originalText = "⚓ 元素CSS选择器获取"; // 你的原始按钮文字
+
+            // 如果工具已经运行，则不重复执行逻辑
+            if (document.getElementById('selector-tool-style-final')) {
+                return;
+            }
+
+            // 1. 修改按钮文字，告知用户已开启
+            btn.innerText = `${originalText}(开)`;
+            btn.style.background = 'rgb(0, 200, 83)'
+            //btn.style.color = "#3498db"; // 可选：给按钮文字上个色，增加视觉反馈
+
+            // 2. 启动工具
+            startSelectorTool();
+
+            // 3. 增强：拦截工具内的“退出”按钮，点击时恢复按钮文字
+            // 我们需要通过定时器或事件监听来捕获工具销毁的时机
+            const checkExit = setInterval(() => {
+                if (!document.getElementById('selector-tool-style-final')) {
+                    btn.innerText = `${originalText}(关)`;
+                    btn.style.background = '#ffc107'
+                    clearInterval(checkExit);
+                }
+            }, 500); // 每半秒检查一次工具是否还存在
+        });
+
+
 
         const tabCurrent = document.getElementById('tab-current');
         const tabIframe = document.getElementById('tab-iframe');
