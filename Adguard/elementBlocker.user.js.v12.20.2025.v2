@@ -864,28 +864,20 @@
                 <div style="color:black;font-size: 12px; background: #f8f9fa; padding: 12px; border-radius: 6px; margin-bottom: 20px; border-left: 4px solid #007bff;">
                     <strong style="color: #007bff; display: block; margin-bottom: 5px;">🚀 目标信息 (V26.39.6 - 增强):</strong>
                     <button onclick="window.showLinkTipsModalOnce()" id="tips" style="padding: 5px 5px 5px 5px; margin: 5px 5px 5px 0px; ">如何利用目标信息</button>
-                   
-
                     <div style="word-break: break-all; margin-bottom: 5px;">
-                        <span style="font-weight: bold;">目标元素:</span> ${truncatedCssSelector}
-                    </div>
-                    <div style="word-break: break-all; margin-bottom: 5px;">
-                                            <span style="font-weight: bold;">目标尺寸:</span> ${elementInfo.width}x${elementInfo.height}px 
+                        <span style="font-weight: bold;">目标类型 (Tag):</span> ${elementInfo.tagName} 
+                        <span style="font-weight: bold; margin-left: 10px;">尺寸:</span> ${elementInfo.width}x${elementInfo.height}px 
                     </div>
 
-
                     <div style="word-break: break-all; margin-bottom: 5px;">
-                        <span style="font-weight: bold;">父元素:</span> ${truncatedParent}
+                        <span style="font-weight: bold;">父级简述:</span> ${truncatedParent}
                     </div>
                     
-                   
-
-
                     <div style="word-break: break-all; margin-bottom: 5px;">
-        <span style="font-weight: bold;">精确路径(nth-child):</span> ${safeTruncate(elementInfo.preciseSelector, 10000)}
-    </div>
-
-     <div style="word-break: break-all; margin-bottom: 5px;">
+                        <span style="font-weight: bold;">CSS 选择器:</span> ${truncatedCssSelector}
+                    </div>
+                    
+                    <div style="word-break: break-all; margin-bottom: 5px;">
                         <span style="font-weight: bold;">链接 (Href):</span> ${truncatedHref}
                     </div>
 
@@ -1146,7 +1138,7 @@ onclick="toggleDebugAndRefresh()"
         }
 
         // 2. 核心算法 (nth-child + ID 终结)
-        window.getSmartSelector = function getSmartSelector(el) {
+        function getSmartSelector(el) {
             if (!(el instanceof Element)) return "";
             let path = [];
             let current = el;
@@ -3151,103 +3143,6 @@ onclick="toggleDebugAndRefresh()"
     const ALLOW_ONCE_ATTRIBUTE = 'data-gemini-allow';
 
     function applyClickDebugFilter(doc) {
-
-
-
-
-
-
-  /**
- * 通用解：属性特征 + 严格同名标签计数
- */
-function getSmartSelector_w(el) {
-    if (!(el instanceof Element)) return "";
-
-    const tagName = el.tagName.toLowerCase();
-
-    // --- 1. 提取目标元素自身的强特征 (自身属性) ---
-    function getElementUniqueAttr(element) {
-        const tag = element.tagName.toLowerCase();
-        // 优先级：title > name > data-属性 > src(文件名) > href(末尾)
-        const title = element.getAttribute('title');
-        if (title) return `${tag}[title*="${CSS.escape(title.substring(0, 6))}"]`;
-
-        const dataId = Array.from(element.attributes).find(a => a.name.startsWith('data-'));
-        if (dataId) return `${tag}[${dataId.name}="${CSS.escape(dataId.value)}"]`;
-
-        if (tag === 'img' && element.src) {
-            const fileName = element.src.split('/').pop().split(/[?#]/)[0];
-            if (fileName && fileName.length > 4) return `img[src*="${CSS.escape(fileName)}"]`;
-        }
-
-        if (tag === 'a' && element.href) {
-            const part = element.href.split('/').filter(p => p).pop();
-            if (part && part.length > 3) return `a[href*="${CSS.escape(part)}"]`;
-        }
-        
-        return null;
-    }
-
-    // --- 2. 遍历父级节点并寻找锚点 ---
-    let path = [];
-    let current = el;
-    let depth = 0;
-
-    while (current && current.nodeType === Node.ELEMENT_NODE && depth < 5) {
-        let segment = current.nodeName.toLowerCase();
-        
-        // 检查当前层级是否有强特征属性
-        const strongAttrSelector = getElementUniqueAttr(current);
-        
-        // 如果是 ID，直接截断并返回
-        if (current.id && !/^\d+$/.test(current.id)) {
-            segment = `#${CSS.escape(current.id)}`;
-            path.unshift(segment);
-            break; 
-        } 
-        
-        // 如果在当前层级找到了强属性（如 a[href*="KNB-391"]），作为起始锚点
-        if (strongAttrSelector && current !== el) {
-            path.unshift(strongAttrSelector);
-            break;
-        }
-
-        // --- 3. 统计同名标签的兄弟节点 (解决 nth-of-type 计数问题) ---
-        if (current.parentElement) {
-            const siblings = Array.from(current.parentElement.children);
-            const sameTagSiblings = siblings.filter(s => s.nodeName === current.nodeName);
-            
-            if (sameTagSiblings.length > 1) {
-                const index = sameTagSiblings.indexOf(current) + 1;
-                segment += `:nth-of-type(${index})`;
-            }
-        }
-
-        // 如果是目标元素本身，且有强属性，直接用强属性代替标签名
-        if (current === el && strongAttrSelector) {
-            segment = strongAttrSelector;
-        }
-
-        path.unshift(segment);
-        if (['body', 'html'].includes(current.nodeName.toLowerCase())) break;
-        
-        current = current.parentElement;
-        depth++;
-    }
-
-    // --- 4. 路径净化 ---
-    // 如果路径中包含锚点，我们可以缩短路径（例如 a[...] button[...]）
-    if (path.length > 1 && path[0].includes('[')) {
-        // 保留锚点和目标元素，中间如果层级过多则简化
-        return `${path[0]} ${path[path.length - 1]}`;
-    }
-
-    return path.join(" > ");
-}
-
-        
-
-
         if (!doc || doc.gemini_click_debug_listener_attached) {
             return;
         }
@@ -3302,18 +3197,9 @@ function getSmartSelector_w(el) {
                 const rect = targetElement.getBoundingClientRect();
                 const computedStyle = targetElement.ownerDocument.defaultView.getComputedStyle(targetElement);
                 const parentElement = targetElement.parentElement;
-
-                /*
                 const parentInfo = parentElement
-                    ? `${parentElement.tagName}${parentElement.id || ''}${'.' + parentElement.className.split(' ')[0] || ''}`
+                    ? `${parentElement.tagName}#${parentElement.id || ''}.${parentElement.className.split(' ')[0] || ''}`
                     : '[无父级]';
-                    */
-
-                // ⬇️ 修改后的逻辑
-                const parentInfo = parentElement
-                    ? `${parentElement.tagName}${(parentElement.classList && parentElement.classList.length > 0) ? '.' + parentElement.classList[0] : ''}`
-                    : '[无父级]';
-
                 // 检查主要的内联事件处理器
                 const inlineClick = targetElement.getAttribute('onclick') ||
                     targetElement.getAttribute('onmous edown') ||
@@ -3333,7 +3219,6 @@ function getSmartSelector_w(el) {
                     position: computedStyle.position,
                     parent: parentInfo,
                     inlineClick: inlineClick,
-                    preciseSelector: getSmartSelector_w(targetElement),   // 包含 nth-child 的精确选择器 [新属性]
                 };
 
 
