@@ -17,15 +17,53 @@
 
 //document.cookie = "googtrans=/auto/zh-CN; path=/";
 
+
+// 全局转换带br的段落
+
+function formatWholeDom(root = document.body) {
+    // 1. 找出所有直接包含 br 的元素
+    // 使用 TreeWalker 或 querySelectorAll 效率较高
+    const containers = Array.from(root.querySelectorAll('*')).filter(el => {
+        // 只处理直接子节点包含 br 的元素，避免重复嵌套处理
+        return el.children.length > 0 &&
+            Array.from(el.childNodes).some(node => node.nodeName === 'BR') &&
+            !['SCRIPT', 'STYLE', 'TEXTAREA', 'INPUT'].includes(el.tagName);
+    });
+
+    containers.forEach(container => {
+        // 获取 HTML 内容
+        const rawHTML = container.innerHTML;
+
+        // 按照一个或多个 br 进行切割
+        const parts = rawHTML.split(/(?:<br\s*\/?>)+/i);
+
+        // 如果切割后的片段多于 1 个，说明需要重组
+        if (parts.length > 1) {
+            const newHTML = parts
+                .map(part => part.trim())
+                .filter(part => part !== "") // 过滤掉空段落
+                .map(part => `<p style="margin-bottom: 1em; display: block;">${part}</p>`)
+                .join('');
+
+            if (newHTML) {
+                container.innerHTML = newHTML;
+            }
+        }
+    });
+}
+
+
+
+
 window.loadGoogleTranslateUI = async function () {
     return new Promise((resolve) => {
+
         const uiContainerId = 'google_translate_element';
-        const successSelector = '.skiptranslate.goog-te-gadget';
+        const successSelector = '.goog-te-gadget';
         const translationButton = document.getElementById("translation-button");
-        const ybyfyvalue = translationButton?.classList?.contains('translated');
 
         // --- 1. 预检查：如果 UI 已存在且符合状态，直接返回成功 ---
-        if (document.getElementById(uiContainerId)/*&& document.querySelector(successSelector) && ybyfyvalue*/) {
+        if (document.querySelector(successSelector)) {
             console.log("翻译组件已在运行中，跳过初始化。");
             return resolve(true);
         }
@@ -123,27 +161,43 @@ window.applyDualWrapperProtection = function () {
                 /** 重构 */
 
                 acceptNode: node => {
-                    const forbiddenSelectors = '.notranslate, .cjsfy-original, .cjsfy-translated, .Original, .spacer, font[dir], svg, video';
-                    const excludedTags = 'script, style, noscript, textarea';
 
-                    const el = (node.nodeType === 1) ? node : node.parentElement;
-                    if (!el || typeof el.closest !== 'function') return NodeFilter.FILTER_REJECT;
+                    const text = node.nodeValue.trim();
+                    if (!text) return NodeFilter.FILTER_REJECT;
 
-                    // 核心改进：一旦命中任何禁区，立即拒绝整个分支
-                    if (el.closest(forbiddenSelectors) || el.closest(excludedTags)) {
+                    // 1. 纯数字或符号 (例如 123.45)
+                    const pureNumericOrSymbolic = /^\s*[\d\s.,]+\s*$/.test(text)
+                    if (pureNumericOrSymbolic) {
                         return NodeFilter.FILTER_REJECT;
                     }
 
-                    if (el.dataset && el.dataset._textDuplicated === 'true') return NodeFilter.FILTER_REJECT;
+                    // 2. 日期格式 (例如 2025-12-12)
+                    const dateformat = /\b(\d{1,4}[-\/.]\d{1,2}[-\/.]\d{1,4})\b/.test(text)
+                    if (dateformat) {
+                        return NodeFilter.FILTER_REJECT;
+                    }
 
-                    const text = (node.nodeType === 3 ? node.nodeValue : node.innerText || "").trim();
-                    if (text.length < 2) return NodeFilter.FILTER_REJECT;
+                    // **【新增过滤规则：纯时间格式 (例如 45:00, 1:23:45)】**
+                    const timeFormat = /^\s*(\d{1,2}:\d{2}(:\d{2})?)\s*$/.test(text);
+                    if (timeFormat) {
+                        return NodeFilter.FILTER_REJECT;
+                    }
 
-                    // 正则检查保持不变...
-                    if (/^\s*[\d\s.,]+\s*$/.test(text)) return NodeFilter.FILTER_REJECT;
-                    if (/\b(\d{1,4}[-\/.]\d{1,2}[-\/.]\d{1,4})\b/.test(text)) return NodeFilter.FILTER_REJECT;
-                    if (/^\s*(\d{1,2}:\d{2}(:\d{2})?)\s*$/.test(text)) return NodeFilter.FILTER_REJECT;
+                    const parent = node.parentElement;
 
+                    if (!parent) return NodeFilter.FILTER_REJECT;
+
+                    const excludedTags = 'script, style, noscript, textarea';
+                    if (parent.closest(excludedTags)) {
+                        return NodeFilter.FILTER_REJECT;
+                    }
+
+                    if (parent.closest('.notranslate, .cjsfy-original, .cjsfy-translated, font[dir], svg, video')) {
+                        return NodeFilter.FILTER_REJECT;
+                    }
+
+                    if (parent.dataset._textDuplicated) return NodeFilter.FILTER_REJECT;
+                    if (text.length < 2) return NodeFilter.FILTER_REJECT; // 字符长度
                     return NodeFilter.FILTER_ACCEPT;
                 }
 
@@ -164,6 +218,7 @@ window.applyDualWrapperProtection = function () {
             });
         }
 
+
         // 2. 统一处理：创建并插入 双包裹体 + 分隔符
         const results = [];
         targetsToProcess.forEach(({ originalText, target }, i) => {
@@ -171,14 +226,6 @@ window.applyDualWrapperProtection = function () {
             function wrapTarget() { // 打包函数开始 包裹 对于普通节点
                 console.log(target.innerText)
                 // 1. 创建 原文副本 (克隆：保留原结构和内容)
-
-
-                // --- 新增：处理包含 BR 的情况 ---
-                if (target.querySelector('br')) {
-                    // 但需要稍作修改，使其返回拆分后的新节点
-                    splitAndWrapBrElement(target);
-                    return;
-                }
 
                 const originalWrapper = target.cloneNode(true);
                 originalWrapper.classList.add('notranslate', 'Original', 'ori');
@@ -212,7 +259,6 @@ window.applyDualWrapperProtection = function () {
 
 
 
-
             // 克隆函数开始
 
             window.cloneThat = function cloneAndModifyElements(originalElements) { // 对于含有 br 的节点
@@ -237,7 +283,6 @@ window.applyDualWrapperProtection = function () {
             wrapTarget(target)
 
         });
-
 
 
         console.log(`%c 成功为 ${results.length} 个元素创建了双包裹结构`,
@@ -298,45 +343,7 @@ window.applyDualWrapperProtection = function () {
 
 // 拆分函数开始 拆分 含有 br 的节点 转为 p
 
-window.splitAndWrapBrElement = function (target) {
-    // 1. 获取内部 HTML 并按 BR 拆分
-    const lines = target.innerHTML.split(/<br\s*\/?>/i);
-    if (lines.length <= 1) return; // 如果没有实际拆分出多行则跳过
 
-    // 2. 清空原容器
-    target.innerHTML = '';
-    target.dataset._textDuplicated = 'true';
-
-    lines.forEach(lineContent => {
-        const trimmed = lineContent.trim();
-        if (!trimmed) return;
-
-        // 3. 为每一行创建一个行容器 (Line Container)
-        const row = document.createElement('div');
-        row.className = 'cjsfy-row-wrapper';
-        row.style.display = 'block'; // 确保换行
-
-        // 4. 创建该行的原文层
-        const ori = document.createElement('div');
-        ori.className = 'notranslate Original ori';
-        ori.innerHTML = trimmed;
-
-        // 5. 创建分隔符
-        const spacer = document.createElement('p');
-        spacer.className = 'spacer';
-
-        // 6. 创建该行的译文层
-        const trans = document.createElement('div');
-        trans.className = 'cjsfy-translated';
-        trans.innerHTML = trimmed;
-
-        // 7. 组装
-        row.appendChild(ori);
-        row.appendChild(spacer);
-        row.appendChild(trans);
-        target.appendChild(row);
-    });
-};
 
 // 拆分br函数结束
 
@@ -381,17 +388,6 @@ function createFloatingButton() {
     const cssFileUrl = 'https://limbopro.com/CSS/Adblock4limbo.user.css'; // 含 Adguard 通用广告元素选择器 看外网网页会非常干净
     loadExternalCss(cssFileUrl);
     const css = `
-
-    /* 在 createFloatingButton 的 css 变量中添加 */
-    .cjsfy-row-wrapper {
-    margin-bottom: 0.5em; /* 行间距 */
-    }
-
-    /* 确保原文和译文块级显示，以便谷歌翻译处理 */
-    .cjsfy-translated, .Original {
-    display: block !important;
-    }
-
 
     /* 该死的广告 */
     .Ad-label,
@@ -690,7 +686,7 @@ window.skiptrans = function () {
     const cjsfytraLength = document.querySelectorAll(".notranslate.ori").length;
     if (googletraLength > 0 && (googletraLength / cjsfytraLength) > 3) {
         console.log('正在重载🔃...' + "googletraLength: " + googletraLength + "; cjsfytraLength: " + cjsfytraLength)
-        forceHardReload()
+        //forceHardReload()
     } else {
         console.log('无需重载🔃...' + "googletraLength: " + googletraLength + "; cjsfytraLength: " + cjsfytraLength)
     }
@@ -899,6 +895,9 @@ window.stopGoogleTranslate = function stopGoogleTranslate() {
 
 
 
+
+
+
 /**
  * 持久监听 DOM 变动：每当页面静止超过 waitTime 毫秒，执行 ybyfy()
  */
@@ -912,25 +911,6 @@ window.keepYbyfyAlive = function keepYbyfyAlive(waitTime = 1000) {
         // 只要有变动，就清除旧的计时器
 
         mutations.forEach((mutation) => {
-
-            /** 重构 */
-
-            mutation.addedNodes.forEach((node) => {
-                if (node.nodeType === 1) {
-                    // 【关键】判断是否是脚本自己生成的节点
-                    const isInternal = node.matches('.cjsfy-translated, .Original, .spacer');
-                    const isInsideManaged = node.closest('[data-_text-duplicated="true"], [data-_text-duplicated="pending"]');
-
-                    if (isInternal || isInsideManaged) {
-                        return; // 脚本内部生成的变动，直接忽略，不要进入 ybyfy 循环
-                    }
-
-                    // 只有真正的网页新内容才加锁并等待 ybyfy
-                    node.classList.add('skiptranslate', 'is-processing');
-                }
-            });
-
-            /* 
             mutation.addedNodes.forEach((node) => {
                 const hasCjsfy = node?.classList?.contains('cjsfy-translated');
                 const hasOriginal = node?.classList?.contains('Original');
@@ -944,12 +924,7 @@ window.keepYbyfyAlive = function keepYbyfyAlive(waitTime = 1000) {
                     console.log("正在处理原始节点:", node.innerText);
                 }
             });
-
-            */
-
         });
-
-
 
         if (timer) {
             clearTimeout(timer)
@@ -1189,4 +1164,5 @@ window.initAdblockLoader = function initAdblockLoader() {
 }
 
 // 启动加载器
+formatWholeDom()
 initAdblockLoader();
