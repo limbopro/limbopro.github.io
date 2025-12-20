@@ -1191,163 +1191,91 @@ onclick="toggleDebugAndRefresh()"
             return;
         }
 
-
-
-        // 2. 核心算法 (nth-child + ID 终结) 开始
-
-
-
-
-
-
-
-        /**
- * 获取元素的精准且鲁棒的选择器
- * @param {HTMLElement} el - 目标元素
- * @param {boolean} isAncestor - 是否是回溯过程中的祖先节点
- */
-        window.getSmartSelector = function getSmartSelector(el, isAncestor = false) {
-            if (!el || el.nodeType !== Node.ELEMENT_NODE) return null;
-
-            const tagName = el.tagName.toLowerCase();
-
-            // --- 优先级 1: 特征属性 (Data Attributes / ARIA) ---
-            const robustAttrs = ['data-testid', 'data-qa', 'data-cy', 'name', 'aria-label'];
-            for (let attr of robustAttrs) {
-                const val = el.getAttribute(attr);
-                if (val) {
-                    const selector = `${tagName}[${attr}="${val}"]`;
-                    if (isUnique(selector)) return selector;
-                    // 如果不唯一，尝试作为局部片段
-                    return selector;
+        // 2. 核心算法 (nth-child + ID 终结)
+        window.getSmartSelector = function getSmartSelector(el) {
+            if (!(el instanceof Element)) return "";
+            let path = [];
+            let current = el;
+            while (current) {
+                let segment = current.nodeName.toLowerCase();
+                if (current.id) {
+                    segment += `#${CSS.escape(current.id)}`;
+                    path.unshift(segment);
+                    break;
                 }
-            }
-
-            // --- 优先级 2: ID 锚点 (排除动态 ID) ---
-            if (el.id && !isDynamicIdentifier(el.id)) {
-                const idSelector = `#${el.id}`;
-                if (isUnique(idSelector)) return idSelector;
-            }
-
-            // --- 优先级 3: 稳定的 Class 组合 ---
-            let classList = Array.from(el.classList)
-                .filter(cls => !isDynamicIdentifier(cls)) // 过滤动态/状态类名
-                .filter(cls => !/^(active|hover|focus|selected|disabled)$/i.test(cls));
-
-            let classSelector = classList.length > 0
-                ? `${tagName}.${classList.join('.')}`
-                : tagName;
-
-            if (isUnique(classSelector)) return classSelector;
-
-            // --- 优先级 4: 位置兜底 (nth-of-type) ---
-            let nthSelector = classSelector;
-            const parent = el.parentElement;
-            if (parent) {
-                const siblings = Array.from(parent.children).filter(s => s.tagName === el.tagName);
-                if (siblings.length > 1) {
-                    const index = siblings.indexOf(el) + 1;
-                    nthSelector += `:nth-of-type(${index})`;
+                let index = 1, sib = current.previousElementSibling;
+                while (sib) { index++; sib = sib.previousElementSibling; }
+                if (current.parentElement && current.parentElement.children.length > 1) {
+                    segment += `:nth-child(${index})`;
                 }
-            }
-
-            // --- 验证与修复逻辑 ---
-            if (isUnique(nthSelector)) {
-                return nthSelector;
-            } else {
-                // 如果当前节点选择器在全局不唯一，递归向上寻找父级作为前缀修复
-                if (parent && parent.tagName.toLowerCase() !== 'html') {
-                    const parentSelector = getSmartSelector(parent, true);
-                    // 使用 > 连接保证结构精准，或使用空格增加灵活性（此处用 > 保证精准）
-                    const refinedSelector = `${parentSelector} > ${nthSelector}`;
-                    return refinedSelector;
+                if (current.classList.length > 0) {
+                    segment += "." + Array.from(current.classList).map(c => CSS.escape(c)).join(".");
                 }
+                path.unshift(segment);
+                if (path.length >= 5 || ['body', 'html'].includes(current.nodeName.toLowerCase())) break;
+                current = current.parentElement;
             }
-
-            return nthSelector;
+            return path.join(" > ");
         }
 
-        /**
-         * 验证选择器在当前文档中是否唯一
-         */
-        function isUnique(selector) {
-            try {
-                return document.querySelectorAll(selector).length === 1;
-            } catch (e) {
-                return false;
-            }
-        }
-
-        /**
-         * 判断标识符（ID或Class）是否为动态生成的
-         * 逻辑：包含过多数字、长度过长、包含特定框架特征
-         */
-        function isDynamicIdentifier(str) {
-            if (!str) return true;
-            const hasManyNumbers = (str.match(/\d/g) || []).length > 3;
-            const isTooLong = str.length > 20;
-            const isHexLike = /[a-f0-9]{8,}/.test(str); // 类似哈希值
-            return hasManyNumbers || isTooLong || isHexLike;
-        }
-
-        // --- 使用示例 ---
-        // document.addEventListener('click', (e) => {
-        //     e.preventDefault();
-        //     const selector = getSmartSelector(e.target);
-        //     console.log("精确定位选择器:", selector);
-        // });
-
-
-
-
-
-
-
-        // 2. 核心算法 (nth-child + ID 终结) 结束
 
         // --- 强制样式注入 ---
         const style = document.createElement('style');
         style.id = 'selector-tool-style-final';
         style.innerHTML = `
-        .sel-overlay { 
-            position: fixed; z-index: 2147483647; pointer-events: none; 
-            background: rgba(52, 152, 219, 0.2) !important; 
-            border: 2px dashed #3498db !important; transition: all 0.05s; display: none; 
-        }
-        .sel-result-window { 
-            position: fixed; top: 20%; left: 50%; transform: translateX(-50%); 
-            z-index: 114119; width: 90%; max-width: 450px; 
-            background: #ffffff !important; border-radius: 12px !important;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.4) !important; font-family: sans-serif !important; 
-            padding: 16px !important; border: 1px solid #ddd !important; display: none;
-            box-sizing: border-box !important; touch-action: none !important; 
-            user-select: none !important; -webkit-user-select: none !important;
-        }
-        .sel-title { 
-            font-size: 14px !important; font-weight: bold !important; color: #333 !important; 
-            margin-bottom: 12px !important; display: block !important; 
-            cursor: move !important; padding: 10px 0 !important; border-bottom: 1px solid #eee !important;
-        }
-        .sel-code { 
-            background: #f8f9fa !important; color: #d63384 !important; padding: 12px !important; 
-            border-radius: 6px !important; font-family: monospace !important; word-break: break-all !important; 
-            font-size: 13px !important; border: 1px solid #ccc !important; max-height: 150px !important; 
-            overflow-y: auto !important; display: block !important; white-space: pre-wrap !important;
-            user-select: text !important; -webkit-user-select: text !important;
-        }
-        .sel-actions { margin-top: 15px !important; display: flex !important; flex-wrap: wrap !important; gap: 8px !important; }
-        .sel-btn { 
-            flex: 1; min-width: 60px; min-height: 40px;
-            padding: 5px !important; border: none !important; border-radius: 8px !important; 
-            cursor: pointer !important; font-weight: bold !important; font-size: 12px !important;
-        }
-        .sel-copy-btn { background: #3498db !important; color: #fff !important; }
-        .sel-edit-btn { background: #673ab7 !important; color: #fff !important; }
-        .sel-block-btn { background: #f39c12 !important; color: #fff !important; }
-        .sel-reset-btn { background: #95a5a6 !important; color: #fff !important; }
-        .sel-exit-btn { background: #e74c3c !important; color: #fff !important; }
-        @media (max-width: 600px) { .sel-result-window { top: auto; bottom: 40px; } }
-    `;
+    /* 建议放在 startSelectorTool 函数内部注入 */
+.sel-overlay { 
+    position: fixed; z-index: 2147483647; pointer-events: none; 
+    background: rgba(52, 152, 219, 0.2) !important; 
+    border: 2px dashed #3498db !important; transition: all 0.05s; display: none; 
+}
+
+.sel-result-window { 
+    position: fixed; top: 20%; left: 50%; transform: translateX(-50%); 
+    z-index: 114119; width: 90%; max-width: 420px; 
+    background: #ffffff !important; border-radius: 12px !important;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.4) !important; font-family: sans-serif !important; 
+    padding: 16px !important; border: 1px solid #ddd !important; display: none;
+    /* 核心：防止拖拽时形变和内容溢出 */
+    box-sizing: border-box !important;
+    touch-action: none !important; 
+    user-select: none !important;
+    -webkit-user-select: none !important;
+}
+
+.sel-title { 
+    font-size: 14px !important; font-weight: bold !important; color: #333 !important; 
+    margin-bottom: 12px !important; display: block !important; 
+    cursor: move !important; padding: 10px 0 !important;
+    border-bottom: 1px solid #eee !important;
+}
+
+.sel-code { 
+    background: #f8f9fa !important; color: #d63384 !important; padding: 12px !important; 
+    border-radius: 6px !important; font-family: monospace !important; word-break: break-all !important; 
+    font-size: 13px !important; border: 1px solid #ccc !important; max-height: 150px !important; 
+    overflow-y: auto !important; display: block !important; white-space: pre-wrap !important;
+}
+
+.sel-actions { 
+    margin-top: 15px !important; display: flex !important; flex-wrap: wrap !important; gap: 10px !important; 
+}
+
+.sel-btn { 
+    flex: 1; min-width: 70px; min-height: 44px; /* 移动端大点击区域 */
+    padding: 8px !important; border: none !important; border-radius: 8px !important; 
+    cursor: pointer !important; font-weight: bold !important; font-size: 13px !important;
+}
+
+.sel-copy-btn { background: #3498db !important; color: #fff !important; flex: 2; }
+.sel-reset-btn { background: #f39c12 !important; color: #fff !important; }
+.sel-exit-btn { background: #e74c3c !important; color: #fff !important; }
+
+/* 移动端特定布局 */
+@media (max-width: 600px) {
+    .sel-result-window { top: auto; bottom: 40px; }
+}
+`;
         document.head.appendChild(style);
 
         // --- UI 创建 ---
@@ -1358,57 +1286,148 @@ onclick="toggleDebugAndRefresh()"
         const resultWin = document.createElement('div');
         resultWin.className = 'sel-result-window notranslate';
         resultWin.innerHTML = `
-        <span class="sel-title">精确CSS选择器(Smart Path):</span>
+        <span class="sel-title">精确CSS选择器(Base ID & nth-child()):</span>
         <code class="sel-code" id="sel-output"></code>
         <div class="sel-actions">
             <button class="sel-btn sel-copy-btn" id="sel-copy">复制</button>
-            <button class="sel-btn sel-edit-btn" id="sel-edit">修改</button>
-            <button class="sel-btn sel-block-btn" id="sel-block">屏蔽</button>
-            <button class="sel-btn sel-reset-btn" id="sel-reset">重选</button>
-            <button class="sel-btn sel-exit-btn" id="sel-exit">退出</button>
+            <button class="sel-btn" style="background:#f39c12" id="sel-block">屏蔽</button>
+            <button class="sel-btn sel-reset-btn" id="sel-reset">重新选择</button>
+            <button class="sel-btn sel-exit-btn" id="sel-exit">退出工具</button>
         </div>
     `;
+
         document.body.appendChild(resultWin);
 
-        const outputEl = resultWin.querySelector('#sel-output');
-        const editBtn = resultWin.querySelector('#sel-edit');
 
-        // --- 拖拽实现 ---
+        // 新增屏蔽按钮 START
+
+
+        // 2. 绑定“屏蔽”按钮点击事件
+        document.getElementById('sel-block').onclick = () => {
+            const sel = document.getElementById('sel-output').innerText;
+
+            // 如果还没获取到选择器，不执行
+            if (!sel || sel === '点击页面元素获取...') {
+                alert('请先点击页面元素！');
+                return;
+            }
+
+            let savedCount = 0;
+            // --- 你提供的屏蔽逻辑核心 ---
+            try {
+                // 使用 DocumentFragment 验证 CSS 语法合法性，无需元素真实存在
+                document.createDocumentFragment().querySelector(sel);
+
+                // 调用你的存储/屏蔽函数 (请确保 saveCssRemovalChoice 已定义)
+                if (typeof saveCssRemovalChoice === 'function') {
+                    if (saveCssRemovalChoice(sel)) {
+                        savedCount++;
+                        //alert(`屏蔽成功！已加入规则库。`);
+
+                        confirmndExecuteFC(`✅ 成功保存 ${savedCount} 个 CSS 选择器！是否立即刷新页面应用新规则？`, () => { location.reload() })
+                    } else {
+                        confirmndExecuteFC(`${sel} 已屏蔽...`)
+                    }
+                } else {
+                    console.error('[错误] 找不到 saveCssRemovalChoice 函数');
+                    // 如果函数未定义，至少在控制台给你个提示
+                    console.log(`拟屏蔽的选择器: ${sel}`);
+                    confirmndExecuteFC(`${sel} 已屏蔽...`)
+                }
+            } catch (e) {
+                confirmndExecuteFC('生成的选择器语法有误，无法屏蔽。')
+                console.warn(`[Gemini屏蔽 V27] 语法错误: ${sel}`);
+                // alert('生成的选择器语法有误，无法屏蔽。');
+            }
+        };
+
+        // 新增屏蔽按钮 END
+
+        // 拖拽 START
+
+
+
+
+        // --- 核心：抗拉伸拖拽实现 ---
         const dragHandle = resultWin.querySelector('.sel-title');
         let isDragging = false;
         let startPos = { x: 0, y: 0 };
-        const getCoords = (e) => (e.touches ? e.touches[0] : e);
+        let scrollOffset = { x: 0, y: 0 };
+
+        const getCoords = (e) => {
+            const t = e.touches ? e.touches[0] : e;
+            return { x: t.clientX, y: t.clientY };
+        };
+
         const onDragStart = (e) => {
+            // 允许点击按钮，只在标题处触发拖拽
             if (e.target !== dragHandle) return;
+
             const coords = getCoords(e);
             const rect = resultWin.getBoundingClientRect();
+
+            // 记录鼠标/手指相对于窗口左上角的偏移
             startPos.x = coords.x - rect.left;
             startPos.y = coords.y - rect.top;
+
+            // --- 关键：锁定宽高并清除所有定位锚点，防止拉伸 ---
             Object.assign(resultWin.style, {
-                width: rect.width + 'px', height: rect.height + 'px',
-                left: rect.left + 'px', top: rect.top + 'px',
-                bottom: 'auto', right: 'auto', transform: 'none', margin: '0'
+                width: rect.width + 'px',   // 锁定当前像素宽度
+                height: rect.height + 'px', // 锁定当前像素高度
+                left: rect.left + 'px',
+                top: rect.top + 'px',
+                bottom: 'auto',             // 必须清除 bottom，防止向上拖拽时被拉伸
+                right: 'auto',              // 必须清除 right
+                transform: 'none',          // 清除居中的 translate
+                margin: '0'
             });
+
             isDragging = true;
             if (e.cancelable) e.preventDefault();
         };
+
         const onDragMove = (e) => {
             if (!isDragging) return;
+
             const coords = getCoords(e);
+
+            // 计算新位置
             let newX = coords.x - startPos.x;
             let newY = coords.y - startPos.y;
-            resultWin.style.left = Math.max(0, Math.min(newX, window.innerWidth - resultWin.offsetWidth)) + 'px';
-            resultWin.style.top = Math.max(0, Math.min(newY, window.innerHeight - resultWin.offsetHeight)) + 'px';
+
+            // 边界限制：防止拖出屏幕
+            const maxX = window.innerWidth - resultWin.offsetWidth;
+            const maxY = window.innerHeight - resultWin.offsetHeight;
+            newX = Math.max(0, Math.min(newX, maxX));
+            newY = Math.max(0, Math.min(newY, maxY));
+
+            resultWin.style.left = newX + 'px';
+            resultWin.style.top = newY + 'px';
         };
-        const onDragEnd = () => { isDragging = false; };
+
+        const onDragEnd = () => {
+            isDragging = false;
+        };
+
+        // 绑定事件 (PC + 移动端)
         dragHandle.addEventListener('mousedown', onDragStart);
         dragHandle.addEventListener('touchstart', onDragStart, { passive: false });
+
         window.addEventListener('mousemove', onDragMove);
         window.addEventListener('touchmove', onDragMove, { passive: false });
+
         window.addEventListener('mouseup', onDragEnd);
         window.addEventListener('touchend', onDragEnd);
 
-        // --- 核心交互逻辑 ---
+
+
+
+
+        // 拖拽
+
+        const outputEl = resultWin.querySelector('#sel-output');
+
+        // --- 事件函数 ---
         const onMove = (e) => {
             if (resultWin.style.display === 'block') return;
             const rect = e.target.getBoundingClientRect();
@@ -1427,78 +1446,44 @@ onclick="toggleDebugAndRefresh()"
             document.body.style.cursor = 'default';
         };
 
+        const destroyTool = () => {
+            document.removeEventListener('mousemove', onMove, true);
+            document.removeEventListener('click', onClick, true);
+            window.removeEventListener('keydown', handleKey);
+            document.body.style.cursor = 'default';
+            overlay.remove();
+            resultWin.remove();
+            style.remove(); // 同时移除样式
+        };
+
         const resetMode = () => {
             resultWin.style.display = 'none';
             overlay.style.display = 'none';
             overlay.style.borderStyle = 'dashed';
             document.body.style.cursor = 'crosshair';
-            // 重置编辑状态
-            outputEl.contentEditable = 'false';
-            outputEl.style.outline = 'none';
-            editBtn.innerText = "修改";
-            editBtn.style.background = "#673ab7";
         };
 
-        const destroyTool = () => {
-            document.removeEventListener('mousemove', onMove, true);
-            document.removeEventListener('click', onClick, true);
-            overlay.remove(); resultWin.remove(); style.remove();
-            document.body.style.cursor = 'default';
+        const handleKey = (e) => {
+            if (e.key === 'Escape') resetMode();
         };
 
-        // --- 按钮功能绑定 ---
+        // --- 按钮绑定 ---
         resultWin.querySelector('#sel-copy').onclick = () => {
             navigator.clipboard.writeText(outputEl.innerText).then(() => {
                 const btn = resultWin.querySelector('#sel-copy');
-                btn.innerText = "已复制";
+                btn.innerText = "已复制！";
                 setTimeout(() => btn.innerText = "复制", 1000);
             });
         };
-
-        editBtn.onclick = () => {
-            const isEditing = outputEl.contentEditable === 'true';
-            if (!isEditing) {
-                outputEl.contentEditable = 'true';
-                outputEl.style.outline = '2px solid #673ab7';
-                outputEl.focus();
-                editBtn.innerText = "保存";
-                editBtn.style.background = "#2ecc71";
-            } else {
-                outputEl.contentEditable = 'false';
-                outputEl.style.outline = 'none';
-                editBtn.innerText = "修改";
-                editBtn.style.background = "#673ab7";
-            }
-        };
-
-        resultWin.querySelector('#sel-block').onclick = () => {
-            const sel = outputEl.innerText;
-            if (!sel || sel === '点击页面元素获取...') return alert('请先选择元素');
-            try {
-                document.createDocumentFragment().querySelector(sel);
-                if (typeof saveCssRemovalChoice === 'function') {
-                    if (saveCssRemovalChoice(sel)) {
-                        confirmndExecuteFC(`✅ 成功保存规则！是否刷新页面？`, () => { location.reload() });
-                    }
-                } else {
-                    console.log("拟屏蔽选择器:", sel);
-                    confirmndExecuteFC(`${sel} 已模拟屏蔽...`);
-                }
-            } catch (e) {
-                confirmndExecuteFC('CSS语法错误，请检查修改内容。');
-            }
-        };
-
         resultWin.querySelector('#sel-reset').onclick = resetMode;
         resultWin.querySelector('#sel-exit').onclick = destroyTool;
 
+        // --- 启动监听 ---
         document.addEventListener('mousemove', onMove, true);
         document.addEventListener('click', onClick, true);
+        window.addEventListener('keydown', handleKey);
         document.body.style.cursor = 'crosshair';
-    };
-
-
-
+    }
 
 
     // V26.39.9: 移除 showCustomConfirmLocation
@@ -2608,7 +2593,7 @@ onclick="toggleDebugAndRefresh()"
             </div>
 
             <div class="gemini-tip-text">
-                🌟**提示:** “选择并屏蔽模式”及🛠️ 元素点击调试中的屏蔽原理基于<a href='https://www.google.com/search?q=xpath+%E6%98%AF%E4%BB%80%E4%B9%88' target='_blank' style='color:blue !important;'>xPath</a>；CSS选择器屏蔽：使用 <a style="color:blue !important" href='https://www.google.com/search?q=mutationobserver+%E4%BB%8B%E7%BB%8D'>MutationObserver</a> & <a style="color:blue !important" href='https://www.google.com/search?q=querySelectorAll()+%E6%96%B9%E6%B3%95'>querySelectorAll()</a> 方法遍历.remove()，会对网页的<a href='https://www.google.com/search?q=%E6%96%87%E6%A1%A3%E5%AF%B9%E8%B1%A1%E6%A8%A1%E5%9E%8B' target='_blank' style='color:blue !important'>DOM</a>层级结构造成破坏。⛔标记为黑名单页意味着对当前页面存在的所有iframe进行<a href='https://www.google.com/search?q=iframe+sandbox%E5%B1%9E%E6%80%A7' target='_blank' style='color:blue !important;'>沙箱化</a>处理，严格限制其交互权限。
+                🌟**提示:** “选择并屏蔽模式”及🛠️ 元素点击调试中的屏蔽原理基于<a href='https://www.google.com/search?q=xpath+%E6%98%AF%E4%BB%80%E4%B9%88' target='_blank' style='color:blue !important;'>xPath</a>；CSS选择器屏蔽：使用 <a style="color:blue !important" href='https://www.google.com/search?q=mutationobserver+%E4%BB%8B%E7%BB%8D'>MutationObserver</a> & <a style="color:blue !important" href='https://www.google.com/search?q=querySelectorAll()+%E6%96%B9%E6%B3%95'>querySelectorAll()</a> 方法遍历.remove()。⛔标记为黑名单页意味着对当前页面存在的所有iframe进行<a href='https://www.google.com/search?q=iframe+sandbox%E5%B1%9E%E6%80%A7' target='_blank' style='color:blue !important;'>沙箱化</a>处理，严格限制其交互权限。
             </div>
         `;
 
@@ -3202,7 +3187,6 @@ onclick="toggleDebugAndRefresh()"
 
 
 
-
     // 无论你的 HTML 什么时候生成，这段代码都能监听到那个按钮的点击
     document.addEventListener('click', function (e) {
         if (e.target && e.target.id === 'repair-css-data-btn') {
@@ -3216,12 +3200,10 @@ onclick="toggleDebugAndRefresh()"
                 const cleaned = [...new Set(list.map(s => {
                     let fixed = s.replace(/\\/g, "").replace(/"/g, "'").replace(/'+/g, "'");
                     // 补全可能断掉的括号
-                    /*
                     if (fixed.includes('[') && !fixed.endsWith(']')) {
                         if ((fixed.match(/'/g) || []).length % 2 !== 0) fixed += "'";
                         fixed += "]";
                     }
-                    */
                     return fixed.trim();
                 }))];
 
