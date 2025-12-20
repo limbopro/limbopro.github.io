@@ -827,8 +827,8 @@
 
             // V26.39.5: 使用 safeTruncate 优化信息展示
             const truncatedCssSelector = safeTruncate(elementInfo.cssSelector, 100);
-            const truncatedHref = safeTruncate(elementInfo.href, 100);
-            const truncatedXpath = safeTruncate(xpath, 70);
+            const truncatedHref = safeTruncate(elementInfo.href, 1000);
+            const truncatedXpath = safeTruncate(xpath, 100);
 
             // V26.39.6 增强信息
             const truncatedParent = safeTruncate(elementInfo.parent, 70);
@@ -863,8 +863,8 @@
                 </div>
                 
                 <div style="color:black;font-size: 12px; background: #f8f9fa; padding: 12px; border-radius: 6px; margin-bottom: 20px; border-left: 4px solid #1976D2;">
-                    <strong style="color: #1976D2; display: block; margin-bottom: 5px;">🚀 目标信息 (V26.39.6 - 增强):</strong>
-                    <button onclick="window.showLinkTipsModalOnce()" id="tips" style="padding: 5px 5px 5px 5px; margin: 5px 5px 5px 0px; ">如何利用目标信息</button>
+                    <strong style="color: #1976D2; display: block; margin-bottom: 5px;">🚀 目标信息 (V26.39.12 - 增强):</strong>
+                    <button onclick="window.showLinkTipsModalOnce()" id="tips" style="padding: 5px 5px 5px 5px; margin: 5px 5px 5px 0px; ">如何利用目标信息？🆕</button>
                    
                     <div style="word-break: break-all; margin-bottom: 5px;">
                         <span style="font-weight: bold;">父元素:</span> ${truncatedParent}
@@ -874,15 +874,16 @@
                         <span style="font-weight: bold;">目标元素:</span> ${truncatedCssSelector}
                     </div>
 
-                    <div style="word-break: break-all; margin-bottom: 5px;">
-    <span style="font-weight: bold;">目标元素:</span>  <span style="font-weight: bold;">${truncatedCssSelector}</span> 位于父元素 <span style="font-weight: bold;">${truncatedParent}</span> 内的位置:  <span style="font-weight: bold;">${truncatedParent} > ${truncatedCssSelector}:nth-child(${elementInfo.nthChild})</span>
-</div>
 
                     <div style="word-break: break-all; margin-bottom: 5px;">
-                                            <span style="font-weight: bold;">目标尺寸:</span> ${elementInfo.width}x${elementInfo.height}px 
+                                            <span style="font-weight: bold;">目标元素尺寸:</span> ${elementInfo.width}x${elementInfo.height}px 
                     </div>
 
+                    <div style="word-break: break-all; margin-bottom: 5px;">
+    <span style="font-weight: bold;">相对CSS选择器(Base parentElement): </span> ${truncatedParent} > ${truncatedCssSelector}:nth-child(${elementInfo.nthChild})
+                    </div>
 
+                
             
 
                     <div style="word-break: break-all; margin-bottom: 5px;">
@@ -3362,6 +3363,10 @@ onclick="toggleDebugAndRefresh()"
 
         const eventListenerFunction = async (e) => {
             const targetElement = e.target;
+
+            if (document.getElementById('gemini-main-container') == null) {
+                return; // 如果元素屏蔽/追踪器面板未打开则不监控
+            }
 
             // V26.39.7 新增：只拦截 click, mousedown, touchstart
             if (e.type !== 'click' && e.type !== 'mousedown' && e.type !== 'touchstart') {
