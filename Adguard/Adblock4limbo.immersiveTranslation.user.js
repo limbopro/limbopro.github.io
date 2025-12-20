@@ -87,8 +87,8 @@ window.loadGoogleTranslateUI = async function () {
             uiContainer.classList.add('notranslate');
             Object.assign(uiContainer.style, {
                 position: 'fixed', top: '40px', right: '0px', zIndex: '9999',
-                backgroundColor: '#f8f8f8', padding: '8px 12px', borderRadius: '10px 0px 0px 10px',
-                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)', border: '1px solid #ddd',
+                /*backgroundColor: '#f8f8f8', padding: '8px 12px', borderRadius: '10px 0px 0px 10px',*/
+                /*boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)', border: '1px solid #ddd',*/
                 transition: 'box-shadow 0.3s ease-in-out', lineHeight: '0'
             });
             document.body.appendChild(uiContainer);
@@ -388,6 +388,29 @@ function createFloatingButton() {
     const cssFileUrl = 'https://limbopro.com/CSS/Adblock4limbo.user.css'; // 含 Adguard 通用广告元素选择器 看外网网页会非常干净
     loadExternalCss(cssFileUrl);
     const css = `
+
+
+    /* 隐藏翻译工具栏 */
+    .goog-te-banner-frame.skiptranslate, 
+    .goog-te-gadget { 
+        display: none !important; 
+    }
+    /* 修复隐藏工具栏后 body 出现的顶部空白 */
+    body { 
+        top: 0px !important; 
+    }
+    /* 隐藏鼠标悬停时的原始文字弹窗 */
+    google_translate_element,
+    #goog-gt-tt, .goog-tooltip, .goog-tooltip:hover { 
+        display: none !important; 
+        visibility: hidden !important; 
+    }
+    /* 隐藏翻译后的文字高亮阴影 */
+    .goog-text-highlight { 
+        background-color: transparent !important; 
+        box-shadow: none !important; 
+    }
+    
 
     /* 该死的广告 */
     .Ad-label,

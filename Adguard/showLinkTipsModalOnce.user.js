@@ -33,7 +33,7 @@ window.showLinkTipsModalOnce = function() {
                     "目标元素尺寸": "size",
                     "相对CSS选择器(Base parentElement)": "relCSS",
                     "精确CSS选择器(Base attributes)": "absCSS",
-                    "链接 (Href)": "href",
+                    "目标元素递归向上含链接(Href)": "href",
                     "Z/Opacity/Pos": "zPos",
                     "内联 Click": "inline",
                     "XPath": "xpath"
@@ -135,7 +135,7 @@ window.showLinkTipsModalOnce = function() {
                 <div class="info-cell"><b>Z/Opacity/Pos</b>${liveData.zPos}</div>
                 <div class="info-cell"><b>内联点击事件</b>${liveData.inline}</div>
                 <div class="info-cell"><b>捕获源版本</b>V26.39.12+</div>
-                <div class="info-cell span-all"><b>目标链接 (Href)</b><small style="color:#3182ce; font-family:monospace;">${liveData.href}</small></div>
+                <div class="info-cell span-all"><b>目标元素递归向上含链接(Href)</b><small style="color:#3182ce; font-family:monospace;">${liveData.href}</small></div>
             </div>
 
             ${createSection("[ 方案 A ] 相对 CSS 选择器 (最佳实践)", liveData.relCSS, "#38a169", 

@@ -798,6 +798,9 @@
 
 
 
+
+
+
     function showCustomConfirm(message, elementInfo, xpath) {
 
         // ⚠️ 新增/确保有这个判断：
@@ -829,6 +832,7 @@
             const truncatedCssSelector = safeTruncate(elementInfo.cssSelector, 100);
             const truncatedHref = safeTruncate(elementInfo.href, 1000);
             const truncatedXpath = safeTruncate(xpath, 100);
+
 
             // V26.39.6 增强信息
             const truncatedParent = safeTruncate(elementInfo.parent, 70);
@@ -874,6 +878,9 @@
                         <span style="font-weight: bold;">目标元素:</span> ${truncatedCssSelector}
                     </div>
 
+                    <div style="word-break: break-all; margin-bottom: 5px;">
+                        <span style="font-weight: bold;">目标元素属性特征:</span>${window.targetElementInform.val}
+                    </div>
 
                     <div style="word-break: break-all; margin-bottom: 5px;">
                                             <span style="font-weight: bold;">目标元素尺寸:</span> ${elementInfo.width}x${elementInfo.height}px 
@@ -891,7 +898,7 @@
     </div>
 
      <div style="word-break: break-all; margin-bottom: 5px;">
-                        <span style="font-weight: bold;">链接 (Href):</span> ${truncatedHref}
+                        <span style="font-weight: bold;">目标元素递归向上含链接(Href):</span> ${truncatedHref}
                     </div>
 
                     <div style="word-break: break-all; margin-bottom: 5px;">
@@ -3341,11 +3348,9 @@ onclick="toggleDebugAndRefresh()"
             return path.join(' > ');
         }
 
+
+
         // 捕获元素 结束 
-
-
-
-
 
 
 
@@ -3353,13 +3358,47 @@ onclick="toggleDebugAndRefresh()"
             return;
         }
 
-
-        // 1. 将工具函数定义在外面，只需定义一次
         window.getElementNthChild = (el) => {
             if (!el || !el.parentElement) return 1;
-            // 使用 Array.indexOf 查找当前元素在父节点所有子元素(children)中的位置
-            return Array.from(el.parentElement.children).indexOf(el) + 1;
+
+            const index = Array.from(el.parentElement.children).indexOf(el) + 1;
+            const result = new Number(index);
+
+            // 1. 定义属性及其对应的显示标签
+            const attrMap = [
+                { key: 'id', label: 'ID' },
+                { key: 'href', label: 'hrfe' },
+                { key: 'src', label: 'src' },
+                { key: 'class', label: 'class' }
+            ];
+
+            // 2. 遍历提取并设置 N/A
+            attrMap.forEach(item => {
+                const value = el.getAttribute(item.key);
+                if (value && value.trim() !== "") {
+                    result[item.key] = value.trim();
+                } else {
+                    result[item.key] = 'N/A';
+                }
+            });
+
+            // 3. 核心逻辑：生成你要求的“目标元素XXX：XXX值”字符串
+            // 按照优先级查找第一个非 N/A 的属性进行显示
+            const hit = attrMap.find(item => result[item.key] !== 'N/A');
+
+            if (hit) {
+                // 如果找到了存在的属性，按照你要求的格式赋值
+                result.display = ` [${hit.label}='${result[hit.key]}']`;
+                // [src*='/pics/thumb/bvur.jpg']
+            } else {
+                result.display = "无关键属性";
+            }
+
+            // 为了兼容性，将这个格式化后的字符串也赋给 val
+            result.val = result.display;
+            return result;
         };
+
 
         const eventListenerFunction = async (e) => {
             const targetElement = e.target;
@@ -3453,6 +3492,8 @@ onclick="toggleDebugAndRefresh()"
                     // ✅ 直接调用已定义好的工具函数
                     nthChild: window.getElementNthChild(targetElement),
                 };
+
+                window.targetElementInform = window.getElementNthChild(targetElement)
 
                 const confirmBlock = await showCustomConfirm(
                     message,
