@@ -865,6 +865,9 @@
                     <strong style="color: #007bff; display: block; margin-bottom: 5px;">🚀 目标信息 (V26.39.6 - 增强):</strong>
                     <button onclick="window.showLinkTipsModalOnce()" id="tips" style="padding: 5px 5px 5px 5px; margin: 5px 5px 5px 0px; ">如何利用目标信息</button>
                    
+                    <div style="word-break: break-all; margin-bottom: 5px;">
+                        <span style="font-weight: bold;">父元素:</span> ${truncatedParent}
+                    </div>
 
                     <div style="word-break: break-all; margin-bottom: 5px;">
                         <span style="font-weight: bold;">目标元素:</span> ${truncatedCssSelector}
@@ -874,15 +877,11 @@
                     </div>
 
 
-                    <div style="word-break: break-all; margin-bottom: 5px;">
-                        <span style="font-weight: bold;">父元素:</span> ${truncatedParent}
-                    </div>
                     
-                   
-
+            
 
                     <div style="word-break: break-all; margin-bottom: 5px;">
-        <span style="font-weight: bold;">精确路径(nth-child):</span> ${safeTruncate(elementInfo.preciseSelector, 10000)}
+        <span style="font-weight: bold;">精确路径(Base attributes):</span> ${safeTruncate(elementInfo.preciseSelector, 10000)}
     </div>
 
      <div style="word-break: break-all; margin-bottom: 5px;">
@@ -3155,97 +3154,106 @@ onclick="toggleDebugAndRefresh()"
 
 
 
+        // 捕获元素 
 
 
-  /**
- * 通用解：属性特征 + 严格同名标签计数
- */
+
 function getSmartSelector_w(el) {
     if (!(el instanceof Element)) return "";
 
-    const tagName = el.tagName.toLowerCase();
+    /**
+     * 内部辅助：提取元素的“硬指纹”特征
+     * 包含：ID, href, src, title, alt, data-*, 业务Class
+     */
+    function getHardFeature(node) {
+        if (!node) return null;
+        const tag = node.tagName.toLowerCase();
 
-    // --- 1. 提取目标元素自身的强特征 (自身属性) ---
-    function getElementUniqueAttr(element) {
-        const tag = element.tagName.toLowerCase();
-        // 优先级：title > name > data-属性 > src(文件名) > href(末尾)
-        const title = element.getAttribute('title');
-        if (title) return `${tag}[title*="${CSS.escape(title.substring(0, 6))}"]`;
-
-        const dataId = Array.from(element.attributes).find(a => a.name.startsWith('data-'));
-        if (dataId) return `${tag}[${dataId.name}="${CSS.escape(dataId.value)}"]`;
-
-        if (tag === 'img' && element.src) {
-            const fileName = element.src.split('/').pop().split(/[?#]/)[0];
-            if (fileName && fileName.length > 4) return `img[src*="${CSS.escape(fileName)}"]`;
+        // 1. ID 永远是第一优先级 (排除纯数字/动态ID)
+        if (node.id && typeof node.id === 'string' && !/^\d+$/.test(node.id)) {
+            return `#${CSS.escape(node.id)}`;
         }
 
-        if (tag === 'a' && element.href) {
-            const part = element.href.split('/').filter(p => p).pop();
-            if (part && part.length > 3) return `a[href*="${CSS.escape(part)}"]`;
-        }
-        
-        return null;
-    }
-
-    // --- 2. 遍历父级节点并寻找锚点 ---
-    let path = [];
-    let current = el;
-    let depth = 0;
-
-    while (current && current.nodeType === Node.ELEMENT_NODE && depth < 5) {
-        let segment = current.nodeName.toLowerCase();
-        
-        // 检查当前层级是否有强特征属性
-        const strongAttrSelector = getElementUniqueAttr(current);
-        
-        // 如果是 ID，直接截断并返回
-        if (current.id && !/^\d+$/.test(current.id)) {
-            segment = `#${CSS.escape(current.id)}`;
-            path.unshift(segment);
-            break; 
-        } 
-        
-        // 如果在当前层级找到了强属性（如 a[href*="KNB-391"]），作为起始锚点
-        if (strongAttrSelector && current !== el) {
-            path.unshift(strongAttrSelector);
-            break;
-        }
-
-        // --- 3. 统计同名标签的兄弟节点 (解决 nth-of-type 计数问题) ---
-        if (current.parentElement) {
-            const siblings = Array.from(current.parentElement.children);
-            const sameTagSiblings = siblings.filter(s => s.nodeName === current.nodeName);
-            
-            if (sameTagSiblings.length > 1) {
-                const index = sameTagSiblings.indexOf(current) + 1;
-                segment += `:nth-of-type(${index})`;
+        // 2. 强业务属性特征 (href, src, data-*)
+        // href/src 只取路径最后一段，防止整条路径太长或带域名
+        const strongAttrs = ['href', 'src', 'data-id', 'data-code', 'data-uid'];
+        for (let attr of strongAttrs) {
+            let val = node.getAttribute(attr);
+            if (val && val.length > 3 && val.length < 150) {
+                if (['href', 'src'].includes(attr)) {
+                    val = val.split('?')[0].split('/').pop();
+                    if (!val || val.length < 3) continue; 
+                }
+                return `${tag}[${attr}*="${CSS.escape(val)}"]`;
             }
         }
 
-        // 如果是目标元素本身，且有强属性，直接用强属性代替标签名
-        if (current === el && strongAttrSelector) {
-            segment = strongAttrSelector;
+        // 3. 语义化文字属性 (title, alt, placeholder)
+        const textAttrs = ['title', 'alt', 'placeholder', 'aria-label'];
+        for (let attr of textAttrs) {
+            let val = node.getAttribute(attr);
+            if (val && val.length > 1 && val.length < 50) {
+                return `${tag}[${attr}*="${CSS.escape(val)}"]`;
+            }
         }
 
-        path.unshift(segment);
-        if (['body', 'html'].includes(current.nodeName.toLowerCase())) break;
-        
-        current = current.parentElement;
-        depth++;
+        // 4. 业务类名特征 (过滤布局干扰类)
+        const layoutBlacklist = ['item', 'masonry', 'brick', 'active', 'selected', 'row', 'col-', 'grid-'];
+        const validClasses = Array.from(node.classList).filter(c => 
+            !layoutBlacklist.some(lc => c.includes(lc))
+        );
+        if (validClasses.length > 0) {
+            return `${tag}.${CSS.escape(validClasses[0])}`;
+        }
+
+        return null; // 这一层彻底没特征
     }
 
-    // --- 4. 路径净化 ---
-    // 如果路径中包含锚点，我们可以缩短路径（例如 a[...] button[...]）
-    if (path.length > 1 && path[0].includes('[')) {
-        // 保留锚点和目标元素，中间如果层级过多则简化
-        return `${path[0]} ${path[path.length - 1]}`;
+    let path = [];
+    let current = el;
+    let foundStrongAnchor = false;
+
+    // =================================================================
+    // 核心逻辑：向上递归遍历，直到找到有属性特征的锚点
+    // =================================================================
+    while (current && !['HTML', 'BODY'].includes(current.tagName)) {
+        const feature = getHardFeature(current);
+
+        if (feature) {
+            path.unshift(feature);
+            // 如果撞到了“顶级锚点”（带ID或带业务代码的A标签），停止向上爬
+            if (feature.startsWith('#') || feature.startsWith('a[')) {
+                foundStrongAnchor = true;
+                break;
+            }
+        } else {
+            // 如果这一层没特征，记录它的标签名和位置(nth-child)，并强制继续向上找
+            let segment = current.tagName.toLowerCase();
+            if (current.parentElement && current.parentElement.children.length > 1) {
+                let index = Array.from(current.parentElement.children).indexOf(current) + 1;
+                segment += `:nth-child(${index})`;
+            }
+            path.unshift(segment);
+        }
+
+        current = current.parentElement;
+    }
+
+    // 如果最后实在没撞到强锚点，补一个 body 前缀作为基准
+    if (!foundStrongAnchor && current && current.tagName === 'BODY') {
+        path.unshift('body');
     }
 
     return path.join(" > ");
 }
 
-        
+        // 捕获元素 结束 
+
+
+
+
+
+
 
 
         if (!doc || doc.gemini_click_debug_listener_attached) {
