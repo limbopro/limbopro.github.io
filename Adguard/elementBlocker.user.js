@@ -328,28 +328,7 @@
         return tag;
     }
 
-    /*
-    function getElementCssSelector(element) {
-        if (!element || element.tagName === 'HTML' || element.tagName === 'BODY') return element.tagName ? element.tagName.toLowerCase() : '';
 
-        // 1. 优先使用 ID (最精确)
-        if (element.id) {
-            return `#${element.id}`;
-        }
-
-        // 2. 其次使用 TagName 和第一个 Class (具有一定特异性)
-        const tag = element.tagName.toLowerCase();
-        const classList = element.className.split(/\s+/).filter(c => c.length > 0);
-
-        if (classList.length > 0) {
-            // 返回 Tag.Class 形式
-            return `${tag}.${classList[0]}`;
-        }
-
-        // 3. 最后退化为纯 TagName
-        return tag;
-    }
-    */
 
     // =================================================================
     // 基础工具函数：safeTruncate (V26.39.5 NEW)
@@ -375,7 +354,7 @@
         }
     }
 
-    function saveCssRemovalChoice(selector) {
+    window.saveCssRemovalChoice = function saveCssRemovalChoice(selector) {
         const trimmed = selector.trim();
         if (!trimmed) return false;
         let removals = getSavedCssRemovals();
@@ -536,7 +515,9 @@
             // 4. 执行清理：从 DOM 中移除这些未被排除的元素
             result.forEach((x) => {
                 try {
+                    console.log(x, ' 移除中...')
                     x.remove();
+                    //x.classList.add('hiddenbyLimbopro')
                 } catch (e) {
                     console.warn('移除元素失败:', e);
                 }
@@ -588,7 +569,7 @@
                 right: 20px; 
                 z-index: 114115; 
                 transition: transform 0.2s ease-out; 
-                border-radius: 12px; 
+                border-radius: 5px; 
                 box-shadow: 0 10px 30px rgba(0,0,0,0.1), 0 4px 6px rgba(0,0,0,0.05); 
                 width: 400px; 
                 background: #f7f7f7; 
@@ -679,7 +660,7 @@
 
             /* 提示信息样式 (美化) */
             #${windowId} .gemini-tip-text {
-                padding: 5px 15px;
+                padding: 15px 15px;
                 background: #fafafa; 
                  /*
             max-height:50px;
@@ -838,6 +819,10 @@
             const truncatedParent = safeTruncate(elementInfo.parent, 70);
             const truncatedInlineClick = safeTruncate(elementInfo.inlineClick || '[无内联事件]', 70);
 
+            // 是否包含属性
+
+
+
             modalBox.innerHTML = `
                 <h3 style="margin-top: 0; color: #dc3545; border-bottom: 2px solid #eee; padding-bottom: 10px;">
                     🎯 链接点击捕获 (元素调试)
@@ -879,7 +864,11 @@
                     </div>
 
                     <div style="word-break: break-all; margin-bottom: 5px;">
-                        <span style="font-weight: bold;">目标元素属性特征:</span>${window.targetElementInform.val}
+                        <span style="font-weight: bold;">目标元素属性特征:&nbsp</span>${window.targetElementInform.val}
+                    </div>
+
+                    <div style="word-break: break-all; margin-bottom: 5px;">
+                        <span style="font-weight: bold;">目标元素文本内容:&nbsp</span>${window.targetElementInform.text}
                     </div>
 
                     <div style="word-break: break-all; margin-bottom: 5px;">
@@ -887,11 +876,9 @@
                     </div>
 
                     <div style="word-break: break-all; margin-bottom: 5px;">
-    <span style="font-weight: bold;">相对CSS选择器(Base parentElement): </span> ${truncatedParent} > ${truncatedCssSelector}:nth-child(${elementInfo.nthChild})
+    <span style="font-weight: bold;">相对CSS选择器(Base parentElement): </span> ${truncatedParent} > ${truncatedCssSelector}:nth-child(${elementInfo.nthChild})${targetElementInformAppend}
                     </div>
 
-                
-            
 
                     <div style="word-break: break-all; margin-bottom: 5px;">
         <span style="font-weight: bold;">精确CSS选择器(Base attributes):</span> ${safeTruncate(elementInfo.preciseSelector, 10000)}
@@ -2606,7 +2593,7 @@ onclick="toggleDebugAndRefresh()"
             </div>
 
             <div class="gemini-tip-text">
-                🌟**提示:** “选择并屏蔽模式”及🛠️ 元素点击调试中的屏蔽原理基于<a href='https://www.google.com/search?q=xpath+%E6%98%AF%E4%BB%80%E4%B9%88' target='_blank' style='color:blue !important;'>xPath</a>。⛔标记为黑名单页意味着对当前页面存在的所有iframe进行<a href='https://www.google.com/search?q=iframe+sandbox%E5%B1%9E%E6%80%A7' target='_blank' style='color:blue !important;'>沙箱化</a>处理，严格限制其交互权限。
+                🌟**提示:** “选择并屏蔽模式”及🛠️ 元素点击调试中的屏蔽原理基于<a href='https://www.google.com/search?q=xpath+%E6%98%AF%E4%BB%80%E4%B9%88' target='_blank' style='color:blue !important;'>xPath</a>；CSS选择器屏蔽：使用 <a style="color:blue !important" href='https://www.google.com/search?q=mutationobserver+%E4%BB%8B%E7%BB%8D'>MutationObserver</a> & <a style="color:blue !important" href='https://www.google.com/search?q=querySelectorAll()+%E6%96%B9%E6%B3%95'>querySelectorAll()</a> 方法遍历.remove()。⛔标记为黑名单页意味着对当前页面存在的所有iframe进行<a href='https://www.google.com/search?q=iframe+sandbox%E5%B1%9E%E6%80%A7' target='_blank' style='color:blue !important;'>沙箱化</a>处理，严格限制其交互权限。
             </div>
         `;
 
@@ -3366,8 +3353,8 @@ onclick="toggleDebugAndRefresh()"
 
             // 1. 定义属性及其对应的显示标签
             const attrMap = [
-                { key: 'id', label: 'ID' },
-                { key: 'href', label: 'hrfe' },
+                { key: 'id', label: 'id' },
+                { key: 'href', label: 'href' },
                 { key: 'src', label: 'src' },
                 { key: 'class', label: 'class' }
             ];
@@ -3388,11 +3375,20 @@ onclick="toggleDebugAndRefresh()"
 
             if (hit) {
                 // 如果找到了存在的属性，按照你要求的格式赋值
-                result.display = ` [${hit.label}='${result[hit.key]}']`;
+                result.display = `[${hit.label}='${result[hit.key]}']`;
                 // [src*='/pics/thumb/bvur.jpg']
             } else {
                 result.display = "无关键属性";
             }
+
+            // 4. 获取文本
+            // 假设 el 是你获取到的 DOM 元素
+            const rawText = el.textContent || ""; // 确保处理 null 或 undefined
+
+            // 获取前10个文本，超出部分截取并用 ... 替代
+            result.text = rawText.length > 10
+                ? rawText.substring(0, 10) + "..."
+                : rawText
 
             // 为了兼容性，将这个格式化后的字符串也赋给 val
             result.val = result.display;
@@ -3473,11 +3469,8 @@ onclick="toggleDebugAndRefresh()"
                     targetElement.getAttribute('onpointerdown');
 
 
-
-
-
                 const elementInfo = {
-                    href: href || '[非链接元素]',
+                    href: href || '[不含链接]',
                     tagName: tagName,
                     cssSelector: cssSelector,
                     // V26.39.6 增强信息
@@ -3493,7 +3486,13 @@ onclick="toggleDebugAndRefresh()"
                     nthChild: window.getElementNthChild(targetElement),
                 };
 
+
                 window.targetElementInform = window.getElementNthChild(targetElement)
+                if (window.targetElementInform.val == '无关键属性') {
+                    window.targetElementInformAppend = ''
+                } else {
+                    window.targetElementInformAppend = window.targetElementInform.val
+                }
 
                 const confirmBlock = await showCustomConfirm(
                     message,
@@ -3735,6 +3734,23 @@ onclick="toggleDebugAndRefresh()"
     // 核心启动函数 
     // =================================================================
     function initScript() {
+
+        // 1. 立即注入 CSS 样式
+        if (!document.getElementById('style-limbopro')) {
+            const style = document.createElement('style');
+            style.id = 'style-limbopro'; // 设置 ID 防止重复注入
+            style.textContent = `
+            .hiddenbyLimbopro {
+                visibility: hidden !important;   /* 隐藏但保留占位 */
+                pointer-events: none !important; /* 禁止任何鼠标/点击事件 */
+                user-select: none !important;    /* 禁止选中文本 */
+                opacity: 0 !important;           /* 视觉完全透明 */
+            }
+        `;
+            document.head.appendChild(style);
+            console.log('%c[Init]%c 隐藏样式表已注入', 'color: #673ab7; font-weight: bold;', 'color: default;');
+        }
+
 
         const currentHost = getCurrentHost();
         const isHostInDebugList = DEBUG_WEBLIST.some(domain => currentHost.includes(domain));
