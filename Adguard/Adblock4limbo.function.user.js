@@ -35,7 +35,7 @@
 
 
 
-(function() {
+(function () {
     const css = `
 /* 给到悬浮窗用 Adblock4limbo 4 function */
 /* 遮罩层 */
@@ -798,7 +798,7 @@ function getNavigationHTML() {
 
 <li class="li_global">
 <button id="loadCSS" 
-    class="a_global special yellow ads_skip_off" 
+    class="a_global special" 
     title="🌈 加载 AdGuard 过滤器(CSS)" 
     onclick="toggleAdGuardFilter()"
     style="
@@ -2686,7 +2686,7 @@ loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/showLi
 
 
 
-// 加载Adgurad 过滤器
+// 加载 Adgurad 基础过滤器（CSS版）
 // 定义 CSS 地址
 const ADGUARD_CSS_URL = 'https://limbopro.com/CSS/Adblock4limbo.user.css';
 const STORAGE_KEY = 'loadAdguradGeneralFilterCSS';
@@ -2731,6 +2731,12 @@ function toggleAdGuardFilter() {
 
     // 执行状态切换逻辑
     updateAdGuardButtonUI(btn, statusText, newState);
+
+    // 按照要求：用户点击开启时，弹窗 alert 提示
+    if (newState) {
+        confirmndExecuteFC('🌈 https://limbopro.com/CSS/Adblock4limbo.user.css 已加载至网页！共计1.8w+条 Adgurad 基础过滤器(CSS)，移除恼人的图片/GIF广告🪧！如仍有广告，请联系博主反馈...')
+    }
+
 }
 
 /**
