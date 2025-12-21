@@ -1388,8 +1388,7 @@ onclick="toggleDebugAndRefresh()"
         function getFinalSelector(el) {
             // 1. 获取基础路径和提纯路径
             let selector = getFullSmartPath(el);
-            const refined = refineAndCleanSelector(selector, el);
-
+            const refined = refineAndCleanSelector(selector, el).replace(/"/g, "'"); // 将双引号改为单引号
             console.log('原始路径:', selector);
             console.log('提纯结果:', refined);
 
@@ -1418,7 +1417,11 @@ onclick="toggleDebugAndRefresh()"
 
             // 3. 只有当提纯结果完全无法选中当前元素时，才回退到原始路径
             // 或者是 refined 变成了空字符串等异常情况
-            return refined || selector;
+            //// return refined || selector;
+
+            const finalSelector = (refined || selector || "").toString();
+            return finalSelector.replace(/"/g, "'");
+            // return (refined || selector).replace(/"/g, "'"); // 返回单引号
         }
 
 
@@ -1662,7 +1665,7 @@ onclick="toggleDebugAndRefresh()"
     <div class="sel-actions">
         <button class="sel-btn sel-copy-btn" id="sel-copy">复制</button>
         <button class="sel-btn sel-edit-btn" id="sel-edit">修改</button>
-        <button class="sel-btn sel-inspect-btn" id="sel-inspect-btn" style="min-width: 65px;">定位</button>
+        <button class="sel-btn sel-inspect-btn" id="sel-inspect-btn" style="min-width: 65px; color:black; background:#f2f2f2;">定位</button>
         <button class="sel-btn sel-block-btn" id="sel-block">屏蔽</button>
         <button class="sel-btn sel-reset-btn" id="sel-reset">重选</button>
         <button class="sel-btn sel-exit-btn" id="sel-exit">退出</button>
