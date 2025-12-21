@@ -454,6 +454,10 @@
 
         let removedCount = 0;
 
+
+
+
+
         // XPath 移除
         allRemovals.forEach(xpath => {
             try {
@@ -525,6 +529,7 @@
         };
 
 
+
         // 2. 初始化动态监听，使用独一无二的变量名
         const startDynamicCleanup = (cssRemovals) => {
             const targetNode = document.body || document.documentElement;
@@ -553,6 +558,8 @@
                 'Iframe (同源)';
         console.log(`[Gemini屏蔽] 已在 ${docName} 自动移除 ${removedCount} 个元素（含 CSS 选择器）。`);
         return removedCount;
+
+
     }
 
 
@@ -719,15 +726,30 @@
                 width: 90%; /* 增加宽度适应性 */
                 font-size: 14px;
             }
+
+
             /* 通用按钮样式 */
             #gemini-custom-modal-overlay button {
+
+            /*
                 padding: 10px 15px; 
                 border-radius: 6px; 
                 cursor: pointer !important; 
                 font-weight: bold; 
                 margin: 5px;
                 transition: background 0.2s, box-shadow 0.2s;
+            */
+
+                padding: 6px 0px; 
+                border-radius: 6px; 
+                cursor: pointer !important; 
+                font-weight: bold; 
+                margin: 1px;
+                transition: background 0.2s, box-shadow 0.2s;
+
             }
+
+
             
             /* V26.20 新增：操作提示文本容器样式 */
             #gemini-custom-modal-overlay .operation-notes p {
@@ -854,7 +876,11 @@
                 
                 <div style="color:black;font-size: 12px; background: #f8f9fa; padding: 12px; border-radius: 6px; margin-bottom: 20px; border-left: 4px solid #1976D2;">
                     <strong style="color: #1976D2; display: block; margin-bottom: 5px;">🚀 目标信息 (V26.39.12 - 增强):</strong>
-                    <button onclick="window.showLinkTipsModalOnce()" id="tips" style="padding: 5px 5px 5px 5px; margin: 5px 5px 5px 0px; background:wheat;">如何利用目标信息？🆕</button>
+                    
+                    
+
+                    <button onclick="window.showLinkTipsModalOnce()" id="tips" style="padding: 5px 5px 5px 5px;margin: 5px 5px 5px 0px;background: #6b6465;color: aliceblue;border: antiquewhite;">如何利用目标信息？🆕</button>
+
                    
                     <div style="word-break: break-all; margin-bottom: 5px;">
                         <span style="font-weight: bold;">父元素:</span> ${truncatedParent}
@@ -877,7 +903,7 @@
                     </div>
 
                     <div style="word-break: break-all; margin-bottom: 5px;">
-    <span style="font-weight: bold;">相对CSS选择器(Base parentElement): </span>${truncatedParent} > ${truncatedCssSelector}:nth-child(${elementInfo.nthChild})${targetElementInformAppend}
+    <span style="font-weight: bold;">相对CSS选择器(Base parentElement): </span><p id='cssSelector'>${truncatedParent} > ${truncatedCssSelector}:nth-child(${elementInfo.nthChild})${targetElementInformAppend}</p>
                     </div>
 
 
@@ -900,7 +926,7 @@
                     </div>
                 </div>
                 
-                <div style="display: flex; justify-content: space-around; margin-top: 10px; gap: 0px;">
+                <div style="display: flex; justify-content: space-around; flex-direction:column ;margin-top: 10px; gap: 0px;">
                 
                 <button id="gemini-modal-protect" style="background: #43A047; color: white; border: none; flex: 1;"
 onclick="toggleDebugAndRefresh()"
@@ -908,11 +934,21 @@ onclick="toggleDebugAndRefresh()"
                         🔰 关闭元素点击调试
                     </button>
 
-                <button id="gemini-modal-confirm" style="
+                
+                    <button id="gemini-modal-confirm" style="
                         background: #dc3545; color: white; border: none; flex: 1;
                     ">
                         🛡️ 永久屏蔽并移除(xPath)
                     </button>
+
+
+                    <button onclick='window.showLinkTipsModalOnce()' id="gemini-modal-confirm-css" style="
+                        background: #dc3545; color: white; border: none; flex: 1;
+                    " class="skiptranslate is-processing">
+                        🛡️ 永久屏蔽并移除(CSS选择器)
+                    </button>
+
+
                     <button id="gemini-modal-cancel" style="
                         background: #FFB300; color: #333; border: none; flex: 1;
                     ">
@@ -941,10 +977,11 @@ onclick="toggleDebugAndRefresh()"
                 if (debugToggle && localStorage.getItem('gemini_debug_element_click_mode') == 'true') {
                     // 1. 触发目标元素的点击事件
                     debugToggle.click();
-                    clickedElement.textContent = '🔰 元素点击调试(已关闭)'
+                    clickedElement.textContent = '🔰 返回'
                 } else {
                     // 4. 如果目标元素不存在，则提示
-                    clickedElement.textContent = '元素点击调试(未找到目标) 或已关闭';
+                    //// clickedElement.textContent = '元素点击调试(未找到目标) 或已关闭';
+                    closeAndResolve(false)
                     console.warn("未找到 ID 为 'debug-click-toggle' 的目标元素。");
                 }
             }
@@ -1144,14 +1181,6 @@ onclick="toggleDebugAndRefresh()"
             let savedCount = 0;
             selectors.forEach(sel => {
 
-                /*
-                try {
-                    document.querySelector(sel); // 简单校验
-                    if (saveCssRemovalChoice(sel)) savedCount++;
-                } catch (e) {
-                    console.warn(`[Gemini屏蔽 V27] 无效选择器（忽略）: ${sel}`);
-                }*/
-
 
                 // 重构
                 // 更严谨的 CSS 语法校验，不依赖页面是否存在该元素
@@ -1203,6 +1232,9 @@ onclick="toggleDebugAndRefresh()"
  * @param {HTMLElement} el - 目标元素
  * @param {boolean} isAncestor - 是否是回溯过程中的祖先节点
  */
+
+
+        /*
         window.getSmartSelector = function getSmartSelector(el, isAncestor = false) {
             if (!el || el.nodeType !== Node.ELEMENT_NODE) return null;
 
@@ -1262,6 +1294,98 @@ onclick="toggleDebugAndRefresh()"
             }
 
             return nthSelector;
+        }
+
+        */
+
+
+        window.getSmartSelector = function getSmartSelector(el) {
+            if (!(el instanceof Element)) return '';
+
+            /**
+             * 内部辅助：提取元素的“硬指纹”特征
+             * 包含：ID, href, src, title, alt, data-*, 业务Class
+             */
+            function getHardFeature(node) {
+                if (!node) return null;
+                const tag = node.tagName.toLowerCase();
+
+                // 1. ID 永远是第一优先级 (排除纯数字/动态ID)
+                if (node.id && typeof node.id === 'string' && !/^\d+$/.test(node.id)) {
+                    return `#${CSS.escape(node.id)}`;
+                }
+
+                // 2. 强业务属性特征 (href, src, data-*)
+                // href/src 只取路径最后一段，防止整条路径太长或带域名
+                const strongAttrs = ['href', 'src', 'data-id', 'data-code', 'data-uid'];
+                for (let attr of strongAttrs) {
+                    let val = node.getAttribute(attr);
+                    if (val && val.length > 3 && val.length < 150) {
+                        if (['href', 'src'].includes(attr)) {
+                            val = val.split('?')[0].split('/').pop();
+                            if (!val || val.length < 3) continue;
+                        }
+                        return `${tag}[${attr}*='${CSS.escape(val)}']`;
+                    }
+                }
+
+                // 3. 语义化文字属性 (title, alt, placeholder)
+                const textAttrs = ['title', 'alt', 'placeholder', 'aria-label'];
+                for (let attr of textAttrs) {
+                    let val = node.getAttribute(attr);
+                    if (val && val.length > 1 && val.length < 50) {
+                        return `${tag}[${attr}*='${CSS.escape(val)}']`;
+                    }
+                }
+
+                // 4. 业务类名特征 (过滤布局干扰类)
+                const layoutBlacklist = ['item', 'masonry', 'brick', 'active', 'selected', 'row', 'col-', 'grid-'];
+                const validClasses = Array.from(node.classList).filter(c =>
+                    !layoutBlacklist.some(lc => c.includes(lc))
+                );
+                if (validClasses.length > 0) {
+                    return `${tag}.${CSS.escape(validClasses[0])}`;
+                }
+
+                return null; // 这一层彻底没特征
+            }
+
+            let path = [];
+            let current = el;
+            let foundStrongAnchor = false;
+
+            // =================================================================
+            // 核心逻辑：向上递归遍历，直到找到有属性特征的锚点
+            // =================================================================
+            while (current && !['HTML', 'BODY'].includes(current.tagName)) {
+                const feature = getHardFeature(current);
+
+                if (feature) {
+                    path.unshift(feature);
+                    // 如果撞到了“顶级锚点”（带ID或带业务代码的A标签），停止向上爬
+                    if (feature.startsWith('#') || feature.startsWith('a[')) {
+                        foundStrongAnchor = true;
+                        break;
+                    }
+                } else {
+                    // 如果这一层没特征，记录它的标签名和位置(nth-child)，并强制继续向上找
+                    let segment = current.tagName.toLowerCase();
+                    if (current.parentElement && current.parentElement.children.length > 1) {
+                        let index = Array.from(current.parentElement.children).indexOf(current) + 1;
+                        segment += `:nth-child(${index})`;
+                    }
+                    path.unshift(segment);
+                }
+
+                current = current.parentElement;
+            }
+
+            // 如果最后实在没撞到强锚点，补一个 body 前缀作为基准
+            if (!foundStrongAnchor && current && current.tagName === 'BODY') {
+                path.unshift('body');
+            }
+
+            return path.join(' > ');
         }
 
         /**
@@ -1388,40 +1512,34 @@ onclick="toggleDebugAndRefresh()"
         function getFinalSelector(el) {
             // 1. 获取基础路径和提纯路径
             let selector = getFullSmartPath(el);
-            const refined = refineAndCleanSelector(selector, el).replace(/"/g, "'"); // 将双引号改为单引号
+            // 处理引号以确保 CSS 选择器字符串合法
+            let refined = refineAndCleanSelector(selector, el).replace(/"/g, "'");
+            selector = selector.replace(/"/g, "'");
+
             console.log('原始路径:', selector);
             console.log('提纯结果:', refined);
 
             try {
-                // 2. 校验逻辑修改：放宽限制
-                const matches = document.querySelectorAll(refined);
-                const matchesArray = Array.from(matches);
+                // 2. 校验合法性：使用 matches 性能更高，且逻辑更直接
+                // 它直接判断 el 元素是否符合该选择器，不需要遍历整个页面
+                const isRefinedValid = el.matches(refined);
+                const isSelectorValid = el.matches(selector);
 
-                // --- 修改点 A：只要提纯后的选择器能覆盖到我点的这个元素，就返回它 ---
-                // 哪怕 matches.length 是 3 或 5，只要 el 在里面，说明它是一个有效的“全站通杀”规则
-                if (matchesArray.includes(el)) {
-                    console.log(`[提纯成功] 匹配到 ${matches.length} 个元素，包含目标。`);
-                    return refined;
+                // 情况 A：两者都有效，选短的
+                if (isRefinedValid && isSelectorValid) {
+                    return refined.length <= selector.length ? refined : selector;
                 }
 
-                // --- 修改点 B：针对强力属性的“盲信”逻辑 (可选) ---
-                // 如果 refined 包含了视频 ID (href*=)，即使在这一瞬间没匹配到(可能属性被JS删了)，
-                // 考虑到它在刷新后的稳定性，依然可以优先返回它。
-                if (/\[href\*=/.test(refined)) {
-                    return refined;
-                }
+                // 情况 B：只有一个有效
+                if (isRefinedValid) return refined;
+                if (isSelectorValid) return selector;
 
             } catch (e) {
-                console.error("提纯选择器执行错误:", e);
+                console.error("选择器校验执行错误:", e);
             }
 
-            // 3. 只有当提纯结果完全无法选中当前元素时，才回退到原始路径
-            // 或者是 refined 变成了空字符串等异常情况
-            //// return refined || selector;
-
-            const finalSelector = (refined || selector || "").toString();
-            return finalSelector.replace(/"/g, "'");
-            // return (refined || selector).replace(/"/g, "'"); // 返回单引号
+            // 3. 兜底逻辑：如果校验失败或报错，尝试返回一个不为空的值，或者返回 null
+            return refined || selector || null;
         }
 
 
@@ -1822,8 +1940,8 @@ onclick="toggleDebugAndRefresh()"
             // 2. 更新你的悬浮窗 UI
             outputEl.innerText = selector;
 
-            // outputEl.innerText = getSmartSelector(e.target);
-            outputEl.innerText = getFinalSelector(e.target);
+            outputEl.innerText = getSmartSelector(e.target);
+            //outputEl.innerText = getFinalSelector(e.target);
 
             overlay.style.borderStyle = 'solid';
             resultWin.style.display = 'block';
@@ -3619,6 +3737,7 @@ onclick="toggleDebugAndRefresh()"
 
     // 无论你的 HTML 什么时候生成，这段代码都能监听到那个按钮的点击
     document.addEventListener('click', function (e) {
+
         if (e.target && e.target.id === 'repair-css-data-btn') {
             const CSS_KEY = 'gemini_css_selectors_removals'; // 请确认你的 key 名
             const data = localStorage.getItem(CSS_KEY);
@@ -3649,6 +3768,7 @@ onclick="toggleDebugAndRefresh()"
                 alert("修复失败: " + err);
             }
         }
+
     });
 
 
@@ -3675,7 +3795,6 @@ onclick="toggleDebugAndRefresh()"
 
 
         // 捕获元素 
-
 
 
         function getSmartSelector_vW(el) {
