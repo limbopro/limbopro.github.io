@@ -516,14 +516,13 @@
             result.forEach((x) => {
                 try {
                     console.log(x, ' 移除中...')
-                    // x.remove();
-                    x.classList.add('hiddenbylimbopro')
+                    x.remove();
+                    //x.classList.add('hiddenbyLimbopro')
                 } catch (e) {
                     console.warn('移除元素失败:', e);
                 }
             });
         };
-
 
         // 2. 初始化动态监听，使用独一无二的变量名
         const startDynamicCleanup = (cssRemovals) => {
@@ -1301,89 +1300,6 @@ onclick="toggleDebugAndRefresh()"
 
 
 
-        const SelectorBlockerTool = {
-            // 保存当前正在预览的选择器
-            currentSelector: '',
-
-            /**
-             * 核心：获取并预览选择器
-             * 在你的点击事件回调中调用此方法
-             */
-            handleElementClick: function (el) {
-                // 1. 调用你之前的逻辑链条（保持原样）
-                const selector = typeof getFinalSelector === 'function'
-                    ? getFinalSelector(el)
-                    : this._fallbackGetSelector(el); // 兜底逻辑
-
-                this.currentSelector = selector;
-
-                // 2. 执行预览高亮
-                this.applyPreview(selector);
-
-                return selector;
-            },
-
-            /**
-             * 实时 CSS 注入预览
-             * 这种方式比修改 Style 属性更强大，能覆盖伪元素且对动态生成的元素有效
-             */
-            applyPreview: function (selector) {
-                let styleEl = document.getElementById('blocker-preview-style');
-                if (!styleEl) {
-                    styleEl = document.createElement('style');
-                    styleEl.id = 'blocker-preview-style';
-                    document.head.appendChild(styleEl);
-                }
-
-                // 使用 CSS 注入实现高亮和标签提示
-                // 加上 !important 确保覆盖网页原生样式
-                styleEl.innerHTML = `
-            ${selector} {
-                outline: 7px solid #ff4d4f !important;
-                outline-offset: -7px !important;
-                background-color: rgba(255, 77, 79, 0.3) !important;
-                position: relative !important;
-                filter: grayscale(0.5) !important;
-            }
-
-            ${selector}::before {
-                content: "SELECTED: ${selector.replace(/"/g, "'")}";
-                position: absolute;
-                top: -25px;
-                left: 0;
-                background: #ff4d4f;
-                color: white;
-                font-size: 10px;
-                padding: 2px 6px;
-                white-space: nowrap;
-                z-index: 2147483647;
-                border-radius: 2px;
-                pointer-events: none;
-            }
-        `;
-            },
-
-            /**
-             * 清除预览效果
-             */
-            clear: function () {
-                const styleEl = document.getElementById('blocker-preview-style');
-                if (styleEl) styleEl.remove();
-                this.currentSelector = '';
-            },
-
-            /**
-             * 确认屏蔽：清除高亮并返回选择器供你保存
-             */
-            confirm: function () {
-                const final = this.currentSelector;
-                this.clear();
-                return final;
-            }
-        };
-
-
-
         /**
  * 总调度：获取并自动优化选择器
  */
@@ -1409,7 +1325,6 @@ onclick="toggleDebugAndRefresh()"
 
             return selector;
         }
-
 
         /**
          * 辅助逻辑：判断是否命中提纯条件
@@ -1553,7 +1468,7 @@ onclick="toggleDebugAndRefresh()"
         const resultWin = document.createElement('div');
         resultWin.className = 'sel-result-window notranslate';
         resultWin.innerHTML = `
-        <span class="sel-title">精确CSS选择器(类xPath):</span>
+        <span class="sel-title">精确CSS选择器(Smart Path):</span>
         <code class="sel-code" id="sel-output"></code>
         <div class="sel-actions">
             <button class="sel-btn sel-copy-btn" id="sel-copy">复制</button>
@@ -1616,16 +1531,9 @@ onclick="toggleDebugAndRefresh()"
         const onClick = (e) => {
             if (resultWin.style.display === 'block') return;
             e.preventDefault(); e.stopPropagation();
-
-            /** 新增 “所见即所得”（WYSIWYG） */
-            // 1. 使用工具处理点击：它会自动调用 getFinalSelector 并触发红框预览
-            const selector = SelectorBlockerTool.handleElementClick(e.target);
-            // 2. 更新你的悬浮窗 UI
-            outputEl.innerText = selector;
-
             // outputEl.innerText = getSmartSelector(e.target);
             outputEl.innerText = getFinalSelector(e.target);
-
+            
             overlay.style.borderStyle = 'solid';
             resultWin.style.display = 'block';
             document.body.style.cursor = 'default';
@@ -1644,13 +1552,6 @@ onclick="toggleDebugAndRefresh()"
         };
 
         const destroyTool = () => {
-
-            // 1. 核心：清除 SelectorBlockerTool 注入的预览样式和红框
-            if (typeof SelectorBlockerTool !== 'undefined') {
-                SelectorBlockerTool.clear();
-            }
-
-            // 原有的销毁逻辑
             document.removeEventListener('mousemove', onMove, true);
             document.removeEventListener('click', onClick, true);
             overlay.remove(); resultWin.remove(); style.remove();
@@ -1702,6 +1603,7 @@ onclick="toggleDebugAndRefresh()"
 
         resultWin.querySelector('#sel-reset').onclick = resetMode;
         resultWin.querySelector('#sel-exit').onclick = destroyTool;
+
         document.addEventListener('mousemove', onMove, true);
         document.addEventListener('click', onClick, true);
         document.body.style.cursor = 'crosshair';
@@ -2819,7 +2721,7 @@ onclick="toggleDebugAndRefresh()"
             </div>
 
             <div class="gemini-tip-text">
-                🌟**提示:** “选择并屏蔽模式”及🛠️ 元素点击调试中的屏蔽原理基于<a href='https://www.google.com/search?q=xpath+%E6%98%AF%E4%BB%80%E4%B9%88' target='_blank' style='color:blue !important;'>xPath</a>；CSS选择器屏蔽：使用 <a style="color:blue !important" href='https://www.google.com/search?q=mutationobserver+%E4%BB%8B%E7%BB%8D'>MutationObserver</a> & <a style="color:blue !important" href='https://www.google.com/search?q=querySelectorAll()+%E6%96%B9%E6%B3%95'>querySelectorAll()</a> 方法遍历添加类.hiddenbylimbopro，不影响网页<a href='https://developer.chrome.com/docs/devtools/dom?hl=zh-cn' target='_blank' style='color:blue !important'>DOM</a> 结构。<a href='https://www.google.com/search?q=iframe+sandbox%E5%B1%9E%E6%80%A7' target='_blank' style='color:blue !important;'>了解沙箱化</a>。
+                🌟**提示:** “选择并屏蔽模式”及🛠️ 元素点击调试中的屏蔽原理基于<a href='https://www.google.com/search?q=xpath+%E6%98%AF%E4%BB%80%E4%B9%88' target='_blank' style='color:blue !important;'>xPath</a>；CSS选择器屏蔽：使用 <a style="color:blue !important" href='https://www.google.com/search?q=mutationobserver+%E4%BB%8B%E7%BB%8D'>MutationObserver</a> & <a style="color:blue !important" href='https://www.google.com/search?q=querySelectorAll()+%E6%96%B9%E6%B3%95'>querySelectorAll()</a> 方法遍历.remove()，会对网页的<a href='https://www.google.com/search?q=%E6%96%87%E6%A1%A3%E5%AF%B9%E8%B1%A1%E6%A8%A1%E5%9E%8B' target='_blank' style='color:blue !important'>DOM</a>层级结构造成破坏。⛔标记为黑名单页意味着对当前页面存在的所有iframe进行<a href='https://www.google.com/search?q=iframe+sandbox%E5%B1%9E%E6%80%A7' target='_blank' style='color:blue !important;'>沙箱化</a>处理，严格限制其交互权限。
             </div>
         `;
 
@@ -3475,7 +3377,7 @@ onclick="toggleDebugAndRefresh()"
 
 
 
-        function getSmartSelector_wv(el) {
+        function getSmartSelector_w(el) {
             if (!(el instanceof Element)) return '';
 
             /**
@@ -3710,7 +3612,7 @@ onclick="toggleDebugAndRefresh()"
                     position: computedStyle.position,
                     parent: parentInfo,
                     inlineClick: inlineClick,
-                    preciseSelector: getSmartSelector_wv(targetElement),   // 包含 nth-child 的精确选择器 [新属性]
+                    preciseSelector: getSmartSelector_w(targetElement),   // 包含 nth-child 的精确选择器 [新属性]
                     // ✅ 直接调用已定义好的工具函数
                     nthChild: window.getElementNthChild(targetElement),
                 };
@@ -3969,8 +3871,7 @@ onclick="toggleDebugAndRefresh()"
             const style = document.createElement('style');
             style.id = 'style-limbopro'; // 设置 ID 防止重复注入
             style.textContent = `
-            .hiddenbylimbopro {
-                display: none! important;        /*核心隐藏：将元素从渲染树中完全移除，不占据物理空间 */
+            .hiddenbyLimbopro {
                 visibility: hidden !important;   /* 隐藏但保留占位 */
                 pointer-events: none !important; /* 禁止任何鼠标/点击事件 */
                 user-select: none !important;    /* 禁止选中文本 */

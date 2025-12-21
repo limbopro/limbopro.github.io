@@ -150,7 +150,7 @@ window.showLinkTipsModalOnce = function() {
                 <div class="info-cell span-all"><b>目标元素递归向上含链接(Href)</b><small style="color:#3182ce; font-family:monospace; word-break:break-all;">${liveData.href}</small></div>
             </div>
 
-            ${createSection("🛠️ 提取到的关键特征属性", liveData.attr || '', "#ed8936", 
+            ${createSection("🛠️ 提取到的目标元素属性特征", liveData.attr || '', "#ed8936", 
                 ["精准定位：直接反射目标元素的内在特征属性。", "独立性强：不依赖外部 DOM 层级。"], 
                 ["内容耦合：属性值可能包含动态参数。"], true)}
 
