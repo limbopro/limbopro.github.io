@@ -813,7 +813,7 @@
             // V26.39.5: 使用 safeTruncate 优化信息展示
             const truncatedCssSelector = safeTruncate(elementInfo.cssSelector, 100);
             const truncatedHref = safeTruncate(elementInfo.href, 1000);
-            const truncatedXpath = safeTruncate(xpath, 100);
+            const truncatedXpath = safeTruncate(xpath, 10000);
 
 
             // V26.39.6 增强信息
@@ -877,13 +877,9 @@
                     </div>
 
                     <div style="word-break: break-all; margin-bottom: 5px;">
-    <span style="font-weight: bold;">相对CSS选择器(Base parentElement): </span> ${truncatedParent} > ${truncatedCssSelector}:nth-child(${elementInfo.nthChild})${targetElementInformAppend}
+    <span style="font-weight: bold;">相对CSS选择器(Base parentElement): </span>${truncatedParent} > ${truncatedCssSelector}:nth-child(${elementInfo.nthChild})${targetElementInformAppend}
                     </div>
 
-
-                    <div style="word-break: break-all; margin-bottom: 5px;">
-        <span style="font-weight: bold;">精确CSS选择器(Base attributes):</span> ${safeTruncate(elementInfo.preciseSelector, 10000)}
-    </div>
 
      <div style="word-break: break-all; margin-bottom: 5px;">
                         <span style="font-weight: bold;">目标元素递归向上含链接(Href):</span> ${truncatedHref}
@@ -1384,31 +1380,47 @@ onclick="toggleDebugAndRefresh()"
 
 
 
+
         /**
  * 总调度：获取并自动优化选择器
  */
+
         function getFinalSelector(el) {
-            // 1. 调用你保留的 getSmartSelector (这里假设它内部包含递归向上逻辑)
-            // 如果你的 getSmartSelector 只处理单层，我们需要确保这里拿到的是完整路径
+            // 1. 获取基础路径和提纯路径
             let selector = getFullSmartPath(el);
+            const refined = refineAndCleanSelector(selector, el);
 
-            // 2. 判断是否需要二次处理
-            if (shouldRefine(selector)) {
-                // 3. 调用二次处理工具进行提纯
-                const refined = refineAndCleanSelector(selector);
+            console.log('原始路径:', selector);
+            console.log('提纯结果:', refined);
 
-                try {
-                    // 4. 最终校验：确保提纯后的选择器依然能选中唯一元素且不报错
-                    if (document.querySelectorAll(refined).length === 1) {
-                        return refined;
-                    }
-                } catch (e) {
-                    console.error("提纯选择器语法错误:", e);
+            try {
+                // 2. 校验逻辑修改：放宽限制
+                const matches = document.querySelectorAll(refined);
+                const matchesArray = Array.from(matches);
+
+                // --- 修改点 A：只要提纯后的选择器能覆盖到我点的这个元素，就返回它 ---
+                // 哪怕 matches.length 是 3 或 5，只要 el 在里面，说明它是一个有效的“全站通杀”规则
+                if (matchesArray.includes(el)) {
+                    console.log(`[提纯成功] 匹配到 ${matches.length} 个元素，包含目标。`);
+                    return refined;
                 }
+
+                // --- 修改点 B：针对强力属性的“盲信”逻辑 (可选) ---
+                // 如果 refined 包含了视频 ID (href*=)，即使在这一瞬间没匹配到(可能属性被JS删了)，
+                // 考虑到它在刷新后的稳定性，依然可以优先返回它。
+                if (/\[href\*=/.test(refined)) {
+                    return refined;
+                }
+
+            } catch (e) {
+                console.error("提纯选择器执行错误:", e);
             }
 
-            return selector;
+            // 3. 只有当提纯结果完全无法选中当前元素时，才回退到原始路径
+            // 或者是 refined 变成了空字符串等异常情况
+            return refined || selector;
         }
+
 
 
         /**
@@ -1469,34 +1481,103 @@ onclick="toggleDebugAndRefresh()"
 
 
         /**
- * 二次处理工具：专门从长路径中提取核心结构
+ * 针对 Jable 深度优化的提纯函数
+ * @param {string} selector 原始路径
+ * @param {HTMLElement} targetEl 点击的真实元素
  */
-        function refineAndCleanSelector(selector) {
-            return selector.split(/\s*>\s*/).map(part => {
-                // 提取标签名
+        function refineAndCleanSelector(selector, targetEl) {
+            console.log('控制台输出selector和targetEl', selector, targetEl)
+            const parts = selector.split(/\s*>\s*/);
+            let currentEl = targetEl;
+            const elChain = [];
+
+            // 溯源 DOM 链
+            while (currentEl && elChain.length < parts.length) {
+                elChain.unshift(currentEl);
+                currentEl = currentEl.parentElement;
+            }
+
+            return parts.map((part, index) => {
+                const el = elChain[index];
                 const tagMatch = part.match(/^([a-z0-9]+)/i);
                 const tag = tagMatch ? tagMatch[1] : '';
-
-                // 提取 nth-of-type 位置
                 const nthMatch = part.match(/:nth-of-type\(\d+\)/);
                 const nth = nthMatch ? nthMatch[0] : '';
 
-                // 提取被认为“稳定”的类名 (不包含冒号且非 Tailwind 常用词)
+
+                // --- 1. 属性提取：处理 a, img 和 video 标签 ---
+                let attrPart = '';
+                if (el) {
+                    if (tag === 'a') {
+                        const href = el.getAttribute('href') || '';
+                        // 提取视频 ID (例如从 /videos/jur-566/ 提取 jur-566)
+                        const vid = href.split('/').filter(Boolean).pop();
+                        if (vid && vid.length > 3) attrPart = `[href*="${vid}"]`;
+                    }
+                    else if (tag === 'img') {
+                        const dSrc = el.getAttribute('data-src') || '';
+                        // 提取图片 ID (如 55472)
+                        const imgId = dSrc.match(/\/(\d+)\//)?.[1];
+                        if (imgId) attrPart = `[data-src*="${imgId}"]`;
+                    }
+                    // --- 新增：针对 video 标签的特殊处理 ---
+                    else if (tag === 'video') {
+                        const vSrc = el.getAttribute('src') || '';
+                        // 只有当不是动态 blob 且长度足够时才提取
+                        if (vSrc && !vSrc.startsWith('blob:')) {
+                            // 尝试提取文件名部分作为指纹
+                            const vFingerprint = vSrc.split('/').pop().split('?')[0];
+                            if (vFingerprint && vFingerprint.length > 8) {
+                                attrPart = `[src*="${vFingerprint}"]`;
+                            }
+                        }
+                    }
+                }
+
+
+                // --- 2. 类名过滤：扩大黑名单范围 ---
                 let stableClasses = [];
                 const classMatch = part.match(/\.([^\s.:>#\[]+)/g);
                 if (classMatch) {
                     stableClasses = classMatch
                         .map(c => c.substring(1))
-                        .filter(c => !/(px-|py-|mb-|mt-|bg-|text-|dark|hover|md:|lg:)/.test(c))
+                        .filter(c => {
+                            // 1. 排除所有状态类名
+                            const isTransient = /(loading|lazy|loaded|preview|active|hover|focus|show|open)/i.test(c);
+
+                            // 2. 排除所有间距、布局、栅格类名
+                            const isStyle = /^(px-|py-|mb-|mt-|pb-|ml-|mr|bg-|text-|dark|col-|gutter|cover|d-|flex|justify|align|p-|m-)/.test(c);
+
+                            // 3. 业务白名单：保留这些核心词
+                            const isBusiness = /(video|box|card|item|detail|title|main|wrapper)/i.test(c);
+
+                            // 4. 【新增】排除随机混淆类名 (例如 mtz-vlc-mkjjc)
+                            // 逻辑：如果类名包含连字符超过2个，或者长度超过10且没有明确语义，判定为随机
+                            const isRandom = (c.split('-').length > 2) || (c.length > 10 && !isBusiness);
+
+                            // 只要是业务词就保留，否则必须既不是瞬态、也不是样式、也不是随机
+                            return isBusiness || (!isTransient && !isStyle && !isRandom);
+                        })
                         .map(c => CSS.escape(c));
                 }
 
-                // 重新组合：优先使用 标签 + 稳定类 + 位置
-                const classStr = stableClasses.length > 0 ? '.' + stableClasses.slice(0, 1).join('.') : '';
-                return `${tag}${classStr}${nth}`;
+                // --- 3. 组合逻辑 ---
+                let finalPart = tag;
+                // 如果有属性（如 [href*="jur-566"]），优先级最高，因为它最稳定
+                if (attrPart) {
+                    finalPart += attrPart;
+                } else {
+                    // 否则才使用类名
+                    if (stableClasses.length > 0) {
+                        finalPart += '.' + stableClasses[0];
+                    }
+                    // 始终保留位置信息作为兜底
+                    if (nth) finalPart += nth;
+                }
+
+                return finalPart;
             }).join(' > ');
         }
-
 
         // 2. 核心算法 (nth-child + ID 终结) 结束
 
@@ -1552,6 +1633,8 @@ onclick="toggleDebugAndRefresh()"
 
         const resultWin = document.createElement('div');
         resultWin.className = 'sel-result-window notranslate';
+
+        /* 重构
         resultWin.innerHTML = `
         <span class="sel-title">精确CSS选择器(类xPath):</span>
         <code class="sel-code" id="sel-output"></code>
@@ -1563,10 +1646,123 @@ onclick="toggleDebugAndRefresh()"
             <button class="sel-btn sel-exit-btn" id="sel-exit">退出</button>
         </div>
     `;
+    */
+
+
+        // --- 1. UI 渲染 ---
+        resultWin.innerHTML = `
+    <span class="sel-title">精确CSS选择器(Under Test):</span>
+    <code class="sel-code" id="sel-output"></code>
+    
+    <div id="sel-warning-tip" style="margin: 10px 0; padding: 8px; border-radius: 4px; font-size: 12px; display: none;">
+        <span id="sel-tip-msg"></span>
+        <span style="float: right;">(匹配: <strong id="sel-count-num">0</strong>)</span>
+    </div>
+
+    <div class="sel-actions">
+        <button class="sel-btn sel-copy-btn" id="sel-copy">复制</button>
+        <button class="sel-btn sel-edit-btn" id="sel-edit">修改</button>
+        <button class="sel-btn sel-inspect-btn" id="sel-inspect-btn" style="min-width: 65px;">定位</button>
+        <button class="sel-btn sel-block-btn" id="sel-block">屏蔽</button>
+        <button class="sel-btn sel-reset-btn" id="sel-reset">重选</button>
+        <button class="sel-btn sel-exit-btn" id="sel-exit">退出</button>
+    </div>
+`;
         document.body.appendChild(resultWin);
 
-        const outputEl = resultWin.querySelector('#sel-output');
+
+        // 1. 获取刚刚生成的元素引用
         const editBtn = resultWin.querySelector('#sel-edit');
+        const currentResultWin = document.querySelector('.sel-result-window.notranslate');
+        const outputEl = currentResultWin.querySelector('#sel-output');
+        let currentMatchIndex = 0; // 记录当前查看位置
+        const inspectBtn = currentResultWin.querySelector('#sel-inspect-btn'); // 假设你按钮id是这个
+        const tipBox = currentResultWin.querySelector('#sel-warning-tip');
+        const tipMsg = currentResultWin.querySelector('#sel-tip-msg');
+        const countNum = currentResultWin.querySelector('#sel-count-num');
+
+
+
+        // 查看元素
+        // --- 2. 绑定点击事件 ---
+        inspectBtn.onclick = () => {
+            // 关键点：每次点击时，都重新实时获取当前 id="sel-output" 里的文本
+            const currentSelector = document.getElementById('sel-output').textContent.trim();
+
+            // 重新获取当前页面匹配到的最新 targets
+            const targets = document.querySelectorAll(currentSelector);
+            const total = targets.length;
+
+            if (total === 0) {
+                inspectBtn.textContent = "未找到目标";
+                return;
+            }
+
+            // 确保点击重选后，索引能回到 1
+            // 建议在“重选”按钮的逻辑里加入：window.currentMatchIndex = 0;
+            const indexToView = (window.currentMatchIndex || 0) % total;
+
+            const target = targets[indexToView];
+            target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+            // 高亮逻辑...
+            const originalOutline = target.style.outline;
+            target.style.outline = '4px solid #ffeb3b';
+            target.style.outlineOffset = '2px';
+            setTimeout(() => { target.style.outline = originalOutline; }, 1000);
+
+            // 更新按钮文字
+            inspectBtn.textContent = `${indexToView + 1} / ${total}`;
+
+            // 更新全局或闭包内的索引
+            window.currentMatchIndex = indexToView + 1;
+        };
+
+
+
+        // 封装一个更新函数
+        const refreshTip = () => {
+            const currentSelector = outputEl.textContent.trim();
+            let count = 0;
+            try {
+                count = document.querySelectorAll(currentSelector).length;
+            } catch (e) { count = 0; }
+
+            const tipBox = currentResultWin.querySelector('#sel-warning-tip');
+            const tipMsg = currentResultWin.querySelector('#sel-tip-msg');
+            const countNum = currentResultWin.querySelector('#sel-count-num');
+
+            // 重新判定颜色和文字
+            let color = count === 1 ? "#2e7d32" : (count > 8 ? "#d32f2f" : (count > 0 ? "#ed6c02" : "#9e9e9e"));
+            let text = count === 1 ? "✅ 精准屏蔽" : (count > 8 ? "🚨 危险：匹配过多" : (count > 0 ? "💡 通杀模式" : "❓ 暂未匹配(预览中)"));
+
+            // 应用变化
+            tipBox.style.display = "block";
+            tipBox.style.border = `1px solid ${color}`;
+            tipBox.style.background = `${color}15`;
+            tipBox.style.color = color;
+            countNum.textContent = count;
+            tipMsg.textContent = text;
+        };
+
+        // --- 关键点：多重触发机制 ---
+
+        // 1. 初始化立即执行
+        refreshTip();
+
+        // 2. 针对 Jable 预览延迟：500ms 后再复检一次
+        setTimeout(refreshTip, 500);
+
+        // 3. 针对“修改”功能：如果 outputEl 变动，自动更新
+        const observer = new MutationObserver(refreshTip);
+        observer.observe(outputEl, { characterData: true, childList: true, subtree: true });
+
+        /**
+         *  重构
+         */
+        //document.body.appendChild(resultWin);
+        //const outputEl = resultWin.querySelector('#sel-output');
+        //const editBtn = resultWin.querySelector('#sel-edit');
 
         // --- 拖拽实现 ---
         const dragHandle = resultWin.querySelector('.sel-title');
@@ -1632,6 +1828,10 @@ onclick="toggleDebugAndRefresh()"
         };
 
         const resetMode = () => {
+            window.currentMatchIndex = 0
+            if (document.getElementById('sel-inspect-btn')) {
+                document.getElementById('sel-inspect-btn').textContent = '定位';
+            }
             resultWin.style.display = 'none';
             overlay.style.display = 'none';
             overlay.style.borderStyle = 'dashed';
@@ -3475,7 +3675,7 @@ onclick="toggleDebugAndRefresh()"
 
 
 
-        function getSmartSelector_wv(el) {
+        function getSmartSelector_vW(el) {
             if (!(el instanceof Element)) return '';
 
             /**
@@ -3710,7 +3910,7 @@ onclick="toggleDebugAndRefresh()"
                     position: computedStyle.position,
                     parent: parentInfo,
                     inlineClick: inlineClick,
-                    preciseSelector: getSmartSelector_wv(targetElement),   // 包含 nth-child 的精确选择器 [新属性]
+                    preciseSelector: getSmartSelector_vW(targetElement),   // 包含 nth-child 的精确选择器 [新属性]
                     // ✅ 直接调用已定义好的工具函数
                     nthChild: window.getElementNthChild(targetElement),
                 };

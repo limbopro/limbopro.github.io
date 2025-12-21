@@ -2,7 +2,7 @@
  * 自动化提示模态框 (V5.5 - 集成一键屏蔽功能)
  * 新增：在复制按钮左侧添加“🛡️ 屏蔽”按钮，直接调用屏蔽逻辑。
  */
-window.showLinkTipsModalOnce = function () {
+window.showLinkTipsModalOnce = function() {
     if (document.getElementById('gemini-tips-modal-overlay')) {
         document.getElementById('gemini-tips-modal-overlay').style.display = 'block';
         return;
@@ -60,6 +60,7 @@ window.showLinkTipsModalOnce = function () {
                 const map = {
                     "父元素": "parent", "目标元素": "target", "目标元素属性特征": "attr",
                     "目标元素尺寸": "size", "相对CSS选择器(Base parentElement)": "relCSS",
+                    "精确CSS选择器(Base attributes)": "absCSS", "目标元素递归向上含链接(Href)": "href",
                     "Z/Opacity/Pos": "zPos", "内联 Click": "inline", "XPath": "xpath"
                 };
                 if (map[key]) data[map[key]] = value;
@@ -149,39 +150,21 @@ window.showLinkTipsModalOnce = function () {
                 <div class="info-cell span-all"><b>目标元素递归向上含链接(Href)</b><small style="color:#3182ce; font-family:monospace; word-break:break-all;">${liveData.href}</small></div>
             </div>
 
-            ${createSection("[ 方案 A ] 目标元素属性特征", liveData.attr || '', "#ed8936",
-        ["精准定位：直接反射目标元素的内在特征属性。", "独立性强：不依赖外部 DOM 层级。"],
-        ["内容耦合：属性值可能包含动态参数。"], true)}
+            ${createSection("🛠️ 提取到的目标元素属性特征", liveData.attr || '', "#ed8936", 
+                ["精准定位：直接反射目标元素的内在特征属性。", "独立性强：不依赖外部 DOM 层级。"], 
+                ["内容耦合：属性值可能包含动态参数。"], true)}
 
-            ${createSection("[ 方案 B ] 相对 CSS 选择器 (最佳实践)", liveData.relCSS, "#38a169",
-            ["结构稳定性极高：仅依赖 ${liveData.parent} 内部结构。", "代码简洁：适合在 <code>eval()</code> 中使用。", "浏览器解析效率最高。"],
-            ["索引依赖：需确保 <code>nth-child</code> 正确。"])}
+            ${createSection("[ 方案 A ] 相对 CSS 选择器 (最佳实践)", liveData.relCSS, "#38a169", 
+                ["结构稳定性极高：仅依赖 ${liveData.parent} 内部结构。", "代码简洁：适合在 <code>eval()</code> 中使用。", "浏览器解析效率最高。"], 
+                ["索引依赖：需确保 <code>nth-child</code> 正确。"])}
 
+            ${createSection("[ 方案 B ] 精确属性选择器 (Base Attributes)", liveData.absCSS, "#3182ce", 
+                ["全局唯一性：能 100% 锁定特定业务对象。", "无视位置变动：只要链接属性不变即可捕获。"], 
+                ["极度脆弱：中间层级 Class 改变会失效。", "包含业务数据：不具备通用性。"])}
 
-            ${createSection("[ 方案 C ] 完整 XPath 路径 (强力保底)", liveData.xpath, "#805ad5",
-                    ["定位维度最全：支持文本匹配和向上查找。", "逻辑保底：复杂页面唯一方案。"],
-                    ["性能开销稍大：在大型 DOM 树中稍慢。", "维护难度高：路径对层级敏感。"], false)}
-
-
-
-
-                    
-                    
-
-    <details style="margin-top: 15px; background: #f7fafc; border-radius: 10px; border: 1px solid #e2e8f0;">
-        <summary style="padding: 10px; font-size: 13px; font-weight: bold; color: #2d3748; cursor: pointer; outline: none;">
-            💡 为什么懒加载(Lazyload)经常导致CSS选择器失效？ (点击展开)
-        </summary>
-        <div style="padding: 0 12px 12px 12px; font-size: 12px; color: #718096; line-height: 1.6; border-top: 1px solid #e2e8f0; margin-top: 5px; padding-top: 10px;">
-            <p><strong>1. 属性延迟：</strong> 没滚到视频前，<code>src</code> 是空的或 base64 位图。选择器应优先匹配 <code>[data-src]</code>。</p>
-            <p><strong>2. 节点复用：</strong> 某些引擎在滚动时会回收旧节点。如果你的选择器太死（如 <code>nth-child</code>），滚动后位置一变就会抓错。</p>
-            <p><strong>3. 影子 DOM：</strong> 广告位经常动态插入，导致 CSS 路径深度突然变化。xPath 的 <code>//</code> 模糊搜索比 CSS 的 <code>></code> 逐级查找更稳。</p>
-        </div>
-    </details>
-
-
-
-
+            ${createSection("[ 方案 C ] 完整 XPath 路径 (强力保底)", liveData.xpath, "#805ad5", 
+                ["定位维度最全：支持文本匹配和向上查找。", "逻辑保底：复杂页面唯一方案。"], 
+                ["性能开销稍大：在大型 DOM 树中稍慢。", "维护难度高：路径对层级敏感。"], false)}
 
             <button onclick="this.closest('.gemini-tips-modal-overlay').remove()" style="width:100%; margin-top:35px; padding:16px; background:#f7fafc; border:1px solid #e2e8f0; border-radius:12px; font-weight:bold; cursor:pointer;">返回调试界面</button>
         </div>
