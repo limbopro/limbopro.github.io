@@ -386,7 +386,7 @@ function createFloatingButton() {
 
     // 调用函数，传入您提供的 CSS 文件 URL
     const cssFileUrl = 'https://limbopro.com/CSS/Adblock4limbo.user.css'; // 含 Adguard 通用广告元素选择器 看外网网页会非常干净
-    loadExternalCss(cssFileUrl);
+    // loadExternalCss(cssFileUrl); 自行去导航里的工具箱开启
     const css = `
 
 
@@ -446,6 +446,7 @@ function createFloatingButton() {
         border:0px;
     }
 
+    iframe.skiptranslate,
     .dual-wrapper-hidden {
         display: none !important;
         height: 0px !important;
@@ -460,6 +461,7 @@ function createFloatingButton() {
         color: inherit;
         word-break: break-word;
         user-select: text;
+        line-height:inherit;
         /*display: block !important;*/
     }
 
@@ -479,7 +481,7 @@ function createFloatingButton() {
         pointer-events: none !important;
     }
 
-    #refresh-button,
+        #refresh-button,
         #translation-button {
         padding: 0px;
         border:1px solid #1a73e8;
@@ -1189,3 +1191,53 @@ window.initAdblockLoader = function initAdblockLoader() {
 // 启动加载器
 formatWholeDom()
 initAdblockLoader();
+
+
+
+(function() {
+    const btn = document.getElementById('translation-button');
+    let isDragging = false;
+    let startY, startTop;
+
+    const start = (e) => {
+        isDragging = true;
+        // 兼容触摸屏和鼠标
+        startY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
+        startTop = btn.offsetTop;
+        btn.style.transition = 'none'; // 拖拽时关闭过渡动画，防止延迟
+    };
+
+    const move = (e) => {
+        if (!isDragging) return;
+        e.preventDefault(); // 阻止移动端页面滚动
+
+        const currentY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
+        const deltaY = currentY - startY;
+        
+        // 计算新的 top 值
+        let newTop = startTop + deltaY;
+
+        // 边界限制：不超出屏幕
+        const maxTop = window.innerHeight - btn.offsetHeight;
+        newTop = Math.max(0, Math.min(newTop, maxTop));
+
+        // 应用位置（改为 top 定位，覆盖原本的 bottom）
+        btn.style.bottom = 'auto';
+        btn.style.top = newTop + 'px';
+    };
+
+    const end = () => {
+        isDragging = false;
+        btn.style.transition = 'transform 0.1s'; // 恢复微调动画
+    };
+
+    // 鼠标事件
+    btn.addEventListener('mousedown', start);
+    window.addEventListener('mousemove', move);
+    window.addEventListener('mouseup', end);
+
+    // 触摸事件
+    btn.addEventListener('touchstart', start, { passive: false });
+    window.addEventListener('touchmove', move, { passive: false });
+    window.addEventListener('touchend', end);
+})();

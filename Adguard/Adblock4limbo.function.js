@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Adblock4limbo——导航及各类功能函数合集.[github]
 // @namespace    https://limbopro.com/Adguard/Adblock4limbo.function.js
-// @version      0.2025.12.17
+// @version      0.2025.12.21
 // @license      CC BY-NC-SA 4.0
 // @description  实用网站导航 —— 沉浸式翻译纯JS版本；M3U8/MP4资源链接提取；广告元素屏蔽器；费在线影视/前端学习/开发者社区/新闻/建站/下载工具/格式转换工具/电子书/新闻/写作/免费漫画等；
 // @author       limbopro
@@ -33,9 +33,108 @@
 
 
 
+
+
+(function () {
+    const css = `
+/* 给到悬浮窗用 Adblock4limbo 4 function */
+/* 遮罩层 */
+.confirm-mask {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, .5) !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center;
+    z-index: 9998 !important;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity .2s, visibility .2s;
+}
+
+.confirm-mask.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* 弹窗本体 */
+.confirm-dialog {
+    background: #fff !important;
+    border-radius: 8px;
+    width: 320px;
+    max-width: 90vw;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, .2);
+    animation: pop .2s ease-out;
+}
+
+@keyframes pop {
+    from {
+        transform: scale(.8);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.confirm-header {
+    padding: 16px 20px 8px;
+    font-weight: 600;
+    font-size: 18px;
+    color: #333 !important;
+}
+
+.confirm-body {
+    padding: 0 20px 16px;
+    color: #555 !important;
+}
+
+.confirm-footer {
+    padding: 0 20px 16px;
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+.confirm-footer button {
+    min-width: 72px;
+    padding: 6px 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.confirm-footer .cancel {
+    background: #f0f0f0 !important;
+    color: #333 !important;
+}
+
+.confirm-footer .ok {
+    background: #007bff !important;
+    color: #fff !important;
+}
+
+.confirm-footer .ok:hover {
+    background: #0056b3 !important;
+}
+
+.confirm-footer .cancel:hover {
+    background: #e0e0e0 !important;
+}
+`;
+
+    const style = document.createElement('style');
+    style.textContent = css;
+    (document.head || document.documentElement).appendChild(style);
+})();
+
+
+
 // 设置 cookie 饼
 window.fcsetCookie = function fcsetCookie(cname, cvalue, exdays) { var d = new Date(); d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000)); var expires = "expires=" + d.toGMTString(); document.cookie = cname + "=" + cvalue + "; path=/;" + expires; }
-
 
 fcsetCookie('daohangMode_global', 'true', 400);
 
@@ -681,7 +780,11 @@ function getNavigationHTML() {
 </li>
 
       <li class="li_global"><button class="a_global special yellow" id="zhixingjs"  style="border-radius:4px;background:#c53f3f">🧑‍💻执行JS代码</button></li>
-     <li class="li_global"><button id="adsSkip" class="a_global special yellow ads_skip_on" title="自动跳过广告已开启 (点击关闭)" style="
+    
+    
+    
+      <li class="li_global">
+      <button id="adsSkip" class="a_global special yellow ads_skip_on" title="自动跳过广告已开启 (点击关闭)" style="
     width: 106px !important;
     height: 50px !important;
     padding: 5px !important;
@@ -691,6 +794,34 @@ function getNavigationHTML() {
     padding: 2px 5px 2px 5px;
 "><span>视频广告自动跳过</span><span id="toggle_status_text">开启</span>
 </p></button></li>
+
+
+<li class="li_global">
+<button id="loadCSS" 
+    class="a_global special" 
+    title="🌈 加载 AdGuard 过滤器(CSS)" 
+    onclick="toggleAdGuardFilter()"
+    style="
+        width: 106px !important;
+        height: 50px !important;
+        padding: 5px !important;
+        align-items: center !important;
+        display: grid !important;
+        cursor: pointer !important;
+        border-radius: 4px !important;
+        border: none !important;
+        color: white !important;
+        line-height: 1.2 !important;
+        background: #c53f3f !important; /* 默认红色 */
+    ">
+    <p style="padding: 2px 5px !important; margin: 0 !important; pointer-events: none !important;">
+        <span style="font-size: 11px !important; display: block !important;">AdGuard 过滤器</span>
+        <span id="loadCSS_status_text" style="font-weight: bold !important; font-size: 12px !important;">默认关闭</span>
+    </p>
+</button>
+</li>
+
+
     </ul>
   </div>
 
@@ -729,7 +860,6 @@ var file = {
 
     // global_css：全部原样保留 + 按功能分组 + 每条独立一行 + 关键注释
     global_css: [
-
         // ─────────────────── _header4tips 完整样式（已拆行） ───────────────────
         "._header4tips {margin-top:50px; padding:10px 0 5px 0 !important; color:black !important; /*background:rgba(255,255,255,0.96);*/ text-align:center !important; width:100% !important; bottom:-6px; left:7px; font-size:xx-small !important; line-height:1.5 !important; z-index:114153; backdrop-filter:blur(4px);}",
         "._header4tips a {background:black !important; color:white !important; padding:1px 6px !important; border-radius:4px !important; text-decoration:none !important; margin:0 2px; font-weight:bold;}",
@@ -2552,6 +2682,95 @@ loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/clearL
 
 // 如何利用目标信息
 loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/showLinkTipsModalOnce.user.js', 'head', 'showLinkTipsModalOnce')
+
+
+
+
+// 加载 Adgurad 基础过滤器（CSS版）
+// 定义 CSS 地址
+const ADGUARD_CSS_URL = 'https://limbopro.com/CSS/Adblock4limbo.user.css';
+const STORAGE_KEY = 'loadAdguradGeneralFilterCSS';
+
+/**
+ * 核心检查与加载函数：确保 CSS 存在或被移除
+ */
+function manageAdGuardStyle(isActive) {
+    let link = document.querySelector(`link[href="${ADGUARD_CSS_URL}"]`);
+
+    if (isActive) {
+        // 如果开启且不存在，则创建 link 标签加载
+        if (!link) {
+            link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.type = 'text/css';
+            link.href = ADGUARD_CSS_URL;
+            document.head.appendChild(link);
+            console.log('[AdGuard] CSS 已加载');
+        }
+    } else {
+        // 如果关闭且存在，则移除
+        if (link) {
+            link.remove();
+            console.log('[AdGuard] CSS 已卸载');
+        }
+    }
+}
+
+/**
+ * 完善后的切换函数
+ */
+function toggleAdGuardFilter() {
+    const btn = document.getElementById('loadCSS');
+    const statusText = document.getElementById('loadCSS_status_text');
+    if (!btn || !statusText) return;
+
+    const isActive = localStorage.getItem(STORAGE_KEY) === 'true';
+    const newState = !isActive;
+
+    localStorage.setItem(STORAGE_KEY, newState);
+
+    // 执行状态切换逻辑
+    updateAdGuardButtonUI(btn, statusText, newState);
+
+    // 按照要求：用户点击开启时，弹窗 alert 提示
+    if (newState) {
+        confirmndExecuteFC('🌈 https://limbopro.com/CSS/Adblock4limbo.user.css 已加载至网页！共计1.8w+条 Adgurad 基础过滤器(CSS)，移除恼人的图片/GIF广告🪧！如仍有广告，请联系博主反馈...')
+    }
+
+}
+
+/**
+ * 完善后的 UI 更新函数：增加 CSS 检查逻辑
+ */
+function updateAdGuardButtonUI(btn, statusText, isActive) {
+    // 1. 同步 CSS 状态
+    manageAdGuardStyle(isActive);
+
+    // 2. 更新视觉 UI
+    if (isActive) {
+        btn.style.setProperty('background', '#28a745', 'important');
+        statusText.innerText = '已开启';
+        btn.classList.replace('ads_skip_off', 'ads_skip_on');
+    } else {
+        btn.style.setProperty('background', '#c53f3f', 'important');
+        statusText.innerText = '默认关闭';
+        btn.classList.replace('ads_skip_on', 'ads_skip_off');
+    }
+}
+
+/**
+ * 初始化
+ */
+function initAdGuardButton() {
+    const btn = document.getElementById('loadCSS');
+    const statusText = document.getElementById('loadCSS_status_text');
+    if (btn && statusText) {
+        const savedState = localStorage.getItem(STORAGE_KEY) === 'true';
+        updateAdGuardButtonUI(btn, statusText, savedState);
+    }
+}
+
+initAdGuardButton();
 
 
 
