@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         沉浸式双语翻译 (Google Translate & Dual Wrapper) - 简洁滚动控制 - 纯JS版本
 // @namespace    http://tampermonkey.net/
-// @version      2025-12-19_Final_V17.2_ScrollSimple_CloseButton_Stable
+// @version      2025-12-22_Final_V17.2_ScrollSimple_CloseButton_Stable
 // @description  基于 Google Translate，采用双包裹结构实现沉浸式双语对照翻译。包含：Trusted Types兼容加载、SPA路由变化监控、滚动时自动隐藏 UI、以及浮动按钮切换“双语/原文”模式。
 // @author       limbopro
 // @match        https://*/*
@@ -395,16 +395,19 @@ function createFloatingButton() {
     .goog-te-gadget { 
         display: none !important; 
     }
+
     /* 修复隐藏工具栏后 body 出现的顶部空白 */
     body { 
         top: 0px !important; 
     }
+
     /* 隐藏鼠标悬停时的原始文字弹窗 */
     google_translate_element,
     #goog-gt-tt, .goog-tooltip, .goog-tooltip:hover { 
         display: none !important; 
         visibility: hidden !important; 
     }
+        
     /* 隐藏翻译后的文字高亮阴影 */
     .goog-text-highlight { 
         background-color: transparent !important; 
@@ -412,7 +415,15 @@ function createFloatingButton() {
     }
     
 
+    html, body {
+    overflow-x: hidden !important;
+    /* 额外保险：防止触摸设备上的橡皮筋回弹效果 */
+    position: relative;
+    width: 100% !important;
+    }
+     
     /* 该死的广告 */
+    /* 部分网站似乎有“很大意见”，强制隐藏广告它直接白屏 故不再全局加载该样式
     .Ad-label,
     .ad-label,
     .widget.ad,
@@ -428,6 +439,7 @@ function createFloatingButton() {
         pointer-events: none !important;
         opacity:0;
     }
+    */
 
     .Original {
     /*margin: 0px;*/
