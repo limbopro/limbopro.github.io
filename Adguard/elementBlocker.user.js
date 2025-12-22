@@ -1224,79 +1224,12 @@ onclick="toggleDebugAndRefresh()"
 
 
 
-
-
-
         /**
  * 获取元素的精准且鲁棒的选择器
  * @param {HTMLElement} el - 目标元素
  * @param {boolean} isAncestor - 是否是回溯过程中的祖先节点
  */
 
-
-        /*
-        window.getSmartSelector = function getSmartSelector(el, isAncestor = false) {
-            if (!el || el.nodeType !== Node.ELEMENT_NODE) return null;
-
-            const tagName = el.tagName.toLowerCase();
-
-            // --- 优先级 1: 特征属性 (Data Attributes / ARIA) ---
-            const robustAttrs = ['data-testid', 'data-qa', 'data-cy', 'name', 'aria-label'];
-            for (let attr of robustAttrs) {
-                const val = el.getAttribute(attr);
-                if (val) {
-                    const selector = `${tagName}[${attr}="${val}"]`;
-                    if (isUnique(selector)) return selector;
-                    // 如果不唯一，尝试作为局部片段
-                    return selector;
-                }
-            }
-
-            // --- 优先级 2: ID 锚点 (排除动态 ID) ---
-            if (el.id && !isDynamicIdentifier(el.id)) {
-                const idSelector = `#${el.id}`;
-                if (isUnique(idSelector)) return idSelector;
-            }
-
-            // --- 优先级 3: 稳定的 Class 组合 ---
-            let classList = Array.from(el.classList)
-                .filter(cls => !isDynamicIdentifier(cls)) // 过滤动态/状态类名
-                .filter(cls => !/^(active|hover|focus|selected|disabled)$/i.test(cls));
-
-            let classSelector = classList.length > 0
-                ? `${tagName}.${classList.join('.')}`
-                : tagName;
-
-            if (isUnique(classSelector)) return classSelector;
-
-            // --- 优先级 4: 位置兜底 (nth-of-type) ---
-            let nthSelector = classSelector;
-            const parent = el.parentElement;
-            if (parent) {
-                const siblings = Array.from(parent.children).filter(s => s.tagName === el.tagName);
-                if (siblings.length > 1) {
-                    const index = siblings.indexOf(el) + 1;
-                    nthSelector += `:nth-of-type(${index})`;
-                }
-            }
-
-            // --- 验证与修复逻辑 ---
-            if (isUnique(nthSelector)) {
-                return nthSelector;
-            } else {
-                // 如果当前节点选择器在全局不唯一，递归向上寻找父级作为前缀修复
-                if (parent && parent.tagName.toLowerCase() !== 'html') {
-                    const parentSelector = getSmartSelector(parent, true);
-                    // 使用 > 连接保证结构精准，或使用空格增加灵活性（此处用 > 保证精准）
-                    const refinedSelector = `${parentSelector} > ${nthSelector}`;
-                    return refinedSelector;
-                }
-            }
-
-            return nthSelector;
-        }
-
-        */
 
 
         window.getSmartSelector = function getSmartSelector(el) {
@@ -1431,8 +1364,8 @@ onclick="toggleDebugAndRefresh()"
              */
             handleElementClick: function (el) {
                 // 1. 调用你之前的逻辑链条（保持原样）
-                const selector = typeof getFinalSelector === 'function'
-                    ? getFinalSelector(el)
+                const selector = typeof getSmartSelector === 'function'
+                    ? getSmartSelector(el)
                     : this._fallbackGetSelector(el); // 兜底逻辑
 
                 this.currentSelector = selector;
