@@ -623,13 +623,6 @@ function _onclick_button() {
         }
 
 
-        if (document.getElementById('nsfwmode_switch')) {
-            document.getElementById('nsfwmode_switch').addEventListener('click', function () {
-                nsfwmode(); // 开始或关闭成人模式
-                confirmndExecuteFC('已无该模式！')
-            })
-        }
-
     }, 1000)
 }
 
@@ -725,7 +718,9 @@ function getNavigationHTML() {
             <li class="li_global"><button class="crbhms" id="huacisousuo" onclick='window.toggleSearchState()' data-state="off" style="background-color:red">划词搜索(OFF)</button></li>
       <li class="li_global">
     <button style="background: black;"class="crbhms" id="resetSort">重置排序</button></li>
-      <li class="li_global"><button class="crbhms" id="nsfwmode_switch">WTF!</button></li>
+      <li class="li_global"><button class="crbhms" id="nsfwmode_switch" onclick="toggleNSFWProtection()" style="background: green;">
+    🔒页面保护模式(OFF)
+</button></li>
       <li class="li_global"><button class="a_global red" id="resetting" style="background:#171212;box-shadow:inset 0 0 15px 3px #16191f00">重置导航设置</button></li>
       <li class="li_global"><a class="a_global" id="jiaocheng" href="https://github.com/limbopro/Adblock4limbo?tab=readme-ov-file#%E6%AF%92%E5%A5%B6%E5%8E%BB%E5%B9%BF%E5%91%8A%E4%BD%BF%E7%94%A8%E6%96%B9%E6%B3%95%E9%85%8D%E7%BD%AE%E6%AD%A5%E9%AA%A4" target="_blank">导航使用教程</a></li>
       <li class="li_global"><a class="a_global" id="issue" href="https://github.com/limbopro/Adblock4limbo?tab=readme-ov-file#%E5%A6%82%E4%BD%95%E5%8F%8D%E9%A6%88%E9%97%AE%E9%A2%98%E6%8F%90%E4%BA%A4%E6%96%B0%E7%BD%91%E7%AB%99%E9%87%8D%E8%A6%81" target="_blank">提交issue</a></li>
@@ -779,8 +774,7 @@ function getNavigationHTML() {
     </button>
 </li>
 
-      <li class="li_global"><button class="a_global special yellow" id="zhixingjs"  style="border-radius:4px;background:#c53f3f">🧑‍💻执行JS代码</button></li>
-    
+      <li class="li_global"><button class="a_global special yellow" id="zhixingjs" onclick='window.showJsManager()' style="border-radius:4px;background:#c53f3f">🧑‍💻执行JS代码</button></li>
     
     
       <li class="li_global">
@@ -1674,20 +1668,6 @@ function saveCustomOrder() {
 
 
 
-// 监听事件
-window.addEventListener('load', function () {
-    // 监听指定按钮的点击事件
-    document.getElementById('nsfwmode_switch').addEventListener('click', function () {
-        const buttonText = this.textContent.trim();
-
-        if (buttonText.includes('非成人')) {
-            confirmndExecuteFC('似乎该网站不是成人网站！去网页广告计划的一些功能不会在该网站执行！');
-        } else {
-            confirmndExecuteFC('该网站似乎是成人网站！去网页广告计划的一些功能将在该网站执行！');
-        }
-    });
-
-});
 
 
 function nsfwmode(x) { // 是否开启
@@ -1708,64 +1688,6 @@ function nsfwmode(x) { // 是否开启
         setTimeout(() => { nsfwmode_check() }, 100)
     }
 }
-
-nsfwmode_check();
-
-function nsfwmode_check() {
-    if (getCookie('nsfwmode') == 'true' && nsfw_regex.test(document.location.href)) {
-        if (document.getElementById('nsfwmode_switch')) {
-            document.getElementById('nsfwmode_switch').textContent = '成人保护模式(ON)';
-            console.log('该网站为成人🔞网站！现已开启成人保护模式！')
-            document.getElementById('nsfwmode_switch').style.background = 'green';
-            setTimeout(() => {
-                body_build('false');
-
-                if (typeof (znsh_ele_create) !== 'undefined') {
-                    if (sessionStorage.getItem('click2show') !== 'true') {
-                        znsh_ele_create();
-                    }
-
-                    console.log('直接显示安全🔐模式...')
-                }
-
-            }, 1000)
-        }
-
-    } else if (getCookie('nsfwmode') == 'false' && nsfw_regex.test(document.location.href)) {
-        if (document.getElementById('nsfwmode_switch') !== null) {
-            document.getElementById('nsfwmode_switch').textContent = '成人保护模式(OFF)';
-            console.log('该网站为成人🔞网站！现已（手动）关闭成人保护模式！')
-            document.getElementById('nsfwmode_switch').style.background = 'red';
-            setTimeout(() => {
-                body_build('false');
-            }, 1200)
-        }
-
-    } else if (getCookie('nsfwmode') == '' && nsfw_regex.test(document.location.href)) {
-
-        function valuefromDefault(x) {
-            if (document.getElementById('nsfwmode_switch') !== null) {
-                if (x == 'false' || x == '') {
-                    nsfwmode('false');
-                } else {
-                    nsfwmode('true')
-                }
-
-            }
-        }
-
-        valuefromDefault(getCookie('adultMode'));
-
-    } else {
-        if (document.getElementById('nsfwmode_switch')) {
-            document.getElementById('nsfwmode_switch').textContent = '非成人网站!';
-            document.getElementById('nsfwmode_switch').style.background = 'green';
-            console.log('该网站非成人🔞网站！')
-        }
-    }
-
-}
-
 
 
 function getCookie(cname) {
@@ -2321,14 +2243,17 @@ window.promptAndExecute = function promptAndExecute() {
 // 初始化和事件绑定
 // =========================================================
 
+/*
 // 1. 注入 CSS 样式
 injectFloatingWindowStyles();
 
 // 2. 获取按钮并绑定事件监听器
+
 window.runButton = document.getElementById('zhixingjs');
 if (runButton) {
     runButton.addEventListener('click', promptAndExecute);
 }
+*/
 
 
 
@@ -2471,7 +2396,7 @@ window.tmd = function tmd(parentSelector, code, titleText) {
 
 
 // start filter
-loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/filter.user.js', 'head', 'wtf') // 加载过滤脚本
+//// loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/filter.user.js', 'head', 'wtf') // 加载过滤脚本
 // end filter
 
 
@@ -2684,95 +2609,20 @@ loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/clearL
 loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/showLinkTipsModalOnce.user.js', 'head', 'showLinkTipsModalOnce')
 
 
+// 加载 Adgurad 基础过滤器（CSS版） START
+loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/Adguard.filter.user.js', 'head', 'AdguardFilter')
+// 加载 Adgurad 基础过滤器（CSS版） END
 
 
-// 加载 Adgurad 基础过滤器（CSS版）
-// 定义 CSS 地址
-const ADGUARD_CSS_URL = 'https://limbopro.com/CSS/Adblock4limbo.user.css';
-const STORAGE_KEY = 'loadAdguradGeneralFilterCSS';
-
-/**
- * 核心检查与加载函数：确保 CSS 存在或被移除
- */
-function manageAdGuardStyle(isActive) {
-    let link = document.querySelector(`link[href="${ADGUARD_CSS_URL}"]`);
-
-    if (isActive) {
-        // 如果开启且不存在，则创建 link 标签加载
-        if (!link) {
-            link = document.createElement('link');
-            link.rel = 'stylesheet';
-            link.type = 'text/css';
-            link.href = ADGUARD_CSS_URL;
-            document.head.appendChild(link);
-            console.log('[AdGuard] CSS 已加载');
-        }
-    } else {
-        // 如果关闭且存在，则移除
-        if (link) {
-            link.remove();
-            console.log('[AdGuard] CSS 已卸载');
-        }
-    }
-}
-
-/**
- * 完善后的切换函数
- */
-function toggleAdGuardFilter() {
-    const btn = document.getElementById('loadCSS');
-    const statusText = document.getElementById('loadCSS_status_text');
-    if (!btn || !statusText) return;
-
-    const isActive = localStorage.getItem(STORAGE_KEY) === 'true';
-    const newState = !isActive;
-
-    localStorage.setItem(STORAGE_KEY, newState);
-
-    // 执行状态切换逻辑
-    updateAdGuardButtonUI(btn, statusText, newState);
-
-    // 按照要求：用户点击开启时，弹窗 alert 提示
-    if (newState) {
-        confirmndExecuteFC('🌈 https://limbopro.com/CSS/Adblock4limbo.user.css 已加载至网页！共计1.8w+条 Adgurad 基础过滤器(CSS)，移除恼人的图片/GIF广告🪧！如仍有广告，请联系博主反馈...')
-    }
-
-}
-
-/**
- * 完善后的 UI 更新函数：增加 CSS 检查逻辑
- */
-function updateAdGuardButtonUI(btn, statusText, isActive) {
-    // 1. 同步 CSS 状态
-    manageAdGuardStyle(isActive);
-
-    // 2. 更新视觉 UI
-    if (isActive) {
-        btn.style.setProperty('background', '#28a745', 'important');
-        statusText.innerText = '已开启';
-        btn.classList.replace('ads_skip_off', 'ads_skip_on');
-    } else {
-        btn.style.setProperty('background', '#c53f3f', 'important');
-        statusText.innerText = '默认关闭';
-        btn.classList.replace('ads_skip_on', 'ads_skip_off');
-    }
-}
-
-/**
- * 初始化
- */
-function initAdGuardButton() {
-    const btn = document.getElementById('loadCSS');
-    const statusText = document.getElementById('loadCSS_status_text');
-    if (btn && statusText) {
-        const savedState = localStorage.getItem(STORAGE_KEY) === 'true';
-        updateAdGuardButtonUI(btn, statusText, savedState);
-    }
-}
-
-initAdGuardButton();
+// 脚本管理器 START
+loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/showJsManager.user.js', 'head', 'showJsManager') // 加载过滤脚本
+// 脚本管理器 END
 
 
+
+// 成人保护模式 START
+loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/pageProtect.user.js', 'head', 'pageProtect') // 加载过滤脚本
+// 成人保护模式 END
 
 
 // 这里存放导航页各类网站

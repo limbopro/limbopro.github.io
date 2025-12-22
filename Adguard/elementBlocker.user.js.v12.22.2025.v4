@@ -934,29 +934,29 @@
                 
                 <div style="display: flex; justify-content: space-around; flex-direction:column ;margin-top: 10px; gap: 0px;">
                 
-                
-                
-                    <button id="gemini-modal-confirm" style="
-                        background: #dc3545; color: white; border: none; flex: 1;
-                    ">
-                        🛡️ 立即屏蔽(xPath)
-                    </button>
-
-                    <button onclick='window.showLinkTipsModalOnce()' id="gemini-modal-confirm-css" style="
-                        background: #dc3545; color: white; border: none; flex: 1;
-                    " class="skiptranslate is-processing">
-                        🛡️ 更多屏蔽选项(CSS选择器)
-                    </button>
-
-                    <button id="gemini-modal-protect" style="background: #FFB300; color: white; border: none; flex: 1;"
+                <button id="gemini-modal-protect" style="background: #43A047; color: white; border: none; flex: 1;"
 onclick="toggleDebugAndRefresh()"
                 >
                         🔰 关闭元素点击调试
                     </button>
 
+                
+                    <button id="gemini-modal-confirm" style="
+                        background: #dc3545; color: white; border: none; flex: 1;
+                    ">
+                        🛡️ 永久屏蔽并移除(xPath)
+                    </button>
+
+
+                    <button onclick='window.showLinkTipsModalOnce()' id="gemini-modal-confirm-css" style="
+                        background: #dc3545; color: white; border: none; flex: 1;
+                    " class="skiptranslate is-processing">
+                        🛡️ 永久屏蔽并移除(CSS选择器)
+                    </button>
+
 
                     <button id="gemini-modal-cancel" style="
-                        background: #43A047; color: #333; border: none; flex: 1;
+                        background: #FFB300; color: #333; border: none; flex: 1;
                     ">
                         ➡️ 临时放行 (需二次点击)
                     </button>
@@ -4000,9 +4000,7 @@ onclick="toggleDebugAndRefresh()"
             let currentHoverElement = null;
             if (currentHoverElement !== targetElement) {
                 currentHoverElement = targetElement;
-                currentHoverElement.style.outline = '4px dashed orange !important';
-                currentHoverElement.style.outlineOffset = '-4px dashed orange !important'
-
+                currentHoverElement.style.outline = '2px dashed orange';
             }
 
             const isLink = targetElement.closest(' a');
@@ -4099,7 +4097,6 @@ onclick="toggleDebugAndRefresh()"
 
                 if (confirmBlock) {
                     currentHoverElement.style.outline = '';
-                    currentHoverElement.style.outlineOffset = ''
                     if (xpath && targetElement.parentNode) {
                         // Element Click Debugging is for general elements (not Iframes)
                         if (targetElement.tagName === 'IFRAME') {
