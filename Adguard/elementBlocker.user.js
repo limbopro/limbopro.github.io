@@ -68,6 +68,7 @@
     }
 
     function toggleDebugOverride(shouldAdd, host = getCurrentHost()) {
+
         if (!host) return false;
         let list = getDebugOverrideList();
         const index = list.indexOf(host);
@@ -715,9 +716,11 @@
             #gemini-custom-modal-overlay {
                 overflow:auto;
                 position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-                background: rgba(0, 0, 0, 0.7); z-index: 114120; 
+                /*background: rgba(0, 0, 0, 0.7); */
+                /*background:rgb(0 0 0 / 27%);*/
+                z-index: 114120; 
                 display: flex; justify-content: center; align-items: center;
-                backdrop-filter: blur(2px);
+                /*backdrop-filter: blur(2px);*/
                 font-family: 'Helvetica Neue', Arial, sans-serif;
             }
             #gemini-custom-modal-overlay > div {
@@ -745,6 +748,7 @@
                 cursor: pointer !important; 
                 font-weight: bold; 
                 margin: 1px;
+                font-size:xx-small;
                 transition: background 0.2s, box-shadow 0.2s;
 
             }
@@ -753,7 +757,7 @@
             
             /* V26.20 新增：操作提示文本容器样式 */
             #gemini-custom-modal-overlay .operation-notes p {
-                margin: 5px 0; /* 减少段落间的默认间距 */
+                margin: 1px 0; /* 减少段落间的默认间距 */
                 line-height: 1.4;
                 color: #555;
             }
@@ -819,8 +823,10 @@
             modalOverlay.className = 'notranslate';
 
             const modalBox = document.createElement('div');
-            modalBox.className = 'notranslate'
+            modalBox.id = 'modalBox4targetInform'
+            modalBox.className = 'notranslate targetInform'
             modalBox.style.cssText = `
+                cursor:move;
                 background: white; border-radius: 10px; padding: 20px; 
                 box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3); max-width: 450px;
                 width: 90%; 
@@ -854,12 +860,12 @@
                 <div style="
                     font-size: 14px; color: #333; 
                     padding: 10px; background: #fff3cd; border: 1px solid #ffeeba; border-radius: 6px; 
-                    margin-bottom: 15px;
+                    margin-bottom: 3px;
                 ">
                     ${headerMessage.replace(/\n\n/g, '<br><br>')} 
                 </div>
 
-                <div class="operation-notes" style="margin-bottom: 20px;">
+                <div class="operation-notes" style="margin-bottom: 10px;">
                     <p style="
                         font-size: 13px; padding: 5px 10px; 
                         background: #f1f8ff; border-left: 3px solid #1976D2;
@@ -874,7 +880,7 @@
                     </p>
                 </div>
                 
-                <div style="color:black;font-size: 12px; background: #f8f9fa; padding: 12px; border-radius: 6px; margin-bottom: 20px; border-left: 4px solid #1976D2;">
+                <div id='targetInform' style="color:black;font-size: 12px; cursor:default;user-select:text;background: #f8f9fa; padding: 12px; border-radius: 6px; margin-bottom: 10px; border-left: 4px solid #1976D2;">
                     <strong style="color: #1976D2; display: block; margin-bottom: 5px;">🚀 目标信息 (V26.39.12 - 增强):</strong>
                     
                     
@@ -957,14 +963,104 @@ onclick="toggleDebugAndRefresh()"
                 </div>
             `;
 
+
+
             const closeAndResolve = (result) => {
                 modalOverlay.remove();
                 resolve(result);
             };
 
 
+
+
+
+            // 拖拽
+
             /**
- * 查找并触发 ID 为 'debug-click-toggle' 的点击事件，
+     * 使模态框内容支持双端拖拽（鼠标 + 触摸）
+     * @param {string} overlayId - 遮罩层的 ID
+     */
+            window.makeModalDraggable = function makeModalDraggable(overlayId) {
+                const overlay = document.getElementById(overlayId);
+                if (!overlay || overlay.dataset.dragInitialized) return; // 防止重复初始化
+
+                const target = overlay.firstElementChild;
+                if (!target) return;
+
+                let isDragging = false;
+                let startX, startY, initialLeft, initialTop;
+
+                const startAction = (e) => {
+                    // 排除 #targetInform 及其子元素
+                    if (e.target.id === 'targetInform' || e.target.closest('#targetInform')) {
+                        isDragging = false;
+                        return;
+                    }
+
+                    const ignoreTags = ['INPUT', 'TEXTAREA', 'BUTTON', 'A', 'SELECT'];
+                    if (ignoreTags.includes(e.target.tagName)) return;
+
+                    const touch = e.touches ? e.touches[0] : e;
+                    isDragging = true;
+
+                    const rect = target.getBoundingClientRect();
+                    startX = touch.clientX;
+                    startY = touch.clientY;
+                    initialLeft = rect.left;
+                    initialTop = rect.top;
+
+                    // 切换为绝对定位
+                    overlay.style.display = 'block';
+                    target.style.margin = '0';
+                    target.style.transform = 'none';
+                    target.style.position = 'absolute';
+                    target.style.setProperty('left', initialLeft + 'px', 'important');
+                    target.style.setProperty('top', initialTop + 'px', 'important');
+
+                    if (!e.touches) e.preventDefault();
+                };
+
+                const moveAction = (e) => {
+                    if (!isDragging) return;
+
+                    // 只有正在拖拽时才阻止背景滚动
+                    if (e.cancelable) e.preventDefault();
+
+                    const touch = e.touches ? e.touches[0] : e;
+                    const dx = touch.clientX - startX;
+                    const dy = touch.clientY - startY;
+
+                    target.style.setProperty('left', `${initialLeft + dx}px`, 'important');
+                    target.style.setProperty('top', `${initialTop + dy}px`, 'important');
+                };
+
+                const endAction = () => {
+                    isDragging = false;
+                };
+
+                // 绑定事件到 target 而非 overlay 整体，减少误触
+                target.addEventListener('mousedown', startAction);
+                target.addEventListener('touchstart', startAction, { passive: false });
+
+                // 全局监听移动和结束
+                document.addEventListener('mousemove', moveAction, { passive: false });
+                document.addEventListener('mouseup', endAction);
+                document.addEventListener('touchmove', moveAction, { passive: false });
+                document.addEventListener('touchend', endAction);
+
+                // 标记已初始化
+                overlay.dataset.dragInitialized = "true";
+            };
+
+
+
+
+
+
+
+
+            /**
+ * 查找并触发 ID 为 'element-debug-click-toggle' 的点击事件，
  * 并根据其状态（假设通过 'active' 类判断）更新当前点击按钮的文本。
  * * @param {HTMLElement} clickedElement - 当前被点击的 HTML 元素 (使用 this 传递)。
  */
@@ -973,7 +1069,7 @@ onclick="toggleDebugAndRefresh()"
                 const debugPanel = document.getElementById('tmyszzq');
                 debugPanel?.click()
 
-                const debugToggle = document.getElementById('debug-click-toggle');
+                const debugToggle = document.getElementById('element-debug-click-toggle');
                 if (debugToggle && localStorage.getItem('gemini_debug_element_click_mode') == 'true') {
                     // 1. 触发目标元素的点击事件
                     debugToggle.click();
@@ -982,7 +1078,7 @@ onclick="toggleDebugAndRefresh()"
                     // 4. 如果目标元素不存在，则提示
                     //// clickedElement.textContent = '元素点击调试(未找到目标) 或已关闭';
                     closeAndResolve(false)
-                    console.warn("未找到 ID 为 'debug-click-toggle' 的目标元素。");
+                    console.warn("未找到 ID 为 'element-debug-click-toggle' 的目标元素。");
                 }
             }
 
@@ -1222,8 +1318,6 @@ onclick="toggleDebugAndRefresh()"
         // 2. 核心算法 (nth-child + ID 终结) 开始
 
 
-
-
         /**
  * 获取元素的精准且鲁棒的选择器
  * @param {HTMLElement} el - 目标元素
@@ -1232,7 +1326,7 @@ onclick="toggleDebugAndRefresh()"
 
 
 
-        window.getSmartSelector = function getSmartSelector(el) {
+        window.getSmartSelector_selector_get = function getSmartSelector_selector_get(el) {
             if (!(el instanceof Element)) return '';
 
             /**
@@ -1347,11 +1441,9 @@ onclick="toggleDebugAndRefresh()"
         // --- 使用示例 ---
         // document.addEventListener('click', (e) => {
         //     e.preventDefault();
-        //     const selector = getSmartSelector(e.target);
+        //     const selector = getSmartSelector_selector_get(e.target);
         //     console.log("精确定位选择器:", selector);
         // });
-
-
 
 
         const SelectorBlockerTool = {
@@ -1364,8 +1456,8 @@ onclick="toggleDebugAndRefresh()"
              */
             handleElementClick: function (el) {
                 // 1. 调用你之前的逻辑链条（保持原样）
-                const selector = typeof getSmartSelector === 'function'
-                    ? getSmartSelector(el)
+                const selector = typeof getSmartSelector_selector_get === 'function'
+                    ? getSmartSelector_selector_get(el)
                     : this._fallbackGetSelector(el); // 兜底逻辑
 
                 this.currentSelector = selector;
@@ -1493,17 +1585,17 @@ onclick="toggleDebugAndRefresh()"
 
 
         /**
-         * 封装一个递归调用 getSmartSelector 的函数，确保返回完整且唯一的路径
+         * 封装一个递归调用 getSmartSelector_selector_get 的函数，确保返回完整且唯一的路径
          */
         function getFullSmartPath(el) {
             let current = el;
             let path = [];
 
             while (current && current.nodeType === Node.ELEMENT_NODE) {
-                // 调用你保留的 getSmartSelector
-                let part = getSmartSelector(current);
+                // 调用你保留的 getSmartSelector_selector_get
+                let part = getSmartSelector_selector_get(current);
 
-                // 加上位置索引补丁，防止 getSmartSelector 返回的标签/类名在同级不唯一
+                // 加上位置索引补丁，防止 getSmartSelector_selector_get 返回的标签/类名在同级不唯一
                 const parent = current.parentElement;
                 if (parent) {
                     const siblings = Array.from(parent.children).filter(s => s.tagName === current.tagName);
@@ -1521,7 +1613,7 @@ onclick="toggleDebugAndRefresh()"
                         return fullPath;
                     }
                 } catch (e) {
-                    // 如果报错，通常是因为 getSmartSelector 内部没有转义特殊字符
+                    // 如果报错，通常是因为 getSmartSelector_selector_get 内部没有转义特殊字符
                     // 我们在这里强制转义一次作为保险
                     return path.map(p => p.includes(':') ? p.replace(/:/g, '\\:') : p).join(' > ');
                 }
@@ -1873,7 +1965,7 @@ onclick="toggleDebugAndRefresh()"
             // 2. 更新你的悬浮窗 UI
             outputEl.innerText = selector;
 
-            outputEl.innerText = getSmartSelector(e.target);
+            outputEl.innerText = getSmartSelector_selector_get(e.target);
             //outputEl.innerText = getFinalSelector(e.target);
 
             overlay.style.borderStyle = 'solid';
@@ -2645,6 +2737,7 @@ onclick="toggleDebugAndRefresh()"
     window.showEditModal = function showEditModal(oldValue, storageKey) {
         const modalOverlay = document.createElement('div');
         modalOverlay.id = 'gemini-edit-modal-overlay';
+        modalOverlay.classList.add('notranslate')
         // 复用已有的模态框样式逻辑
         modalOverlay.style.cssText = `
         position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
@@ -2949,7 +3042,7 @@ onclick="toggleDebugAndRefresh()"
                     🖱️ 启用选择并屏蔽模式
                 </button>
                 <div style="margin-bottom:2px; display: flex; gap: 2px;">
-                    <button id="debug-click-toggle" style="background: ${isDebuggingElementClick ? 'green' : '#FFB300'}; color: ${isDebuggingElementClick ? 'white' : '#333'}; border: none; padding: 8px 5px; cursor: pointer; border-radius: 4px; font-weight: bold; flex: 1; font-size: 12px;">
+                    <button id="element-debug-click-toggle" style="background: ${isDebuggingElementClick ? 'green' : '#FFB300'}; color: ${isDebuggingElementClick ? 'white' : '#333'}; border: none; padding: 8px 5px; cursor: pointer; border-radius: 4px; font-weight: bold; flex: 1; font-size: 12px;">
                     🛠️ 元素点击调试 (${isDebuggingElementClick ? '开' : '关'})
                     </button>
                     <button id="selector-debug-click-toggle" style="background: #FFB300;color: #333;border: none;padding: 8px 5px;cursor: pointer;border-radius: 4px;font-weight: bold;flex: 1;font-size: 12px;">
@@ -2973,7 +3066,7 @@ onclick="toggleDebugAndRefresh()"
         width: 100%;
     ">📟 查看脚本</button>
 
-    <button id="manual-xpath-runCode" onclick="window.promptAndExecute()" style="
+    <button id="manual-xpath-runCode" onclick="window.showJsManager()" style="
         background: #43A047; /* 使用紫色突出手动操作 */
         color: white;
         border: none;
@@ -3089,7 +3182,7 @@ onclick="toggleDebugAndRefresh()"
         const selectorToggle = document.getElementById('selector-toggle');
         const blacklistToggle = document.getElementById('blacklist-toggle');
 
-        const debugClickToggle = document.getElementById('debug-click-toggle');
+        const debugClickToggle = document.getElementById('element-debug-click-toggle');
         const debugLocationToggle = document.getElementById('debug-location-toggle');
 
         document.getElementById('gemini-close-btn').onclick = () => {
@@ -3308,7 +3401,6 @@ onclick="toggleDebugAndRefresh()"
         };
 
 
-
         function toggleSelectionMode(forceState) {
             if (localStorage.getItem('gemini_debug_element_click_mode') == 'true') { // 元素调试模式跟选择并屏蔽模式只能开一个
                 return;
@@ -3332,7 +3424,7 @@ onclick="toggleDebugAndRefresh()"
                 mainContainer.style.cursor = 'default';
 
                 if (localStorage.getItem('gemini_debug_element_click_mode') == 'true') { // 如果元素点击调试模式开启，必须关掉
-                    document.getElementById('debug-click-toggle').click()
+                    document.getElementById('element-debug-click-toggle').click()
                 }
 
             } else {
@@ -3702,6 +3794,14 @@ onclick="toggleDebugAndRefresh()"
             }
         }
 
+
+        setTimeout(() => {
+            // 1. 先定义好函数 (或确保函数已在 window 作用域)
+            if (typeof window.makeModalDraggable === 'function') {
+                // 2. 直接初始化，不要放在 if (e.target...) 的点击判断里
+                //window.makeModalDraggable('gemini-custom-modal-overlay');
+            }
+        }, 750)
     });
 
 
@@ -3725,18 +3825,16 @@ onclick="toggleDebugAndRefresh()"
     function applyClickDebugFilter(doc) {
 
 
-
-
         // 捕获元素 
 
-
-        function getSmartSelector_vW(el) {
+        function getSmartSelector_element_click_debug_mode(el) {
             if (!(el instanceof Element)) return '';
 
             /**
              * 内部辅助：提取元素的“硬指纹”特征
              * 包含：ID, href, src, title, alt, data-*, 业务Class
              */
+
             function getHardFeature(node) {
                 if (!node) return null;
                 const tag = node.tagName.toLowerCase();
@@ -3897,6 +3995,14 @@ onclick="toggleDebugAndRefresh()"
                 return; // 排除逻辑
             }
 
+
+
+            let currentHoverElement = null;
+            if (currentHoverElement !== targetElement) {
+                currentHoverElement = targetElement;
+                currentHoverElement.style.outline = '2px dashed orange';
+            }
+
             const isLink = targetElement.closest(' a');
             const href = isLink ? isLink.href : '';
             const opensNewTab = isLink ? isLink.target === '_blank' : false;
@@ -3965,7 +4071,7 @@ onclick="toggleDebugAndRefresh()"
                     position: computedStyle.position,
                     parent: parentInfo,
                     inlineClick: inlineClick,
-                    preciseSelector: getSmartSelector_vW(targetElement),   // 包含 nth-child 的精确选择器 [新属性]
+                    preciseSelector: getSmartSelector_element_click_debug_mode(targetElement),   // 包含 nth-child 的精确选择器 [新属性]
                     // ✅ 直接调用已定义好的工具函数
                     nthChild: window.getElementNthChild(targetElement),
                 };
@@ -3978,13 +4084,19 @@ onclick="toggleDebugAndRefresh()"
                     window.targetElementInformAppend = window.targetElementInform.val
                 }
 
+                setTimeout(() => {
+                    window.makeModalDraggable('gemini-custom-modal-overlay');
+                }, 500)
+
                 const confirmBlock = await showCustomConfirm(
                     message,
                     elementInfo, // <-- Pass the elementInfo object (V26.39.6)
                     xpath || "XPath 获取失败"
                 );
 
+
                 if (confirmBlock) {
+                    currentHoverElement.style.outline = '';
                     if (xpath && targetElement.parentNode) {
                         // Element Click Debugging is for general elements (not Iframes)
                         if (targetElement.tagName === 'IFRAME') {
@@ -3999,11 +4111,13 @@ onclick="toggleDebugAndRefresh()"
                         console.error('❌ 屏蔽失败：XPath 获取失败，无法进行永久屏蔽。');
                     }
                 } else {
+                    currentHoverElement.style.outline = '';
                     targetElement.setAttribute(ALLOW_ONCE_ATTRIBUTE, 'true');
                     console.log("🚫 已取消永久屏蔽。请**再次点击**此元素，点击将在第二次被放行。");
                 }
                 return;
             }
+
         };
 
         // ⭐️ V26.39.7 核心修复：Hook 早期事件以阻止异步调度
