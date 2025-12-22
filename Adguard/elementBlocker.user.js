@@ -1392,15 +1392,15 @@ onclick="toggleDebugAndRefresh()"
                 // 加上 !important 确保覆盖网页原生样式
                 styleEl.innerHTML = `
             ${selector} {
-                outline: 7px solid #ff4d4f !important;
-                outline-offset: -7px !important;
+                outline: 2px solid #ff4d4f !important;
+                outline-offset: -2px !important;
                 background-color: rgba(255, 77, 79, 0.3) !important;
                 position: relative !important;
                 filter: grayscale(0.5) !important;
             }
 
             ${selector}::before {
-                content: "SELECTED: ${selector.replace(/"/g, "'")}";
+                content: "SELECTED"/*: ${selector.replace(/"/g, "'")}";*/
                 position: absolute;
                 top: -25px;
                 left: 0;
