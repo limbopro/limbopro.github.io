@@ -182,7 +182,7 @@ window.showLinkTipsModalOnce = function () {
         }
             
         .gemini-tips-modal-overlay { position: fixed !important; z-index: 114120; left: 0; top: 0; width: 100%; height: 100%; background: rgba(8, 12, 24, 0.94); backdrop-filter: blur(10px); overflow-y: auto; -webkit-overflow-scrolling: touch; }
-        .gemini-tips-modal-content { background: #fff; margin: 2vh auto; padding: 25px 35px; border-radius: 20px; width: 94%; max-width: 1050px; font-family: system-ui, -apple-system, sans-serif; box-shadow: 0 30px 80px rgba(0,0,0,0.6); animation: slideIn 0.4s ease; color: #2d3748; box-sizing: border-box; }
+        .gemini-tips-modal-content { background: #fff; margin: 2vh auto; padding: 25px 10px; border-radius: 20px; width: 94%; max-width: 1050px; font-family: system-ui, -apple-system, sans-serif; box-shadow: 0 30px 80px rgba(0,0,0,0.6); animation: slideIn 0.4s ease; color: #2d3748; box-sizing: border-box; }
         .full-info-grid { display: grid; grid-template-columns: 1fr; gap: 12px; margin: 15px 0; background: #f8fafc; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; }
         @media (min-width: 768px) { .full-info-grid { grid-template-columns: repeat(3, 1fr); padding: 20px; } }
         .info-cell { font-size: 13px; word-break: break-word; }
@@ -388,10 +388,10 @@ window.showLinkTipsModalOnce = function () {
                 <span onclick="this.closest('.gemini-tips-modal-overlay').remove()" style="cursor:pointer; font-size:35px; color:#cbd5e0;">&times;</span>
             </div>
             <div class="full-info-grid">
-                <div class="info-cell"><b>父级容器</b><code>${liveData.parent}</code></div>
-                <div class="info-cell"><b>当前目标</b><code>${liveData.target}</code></div>
-                <div class="info-cell"><b>属性特征</b><code>${liveData.attr || '无'}</code></div>
-                <div class="info-cell"><b>元素尺寸</b>${liveData.size}</div>
+                <div class="info-cell"><b>父元素</b><code>${liveData.parent}</code></div>
+                <div class="info-cell"><b>目标元素</b><code>${liveData.target}</code></div>
+                <div class="info-cell"><b>目标元素属性特征</b><code>${liveData.attr || '无'}</code></div>
+                <div class="info-cell"><b>目标元素尺寸</b>${liveData.size}</div>
                 <div class="info-cell"><b>Z/Opacity/Pos</b>${liveData.zPos}</div>
                 <div class="info-cell"><b>内联点击事件</b>${liveData.inline}</div>
                 <div class="info-cell span-all"><b>目标元素递归向上含链接(Href)</b><small style="color:#3182ce; font-family:monospace; word-break:break-all;">${liveData.href}</small></div>

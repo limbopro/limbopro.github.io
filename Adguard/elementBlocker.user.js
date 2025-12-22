@@ -579,7 +579,8 @@
                 z-index: 114115; 
                 transition: transform 0.2s ease-out; 
                 border-radius: 5px; 
-                box-shadow: 0 10px 30px rgba(0,0,0,0.1), 0 4px 6px rgba(0,0,0,0.05); 
+               /* box-shadow: 0 10px 30px rgba(0,0,0,0.1), 0 4px 6px rgba(0,0,0,0.05); */
+                box-shadow: 0 0 10px 10px rgba(0,0,0,0.2), 0 0 6px 6px rgba(0,0,0,0.05);
                 width: 400px; 
                 background: #f7f7f7; 
                 
@@ -717,7 +718,7 @@
                 overflow:auto;
                 position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
                 /*background: rgba(0, 0, 0, 0.7); */
-                /*background:rgb(0 0 0 / 27%);*/
+                background:rgb(0 0 0 / 45%);
                 z-index: 114120; 
                 display: flex; justify-content: center; align-items: center;
                 /*backdrop-filter: blur(2px);*/
@@ -743,7 +744,7 @@
                 transition: background 0.2s, box-shadow 0.2s;
             */
 
-                padding: 6px 0px; 
+                padding: 8px 0px; 
                 border-radius: 6px; 
                 cursor: pointer !important; 
                 font-weight: bold; 
@@ -828,7 +829,7 @@
             modalBox.style.cssText = `
                 cursor:move;
                 background: white; border-radius: 10px; padding: 20px; 
-                box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3); max-width: 450px;
+                box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3); max-width: 380px;
                 width: 90%; 
                 font-family: 'Helvetica Neue', Arial, sans-serif;
             `;
@@ -854,113 +855,109 @@
 
             modalBox.innerHTML = `
                 <h3 style="margin-top: 0; color: #dc3545; border-bottom: 2px solid #eee; padding-bottom: 10px;">
-                    🎯 链接点击捕获 (元素调试)
-                </h3>
-                
-                <div style="
-                    font-size: 14px; color: #333; 
-                    padding: 10px; background: #fff3cd; border: 1px solid #ffeeba; border-radius: 6px; 
+    🎯 链接点击捕获 (元素调试)
+</h3>
+
+<div style="font-size: 12px; color: #333; padding: 10px; background: #fff3cd; border: 1px solid #ffeeba; border-radius: 6px; 
                     margin-bottom: 3px;
                 ">
-                    ${headerMessage.replace(/\n\n/g, '<br><br>')} 
-                </div>
+    ${headerMessage.replace(/\n\n/g, '<br><br>')}
+</div>
 
-                <div class="operation-notes" style="margin-bottom: 10px;">
-                    <p style="
-                        font-size: 13px; padding: 5px 10px; 
+<div class="operation-notes" style="margin-bottom: 10px;">
+    <p style="
+                        font-size: 12px; padding: 5px 10px; 
                         background: #f1f8ff; border-left: 3px solid #1976D2;
                     ">
-                        <strong>🛡️ [永久屏蔽]</strong> 将此元素永久添加到屏蔽列表并移除。
-                    </p>
-                    <p style="
-                        font-size: 13px; padding: 5px 10px; 
+        <strong>🛡️ [立即屏蔽]</strong> 将此元素永久添加到屏蔽列表并移除（见记录管理）。
+    </p>
+    <p style="
+                        font-size: 12px; padding: 5px 10px; 
                         background: #fffbe6; border-left: 3px solid #FFB300;
                     ">
-                        <strong>➡️ [临时放行]</strong> 临时放行此元素，但您需要**再次点击**此按钮来触发原始跳转行为。
-                    </p>
-                </div>
-                
-                <div id='targetInform' style="height:150px; overflow:auto;color:black;font-size: 12px; cursor:default;user-select:text;background: #f8f9fa; padding: 12px; border-radius: 6px; margin-bottom: 10px; border-left: 4px solid #1976D2;">
-                    <strong style="color: #1976D2; display: block; margin-bottom: 5px;">🚀 目标信息 (V26.39.13 - 增强 - 滑动查看更多👀):</strong>
-                    
-                    
+        <strong>➡️ [临时放行]</strong> 临时放行此元素，但您需要**再次点击**此按钮来触发原始跳转行为。
+    </p>
+</div>
 
-                    <button onclick="window.showLinkTipsModalOnce()" id="tips" style="padding: 5px 5px 5px 5px;margin: 5px 5px 5px 0px;background: #6b6465;color: aliceblue;border: antiquewhite;">如何利用目标信息？🆕</button>
-
-                   
-                    <div style="word-break: break-all; margin-bottom: 5px;">
-                        <span style="font-weight: bold;">父元素:</span> ${truncatedParent}
-                    </div>
-
-                    <div style="word-break: break-all; margin-bottom: 5px;">
-                        <span style="font-weight: bold;">目标元素:</span> ${truncatedCssSelector}
-                    </div>
-
-                    <div style="word-break: break-all; margin-bottom: 5px;">
-                        <span style="font-weight: bold;">目标元素属性特征:&nbsp</span>${window.targetElementInform.val}
-                    </div>
-
-                    <div style="word-break: break-all; margin-bottom: 5px;">
-                        <span style="font-weight: bold;">目标元素文本内容:&nbsp</span>${window.targetElementInform.text}
-                    </div>
-
-                    <div style="word-break: break-all; margin-bottom: 5px;">
-                                            <span style="font-weight: bold;">目标元素尺寸:</span> ${elementInfo.width}x${elementInfo.height}px 
-                    </div>
-
-                    <div style="word-break: break-all; margin-bottom: 5px;">
-    <span style="font-weight: bold;">相对CSS选择器(Base parentElement): </span><p id='cssSelector'>${truncatedParent} > ${truncatedCssSelector}:nth-child(${elementInfo.nthChild})${targetElementInformAppend}</p>
-                    </div>
+<div style="display: flex; justify-content: space-around; flex-direction:column ;margin-top: 10px; margin-bottom: 10px; gap: 0px;">
+    <button id="gemini-modal-protect" style="background:#FFB300; color: white; border: none; flex: 1;"
+        onclick="toggleDebugAndRefresh()">
+        🔰 关闭元素点击调试
+    </button>
+    <button id="gemini-modal-confirm" style="background: #dc3545; color: white; border: none; flex: 1;">
+        🛡️ 立即屏蔽 (xPath)
+    </button>
 
 
-     <div style="word-break: break-all; margin-bottom: 5px;">
-                        <span style="font-weight: bold;">目标元素递归向上含链接(Href):</span> ${truncatedHref}
-                    </div>
-
-                    <div style="word-break: break-all; margin-bottom: 5px;">
-                        <span style="font-weight: bold;">Z/Opacity/Pos:</span> ${elementInfo.zIndex} / ${elementInfo.opacity} / ${elementInfo.position}
-                    </div>
-                    
-                    
-                    
-                    <div style="word-break: break-all; margin-bottom: 5px;">
-                        <span style="font-weight: bold;">内联 Click:</span> ${truncatedInlineClick}
-                    </div>
-
-                    <div style="word-break: break-all;">
-                        <span style="font-weight: bold;">XPath:</span> ${truncatedXpath}
-                    </div>
-                </div>
-                
-                <div style="display: flex; justify-content: space-around; flex-direction:column ;margin-top: 10px; gap: 0px;">
-                
-                
-                
-                    <button id="gemini-modal-confirm" style="
-                        background: #dc3545; color: white; border: none; flex: 1;
-                    ">
-                        🛡️ 立即屏蔽(xPath)
-                    </button>
-
-                    <button onclick='window.showLinkTipsModalOnce()' id="gemini-modal-confirm-css" style="
-                        background: #dc3545; color: white; border: none; flex: 1;
-                    " class="skiptranslate is-processing">
-                        🛡️ 更多屏蔽选项(CSS选择器)
-                    </button>
-
-                    <button id="gemini-modal-protect" style="background: #FFB300; color: white; border: none; flex: 1;"
-onclick="toggleDebugAndRefresh()"
-                >
-                        🔰 关闭元素点击调试
-                    </button>
+    <button onclick='window.showLinkTipsModalOnce()' id="gemini-modal-confirm-css"
+        style="background: #b62b38; color: white; border: none; flex: 1;" class="skiptranslate is-processing">
+        🛡️ 更多屏蔽选项 (CSS选择器)
+    </button>
 
 
-                    <button id="gemini-modal-cancel" style="
-                        background: #43A047; color: #333; border: none; flex: 1;
-                    ">
-                        ➡️ 临时放行 (需二次点击)
-                    </button>
-                </div>
+    <button id="gemini-modal-cancel" style="background: green; color:white; border: none; flex: 1;">
+        ➡️ 临时放行 (需二次点击)
+    </button>
+</div>
+
+<div id='targetInform'
+    style="height:150px; overflow:auto;color:black;font-size: 12px; cursor:default;user-select:text;background: #f8f9fa; padding: 12px; border-radius: 6px; margin-bottom: 10px; border-left: 4px solid #1976D2;">
+    <strong style="color: #1976D2; display: block; margin-bottom: 5px;">🚀 目标信息 (V26.39.13 - 增强 - 滑动查看更多👀):</strong>
+
+    <button onclick="window.showLinkTipsModalOnce()" id="tips"
+        style="padding: 5px 5px 5px 5px;margin: 5px 5px 5px 0px;background: #6b6465;color: aliceblue;border: antiquewhite;">如何利用目标信息？🆕</button>
+
+
+    <div style="word-break: break-all; margin-bottom: 5px;">
+        <span style="font-weight: bold;">父元素:</span> ${truncatedParent}
+    </div>
+
+    <div style="word-break: break-all; margin-bottom: 5px;">
+        <span style="font-weight: bold;">目标元素:</span> ${truncatedCssSelector}
+    </div>
+
+    <div style="word-break: break-all; margin-bottom: 5px;">
+        <span style="font-weight: bold;">目标元素属性特征:&nbsp</span>${window.targetElementInform.val}
+    </div>
+
+    <div style="word-break: break-all; margin-bottom: 5px;">
+        <span style="font-weight: bold;">目标元素文本内容:&nbsp</span>${window.targetElementInform.text}
+    </div>
+
+    <div style="word-break: break-all; margin-bottom: 5px;">
+        <span style="font-weight: bold;">目标元素尺寸:</span> ${elementInfo.width}x${elementInfo.height}px
+    </div>
+
+    <div style="word-break: break-all; margin-bottom: 5px;">
+        <span style="font-weight: bold;">相对CSS选择器(Base parentElement): </span>
+        <p id='cssSelector'>${truncatedParent} >
+            ${truncatedCssSelector}:nth-child(${elementInfo.nthChild})${targetElementInformAppend}</p>
+    </div>
+
+
+    <div style="word-break: break-all; margin-bottom: 5px;">
+        <span style="font-weight: bold;">目标元素递归向上含链接(Href):</span> ${truncatedHref}
+    </div>
+
+    <div style="word-break: break-all; margin-bottom: 5px;">
+        <span style="font-weight: bold;">Z/Opacity/Pos:</span> ${elementInfo.zIndex} / ${elementInfo.opacity} /
+        ${elementInfo.position}
+    </div>
+
+
+
+
+
+    <div style="word-break: break-all; margin-bottom: 5px;">
+        <span style="font-weight: bold;">内联 Click:</span> ${truncatedInlineClick}
+    </div>
+
+    <div style="word-break: break-all;">
+        <span style="font-weight: bold;">XPath:</span> ${truncatedXpath}
+    </div>
+</div>
+
+
             `;
 
 
@@ -969,90 +966,6 @@ onclick="toggleDebugAndRefresh()"
                 modalOverlay.remove();
                 resolve(result);
             };
-
-
-
-
-
-            // 拖拽
-
-            /**
-     * 使模态框内容支持双端拖拽（鼠标 + 触摸）
-     * @param {string} overlayId - 遮罩层的 ID
-     */
-            window.makeModalDraggable = function makeModalDraggable(overlayId) {
-                const overlay = document.getElementById(overlayId);
-                if (!overlay || overlay.dataset.dragInitialized) return; // 防止重复初始化
-
-                const target = overlay.firstElementChild;
-                if (!target) return;
-
-                let isDragging = false;
-                let startX, startY, initialLeft, initialTop;
-
-                const startAction = (e) => {
-                    // 排除 #targetInform 及其子元素
-                    if (e.target.id === 'targetInform' || e.target.closest('#targetInform')) {
-                        isDragging = false;
-                        return;
-                    }
-
-                    const ignoreTags = ['INPUT', 'TEXTAREA', 'BUTTON', 'A', 'SELECT'];
-                    if (ignoreTags.includes(e.target.tagName)) return;
-
-                    const touch = e.touches ? e.touches[0] : e;
-                    isDragging = true;
-
-                    const rect = target.getBoundingClientRect();
-                    startX = touch.clientX;
-                    startY = touch.clientY;
-                    initialLeft = rect.left;
-                    initialTop = rect.top;
-
-                    // 切换为绝对定位
-                    overlay.style.display = 'block';
-                    target.style.margin = '0';
-                    target.style.transform = 'none';
-                    target.style.position = 'absolute';
-                    target.style.setProperty('left', initialLeft + 'px', 'important');
-                    target.style.setProperty('top', initialTop + 'px', 'important');
-
-                    if (!e.touches) e.preventDefault();
-                };
-
-                const moveAction = (e) => {
-                    if (!isDragging) return;
-
-                    // 只有正在拖拽时才阻止背景滚动
-                    if (e.cancelable) e.preventDefault();
-
-                    const touch = e.touches ? e.touches[0] : e;
-                    const dx = touch.clientX - startX;
-                    const dy = touch.clientY - startY;
-
-                    target.style.setProperty('left', `${initialLeft + dx}px`, 'important');
-                    target.style.setProperty('top', `${initialTop + dy}px`, 'important');
-                };
-
-                const endAction = () => {
-                    isDragging = false;
-                };
-
-                // 绑定事件到 target 而非 overlay 整体，减少误触
-                target.addEventListener('mousedown', startAction);
-                target.addEventListener('touchstart', startAction, { passive: false });
-
-                // 全局监听移动和结束
-                document.addEventListener('mousemove', moveAction, { passive: false });
-                document.addEventListener('mouseup', endAction);
-                document.addEventListener('touchmove', moveAction, { passive: false });
-                document.addEventListener('touchend', endAction);
-
-                // 标记已初始化
-                overlay.dataset.dragInitialized = "true";
-            };
-
-
 
 
 
@@ -1096,6 +1009,85 @@ onclick="toggleDebugAndRefresh()"
     }
 
 
+
+
+    // 拖拽
+
+    /**
+* 使模态框内容支持双端拖拽（鼠标 + 触摸）
+* @param {string} overlayId - 遮罩层的 ID
+*/
+    window.makeModalDraggable = function makeModalDraggable(overlayId) {
+        const overlay = document.getElementById(overlayId);
+        if (!overlay || overlay.dataset.dragInitialized) return; // 防止重复初始化
+
+        const target = overlay.firstElementChild;
+        if (!target) return;
+
+        let isDragging = false;
+        let startX, startY, initialLeft, initialTop;
+
+        const startAction = (e) => {
+            // 排除 #targetInform 及其子元素
+            if (e.target.id === 'targetInform' || e.target.closest('#targetInform')) {
+                isDragging = false;
+                return;
+            }
+
+            const ignoreTags = ['INPUT', 'TEXTAREA', 'BUTTON', 'A', 'SELECT'];
+            if (ignoreTags.includes(e.target.tagName)) return;
+
+            const touch = e.touches ? e.touches[0] : e;
+            isDragging = true;
+
+            const rect = target.getBoundingClientRect();
+            startX = touch.clientX;
+            startY = touch.clientY;
+            initialLeft = rect.left;
+            initialTop = rect.top;
+
+            // 切换为绝对定位
+            overlay.style.display = 'block';
+            target.style.margin = '0';
+            target.style.transform = 'none';
+            target.style.position = 'absolute';
+            target.style.setProperty('left', initialLeft + 'px', 'important');
+            target.style.setProperty('top', initialTop + 'px', 'important');
+
+            if (!e.touches) e.preventDefault();
+        };
+
+        const moveAction = (e) => {
+            if (!isDragging) return;
+
+            // 只有正在拖拽时才阻止背景滚动
+            if (e.cancelable) e.preventDefault();
+
+            const touch = e.touches ? e.touches[0] : e;
+            const dx = touch.clientX - startX;
+            const dy = touch.clientY - startY;
+
+            target.style.setProperty('left', `${initialLeft + dx}px`, 'important');
+            target.style.setProperty('top', `${initialTop + dy}px`, 'important');
+        };
+
+        const endAction = () => {
+            isDragging = false;
+        };
+
+        // 绑定事件到 target 而非 overlay 整体，减少误触
+        target.addEventListener('mousedown', startAction);
+        target.addEventListener('touchstart', startAction, { passive: false });
+
+        // 全局监听移动和结束
+        document.addEventListener('mousemove', moveAction, { passive: false });
+        document.addEventListener('mouseup', endAction);
+        document.addEventListener('touchmove', moveAction, { passive: false });
+        document.addEventListener('touchend', endAction);
+
+        // 标记已初始化
+        overlay.dataset.dragInitialized = "true";
+    };
 
 
     // =================================================================
@@ -1313,10 +1305,7 @@ onclick="toggleDebugAndRefresh()"
             return;
         }
 
-
-
         // 2. 核心算法 (nth-child + ID 终结) 开始
-
 
         /**
  * 获取元素的精准且鲁棒的选择器
@@ -1325,14 +1314,23 @@ onclick="toggleDebugAndRefresh()"
  */
 
 
-
         window.getSmartSelector_selector_get = function getSmartSelector_selector_get(el) {
             if (!(el instanceof Element)) return '';
+
+
+            // --- 新增：黑名单过滤器 ---
+            const ignoreSelector = '.notranslate, #storage-control-panel, [id="input-prompt-container"], [class*="confirm"], [id*="script-viewer"], [id*="gemini"], #ellCloseX, #dh_buttonContainer, #dh_pageContainer';
+
+            // 如果元素本身在黑名单内，直接返回空或特定标识
+            if (el.closest(ignoreSelector)) {
+                return '';
+            }
 
             /**
              * 内部辅助：提取元素的“硬指纹”特征
              * 包含：ID, href, src, title, alt, data-*, 业务Class
              */
+
             function getHardFeature(node) {
                 if (!node) return null;
                 const tag = node.tagName.toLowerCase();
@@ -1414,36 +1412,6 @@ onclick="toggleDebugAndRefresh()"
 
             return path.join(' > ');
         }
-
-        /**
-         * 验证选择器在当前文档中是否唯一
-         */
-        function isUnique(selector) {
-            try {
-                return document.querySelectorAll(selector).length === 1;
-            } catch (e) {
-                return false;
-            }
-        }
-
-        /**
-         * 判断标识符（ID或Class）是否为动态生成的
-         * 逻辑：包含过多数字、长度过长、包含特定框架特征
-         */
-        function isDynamicIdentifier(str) {
-            if (!str) return true;
-            const hasManyNumbers = (str.match(/\d/g) || []).length > 3;
-            const isTooLong = str.length > 20;
-            const isHexLike = /[a-f0-9]{8,}/.test(str); // 类似哈希值
-            return hasManyNumbers || isTooLong || isHexLike;
-        }
-
-        // --- 使用示例 ---
-        // document.addEventListener('click', (e) => {
-        //     e.preventDefault();
-        //     const selector = getSmartSelector_selector_get(e.target);
-        //     console.log("精确定位选择器:", selector);
-        // });
 
 
         const SelectorBlockerTool = {
@@ -1528,203 +1496,6 @@ onclick="toggleDebugAndRefresh()"
         };
 
 
-
-
-        /**
- * 总调度：获取并自动优化选择器
- */
-
-        function getFinalSelector(el) {
-            // 1. 获取基础路径和提纯路径
-            let selector = getFullSmartPath(el);
-            // 处理引号以确保 CSS 选择器字符串合法
-            let refined = refineAndCleanSelector(selector, el).replace(/"/g, "'");
-            selector = selector.replace(/"/g, "'");
-
-            console.log('原始路径:', selector);
-            console.log('提纯结果:', refined);
-
-            try {
-                // 2. 校验合法性：使用 matches 性能更高，且逻辑更直接
-                // 它直接判断 el 元素是否符合该选择器，不需要遍历整个页面
-                const isRefinedValid = el.matches(refined);
-                const isSelectorValid = el.matches(selector);
-
-                // 情况 A：两者都有效，选短的
-                if (isRefinedValid && isSelectorValid) {
-                    return refined.length <= selector.length ? refined : selector;
-                }
-
-                // 情况 B：只有一个有效
-                if (isRefinedValid) return refined;
-                if (isSelectorValid) return selector;
-
-            } catch (e) {
-                console.error("选择器校验执行错误:", e);
-            }
-
-            // 3. 兜底逻辑：如果校验失败或报错，尝试返回一个不为空的值，或者返回 null
-            return refined || selector || null;
-        }
-
-
-
-        /**
-         * 辅助逻辑：判断是否命中提纯条件
-         */
-        function shouldRefine(selector) {
-            if (!selector) return false;
-            // 命中条件：包含冒号/斜杠(Tailwind)、类名过多(>3)、包含布局关键字
-            const hasUtilityPrefix = /[:/]/.test(selector);
-            const classCount = (selector.match(/\./g) || []).length;
-            const hasStyleKeywords = /(px-|py-|mb-|mt-|flex|grid|bg-|text-)/.test(selector);
-
-            return hasUtilityPrefix || classCount > 3 || hasStyleKeywords;
-        }
-
-
-
-        /**
-         * 封装一个递归调用 getSmartSelector_selector_get 的函数，确保返回完整且唯一的路径
-         */
-        function getFullSmartPath(el) {
-            let current = el;
-            let path = [];
-
-            while (current && current.nodeType === Node.ELEMENT_NODE) {
-                // 调用你保留的 getSmartSelector_selector_get
-                let part = getSmartSelector_selector_get(current);
-
-                // 加上位置索引补丁，防止 getSmartSelector_selector_get 返回的标签/类名在同级不唯一
-                const parent = current.parentElement;
-                if (parent) {
-                    const siblings = Array.from(parent.children).filter(s => s.tagName === current.tagName);
-                    if (siblings.length > 1) {
-                        part += `:nth-of-type(${siblings.indexOf(current) + 1})`;
-                    }
-                }
-
-                path.unshift(part);
-
-                // 验证当前路径是否已经全局唯一
-                const fullPath = path.join(' > ');
-                try {
-                    if (document.querySelectorAll(fullPath).length === 1) {
-                        return fullPath;
-                    }
-                } catch (e) {
-                    // 如果报错，通常是因为 getSmartSelector_selector_get 内部没有转义特殊字符
-                    // 我们在这里强制转义一次作为保险
-                    return path.map(p => p.includes(':') ? p.replace(/:/g, '\\:') : p).join(' > ');
-                }
-
-                current = parent;
-                if (current && (current.tagName === 'BODY' || current.tagName === 'HTML')) break;
-            }
-            return path.join(' > ');
-        }
-
-
-
-        /**
- * 针对 Jable 深度优化的提纯函数
- * @param {string} selector 原始路径
- * @param {HTMLElement} targetEl 点击的真实元素
- */
-        function refineAndCleanSelector(selector, targetEl) {
-            console.log('控制台输出selector和targetEl', selector, targetEl)
-            const parts = selector.split(/\s*>\s*/);
-            let currentEl = targetEl;
-            const elChain = [];
-
-            // 溯源 DOM 链
-            while (currentEl && elChain.length < parts.length) {
-                elChain.unshift(currentEl);
-                currentEl = currentEl.parentElement;
-            }
-
-            return parts.map((part, index) => {
-                const el = elChain[index];
-                const tagMatch = part.match(/^([a-z0-9]+)/i);
-                const tag = tagMatch ? tagMatch[1] : '';
-                const nthMatch = part.match(/:nth-of-type\(\d+\)/);
-                const nth = nthMatch ? nthMatch[0] : '';
-
-
-                // --- 1. 属性提取：处理 a, img 和 video 标签 ---
-                let attrPart = '';
-                if (el) {
-                    if (tag === 'a') {
-                        const href = el.getAttribute('href') || '';
-                        // 提取视频 ID (例如从 /videos/jur-566/ 提取 jur-566)
-                        const vid = href.split('/').filter(Boolean).pop();
-                        if (vid && vid.length > 3) attrPart = `[href*="${vid}"]`;
-                    }
-                    else if (tag === 'img') {
-                        const dSrc = el.getAttribute('data-src') || '';
-                        // 提取图片 ID (如 55472)
-                        const imgId = dSrc.match(/\/(\d+)\//)?.[1];
-                        if (imgId) attrPart = `[data-src*="${imgId}"]`;
-                    }
-                    // --- 新增：针对 video 标签的特殊处理 ---
-                    else if (tag === 'video') {
-                        const vSrc = el.getAttribute('src') || '';
-                        // 只有当不是动态 blob 且长度足够时才提取
-                        if (vSrc && !vSrc.startsWith('blob:')) {
-                            // 尝试提取文件名部分作为指纹
-                            const vFingerprint = vSrc.split('/').pop().split('?')[0];
-                            if (vFingerprint && vFingerprint.length > 8) {
-                                attrPart = `[src*="${vFingerprint}"]`;
-                            }
-                        }
-                    }
-                }
-
-
-                // --- 2. 类名过滤：扩大黑名单范围 ---
-                let stableClasses = [];
-                const classMatch = part.match(/\.([^\s.:>#\[]+)/g);
-                if (classMatch) {
-                    stableClasses = classMatch
-                        .map(c => c.substring(1))
-                        .filter(c => {
-                            // 1. 排除所有状态类名
-                            const isTransient = /(loading|lazy|loaded|preview|active|hover|focus|show|open)/i.test(c);
-
-                            // 2. 排除所有间距、布局、栅格类名
-                            const isStyle = /^(px-|py-|mb-|mt-|pb-|ml-|mr|bg-|text-|dark|col-|gutter|cover|d-|flex|justify|align|p-|m-)/.test(c);
-
-                            // 3. 业务白名单：保留这些核心词
-                            const isBusiness = /(video|box|card|item|detail|title|main|wrapper)/i.test(c);
-
-                            // 4. 【新增】排除随机混淆类名 (例如 mtz-vlc-mkjjc)
-                            // 逻辑：如果类名包含连字符超过2个，或者长度超过10且没有明确语义，判定为随机
-                            const isRandom = (c.split('-').length > 2) || (c.length > 10 && !isBusiness);
-
-                            // 只要是业务词就保留，否则必须既不是瞬态、也不是样式、也不是随机
-                            return isBusiness || (!isTransient && !isStyle && !isRandom);
-                        })
-                        .map(c => CSS.escape(c));
-                }
-
-                // --- 3. 组合逻辑 ---
-                let finalPart = tag;
-                // 如果有属性（如 [href*="jur-566"]），优先级最高，因为它最稳定
-                if (attrPart) {
-                    finalPart += attrPart;
-                } else {
-                    // 否则才使用类名
-                    if (stableClasses.length > 0) {
-                        finalPart += '.' + stableClasses[0];
-                    }
-                    // 始终保留位置信息作为兜底
-                    if (nth) finalPart += nth;
-                }
-
-                return finalPart;
-            }).join(' > ');
-        }
-
         // 2. 核心算法 (nth-child + ID 终结) 结束
 
         // --- 强制样式注入 ---
@@ -1780,24 +1551,9 @@ onclick="toggleDebugAndRefresh()"
         const resultWin = document.createElement('div');
         resultWin.className = 'sel-result-window notranslate';
 
-        /* 重构
-        resultWin.innerHTML = `
-        <span class="sel-title">精确CSS选择器(类xPath):</span>
-        <code class="sel-code" id="sel-output"></code>
-        <div class="sel-actions">
-            <button class="sel-btn sel-copy-btn" id="sel-copy">复制</button>
-            <button class="sel-btn sel-edit-btn" id="sel-edit">修改</button>
-            <button class="sel-btn sel-block-btn" id="sel-block">屏蔽</button>
-            <button class="sel-btn sel-reset-btn" id="sel-reset">重选</button>
-            <button class="sel-btn sel-exit-btn" id="sel-exit">退出</button>
-        </div>
-    `;
-    */
-
-
         // --- 1. UI 渲染 ---
         resultWin.innerHTML = `
-    <span class="sel-title">精确CSS选择器(Under Test):</span>
+    <span class="sel-title">精确CSS选择器 (测试中...):</span>
     <code class="sel-code" id="sel-output"></code>
     
     <div id="sel-warning-tip" style="margin: 10px 0; padding: 8px; border-radius: 4px; font-size: 12px; display: none;">
@@ -1823,10 +1579,6 @@ onclick="toggleDebugAndRefresh()"
         const outputEl = currentResultWin.querySelector('#sel-output');
         let currentMatchIndex = 0; // 记录当前查看位置
         const inspectBtn = currentResultWin.querySelector('#sel-inspect-btn'); // 假设你按钮id是这个
-        const tipBox = currentResultWin.querySelector('#sel-warning-tip');
-        const tipMsg = currentResultWin.querySelector('#sel-tip-msg');
-        const countNum = currentResultWin.querySelector('#sel-count-num');
-
 
 
         // 查看元素
@@ -1902,13 +1654,6 @@ onclick="toggleDebugAndRefresh()"
         // 3. 针对“修改”功能：如果 outputEl 变动，自动更新
         const observer = new MutationObserver(refreshTip);
         observer.observe(outputEl, { characterData: true, childList: true, subtree: true });
-
-        /**
-         *  重构
-         */
-        //document.body.appendChild(resultWin);
-        //const outputEl = resultWin.querySelector('#sel-output');
-        //const editBtn = resultWin.querySelector('#sel-edit');
 
         // --- 拖拽实现 ---
         const dragHandle = resultWin.querySelector('.sel-title');
@@ -3028,7 +2773,7 @@ onclick="toggleDebugAndRefresh()"
                 <span id="gemini-close-btn">&times;</span>
             </div>
             
-            <div style="padding: 8px 8px; font-size:xx-small;border-bottom: 1px solid #ccc; text-align: center;">
+            <div style="padding: 4px 5px; font-size:xx-small;border-bottom: 1px solid #ccc; text-align: center;">
                 
                 <button id="blacklist-toggle" style="
                     background: ${isBlacklisted ? '#dc3545' : '#1976D2'}; 
@@ -3039,16 +2784,17 @@ onclick="toggleDebugAndRefresh()"
                 </button>
                 
                 <button id="selector-toggle" style="background: #1976D2; color: white; border: none; padding: 8px 15px; cursor: pointer; border-radius: 4px; font-weight: bold; width: 100%; margin-bottom: 2px;">
-                    🖱️ 启用选择并屏蔽模式
+                    🖱️ 启用选择并屏蔽模式 (xPath)
                 </button>
-                <div style="margin-bottom:2px; display: flex; gap: 2px;">
-                    <button id="element-debug-click-toggle" style="background: ${isDebuggingElementClick ? 'green' : '#FFB300'}; color: ${isDebuggingElementClick ? 'white' : '#333'}; border: none; padding: 8px 5px; cursor: pointer; border-radius: 4px; font-weight: bold; flex: 1; font-size: 12px;">
+                <button id="element-debug-click-toggle" style="width:100%; margin-bottom:2px;  background: ${isDebuggingElementClick ? 'green' : '#FFB300'}; color: ${isDebuggingElementClick ? 'white' : '#333'}; border: none; padding: 8px 5px; cursor: pointer; border-radius: 4px; font-weight: bold; flex: 1; font-size: xx-small;">
                     🛠️ 元素点击调试 (${isDebuggingElementClick ? '开' : '关'})
                     </button>
-                    <button id="selector-debug-click-toggle" style="background: #FFB300;color: #333;border: none;padding: 8px 5px;cursor: pointer;border-radius: 4px;font-weight: bold;flex: 1;font-size: 12px;">
+                <div style="margin-bottom:2px; display: flex; gap: 2px;">
+                    
+                    <button id="selector-debug-click-toggle" style="background: #FFB300;color: #333;border: none;padding: 8px 5px;cursor: pointer;border-radius: 4px;font-weight: bold;flex: 1;font-size: xx-small;">
                     ⚓ 元素CSS选择器获取(关)
                     </button>
-                    <button id="debug-location-toggle" style="background: ${isDebuggingLocationHooks ? 'green' : '#FFB300'}; color: ${isDebuggingLocationHooks ? 'white' : '#333'}; border: none; padding: 8px 5px; cursor: pointer; border-radius: 4px; font-weight: bold; flex: 1; font-size: 12px;">
+                    <button id="debug-location-toggle" style="background: ${isDebuggingLocationHooks ? 'green' : '#FFB300'}; color: ${isDebuggingLocationHooks ? 'white' : '#333'}; border: none; padding: 8px 5px; cursor: pointer; border-radius: 4px; font-weight: bold; flex: 1; font-size: xx-small;">
                     ⚙️ JS 重定向调试 (${isDebuggingLocationHooks ? '开' : '关'})
                     </button>
                 </div>
@@ -3064,7 +2810,7 @@ onclick="toggleDebugAndRefresh()"
         border-radius: 4px;
         font-weight: bold;
         width: 100%;
-    ">📟 查看脚本</button>
+    ">📟 查看页面上的脚本</button>
 
     <button id="manual-xpath-runCode" onclick="window.showJsManager()" style="
         background: #43A047; /* 使用紫色突出手动操作 */
@@ -3229,7 +2975,7 @@ onclick="toggleDebugAndRefresh()"
                     localStorage.setItem(DEBUG_SELECTOR_CLICK_KEY, 'false')
                     btn.innerText = `${originalText}(关)`;
                     btn.style.background = '#FFB300'
-                    btn.style.color = 'black'
+                    btn.style.color = '#333'
                     clearInterval(checkExit);
                 }
             }, 500); // 每半秒检查一次工具是否还存在
@@ -3432,7 +3178,7 @@ onclick="toggleDebugAndRefresh()"
                     currentHoverElement.style.outline = '';
                     currentHoverElement = null;
                 }
-                selectorToggle.textContent = '🖱️ 启用选择并屏蔽模式';
+                selectorToggle.textContent = '🖱️ 启用选择并屏蔽模式 (xPath)';
                 selectorToggle.style.background = '#1976D2';
                 statusBar.textContent = '选择模式已禁用。';
             }
@@ -3995,14 +3741,12 @@ onclick="toggleDebugAndRefresh()"
                 return; // 排除逻辑
             }
 
-
-
             let currentHoverElement = null;
-            if (currentHoverElement !== targetElement) {
-                currentHoverElement = targetElement;
-                currentHoverElement.style.outline = '4px dashed orange !important';
-                currentHoverElement.style.outlineOffset = '-4px dashed orange !important'
-
+            if (localStorage.gemini_debug_element_click_mode == 'true') {
+                if (currentHoverElement !== targetElement) {
+                    currentHoverElement = targetElement;
+                    currentHoverElement.style.outline = '4px dashed orange';
+                }
             }
 
             const isLink = targetElement.closest(' a');
@@ -4087,7 +3831,9 @@ onclick="toggleDebugAndRefresh()"
                 }
 
                 setTimeout(() => {
-                    window.makeModalDraggable('gemini-custom-modal-overlay');
+                    if (typeof window.makeModalDraggable == 'function') {
+                        window.makeModalDraggable('gemini-custom-modal-overlay');
+                    }
                 }, 500)
 
                 const confirmBlock = await showCustomConfirm(
@@ -4099,7 +3845,6 @@ onclick="toggleDebugAndRefresh()"
 
                 if (confirmBlock) {
                     currentHoverElement.style.outline = '';
-                    currentHoverElement.style.outlineOffset = ''
                     if (xpath && targetElement.parentNode) {
                         // Element Click Debugging is for general elements (not Iframes)
                         if (targetElement.tagName === 'IFRAME') {
@@ -4114,7 +3859,6 @@ onclick="toggleDebugAndRefresh()"
                         console.error('❌ 屏蔽失败：XPath 获取失败，无法进行永久屏蔽。');
                     }
                 } else {
-                    currentHoverElement.style.outline = '';
                     targetElement.setAttribute(ALLOW_ONCE_ATTRIBUTE, 'true');
                     console.log("🚫 已取消永久屏蔽。请**再次点击**此元素，点击将在第二次被放行。");
                 }
@@ -4440,7 +4184,6 @@ onclick="toggleDebugAndRefresh()"
 
             }
         }
-
 
         document.addEventListener('click', (e) => {
             const target = e.target;
