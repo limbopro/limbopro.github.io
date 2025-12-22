@@ -880,8 +880,8 @@
                     </p>
                 </div>
                 
-                <div id='targetInform' style="color:black;font-size: 12px; cursor:default;user-select:text;background: #f8f9fa; padding: 12px; border-radius: 6px; margin-bottom: 10px; border-left: 4px solid #1976D2;">
-                    <strong style="color: #1976D2; display: block; margin-bottom: 5px;">🚀 目标信息 (V26.39.12 - 增强):</strong>
+                <div id='targetInform' style="height:150px; overflow:auto;color:black;font-size: 12px; cursor:default;user-select:text;background: #f8f9fa; padding: 12px; border-radius: 6px; margin-bottom: 10px; border-left: 4px solid #1976D2;">
+                    <strong style="color: #1976D2; display: block; margin-bottom: 5px;">🚀 目标信息 (V26.39.13 - 增强 - 滑动查看更多👀):</strong>
                     
                     
 
