@@ -1205,3 +1205,50 @@ formatWholeDom()
 initAdblockLoader();
 
 
+
+
+(function() {
+    // 1. 注入样式
+    const style = document.createElement('style');
+    style.innerHTML = `#translation-button.hidden-toggle { display: none !important; }`;
+    document.head.appendChild(style);
+
+    let clickTimes = [];
+    let checkTimer = null; // 用于延迟确认是否还有后续点击
+
+    const handleClicks = (e) => {
+        const btn = document.getElementById('translation-button');
+        if (btn && btn.contains(e.target)) return;
+
+        const now = Date.now();
+        clickTimes.push(now);
+
+        // 始终只保留最近 1 秒内的点击
+        clickTimes = clickTimes.filter(t => now - t <= 1000);
+
+        // 每次点击都清除之前的等待逻辑
+        if (checkTimer) clearTimeout(checkTimer);
+
+        // 如果当前 1 秒内正好点击了 3 次，设置一个短延迟检查是否有第 4 次
+        if (clickTimes.length === 3) {
+            checkTimer = setTimeout(() => {
+                // 延迟结束时，如果队列里依然只有 3 次（没有第4次加入），则触发
+                if (clickTimes.length === 3) {
+                    if (btn) {
+                        btn.classList.toggle('hidden-toggle');
+                        console.log("暗号匹配成功：3次点击。");
+                    }
+                    clickTimes = []; // 执行后重置
+                }
+            }, 250); // 250ms 的观察窗，足以判定用户是否在继续点击
+        } 
+        // 如果超过 3 次，直接清空队列，判定为“乱点”，什么也不做
+        else if (clickTimes.length >= 4) {
+            console.log("点击过快或过多，忽略操作。");
+            clickTimes = [];
+        }
+    };
+
+    const eventType = ('ontouchstart' in window) ? 'touchstart' : 'mousedown';
+    document.addEventListener(eventType, handleClicks);
+})();

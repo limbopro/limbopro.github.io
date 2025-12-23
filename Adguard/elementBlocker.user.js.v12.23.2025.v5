@@ -12,6 +12,10 @@
 (function () {
     'use strict';
 
+
+
+
+
     // =================================================================
     // ⚠️ 全局常量与状态 
     // =================================================================
@@ -538,6 +542,7 @@
         };
 
 
+
         // 2. 初始化动态监听，使用独一无二的变量名
         const startDynamicCleanup = (cssRemovals) => {
             const targetNode = document.body || document.documentElement;
@@ -546,6 +551,7 @@
             const dh_ElementRemoverObserver = new MutationObserver((mutationsList) => {
                 // 每次 DOM 变化时执行清理
                 performCleanupAction(document, cssRemovals);
+                console.log('有新元素生成...')
             });
 
             // 配置并启动
@@ -875,42 +881,38 @@
                         font-size: 12px; padding: 5px 10px; 
                         background: #fffbe6; border-left: 3px solid #FFB300;
                     ">
-        <strong>➡️ [放行返回]</strong> 临时放行此元素，但您需要**再次点击**此按钮来触发原始跳转行为。
+        <strong>➡️ [临时放行]</strong> 临时放行此元素，但您需要**再次点击**此按钮来触发原始跳转行为。
     </p>
 </div>
 
-<div style="display: flex; justify-content: space-around; flex-direction:column ;margin-top: 10px; margin-bottom: 0px; gap: 0px;">
-    
-    <button id="gemini-modal-confirm" style="background: #b62b38; color: white; border: none; flex: 1;">
-        🛡️ 立即屏蔽 (xPath)
-    </button>
-
-    <button onclick='window.blockImmediatelyBySelector()' id="gemini-modal-confirm-css"
-        style="background: #b62b38; color: white; border: none; flex: 1;" class="skiptranslate is-processing">
-        🛡️ 立即屏蔽 (CSS选择器)
-    </button>
-
-    </div>
-    <div style="display: grid;grid-template-columns: 1fr 1fr; flex-direction:column;/* margin-top: 10px; */margin-bottom: 10px;gap: 0px;">
-
-     <button id="gemini-modal-protect" style="background:#FFB300; color: white; border: none; flex: 1;"
+<div style="display: flex; justify-content: space-around; flex-direction:column ;margin-top: 10px; margin-bottom: 10px; gap: 0px;">
+    <button id="gemini-modal-protect" style="background:#FFB300; color: white; border: none; flex: 1;"
         onclick="toggleDebugAndRefresh()">
         🔰 关闭元素点击调试
     </button>
+    <button id="gemini-modal-confirm" style="background: #dc3545; color: white; border: none; flex: 1;">
+        🛡️ 立即屏蔽 (xPath)
+    </button>
+
+
+    <button onclick='window.showLinkTipsModalOnce()' id="gemini-modal-confirm-css"
+        style="background: #b62b38; color: white; border: none; flex: 1;" class="skiptranslate is-processing">
+        🛡️ 更多屏蔽选项 (CSS选择器)
+    </button>
+
 
     <button id="gemini-modal-cancel" style="background: green; color:white; border: none; flex: 1;">
-        ➡️ 放行返回
+        ➡️ 临时放行 (需二次点击)
     </button>
-   
-    </div>
-
+</div>
 
 <div id='targetInform'
-    style="box-shadow: inset 4px 4px 4px 4px rgba(0, 0, 0, 0.2) ;max-height: 190px; overflow:auto;color:black;font-size: 12px; cursor:default;user-select:text;background: #f8f9fa; padding: 12px; border-radius: 6px; margin-bottom: 10px; border-left: 4px solid #1976D2;">
+    style="height:110px; overflow:auto;color:black;font-size: 12px; cursor:default;user-select:text;background: #f8f9fa; padding: 12px; border-radius: 6px; margin-bottom: 10px; border-left: 4px solid #1976D2;">
     <strong style="color: #1976D2; display: block; margin-bottom: 5px;">🚀 目标信息 (V26.39.13 - 增强 - 滑动查看更多👀):</strong>
 
     <button onclick="window.showLinkTipsModalOnce()" id="tips"
         style="padding: 5px 5px 5px 5px;margin: 5px 5px 5px 0px;background: #6b6465;color: aliceblue;border: antiquewhite;">如何利用目标信息？🆕</button>
+
 
     <div style="word-break: break-all; margin-bottom: 5px;">
         <span style="font-weight: bold;">父元素:</span> ${truncatedParent}
@@ -971,16 +973,15 @@
             `;
 
 
+
             const closeAndResolve = (result) => {
                 modalOverlay.remove();
                 resolve(result);
             };
 
 
-            window.blockImmediatelyBySelector = function blockImmediatelyBySelector() { // 🛡️ 立即屏蔽 (CSS选择器)
-                window.pendingSelector = document.getElementById('absoluteSelector').textContent.toString()
-                startSelectorTool()
-            }
+
+
 
 
             /**
@@ -1544,12 +1545,11 @@
         resultWin.innerHTML = `
     <span class="sel-title">元素CSS选择器获取与调试 (测试中...)</span>
     
-  <div class="warm-tips" style="background: #f0f5ff !important; border: 1px solid #adc6ff; padding: 10px 12px; border-radius: 4px; margin: 5px 0 10px 0; font-size: 11px; color: #1d39c4; line-height: 1.6;">
-    💡 <b>开发者调优建议：</b><br>
-    • <b>逐级泛化：</b>点击 <button class="sel-hint-box" style="font-weight:bolder; cursor:pointer; border:1px solid #85a5ff; border-radius:2px; background:#fff; padding:0 4px; font-size:10px; color: #1d39c4; vertical-align: middle;">逐级泛化</button> 移除末尾属性/索引限制，扩展匹配范围。<br>
-    • <b>极致精简：</b>点击 <button id="sel-simplify-box" style="font-weight:bolder; cursor:pointer; border:1px solid #85a5ff; border-radius:2px; background:#fff; padding:0 4px; font-size:10px; color: #1d39c4; vertical-align: middle;">极致精简</button> 智能剔除冗余父级与索引，仅保留唯一性核心路径。<br>
-    • <b>手动重构：</b>点击下方“修改”按钮进入编辑模式。
-</div>
+   <div class="warm-tips" style="background: #f0f5ff; border: 1px solid #adc6ff; padding: 10px 12px; border-radius: 4px; margin: 5px 0 10px 0; font-size: 11px; color: #1d39c4; line-height: 1.6;">
+        💡 <b>开发者调优建议：</b><br>
+        • <b>自动泛化：</b>点击 <button class="sel-hint-box" style="font-weight:bolder; cursor:pointer; border:1px solid #85a5ff; border-radius:2px; background:#fff; padding:0 4px; font-size:10px; color: #1d39c4; vertical-align: middle;">逐级泛化</button> 移除末尾索引，以匹配更多同类项（如有）。<br>
+        • <b>手动重构：</b>点击下方“修改”按钮进入编辑模式。
+    </div>
 
     <code class="sel-code" id="sel-output"></code>
     
@@ -1578,163 +1578,59 @@
         const inspectBtn = currentResultWin.querySelector('#sel-inspect-btn'); // 假设你按钮id是这个
 
 
-        // 泛化开始
-
-
-        // 获取核心 DOM 元素
+        // 在你的 UI 渲染并添加到 DOM 之后执行以下逻辑
         const hintBtn = resultWin.querySelector('.sel-hint-box');
-        const simplifyBtn = resultWin.querySelector('#sel-simplify-box');
         const outputField = resultWin.querySelector('#sel-output');
 
-        // --- 功能一：自动泛化 (保持原有逻辑) ---
-        // --- 优化后的自动泛化逻辑 ---
         if (hintBtn && outputField) {
             hintBtn.onclick = () => {
                 let currentSelector = outputField.innerText.trim();
 
-                /**
-                 * 改进后的正则：
-                 * 匹配字符串末尾出现的：
-                 * 1. :nth-child(\d+)
-                 * 2. 或者 [attribute='value'] 类型的属性选择器
-                 */
-                const lastConstraintRegex = /(:nth-child\(\d+\)|\[[^\]]+\])(?!.*(:nth-child|\[))/;
+                // 修正后的正则：匹配字符串中最后一个出现的 :nth-child(n)
+                const lastNthRegex = /:nth-child\(\d+\)(?!.*:nth-child)/;
 
-                if (lastConstraintRegex.test(currentSelector)) {
-                    // 1. 执行删除最后一个约束（属性或索引）
-                    const newSelector = currentSelector.replace(lastConstraintRegex, '').trim();
-
-                    // 清理可能残留在末尾的空格或多余的层级符（如删除属性后剩下的标签名）
-                    const cleanedSelector = newSelector.replace(/\s*>\s*$/, '');
+                if (lastNthRegex.test(currentSelector)) {
+                    // 1. 执行删除
+                    const newSelector = currentSelector.replace(lastNthRegex, '');
 
                     // 2. 更新 UI 显示
-                    outputField.innerText = cleanedSelector;
+                    outputField.innerText = newSelector;
 
-                    // 3. 执行预览与计数
-                    applyAllPreview(cleanedSelector);
+                    // 【同步执行高亮】
+                    SelectorBlockerTool.applyPreview(newSelector);
 
+                    // 3. 触发预览高亮 (使用你习惯的 !important 逻辑)
+                    if (typeof this.applyPreview === 'function') {
+                        this.applyPreview(newSelector);
+                    }
+
+                    // 4. 实时更新匹配数量
                     try {
-                        const count = document.querySelectorAll(cleanedSelector).length;
-                        updateCountUI(count, count > 1 ? "范围已扩大" : "");
+                        const count = document.querySelectorAll(newSelector).length;
+                        const countNumEl = document.getElementById('sel-count-num');
+                        const tipEl = document.getElementById('sel-warning-tip');
+                        const msgEl = document.getElementById('sel-tip-msg');
+
+                        if (countNumEl) countNumEl.innerText = count;
+
+                        if (tipEl && count > 1) {
+                            tipEl.style.display = 'block';
+                            if (msgEl) msgEl.innerText = "范围已扩大";
+                        }
                     } catch (e) {
-                        console.warn("泛化后语法错误");
+                        console.warn("手动编辑可能导致了语法错误");
                     }
                 } else {
-                    // 如果连属性和索引都没了，尝试删除最后一个标签层级
-                    let segments = currentSelector.split(/\s*>\s*/);
-                    if (segments.length > 1) {
-                        segments.pop(); // 删掉最后一级标签
-                        const parentSelector = segments.join(' > ');
-                        outputField.innerText = parentSelector;
-                        applyAllPreview(parentSelector);
-                    } else {
-                        hintBtn.innerText = "已无可泛化项";
-                        hintBtn.disabled = true;
-                        setTimeout(() => { hintBtn.innerText = "逐级泛化"; hintBtn.disabled = false; }, 1000);
-                    }
+                    // 反馈：已经没有索引可以删除了
+                    hintBtn.innerText = "已无更多索引";
+                    hintBtn.disabled = true;
+                    setTimeout(() => {
+                        hintBtn.innerText = "逐级泛化";
+                        hintBtn.disabled = false;
+                    }, 1000);
                 }
             };
         }
-
-        // --- 功能二：极致精简 (整合索引精简与层级剥离) ---
-        if (simplifyBtn && outputField) {
-            simplifyBtn.onclick = () => {
-                let currentSelector = outputField.innerText.trim();
-
-                // 辅助工具：根据下标保留索引
-                const rebuildByIndices = (selector, indexToKeep) => {
-                    let i = 0;
-                    return selector.replace(/:nth-child\(\d+\)/g, (match) => {
-                        return indexToKeep.includes(i++) ? match : "";
-                    });
-                };
-
-                let tempSelector = currentSelector;
-
-                // 1. 获取初始索引列表
-                const allNths = tempSelector.match(/:nth-child\(\d+\)/g) || [];
-                let activeIndices = allNths.map((_, i) => i);
-
-                // 【步骤 A：从左向右索引精简】
-                for (let i = 0; i < allNths.length; i++) {
-                    let testIndices = activeIndices.filter(idx => idx !== i);
-                    let testSelector = rebuildByIndices(currentSelector, testIndices);
-                    if (checkUnique(testSelector)) {
-                        activeIndices = testIndices;
-                        tempSelector = testSelector;
-                    } else { break; } // 按照要求，左侧遇到关键索引即停止
-                }
-
-                // 【步骤 B：从右向左索引精简】(保留最后一个索引)
-                if (activeIndices.length > 1) {
-                    for (let j = activeIndices.length - 2; j >= 0; j--) {
-                        let targetIdx = activeIndices[j];
-                        let testIndices = activeIndices.filter(idx => idx !== targetIdx);
-                        let testSelector = rebuildByIndices(currentSelector, testIndices);
-                        if (checkUnique(testSelector)) {
-                            activeIndices = testIndices;
-                            tempSelector = testSelector;
-                        }
-                    }
-                }
-
-                // 【步骤 C：层级路径剥离】(移除左侧冗余父级)
-                let segments = tempSelector.split(/\s*>\s*/);
-                if (segments.length > 1) {
-                    let finalPath = tempSelector;
-                    for (let k = 0; k < segments.length - 1; k++) {
-                        let testSelector = segments.slice(k + 1).join(' > ');
-                        if (checkUnique(testSelector)) {
-                            finalPath = testSelector;
-                        } else { break; } // 左侧层级是必要的
-                    }
-                    tempSelector = finalPath;
-                }
-
-                // 3. 更新 UI 和预览
-                outputField.innerText = tempSelector;
-                applyAllPreview(tempSelector);
-                updateCountUI(1, "");
-
-                simplifyBtn.innerText = "已极致精简";
-                setTimeout(() => { simplifyBtn.innerText = "极致精简"; }, 1500);
-            };
-        }
-
-        // --- 通用辅助函数 ---
-
-        // 检查选择器在当前页面是否唯一
-        function checkUnique(selector) {
-            try {
-                if (!selector.trim()) return false;
-                return document.querySelectorAll(selector).length === 1;
-            } catch (e) { return false; }
-        }
-
-        // 统一执行预览逻辑 (带 !important 习惯)
-        function applyAllPreview(selector) {
-            if (typeof SelectorBlockerTool !== 'undefined' && SelectorBlockerTool.applyPreview) {
-                SelectorBlockerTool.applyPreview(selector);
-            } else if (typeof this.applyPreview === 'function') {
-                this.applyPreview(selector);
-            }
-        }
-
-        // 统一更新数量显示
-        function updateCountUI(count, msg) {
-            const countNumEl = document.getElementById('sel-count-num');
-            const tipEl = document.getElementById('sel-warning-tip');
-            const msgEl = document.getElementById('sel-tip-msg');
-            if (countNumEl) countNumEl.innerText = count;
-            if (tipEl) {
-                tipEl.style.display = msg ? 'block' : 'none';
-                if (msgEl) msgEl.innerText = msg;
-            }
-        }
-
-        // 泛化结束
-
-
 
 
         // 在外部或 SelectorBlockerTool 中定义一个变量记录定时器
@@ -3025,22 +2921,22 @@
                 <button id="selector-toggle" style="background: #1976D2; color: white; border: none; padding: 8px 15px; cursor: pointer; border-radius: 4px; font-weight: bold; width: 100%; margin-bottom: 2px;">
                     🖱️ 启用选择并屏蔽模式 (xPath)
                 </button>
-                 <button id="selector-debug-click-toggle" style="width:100%; margin-bottom:2px;background:#1976D2;color:white;border: none;padding: 8px 5px;cursor: pointer;border-radius: 4px;font-weight: bold;flex: 1;font-size: xx-small;">
-                    ⚓ 元素CSS选择器获取与调试(关)
-                    </button>
-                <div style="margin-bottom:2px; display: flex; gap: 2px;">
-                    <button id="element-debug-click-toggle" style="width:100%; margin-bottom:2px;  background: ${isDebuggingElementClick ? 'green' : '#FFB300'}; color: ${isDebuggingElementClick ? 'white' : '#333'}; border: none; padding: 8px 5px; cursor: pointer; border-radius: 4px; font-weight: bold; flex: 1; font-size: xx-small;">
+                <button id="element-debug-click-toggle" style="width:100%; margin-bottom:2px;  background: ${isDebuggingElementClick ? 'green' : '#FFB300'}; color: ${isDebuggingElementClick ? 'white' : '#333'}; border: none; padding: 8px 5px; cursor: pointer; border-radius: 4px; font-weight: bold; flex: 1; font-size: xx-small;">
                     🛠️ 元素点击调试 (${isDebuggingElementClick ? '开' : '关'})
                     </button>
-                   
-                    <button id="debug-location-toggle" style=" margin-bottom:2px; background: ${isDebuggingLocationHooks ? 'green' : '#FFB300'}; color: ${isDebuggingLocationHooks ? 'white' : '#333'}; border: none; padding: 8px 5px; cursor: pointer; border-radius: 4px; font-weight: bold; flex: 1; font-size: xx-small;">
+                <div style="margin-bottom:2px; display: flex; gap: 2px;">
+                    
+                    <button id="selector-debug-click-toggle" style="background: #FFB300;color: #333;border: none;padding: 8px 5px;cursor: pointer;border-radius: 4px;font-weight: bold;flex: 1;font-size: xx-small;">
+                    ⚓ 元素CSS选择器获取(关)
+                    </button>
+                    <button id="debug-location-toggle" style="background: ${isDebuggingLocationHooks ? 'green' : '#FFB300'}; color: ${isDebuggingLocationHooks ? 'white' : '#333'}; border: none; padding: 8px 5px; cursor: pointer; border-radius: 4px; font-weight: bold; flex: 1; font-size: xx-small;">
                     ⚙️ JS 重定向调试 (${isDebuggingLocationHooks ? '开' : '关'})
                     </button>
                 </div>
 
                 <div style="grid-template-columns: 1fr 1fr;margin-bottom:2px;display: grid;gap: 2px;">
                 <button id="manual-xpath-add" onclick="window.showPageScriptsFloatWindow()" style="
-        background: #879587; /* 使用紫色突出手动操作 */
+        background: #43A047; /* 使用紫色突出手动操作 */
         color: white;
         border: none;
         padding: 8px 15px;
@@ -3052,7 +2948,7 @@
     ">📟 查看页面上的脚本</button>
 
     <button id="manual-xpath-runCode" onclick="window.showJsManager()" style="
-        background: #879587; /* 使用紫色突出手动操作 */
+        background: #43A047; /* 使用紫色突出手动操作 */
         color: white;
         border: none;
         padding: 8px 15px;
@@ -3185,7 +3081,7 @@
         // === 2. 绑定到你的 HTML 按钮上并切换文本 ===
         document.getElementById('selector-debug-click-toggle').addEventListener('click', function () {
             const btn = this;
-            const originalText = "⚓ 元素CSS选择器获取与调试"; // 你的原始按钮文字
+            const originalText = "⚓ 元素CSS选择器获取"; // 你的原始按钮文字
 
             // 如果工具已经运行，则不重复执行逻辑
             if (document.getElementById('selector-tool-style-final')) {
@@ -3198,7 +3094,7 @@
 
             // 1. 修改按钮文字，告知用户已开启
             btn.innerText = `${originalText}(开)`;
-            btn.style.background = 'rgb(220, 53, 69)'
+            btn.style.background = 'green'
             btn.style.color = 'white'
             //btn.style.color = "#3498db"; // 可选：给按钮文字上个色，增加视觉反馈
 
@@ -3212,8 +3108,8 @@
                 if (!document.getElementById('selector-tool-style-final')) {
                     localStorage.setItem(DEBUG_SELECTOR_CLICK_KEY, 'false')
                     btn.innerText = `${originalText}(关)`;
-                    btn.style.background = '#1976D2'
-                    btn.style.color = 'white'
+                    btn.style.background = '#FFB300'
+                    btn.style.color = '#333'
                     clearInterval(checkExit);
                 }
             }, 500); // 每半秒检查一次工具是否还存在
@@ -3728,78 +3624,45 @@
         document.addEventListener('touchmove', dragMove);
         document.addEventListener('touchend', dragEnd);
 
-
-        let activeObserver = null;
-        let activeInputHandler = null;
-
+        // 示例：处理 CSS 选择器的修改点击
         document.addEventListener('click', (e) => {
             const target = e.target;
 
             if (target.classList.contains('edit-css-btn')) {
                 const selector = target.getAttribute('data-selector');
+                // 调用我们自定义的悬浮窗，传入当前值和 CSS 键名
                 showEditModal(selector, 'gemini_css_selectors_removals');
 
+
+                // 监听 📝 修改屏蔽规则
                 const inputEl = document.getElementById('gemini-edit-input');
                 const lengthEl = document.getElementById('editLength');
 
-                if (!inputEl) return;
-
-                // --- 1. 彻底清理旧的监听（防止重叠和内存泄漏） ---
-                if (activeObserver) activeObserver.disconnect();
-                if (activeInputHandler && inputEl) {
-                    inputEl.removeEventListener('input', activeInputHandler);
-                }
-
-                // --- 2. 核心逻辑：计数并检查元素存活状态 ---
+                // 1. 核心逻辑函数
                 const updateCount = () => {
-                    // 关键：检查元素是否还在 DOM 树中
-                    if (!document.contains(inputEl)) {
-                        cleanup();
-                        return;
-                    }
-
                     try {
-                        const val = inputEl.value.trim();
-                        lengthEl.textContent = val ? document.querySelectorAll(val).length : 0;
-                    } catch (err) {
+                        const selector = inputEl.value.trim();
+                        lengthEl.textContent = selector ? document.querySelectorAll(selector).length : 0;
+                    } catch (e) {
                         lengthEl.textContent = '0';
                     }
                 };
 
-                // --- 3. 定义清理函数 ---
-                const cleanup = () => {
-                    if (activeObserver) {
-                        activeObserver.disconnect();
-                        activeObserver = null;
-                    }
-                    // 设为 null 释放内存引用
-                    activeInputHandler = null;
-                    console.log('检测到 ID 为 gemini-edit-input 的元素已移除，监听器已销毁。');
-                };
+                // 2. 简单的 Observer 配置：只监控属性变化
+                const observer = new MutationObserver(updateCount);
+                observer.observe(inputEl, { attributes: true, attributeFilter: ['value'] });
 
-                // --- 4. 绑定监听 ---
-                activeInputHandler = updateCount;
+                // 3. 补充：Observer 无法直接捕获手打字输入（那是内存里的 value）
+                // 所以还是得挂个简单的 input 监听，确保打字时也实时变
                 inputEl.addEventListener('input', updateCount);
 
-                // --- 5. 监控属性变化 & 元素消失 ---
-                activeObserver = new MutationObserver(() => {
-                    // 每次发生变化都确认一次元素是否存在
-                    if (!document.contains(inputEl)) {
-                        cleanup();
-                    } else {
-                        updateCount();
-                    }
-                });
-
-                // 监视属性变化
-                activeObserver.observe(inputEl, { attributes: true, attributeFilter: ['value'] });
-
-                // 初始化
+                // 4. 初始化运行一次
                 updateCount();
+
+
             }
+
         });
-
-
 
     }
 
@@ -3979,7 +3842,7 @@
         const eventListenerFunction = async (e) => {
             const targetElement = e.target;
 
-            if (document.getElementById('gemini-main-container' == null || localStorage.getItem('gemini_debug_element_click_mode') !== 'true')) {
+            if (document.getElementById('gemini-main-container') == null) {
                 return; // 如果元素屏蔽/追踪器面板未打开则不监控
             }
 
@@ -4573,7 +4436,7 @@ const bodyObserver = new MutationObserver(() => {
     // 只有在 2 秒内没有任何新变化，才会真正触发里面的函数
     debounceTimer = setTimeout(() => {
         console.log('[Gemini屏蔽] 🏁 页面已消停 3 秒，开始执行初始化...');
-
+        
         // 执行你的核心函数
         if (typeof initScript === 'function') {
             try {
@@ -4582,7 +4445,7 @@ const bodyObserver = new MutationObserver(() => {
                 console.error('[Gemini屏蔽] 执行 initScript 出错:', e);
             }
         }
-    }, 2000);
+    }, 2000); 
 });
 
 // 3. 开始对 body 进行深度监控
