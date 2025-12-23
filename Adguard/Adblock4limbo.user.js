@@ -227,6 +227,12 @@
 */
 
 
+
+
+
+
+
+
 function checkDOMLoaded() {
     if (document.readyState === 'complete' || document.readyState === 'interactive') {
         console.log('DOM 已加载');
@@ -5556,7 +5562,7 @@ console.log(`警告将在累积次数恰好为 6 且 dh_button 元素不存在�
  * ===========================================
  */
 
-window.attemptFixScrolling= function attemptFixScrolling() {
+window.attemptFixScrolling = function attemptFixScrolling() {
 
     const targets = [document.documentElement, document.body];
     let fixedCount = 0;

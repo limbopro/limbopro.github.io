@@ -12,6 +12,10 @@
 (function () {
     'use strict';
 
+
+
+
+
     // =================================================================
     // ⚠️ 全局常量与状态 
     // =================================================================
@@ -115,6 +119,7 @@
     }
 
     function isCurrentPageBlacklisted() {
+
         const currentPageKey = getCurrentPageKey();
         return getPageBlacklist().includes(currentPageKey);
     }
@@ -197,6 +202,8 @@
     // Hook document.createElement (保持不变)
     // =================================================================
     if (document.createElement) {
+
+
         const originalCreateElement = document.createElement;
         originalCreateElement.className = 'notranslate';
         document.createElement = function (tagName, options) {
@@ -1850,7 +1857,7 @@
                 document.createDocumentFragment().querySelector(sel);
                 if (typeof saveCssRemovalChoice === 'function') {
                     if (saveCssRemovalChoice(sel)) {
-                        
+
                         if (document.querySelector('.sel-result-window')) {
                             if (confirm(`✅ 成功保存CSS选择器规则！是否刷新页面？`)) {
                                 location.reload();
@@ -2057,6 +2064,9 @@
     // ⭐️ V26.39.10 Hook: 拦截程序化 Element.click() (A)
     // =================================================================
     function interceptElementClick() {
+
+
+
         try {
             const originalClick = Element.prototype.click;
 
@@ -2107,6 +2117,9 @@
     // ⭐️ V26.39.10 Hook: 拦截 PostMessage (B)
     // =================================================================
     function interceptPostMessage() {
+
+
+
         try {
             const originalPostMessage = window.postMessage;
 
@@ -2187,6 +2200,9 @@
     // ⭐️ V26.39.7 Hook: Form 表单提交 (V26.39.10 Sync Update)
     // =================================================================
     function interceptFormSubmission() {
+
+
+
         try {
             // 确保 HTMLFormElement 存在
             if (typeof HTMLFormElement === 'undefined' || !HTMLFormElement.prototype.submit) {
@@ -2219,6 +2235,8 @@
     // ⭐️ V26.39.8 Hook: document.write/writeln 终极拦截 (V26.39.10 Sync Update)
     // =================================================================
     function interceptDocumentWrite() {
+
+
         try {
             if (typeof Document === 'undefined' || !Document.prototype.write) {
                 console.log('[Gemini屏蔽] Document.prototype.write 不可用。');
@@ -2603,11 +2621,12 @@
 
         modalBox.innerHTML = `
         <h3 style="margin-top: 0; color: #2196F3; border-bottom: 2px solid #eee; padding-bottom: 10px;">📝 修改屏蔽规则</h3>
-        <p style="font-size: 12px; color: #666;">您正在修改当前的 CSS 选择器或路径：</p>
+        <p style="font-size: 12px; color: #666;">您正在修改当前的 CSS 选择器或路径：匹配 <strong id='editLength'></strong> 个元素；
+</p>
         <textarea id="gemini-edit-input" style="width: 100%; height: 80px; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-family: monospace; font-size: 13px; box-sizing: border-box; resize: vertical;">${oldValue}</textarea>
         <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px;">
             <button id="gemini-edit-cancel" style="padding: 8px 15px; border-radius: 5px; border: 1px solid #ccc; background: #fff; cursor: pointer;">取消</button>
-            <button id="gemini-edit-save" style="padding: 8px 15px; border-radius: 5px; border: none; background: #4CAF50; color: white; cursor: pointer;">保存修改</button>
+            <button id="gemini-edit-save" style="padding: 8px 15px; border-radius: 5px; border: none; background: #4CAF50; color: white; cursor: pointer;">提交修改</button>
         </div>
     `;
 
@@ -2616,12 +2635,25 @@
 
         // 绑定保存逻辑
         modalBox.querySelector('#gemini-edit-save').onclick = () => {
-            const newValue = document.getElementById('gemini-edit-input').value;
+
+            /*
+            const selectors = document.getElementById('gemini-edit-input').value;
+            // 调用 startSelectorTool()
+            window.pendingSelector = selectors.toString()
+            startSelectorTool()
+            */
+
+
             if (updateRemovalChoice(storageKey, oldValue, newValue)) {
                 modalOverlay.remove();
                 // 提示并刷新页面应用新规则
                 confirmndExecuteFC("修改成功！是否立即刷新页面应用新规则？", () => { location.reload() })
+            } else {
+                confirmndExecuteFC("未修改...")
+
             }
+
+
         };
 
         modalBox.querySelector('#gemini-edit-cancel').onclick = () => modalOverlay.remove();
@@ -3600,6 +3632,34 @@
                 const selector = target.getAttribute('data-selector');
                 // 调用我们自定义的悬浮窗，传入当前值和 CSS 键名
                 showEditModal(selector, 'gemini_css_selectors_removals');
+
+
+                // 监听 📝 修改屏蔽规则
+                const inputEl = document.getElementById('gemini-edit-input');
+                const lengthEl = document.getElementById('editLength');
+
+                // 1. 核心逻辑函数
+                const updateCount = () => {
+                    try {
+                        const selector = inputEl.value.trim();
+                        lengthEl.textContent = selector ? document.querySelectorAll(selector).length : 0;
+                    } catch (e) {
+                        lengthEl.textContent = '0';
+                    }
+                };
+
+                // 2. 简单的 Observer 配置：只监控属性变化
+                const observer = new MutationObserver(updateCount);
+                observer.observe(inputEl, { attributes: true, attributeFilter: ['value'] });
+
+                // 3. 补充：Observer 无法直接捕获手打字输入（那是内存里的 value）
+                // 所以还是得挂个简单的 input 监听，确保打字时也实时变
+                inputEl.addEventListener('input', updateCount);
+
+                // 4. 初始化运行一次
+                updateCount();
+
+
             }
 
         });
@@ -3705,7 +3765,7 @@
 
         // 不要直接给 protectBtn.onclick 赋值，改用这种方式
         doc.addEventListener('click', (e) => {
-            if (e.target && (e.target.id === 'gemini-modal-protect' || e.target.id === 'gemini-modal-cancel')) {
+            if (e.target && (e.target.id === 'gemini-modal-protect' || e.target.id === 'gemini-modal-cancel' || e.target.id === 'element-debug-click-toggle')) {
                 if (currentHoverElement) {
                     currentHoverElement.style.removeProperty('outline');
                     currentHoverElement.style.removeProperty('outline-offset');
@@ -4224,8 +4284,6 @@
         };
     }
 
-
-
     // =================================================================
     // 核心启动函数 
     // =================================================================
@@ -4247,7 +4305,6 @@
             document.head.appendChild(style);
             console.log('%c[Init]%c 隐藏样式表已注入', 'color: #673ab7; font-weight: bold;', 'color: default;');
         }
-
 
         const currentHost = getCurrentHost();
         const isHostInDebugList = DEBUG_WEBLIST.some(domain => currentHost.includes(domain));
@@ -4361,3 +4418,49 @@
         initScript();
     }
 })();
+
+
+
+
+// 1. 定义防抖计时器
+let debounceTimer = null;
+
+// 2. 创建 MutationObserver
+const bodyObserver = new MutationObserver(() => {
+    // 每当 body 发生变化，先清除之前的计时器
+    if (debounceTimer) {
+        clearTimeout(debounceTimer);
+    }
+
+    // 重新开启一个 2 秒（2000 毫秒）的计时器
+    // 只有在 2 秒内没有任何新变化，才会真正触发里面的函数
+    debounceTimer = setTimeout(() => {
+        console.log('[Gemini屏蔽] 🏁 页面已消停 3 秒，开始执行初始化...');
+        
+        // 执行你的核心函数
+        if (typeof initScript === 'function') {
+            try {
+                initScript();
+            } catch (e) {
+                console.error('[Gemini屏蔽] 执行 initScript 出错:', e);
+            }
+        }
+    }, 2000); 
+});
+
+// 3. 开始对 body 进行深度监控
+if (document.body) {
+    bodyObserver.observe(document.body, {
+        childList: true, // 监控子节点增减
+        subtree: true,    // 监控所有后代节点
+        attributes: false // 如果不需要监听属性（如 class 变化），设为 false 性能更好
+    });
+} else {
+    // 预防 body 还没加载的情况
+    window.addEventListener('DOMContentLoaded', () => {
+        bodyObserver.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+    });
+}
