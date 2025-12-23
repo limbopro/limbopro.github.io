@@ -520,11 +520,16 @@
             // 4. 执行清理：从 DOM 中移除这些未被排除的元素
             result.forEach((x) => {
                 try {
-                    console.log(x, ' 移除中...')
-                    // x.remove();
-                    x.classList.add('hiddenbylimbopro')
+                    // 检查是否已经包含该类名，避免重复添加
+                    if (!x.classList.contains('hiddenbylimbopro')) {
+                        console.log(x, ' 标记隐藏中...');
+                        x.classList.add('hiddenbylimbopro');
+                    } else {
+                        // 如果已经包含，可以选择跳过或记录日志
+                        // console.log(x, ' 已在隐藏列表中，跳过');
+                    }
                 } catch (e) {
-                    console.warn('移除元素失败:', e);
+                    console.warn('标记元素隐藏失败:', e);
                 }
             });
         };
@@ -806,10 +811,6 @@
     }
 
 
-
-
-
-
     function showCustomConfirm(message, elementInfo, xpath) {
 
         // ⚠️ 新增/确保有这个判断：
@@ -850,8 +851,6 @@
             const truncatedInlineClick = safeTruncate(elementInfo.inlineClick || '[无内联事件]', 70);
 
             // 是否包含属性
-
-
 
             modalBox.innerHTML = `
                 <h3 style="margin-top: 0; color: #dc3545; border-bottom: 2px solid #eee; padding-bottom: 10px;">
@@ -901,7 +900,7 @@
 </div>
 
 <div id='targetInform'
-    style="height:150px; overflow:auto;color:black;font-size: 12px; cursor:default;user-select:text;background: #f8f9fa; padding: 12px; border-radius: 6px; margin-bottom: 10px; border-left: 4px solid #1976D2;">
+    style="height:110px; overflow:auto;color:black;font-size: 12px; cursor:default;user-select:text;background: #f8f9fa; padding: 12px; border-radius: 6px; margin-bottom: 10px; border-left: 4px solid #1976D2;">
     <strong style="color: #1976D2; display: block; margin-bottom: 5px;">🚀 目标信息 (V26.39.13 - 增强 - 滑动查看更多👀):</strong>
 
     <button onclick="window.showLinkTipsModalOnce()" id="tips"
@@ -932,6 +931,12 @@
         <span style="font-weight: bold;">相对CSS选择器(Base parentElement): </span>
         <p id='cssSelector'>${truncatedParent} >
             ${truncatedCssSelector}:nth-child(${elementInfo.nthChild})${targetElementInformAppend}</p>
+    </div>
+
+
+    <div style="word-break: break-all; margin-bottom: 5px;">
+        <span style="font-weight: bold;">绝对CSS选择器(Base ID & :nth-child()): </span>
+        <p id='absoluteSelector'>${absoluteSelector}</p>
     </div>
 
 
@@ -1279,6 +1284,94 @@
     };
 
 
+
+
+    /**
+* 获取元素的精准且鲁棒的选择器
+* @param {HTMLElement} el - 目标元素
+* @param {boolean} isAncestor - 是否是回溯过程中的祖先节点
+*/
+
+    window.getSmartSelector_selector_get = function getSmartSelector_selector_get(el) {
+        if (!(el instanceof Element)) return '';
+
+        const ignoreSelector = '.notranslate, #storage-control-panel, [id="input-prompt-container"], [class*="confirm"], [id*="script-viewer"], [id*="gemini"], #ellCloseX, #dh_buttonContainer, #dh_pageContainer';
+        if (el.closest(ignoreSelector)) return '';
+
+        function getHardFeature(node) {
+            if (!node) return null;
+            const tag = node.tagName.toLowerCase();
+            // ID 优先级最高
+            if (node.id && typeof node.id === 'string' && !/^\d+$/.test(node.id)) {
+                return `#${CSS.escape(node.id)}`;
+            }
+            // 业务属性
+            const strongAttrs = ['href', 'src', 'data-id', 'data-code', 'data-uid'];
+            for (let attr of strongAttrs) {
+                let val = node.getAttribute(attr);
+                if (val && val.length > 3 && val.length < 150) {
+                    if (['href', 'src'].includes(attr)) {
+                        val = val.split('?')[0].split('/').pop();
+                        if (!val || val.length < 3) continue;
+                    }
+                    return `${tag}[${attr}*='${CSS.escape(val)}']`;
+                }
+            }
+            // 文本属性
+            const textAttrs = ['title', 'alt', 'placeholder', 'aria-label'];
+            for (let attr of textAttrs) {
+                let val = node.getAttribute(attr);
+                if (val && val.length > 1 && val.length < 50) {
+                    return `${tag}[${attr}*='${CSS.escape(val)}']`;
+                }
+            }
+            // 业务 Class
+            const layoutBlacklist = ['item', 'masonry', 'brick', 'active', 'selected', 'row', 'col-', 'grid-'];
+            const validClasses = Array.from(node.classList).filter(c =>
+                !layoutBlacklist.some(lc => c.includes(lc))
+            );
+            if (validClasses.length > 0) {
+                return `${tag}.${CSS.escape(validClasses[0])}`;
+            }
+            return null;
+        }
+
+        let path = [];
+        let current = el;
+        let foundStrongAnchor = false;
+
+        while (current && !['HTML', 'BODY'].includes(current.tagName)) {
+            const feature = getHardFeature(current);
+            const tag = current.tagName.toLowerCase();
+
+            // 获取索引 (精准模式的核心)
+            let index = 1;
+            if (current.parentElement) {
+                index = Array.from(current.parentElement.children).indexOf(current) + 1;
+            }
+
+            // 构造当前层级的精准片段
+            if (feature && feature.startsWith('#')) {
+                path.unshift(feature);
+                foundStrongAnchor = true;
+                break; // 撞到 ID 立即停止
+            } else {
+                // 特征 + nth-child，确保唯一性
+                const segment = feature ? `${feature}:nth-child(${index})` : `${tag}:nth-child(${index})`;
+                path.unshift(segment);
+            }
+
+            current = current.parentElement;
+        }
+
+        if (!foundStrongAnchor && current && current.tagName === 'BODY') {
+            path.unshift('body');
+        }
+
+        return path.join(' > '); // 直接返回字符串
+    }
+
+
     // === 1. 将工具封装为函数 ===
     window.startSelectorTool = function () {
         // 检查是否已经存在实例，防止重复启动
@@ -1289,90 +1382,9 @@
 
         // 2. 核心算法 (nth-child + ID 终结) 开始
 
-        /**
- * 获取元素的精准且鲁棒的选择器
- * @param {HTMLElement} el - 目标元素
- * @param {boolean} isAncestor - 是否是回溯过程中的祖先节点
- */
 
-        window.getSmartSelector_selector_get = function getSmartSelector_selector_get(el) {
-            if (!(el instanceof Element)) return '';
 
-            const ignoreSelector = '.notranslate, #storage-control-panel, [id="input-prompt-container"], [class*="confirm"], [id*="script-viewer"], [id*="gemini"], #ellCloseX, #dh_buttonContainer, #dh_pageContainer';
-            if (el.closest(ignoreSelector)) return '';
 
-            function getHardFeature(node) {
-                if (!node) return null;
-                const tag = node.tagName.toLowerCase();
-                // ID 优先级最高
-                if (node.id && typeof node.id === 'string' && !/^\d+$/.test(node.id)) {
-                    return `#${CSS.escape(node.id)}`;
-                }
-                // 业务属性
-                const strongAttrs = ['href', 'src', 'data-id', 'data-code', 'data-uid'];
-                for (let attr of strongAttrs) {
-                    let val = node.getAttribute(attr);
-                    if (val && val.length > 3 && val.length < 150) {
-                        if (['href', 'src'].includes(attr)) {
-                            val = val.split('?')[0].split('/').pop();
-                            if (!val || val.length < 3) continue;
-                        }
-                        return `${tag}[${attr}*='${CSS.escape(val)}']`;
-                    }
-                }
-                // 文本属性
-                const textAttrs = ['title', 'alt', 'placeholder', 'aria-label'];
-                for (let attr of textAttrs) {
-                    let val = node.getAttribute(attr);
-                    if (val && val.length > 1 && val.length < 50) {
-                        return `${tag}[${attr}*='${CSS.escape(val)}']`;
-                    }
-                }
-                // 业务 Class
-                const layoutBlacklist = ['item', 'masonry', 'brick', 'active', 'selected', 'row', 'col-', 'grid-'];
-                const validClasses = Array.from(node.classList).filter(c =>
-                    !layoutBlacklist.some(lc => c.includes(lc))
-                );
-                if (validClasses.length > 0) {
-                    return `${tag}.${CSS.escape(validClasses[0])}`;
-                }
-                return null;
-            }
-
-            let path = [];
-            let current = el;
-            let foundStrongAnchor = false;
-
-            while (current && !['HTML', 'BODY'].includes(current.tagName)) {
-                const feature = getHardFeature(current);
-                const tag = current.tagName.toLowerCase();
-
-                // 获取索引 (精准模式的核心)
-                let index = 1;
-                if (current.parentElement) {
-                    index = Array.from(current.parentElement.children).indexOf(current) + 1;
-                }
-
-                // 构造当前层级的精准片段
-                if (feature && feature.startsWith('#')) {
-                    path.unshift(feature);
-                    foundStrongAnchor = true;
-                    break; // 撞到 ID 立即停止
-                } else {
-                    // 特征 + nth-child，确保唯一性
-                    const segment = feature ? `${feature}:nth-child(${index})` : `${tag}:nth-child(${index})`;
-                    path.unshift(segment);
-                }
-
-                current = current.parentElement;
-            }
-
-            if (!foundStrongAnchor && current && current.tagName === 'BODY') {
-                path.unshift('body');
-            }
-
-            return path.join(' > '); // 直接返回字符串
-        }
 
 
         const SelectorBlockerTool = {
@@ -1455,6 +1467,8 @@
         };
 
 
+
+
         // 2. 核心算法 (nth-child + ID 终结) 结束
 
         // --- 强制样式注入 ---
@@ -1475,8 +1489,10 @@
         }
 
         .sel-result-window { 
+            * 强制重置面板自身的 outline，防止它自己也被高亮 */
+            outline: none !important;
             position: fixed; top: 20%; left: 50%; transform: translateX(-50%); 
-            z-index: 114121; width: 90%; max-width: 450px; height:auto !important;
+            z-index: 2147483647; width: 90%; max-width: 450px; height:auto !important;
             background: #ffffff !important; border-radius: 12px !important;
             box-shadow: 0 10px 40px rgba(0,0,0,0.4) !important; font-family: sans-serif !important; 
             padding: 16px !important; border: 1px solid #ddd !important; display: none;
@@ -1520,11 +1536,11 @@
 
         // --- 1. UI 渲染 ---
         resultWin.innerHTML = `
-    <span class="sel-title">CSS选择器获取与调试 (测试中...)</span>
+    <span class="sel-title">元素CSS选择器获取与调试 (测试中...)</span>
     
    <div class="warm-tips" style="background: #f0f5ff; border: 1px solid #adc6ff; padding: 10px 12px; border-radius: 4px; margin: 5px 0 10px 0; font-size: 11px; color: #1d39c4; line-height: 1.6;">
         💡 <b>开发者调优建议：</b><br>
-        • <b>自动泛化：</b>点击 <button class="sel-hint-box" style="font-weight:bolder; cursor:pointer; border:1px solid #85a5ff; border-radius:2px; background:#fff; padding:0 4px; font-size:10px; color: #1d39c4; vertical-align: middle;">逐级泛化</button> 移除末尾索引，以匹配更多同类项。（如有）<br>
+        • <b>自动泛化：</b>点击 <button class="sel-hint-box" style="font-weight:bolder; cursor:pointer; border:1px solid #85a5ff; border-radius:2px; background:#fff; padding:0 4px; font-size:10px; color: #1d39c4; vertical-align: middle;">逐级泛化</button> 移除末尾索引，以匹配更多同类项（如有）。<br>
         • <b>手动重构：</b>点击下方“修改”按钮进入编辑模式。
     </div>
 
@@ -1834,7 +1850,16 @@
                 document.createDocumentFragment().querySelector(sel);
                 if (typeof saveCssRemovalChoice === 'function') {
                     if (saveCssRemovalChoice(sel)) {
-                        confirmndExecuteFC(`✅ 成功保存CSS选择器规则！是否刷新页面？`, () => { location.reload() });
+                        
+                        if (document.querySelector('.sel-result-window')) {
+                            if (confirm(`✅ 成功保存CSS选择器规则！是否刷新页面？`)) {
+                                location.reload();
+                            }
+                        } else {
+                            confirmndExecuteFC(`✅ 成功保存CSS选择器规则！是否刷新页面？`, () => { location.reload() });
+                        }
+
+
                     }
                 } else {
                     console.log("拟屏蔽选择器:", sel);
@@ -2933,7 +2958,7 @@
     
             </div>
             <div style="display: flex; border-bottom: 1px solid #ccc;">
-                <button id="tab-current" class="tab-btn" style="flex: 1; background: #fff; border-right: 1px solid #ccc;">
+            <button id="tab-current" class="tab-btn" style="flex: 1; background: #fff; border-right: 1px solid #ccc;">
                     当前透明元素 (${zeroOpacityElements.length})
                 </button>
                 <button id="tab-iframe" class="tab-btn" style="flex: 1; background: #f0f0f0;">
@@ -2974,13 +2999,12 @@
                          <li style="padding: 10px; background: #e6f7ff; font-weight: bold; color: #1976D2; border-top: 1px solid #cceeff; border-bottom: 1px solid #cceeff;">🖼️ Iframe 永久移除记录 (${getIframeRemovals().length})</li>
                          ${renderSavedIframeRemovalsList(getIframeRemovals())}
 
-                         <!-- 【V27 NEW】CSS 记录分区 -->
                          <li style="padding: 10px; background: #f3e5f5; font-weight: bold; color: #9c27b0; border-top: 1px solid #e1bee7; border-bottom: 1px solid #e1bee7;">
                              🎨 CSS 选择器永久移除记录 (${getSavedCssRemovals().length})
                              <button id="repair-css-data-btn" style="background: #9c27b0; color: white; border: 1px solid #fff; padding: 2px 8px; cursor: pointer; border-radius: 3px; font-size: 11px; font-weight: normal;">🛠️ 修复脏数据</button>
                          </li>
                          ${renderSavedCssRemovalsList(getSavedCssRemovals())}
-
+                         
                     </ul>
                 </div>
             </div>
@@ -2990,7 +3014,7 @@
             </div>
 
             <div class="gemini-tip-text">
-                🌟**提示:** “选择并屏蔽模式”及🛠️ 元素点击调试中的屏蔽原理基于<a href='https://www.google.com/search?q=xpath+%E6%98%AF%E4%BB%80%E4%B9%88' target='_blank' style='color:blue !important;'>xPath</a>；CSS选择器屏蔽：使用 <a style="color:blue !important" href='https://www.google.com/search?q=mutationobserver+%E4%BB%8B%E7%BB%8D'>MutationObserver</a> & <a style="color:blue !important" href='https://www.google.com/search?q=querySelectorAll()+%E6%96%B9%E6%B3%95'>querySelectorAll()</a> 方法遍历添加类.hiddenbylimbopro，不影响网页<a href='https://developer.chrome.com/docs/devtools/dom?hl=zh-cn' target='_blank' style='color:blue !important'>DOM</a> 结构。<a href='https://www.google.com/search?q=iframe+sandbox%E5%B1%9E%E6%80%A7' target='_blank' style='color:blue !important;'>了解沙箱化</a>。
+                🌟**提示:** <a href='https://www.google.com/search?q=xpath+%E6%98%AF%E4%BB%80%E4%B9%88' target='_blank' style='color:blue !important;'>了解 xPath</a>；*CSS选择器屏蔽：使用 <a style="color:blue !important" href='https://www.google.com/search?q=mutationobserver+%E4%BB%8B%E7%BB%8D'>MutationObserver</a> & <a style="color:blue !important" href='https://www.google.com/search?q=querySelectorAll()+%E6%96%B9%E6%B3%95'>querySelectorAll()</a> 方法遍历添加类.hiddenbylimbopro，不影响网页<a href='https://developer.chrome.com/docs/devtools/dom?hl=zh-cn' target='_blank' style='color:blue !important'>DOM</a> 结构。<a href='https://www.google.com/search?q=iframe+sandbox%E5%B1%9E%E6%80%A7' target='_blank' style='color:blue !important;'>了解沙箱化</a>；
             </div>
         `;
 
@@ -3625,7 +3649,8 @@
             // 1. 先定义好函数 (或确保函数已在 window 作用域)
             if (typeof window.makeModalDraggable === 'function') {
                 // 2. 直接初始化，不要放在 if (e.target...) 的点击判断里
-                //window.makeModalDraggable('gemini-custom-modal-overlay');
+                // window.makeModalDraggable('gemini-custom-modal-overlay');
+                makeModalDraggable('.sel-result-window')
             }
         }, 750)
     });
@@ -3697,101 +3722,6 @@
 
             doc.gemini_hover_listener_attached = true;
         }
-
-
-        // 捕获元素 
-
-        function getSmartSelector_element_click_debug_mode(el) {
-            if (!(el instanceof Element)) return '';
-
-            /**
-             * 内部辅助：提取元素的“硬指纹”特征
-             * 包含：ID, href, src, title, alt, data-*, 业务Class
-             */
-
-            function getHardFeature(node) {
-                if (!node) return null;
-                const tag = node.tagName.toLowerCase();
-
-                // 1. ID 永远是第一优先级 (排除纯数字/动态ID)
-                if (node.id && typeof node.id === 'string' && !/^\d+$/.test(node.id)) {
-                    return `#${CSS.escape(node.id)}`;
-                }
-
-                // 2. 强业务属性特征 (href, src, data-*)
-                // href/src 只取路径最后一段，防止整条路径太长或带域名
-                const strongAttrs = ['href', 'src', 'data-id', 'data-code', 'data-uid'];
-                for (let attr of strongAttrs) {
-                    let val = node.getAttribute(attr);
-                    if (val && val.length > 3 && val.length < 150) {
-                        if (['href', 'src'].includes(attr)) {
-                            val = val.split('?')[0].split('/').pop();
-                            if (!val || val.length < 3) continue;
-                        }
-                        return `${tag}[${attr}*='${CSS.escape(val)}']`;
-                    }
-                }
-
-                // 3. 语义化文字属性 (title, alt, placeholder)
-                const textAttrs = ['title', 'alt', 'placeholder', 'aria-label'];
-                for (let attr of textAttrs) {
-                    let val = node.getAttribute(attr);
-                    if (val && val.length > 1 && val.length < 50) {
-                        return `${tag}[${attr}*='${CSS.escape(val)}']`;
-                    }
-                }
-
-                // 4. 业务类名特征 (过滤布局干扰类)
-                const layoutBlacklist = ['item', 'masonry', 'brick', 'active', 'selected', 'row', 'col-', 'grid-'];
-                const validClasses = Array.from(node.classList).filter(c =>
-                    !layoutBlacklist.some(lc => c.includes(lc))
-                );
-                if (validClasses.length > 0) {
-                    return `${tag}.${CSS.escape(validClasses[0])}`;
-                }
-
-                return null; // 这一层彻底没特征
-            }
-
-            let path = [];
-            let current = el;
-            let foundStrongAnchor = false;
-
-            // =================================================================
-            // 核心逻辑：向上递归遍历，直到找到有属性特征的锚点
-            // =================================================================
-            while (current && !['HTML', 'BODY'].includes(current.tagName)) {
-                const feature = getHardFeature(current);
-
-                if (feature) {
-                    path.unshift(feature);
-                    // 如果撞到了“顶级锚点”（带ID或带业务代码的A标签），停止向上爬
-                    if (feature.startsWith('#') || feature.startsWith('a[')) {
-                        foundStrongAnchor = true;
-                        break;
-                    }
-                } else {
-                    // 如果这一层没特征，记录它的标签名和位置(nth-child)，并强制继续向上找
-                    let segment = current.tagName.toLowerCase();
-                    if (current.parentElement && current.parentElement.children.length > 1) {
-                        let index = Array.from(current.parentElement.children).indexOf(current) + 1;
-                        segment += `:nth-child(${index})`;
-                    }
-                    path.unshift(segment);
-                }
-
-                current = current.parentElement;
-            }
-
-            // 如果最后实在没撞到强锚点，补一个 body 前缀作为基准
-            if (!foundStrongAnchor && current && current.tagName === 'BODY') {
-                path.unshift('body');
-            }
-
-            return path.join(' > ');
-        }
-
-        // 捕获元素 结束 
 
         if (!doc || doc.gemini_click_debug_listener_attached) {
             return;
@@ -3944,6 +3874,9 @@
                     nthChild: window.getElementNthChild(targetElement),
                 };
 
+                // 绝对CSS选择器
+
+                window.absoluteSelector = getSmartSelector_selector_get(targetElement).toString().replace(/"/g, "'");
 
                 window.targetElementInform = window.getElementNthChild(targetElement)
                 if (window.targetElementInform.val == '无关键属性') {
@@ -4027,6 +3960,101 @@
 
         console.log(logMessage);
     }
+
+
+    // 捕获元素 
+
+    window.getSmartSelector_element_click_debug_mode = function getSmartSelector_element_click_debug_mode(el) {
+        if (!(el instanceof Element)) return '';
+
+        /**
+         * 内部辅助：提取元素的“硬指纹”特征
+         * 包含：ID, href, src, title, alt, data-*, 业务Class
+         */
+
+        function getHardFeature(node) {
+            if (!node) return null;
+            const tag = node.tagName.toLowerCase();
+
+            // 1. ID 永远是第一优先级 (排除纯数字/动态ID)
+            if (node.id && typeof node.id === 'string' && !/^\d+$/.test(node.id)) {
+                return `#${CSS.escape(node.id)}`;
+            }
+
+            // 2. 强业务属性特征 (href, src, data-*)
+            // href/src 只取路径最后一段，防止整条路径太长或带域名
+            const strongAttrs = ['href', 'src', 'data-id', 'data-code', 'data-uid'];
+            for (let attr of strongAttrs) {
+                let val = node.getAttribute(attr);
+                if (val && val.length > 3 && val.length < 150) {
+                    if (['href', 'src'].includes(attr)) {
+                        val = val.split('?')[0].split('/').pop();
+                        if (!val || val.length < 3) continue;
+                    }
+                    return `${tag}[${attr}*='${CSS.escape(val)}']`;
+                }
+            }
+
+            // 3. 语义化文字属性 (title, alt, placeholder)
+            const textAttrs = ['title', 'alt', 'placeholder', 'aria-label'];
+            for (let attr of textAttrs) {
+                let val = node.getAttribute(attr);
+                if (val && val.length > 1 && val.length < 50) {
+                    return `${tag}[${attr}*='${CSS.escape(val)}']`;
+                }
+            }
+
+            // 4. 业务类名特征 (过滤布局干扰类)
+            const layoutBlacklist = ['item', 'masonry', 'brick', 'active', 'selected', 'row', 'col-', 'grid-'];
+            const validClasses = Array.from(node.classList).filter(c =>
+                !layoutBlacklist.some(lc => c.includes(lc))
+            );
+            if (validClasses.length > 0) {
+                return `${tag}.${CSS.escape(validClasses[0])}`;
+            }
+
+            return null; // 这一层彻底没特征
+        }
+
+        let path = [];
+        let current = el;
+        let foundStrongAnchor = false;
+
+        // =================================================================
+        // 核心逻辑：向上递归遍历，直到找到有属性特征的锚点
+        // =================================================================
+        while (current && !['HTML', 'BODY'].includes(current.tagName)) {
+            const feature = getHardFeature(current);
+
+            if (feature) {
+                path.unshift(feature);
+                // 如果撞到了“顶级锚点”（带ID或带业务代码的A标签），停止向上爬
+                if (feature.startsWith('#') || feature.startsWith('a[')) {
+                    foundStrongAnchor = true;
+                    break;
+                }
+            } else {
+                // 如果这一层没特征，记录它的标签名和位置(nth-child)，并强制继续向上找
+                let segment = current.tagName.toLowerCase();
+                if (current.parentElement && current.parentElement.children.length > 1) {
+                    let index = Array.from(current.parentElement.children).indexOf(current) + 1;
+                    segment += `:nth-child(${index})`;
+                }
+                path.unshift(segment);
+            }
+
+            current = current.parentElement;
+        }
+
+        // 如果最后实在没撞到强锚点，补一个 body 前缀作为基准
+        if (!foundStrongAnchor && current && current.tagName === 'BODY') {
+            path.unshift('body');
+        }
+
+        return path.join(' > ');
+    }
+
+    // 捕获元素 结束 
 
     function setupAdLinkFilter() {
         const targetDocuments = getTargetDocuments();

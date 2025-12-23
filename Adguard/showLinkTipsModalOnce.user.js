@@ -70,10 +70,21 @@ window.showLinkTipsModalOnce = function () {
                 const key = rawLabel.replace(':', '').trim();
                 const value = row.innerText.replace(rawLabel, '').trim();
                 const map = {
-                    "父元素": "parent", "目标元素": "target", "目标元素属性特征": "attr",
-                    "目标元素尺寸": "size", "相对CSS选择器(Base parentElement)": "relCSS",
-                    "Z/Opacity/Pos": "zPos", "内联 Click": "inline", "XPath": "xpath"
+                    "父元素": "parent", "目标元素": "target",
+                    "目标元素属性特征": "attr",
+                    "目标元素尺寸": "size",
+                    "相对CSS选择器(Base parentElement)": "relCSS",
+                    "绝对CSS选择器(Base ID & :nth-child())": "alsoluteCSS",
+                    "Z/Opacity/Pos": "zPos",
+                    "内联 Click": "inline", "XPath": "xpath"
                 };
+
+                // --- 针对 alsoluteCSS 的特殊处理：直接取 p 标签的值并移除双引号 ---
+                const absEl = sourceDiv.querySelector('#absoluteSelector');
+                if (absEl) {
+                    data.alsoluteCSS = absEl.innerText.replace(/"/g, '').trim();
+                }
+
                 if (map[key]) data[map[key]] = value;
             }
         });
@@ -352,7 +363,7 @@ window.showLinkTipsModalOnce = function () {
             <div class="code-container">
                 <div class="code-box" style="border-left-color:${color}; outline:none;" contenteditable="false">${code}</div>
                 <div class="btn-group">
-                    <button class="action-btn edit-btn" onclick="geminiToggleInlineEdit(this)">✏️ 修改</button>
+                    <!--button class="action-btn edit-btn" onclick="geminiToggleInlineEdit(this)">✏️ 修改</button--!>
                     ${isBlockable ? `<button class="action-btn block-btn" onclick="geminiApplyBlock('${code.replace(/'/g, "\\'")}')">🛡️ 屏蔽</button>` : ''}
                     <button class="action-btn copy-btn" onclick="geminiCopyText(this, '${code.replace(/'/g, "\\'")}')">📋 复制</button>
                 </div>
@@ -394,14 +405,14 @@ window.showLinkTipsModalOnce = function () {
             ["索引依赖：需确保 <code>nth-child</code> 正确。"])}
 
 
-            ${createSection("[ 方案 C ] 完整 XPath 路径 (强力保底)", liveData.xpath, "#805ad5",
-                ["定位维度最全：支持文本匹配和向上查找。", "逻辑保底：复杂页面唯一方案。"],
-                ["性能开销稍大：在大型 DOM 树中稍慢。", "维护难度高：路径对层级敏感。"], false)}
+    ${createSection("[ 方案 C ] 绝对 CSS 选择器 (Base ID & nth-child)", liveData.alsoluteCSS || '未捕获', "#3182ce",
+                ["层级精确：结合了 ID 锚点与 nth-child 路径。", "定位唯一：在复杂页面中提供极高的指向性。"],
+                ["路径冗长：在 eval() 执行时长路径可能导致解析负担。", "结构敏感：中间层级的变化会导致定位失效。"])}
 
+            ${createSection("[ 方案 D ] 完整 XPath 路径 (强力保底)", liveData.xpath, "#805ad5",
+                    ["定位维度最全：支持文本匹配和向上查找。", "逻辑保底：复杂页面唯一方案。"],
+                    ["性能开销稍大：在大型 DOM 树中稍慢。", "维护难度高：路径对层级敏感。"], false)}
 
-
-
-                    
                     
 
     <details style="margin-top: 15px; background: #f7fafc; border-radius: 10px; border: 1px solid #e2e8f0;">
