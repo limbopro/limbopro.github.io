@@ -1018,11 +1018,8 @@
 * @param {string} overlayId - 遮罩层的 ID
 */
     window.makeModalDraggable = function makeModalDraggable(overlayId) {
-
         const overlay = document.getElementById(overlayId);
         if (!overlay || overlay.dataset.dragInitialized) return; // 防止重复初始化
-
-        console.warn('已捕获', overlayId)
 
         const target = overlay.firstElementChild;
         if (!target) return;
@@ -1187,7 +1184,7 @@
         buttonContainer.style.cssText = 'display: flex; justify-content: flex-end; gap: 10px;';
 
         const saveButton = document.createElement('button');
-        saveButton.textContent = '提交';
+        saveButton.textContent = '保存并屏蔽 (需刷新)';
         saveButton.style.cssText = 'padding: 8px 15px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;';
 
         const cancelButton = document.createElement('button');
@@ -1268,9 +1265,30 @@
                 .filter(s => s !== null && s.length > 0);
 
 
-            // 调用 startSelectorTool()
-            window.pendingSelector = selectors.toString()
-            startSelectorTool()
+
+            let savedCount = 0;
+            selectors.forEach(sel => {
+
+
+                // 重构
+                // 更严谨的 CSS 语法校验，不依赖页面是否存在该元素
+                try {
+                    document.createDocumentFragment().querySelector(sel);
+                    if (saveCssRemovalChoice(sel)) savedCount++;
+                } catch (e) {
+                    console.warn(`[Gemini屏蔽 V27] 语法错误: ${sel}`);
+                    confirmndExecuteFC(`[Gemini屏蔽 V27] 语法错误: ${sel}`)
+                }
+                // 重构
+
+            });
+
+            if (savedCount > 0) {
+                confirmndExecuteFC(`✅ 成功保存 ${savedCount} 个 CSS 选择器！是否刷新页面生效？`, () => { location.reload() })
+            } else {
+                //confirmndExecuteFC('⚠️ 未保存任何有效选择器，请检查格式。');
+                confirmndExecuteFC('⚠️ 未保存任何有效选择器，请检查格式。')
+            }
 
             modal.remove();
         };
@@ -1476,7 +1494,7 @@
 
         .sel-result-window { 
             position: fixed; top: 20%; left: 50%; transform: translateX(-50%); 
-            z-index: 114121; width: 90%; max-width: 450px; height:auto !important;
+            z-index: 114119; width: 90%; max-width: 450px; 
             background: #ffffff !important; border-radius: 12px !important;
             box-shadow: 0 10px 40px rgba(0,0,0,0.4) !important; font-family: sans-serif !important; 
             padding: 16px !important; border: 1px solid #ddd !important; display: none;
@@ -1520,7 +1538,7 @@
 
         // --- 1. UI 渲染 ---
         resultWin.innerHTML = `
-    <span class="sel-title">CSS选择器获取与调试 (测试中...)</span>
+    <span class="sel-title">精确CSS选择器 (测试中...)</span>
     
    <div class="warm-tips" style="background: #f0f5ff; border: 1px solid #adc6ff; padding: 10px 12px; border-radius: 4px; margin: 5px 0 10px 0; font-size: 11px; color: #1d39c4; line-height: 1.6;">
         💡 <b>开发者调优建议：</b><br>
@@ -1834,7 +1852,7 @@
                 document.createDocumentFragment().querySelector(sel);
                 if (typeof saveCssRemovalChoice === 'function') {
                     if (saveCssRemovalChoice(sel)) {
-                        confirmndExecuteFC(`✅ 成功保存CSS选择器规则！是否刷新页面？`, () => { location.reload() });
+                        confirmndExecuteFC(`✅ 成功保存规则！是否刷新页面？`, () => { location.reload() });
                     }
                 } else {
                     console.log("拟屏蔽选择器:", sel);
@@ -3680,7 +3698,7 @@
 
         // 不要直接给 protectBtn.onclick 赋值，改用这种方式
         doc.addEventListener('click', (e) => {
-            if (e.target && (e.target.id === 'gemini-modal-protect' || e.target.id === 'gemini-modal-cancel')) {
+            if (e.target && e.target.id === 'gemini-modal-protect') {
                 if (currentHoverElement) {
                     currentHoverElement.style.removeProperty('outline');
                     currentHoverElement.style.removeProperty('outline-offset');

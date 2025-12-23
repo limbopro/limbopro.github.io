@@ -10,48 +10,36 @@ window.showLinkTipsModalOnce = function () {
 
     // --- 1. 核心屏蔽逻辑函数 ---
     window.geminiApplyBlock = (sel) => {
+        let savedCount = 0;
+        try {
+            // 验证语法合法性
+            document.createDocumentFragment().querySelector(sel);
 
-
-        const selectors = sel
-            .split(/\s*[\n,]\s*/)
-            .map(s => {
-                let selector = s.trim();
-                if (!selector) return null;
-
-                // 1. 【新增核心步骤】强行统一引号：把所有双引号先换成单引号
-                // 这样可以处理 a[href*='BOKO-033"] 这种混合乱码
-                selector = selector.replace(/"/g, "'");
-
-                // 2. 补全逻辑 (你的原始逻辑)
-                const quoteCount = (selector.match(/'/g) || []).length;
-                if (selector.includes('[') && quoteCount % 2 !== 0) {
-                    selector += "'";
+            // 调用你的 saveCssRemovalChoice 函数
+            if (typeof saveCssRemovalChoice === 'function') {
+                if (saveCssRemovalChoice(sel)) {
+                    savedCount++;
+                    // 调用确认执行弹窗 (假设 confirmndExecuteFC 已定义)
+                    if (typeof confirmndExecuteFC === 'function') {
+                        confirmndExecuteFC(`✅ 成功保存 ${savedCount} 个 CSS 选择器！是否立即刷新页面应用新规则？`, () => { location.reload() });
+                    } else if (confirm('✅ 成功保存！是否立即刷新页面？')) {
+                        location.reload();
+                    }
+                } else {
+                    if (typeof confirmndExecuteFC === 'function') {
+                        confirmndExecuteFC(`${sel} 已存在于屏蔽列表。`);
+                    } else {
+                        alert('该选择器已屏蔽过。');
+                    }
                 }
-                const openBracket = (selector.match(/\[/g) || []).length;
-                const closeBracket = (selector.match(/\]/g) || []).length;
-                if (openBracket > closeBracket) {
-                    selector += "]";
-                }
-
-                // 3. 【拦截器】源头合法性预检
-                try {
-                    // 如果预检失败（例如补全后还是不合法的语法），直接抛出异常
-                    document.createDocumentFragment().querySelector(selector);
-                    return selector;
-                } catch (e) {
-                    // 弹出警告，让用户知道这个格式没存进去
-                    // alert(`❌ CSS 选择器格式非法，已拦截：\n${selector}`);
-                    confirmndExecuteFC(`❌ CSS 选择器格式非法，已拦截：\n${selector}`)
-                    return null;
-                }
-            })
-            .filter(s => s !== null && s.length > 0);
-
-
-        // 调用 startSelectorTool()
-        window.pendingSelector = selectors.toString()
-        startSelectorTool()
-
+            } else {
+                console.error('[错误] 找不到 saveCssRemovalChoice 函数');
+                alert(`无法屏蔽：未找到 saveCssRemovalChoice 函数。\n拟屏蔽选择器: ${sel}`);
+            }
+        } catch (e) {
+            console.warn(`[Gemini屏蔽] 语法错误: ${sel}`, e);
+            alert('生成的选择器语法有误，无法屏蔽。');
+        }
     };
 
     const extractLiveInfo = () => {
@@ -251,7 +239,7 @@ window.showLinkTipsModalOnce = function () {
 
 
 
-    window.geminiToggleInlineEdit = function (btn) {
+    window.geminiToggleInlineEdit = function(btn) {
         const container = btn.closest('.code-container');
         const codeBox = container.querySelector('.code-box');
         const isEditing = codeBox.getAttribute('contenteditable') === 'true';
@@ -340,6 +328,30 @@ window.showLinkTipsModalOnce = function () {
             });
         }
     };
+
+
+    /* 重构 */
+    /** 
+    const createSection = (title, code, color, prosArr, consArr, isBlockable = true) => `
+        <div style="margin-top:30px;">
+            <span style="font-weight:bold; font-size:15px; color:${color}; margin-bottom:10px; display:block;">${title}</span>
+            <div class="code-container">
+                <div class="code-box" style="border-left-color:${color};">${code}</div>
+                <div class="btn-group">
+                    ${isBlockable ? `<button class="action-btn block-btn" onclick="geminiApplyBlock('${code.replace(/'/g, "\\'")}')">🛡️ 屏蔽</button>` : ''}
+                    <button class="action-btn copy-btn" onclick="geminiCopyText(this, '${code.replace(/'/g, "\\'")}')">📋 复制</button>
+                </div>
+            </div>
+            ${prosArr ? `
+            <div class="analysis-box">
+                <div class="tag-card pros"><b>✅ 优势分析：</b><br>${prosArr.map(p => `• ${p.replace(/\${liveData.parent}/g, `<code>${liveData.parent}</code>`)}`).join('<br>')}</div>
+                <div class="tag-card cons"><b>❌ 劣势分析：</b><br>${consArr.map(c => `• ${c.replace(/\${liveData.target}/g, `<code>${liveData.target}</code>`)}`).join('<br>')}</div>
+            </div>` : ''}
+        </div>
+    `;
+
+    */
+
 
     const createSection = (title, code, color, prosArr, consArr, isBlockable = true) => {
         // 预处理优势和劣势分析，避免在模板字符串中出现复杂的逻辑

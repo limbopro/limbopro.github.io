@@ -1315,33 +1315,17 @@
 
 
         window.getSmartSelector_selector_get = function getSmartSelector_selector_get(el) {
-            if (!(el instanceof Element)) return '';
+            if (!(el instanceof Element)) return { path: '', precisePath: '' };
 
-
-            // --- 新增：黑名单过滤器 ---
             const ignoreSelector = '.notranslate, #storage-control-panel, [id="input-prompt-container"], [class*="confirm"], [id*="script-viewer"], [id*="gemini"], #ellCloseX, #dh_buttonContainer, #dh_pageContainer';
-
-            // 如果元素本身在黑名单内，直接返回空或特定标识
-            if (el.closest(ignoreSelector)) {
-                return '';
-            }
-
-            /**
-             * 内部辅助：提取元素的“硬指纹”特征
-             * 包含：ID, href, src, title, alt, data-*, 业务Class
-             */
+            if (el.closest(ignoreSelector)) return { path: '', precisePath: '' };
 
             function getHardFeature(node) {
                 if (!node) return null;
                 const tag = node.tagName.toLowerCase();
-
-                // 1. ID 永远是第一优先级 (排除纯数字/动态ID)
                 if (node.id && typeof node.id === 'string' && !/^\d+$/.test(node.id)) {
                     return `#${CSS.escape(node.id)}`;
                 }
-
-                // 2. 强业务属性特征 (href, src, data-*)
-                // href/src 只取路径最后一段，防止整条路径太长或带域名
                 const strongAttrs = ['href', 'src', 'data-id', 'data-code', 'data-uid'];
                 for (let attr of strongAttrs) {
                     let val = node.getAttribute(attr);
@@ -1353,8 +1337,6 @@
                         return `${tag}[${attr}*='${CSS.escape(val)}']`;
                     }
                 }
-
-                // 3. 语义化文字属性 (title, alt, placeholder)
                 const textAttrs = ['title', 'alt', 'placeholder', 'aria-label'];
                 for (let attr of textAttrs) {
                     let val = node.getAttribute(attr);
@@ -1362,8 +1344,6 @@
                         return `${tag}[${attr}*='${CSS.escape(val)}']`;
                     }
                 }
-
-                // 4. 业务类名特征 (过滤布局干扰类)
                 const layoutBlacklist = ['item', 'masonry', 'brick', 'active', 'selected', 'row', 'col-', 'grid-'];
                 const validClasses = Array.from(node.classList).filter(c =>
                     !layoutBlacklist.some(lc => c.includes(lc))
@@ -1371,46 +1351,56 @@
                 if (validClasses.length > 0) {
                     return `${tag}.${CSS.escape(validClasses[0])}`;
                 }
-
-                return null; // 这一层彻底没特征
+                return null;
             }
 
             let path = [];
+            let precisePath = [];
             let current = el;
             let foundStrongAnchor = false;
 
-            // =================================================================
-            // 核心逻辑：向上递归遍历，直到找到有属性特征的锚点
-            // =================================================================
             while (current && !['HTML', 'BODY'].includes(current.tagName)) {
                 const feature = getHardFeature(current);
+                const tag = current.tagName.toLowerCase();
 
+                // 计算 nth-child 索引
+                let index = 1;
+                if (current.parentElement) {
+                    index = Array.from(current.parentElement.children).indexOf(current) + 1;
+                }
+
+                // 1. 处理通用路径 (保持原逻辑：有特征用特征，没特征用 tag:nth-child)
                 if (feature) {
                     path.unshift(feature);
-                    // 如果撞到了“顶级锚点”（带ID或带业务代码的A标签），停止向上爬
-                    if (feature.startsWith('#') || feature.startsWith('a[')) {
-                        foundStrongAnchor = true;
-                        break;
-                    }
                 } else {
-                    // 如果这一层没特征，记录它的标签名和位置(nth-child)，并强制继续向上找
-                    let segment = current.tagName.toLowerCase();
-                    if (current.parentElement && current.parentElement.children.length > 1) {
-                        let index = Array.from(current.parentElement.children).indexOf(current) + 1;
-                        segment += `:nth-child(${index})`;
-                    }
-                    path.unshift(segment);
+                    path.unshift(`${tag}:nth-child(${index})`);
                 }
+
+                // 2. 处理精准路径 (强制每一级都带索引，除非是 ID)
+                if (feature && feature.startsWith('#')) {
+                    precisePath.unshift(feature);
+                    foundStrongAnchor = true;
+                } else {
+                    // 精准模式：特征 + 索引
+                    const segment = feature ? `${feature}:nth-child(${index})` : `${tag}:nth-child(${index})`;
+                    precisePath.unshift(segment);
+                }
+
+                // 如果撞到 ID 锚点，停止向上
+                if (foundStrongAnchor) break;
 
                 current = current.parentElement;
             }
 
-            // 如果最后实在没撞到强锚点，补一个 body 前缀作为基准
             if (!foundStrongAnchor && current && current.tagName === 'BODY') {
                 path.unshift('body');
+                precisePath.unshift('body');
             }
 
-            return path.join(' > ');
+            return {
+                // path: path.join(' > '),
+                precisePath: precisePath.join(' > ')
+            };
         }
 
 
@@ -1460,7 +1450,6 @@
             }
 
             ${selector}::before {
-                content: "SELECTED"/*: ${selector.replace(/"/g, "'")}";*/
                 position: absolute;
                 top: -25px;
                 left: 0;
