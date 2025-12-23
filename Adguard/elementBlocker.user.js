@@ -574,9 +574,58 @@
     // =================================================================
     // 模态框函数 (V26.39.6 更新 - 保持不变)
     // =================================================================
-    function injectStyles(containerId, windowId) {
+    function injectStyles(containerId, windowId) { // 真正注入CSS
         const style = document.createElement('style');
         style.textContent = `
+
+        
+    #element-debug-click-toggle,
+    #debug-location-toggle
+     {
+
+    font-size: xx-small;
+    font-family:'Glyphicons Halflings';
+    /*height:40px; */
+    width: 100%;
+    /*margin-bottom:2px;*/
+    background: rgb(8 6 10);
+    color: white;
+    border: none;
+    padding: 8px 5px;
+    cursor: pointer;
+    border-radius: 4px;
+    font-weight: bolder;
+    flex: 1;
+}
+
+/*xx-small*/
+
+
+#selector-debug-click-toggle,
+    #selector-toggle
+     {
+    font-family:'Glyphicons Halflings';
+    width: 100%;
+    margin-bottom: 2px;
+    background:#0D3869;
+    color: white;
+    border: none;
+height:35px;
+    padding: 8px 5px;
+    cursor: pointer;
+    border-radius: 4px;
+    font-weight: bold;
+    flex: 1;
+    font-size: xx-small !important;
+
+}
+
+.closer {
+background: #D12C25 !important;
+color: white;
+}
+
+
             /* 1. 最外层容器：z-index 提高确保覆盖 Iframe */
             #${containerId} {
                 position: fixed; 
@@ -806,6 +855,28 @@
 #gemini-pin-btn:hover {
     background: #e6f7ff;
     color: #1976D2;
+
+
+    .button {
+    width: var(--size);
+    height: var(--size);
+    padding: var(--padding);
+    border-radius: 100%;
+    filter: drop-shadow(0px 0 0 rgba(0,0,0,0.26)) drop-shadow(0px 1px 2px rgba(0,0,0,0.26)) drop-shadow(0px 4px 4px rgba(0,0,0,0.22)) drop-shadow(1px 8px 5px rgba(0,0,0,0.13)) drop-shadow(2px 14px 6px rgba(0,0,0,0.04)) drop-shadow(3px 22px 6px rgba(0,0,0,0));
+    background: var(--purple-fill-back);
+    font-weight: bold;
+    background-position: 20% 20%;
+    background-size: 200% 200%;
+    transition-property: all;
+    transition: all .4s var(--spring-easing);
+    font-size: 6rem
+}
+
+
+
+
+
+    /* 注入CSS */ 
 }
         `;
         document.head.appendChild(style);
@@ -1380,6 +1451,27 @@
 
     // === 1. 将工具封装为函数 ===
     window.startSelectorTool = function () {
+
+        // 在 window.startSelectorTool = function () { 之后添加
+        const EXCLUDED_SELECTORS = [
+            '.notranslate',
+            '#storage-control-panel',
+            '[id="input-prompt-container"]',
+            '[class*="confirm"]',
+            '[id*="script-viewer"]',
+            '[id*="gemini"]',
+            '#ellCloseX',
+            '#dh_buttonContainer',
+            '#dh_pageContainer',
+            '.sel-overlay',         // 排除工具自身的遮罩
+            '.sel-result-window'    // 排除工具自身的面板
+        ];
+
+        // 辅助函数：检查元素是否匹配排除列表
+        const isExcluded = (el) => {
+            return EXCLUDED_SELECTORS.some(selector => el.matches(selector) || el.closest(selector));
+        };
+
         // 检查是否已经存在实例，防止重复启动
         if (document.getElementById('selector-tool-style-final')) {
             console.log("工具已在运行中");
@@ -1388,12 +1480,9 @@
 
         // 2. 核心算法 (nth-child + ID 终结) 开始
 
-
-
-
-
-
         const SelectorBlockerTool = {
+
+
             // 保存当前正在预览的选择器
             currentSelector: '',
 
@@ -1526,7 +1615,7 @@
         .sel-copy-btn { background: #3498db !important; color: #fff !important; }
         .sel-edit-btn { background: #673ab7 !important; color: #fff !important; }
         .sel-block-btn { background: #f39c12 !important; color: #fff !important; }
-        .sel-reset-btn { background: #95a5a6 !important; color: #fff !important; }
+        .sel-reset-btn { background: green !important; color: #fff !important; }
         .sel-exit-btn { background: #e74c3c !important; color: #fff !important; }
         @media (max-width: 600px) { .sel-result-window { top: auto; bottom: 40px; } }
     `;
@@ -1544,7 +1633,7 @@
         resultWin.innerHTML = `
     <span class="sel-title">元素CSS选择器获取与调试 (测试中...)</span>
     
-  <div class="warm-tips" style="background: #f0f5ff !important; border: 1px solid #adc6ff; padding: 10px 12px; border-radius: 4px; margin: 5px 0 10px 0; font-size: 11px; color: #1d39c4; line-height: 1.6;">
+  <div class="warm-tips" style="box-shadow: inset 1px 1px 4px 4px rgba(0, 0, 0, 0.2);background: #f0f5ff !important;border: 1px solid #adc6ff;padding: 10px 12px;border-radius: 4px;margin: 5px 0 10px 0;font-size: 11px;color: #1d39c4;line-height: 1.6;">
     💡 <b>开发者调优建议：</b><br>
     • <b>逐级泛化：</b>点击 <button class="sel-hint-box" style="font-weight:bolder; cursor:pointer; border:1px solid #85a5ff; border-radius:2px; background:#fff; padding:0 4px; font-size:10px; color: #1d39c4; vertical-align: middle;">逐级泛化</button> 移除末尾属性/索引限制，扩展匹配范围。<br>
     • <b>极致精简：</b>点击 <button id="sel-simplify-box" style="font-weight:bolder; cursor:pointer; border:1px solid #85a5ff; border-radius:2px; background:#fff; padding:0 4px; font-size:10px; color: #1d39c4; vertical-align: middle;">极致精简</button> 智能剔除冗余父级与索引，仅保留唯一性核心路径。<br>
@@ -1563,7 +1652,7 @@
         <button class="sel-btn sel-edit-btn" id="sel-edit">修改</button>
         <button class="sel-btn sel-inspect-btn" id="sel-inspect-btn" style="min-width: 65px; color:black; background:#f2f2f2;">定位</button>
         <button class="sel-btn sel-block-btn" id="sel-block">屏蔽</button>
-        <button class="sel-btn sel-reset-btn" id="sel-reset">重选</button>
+        <button class="sel-btn sel-reset-btn" id="sel-reset">重选元素</button>
         <button class="sel-btn sel-exit-btn" id="sel-exit">退出</button>
     </div>
 `;
@@ -1713,6 +1802,8 @@
 
         // 统一执行预览逻辑 (带 !important 习惯)
         function applyAllPreview(selector) {
+
+
             if (typeof SelectorBlockerTool !== 'undefined' && SelectorBlockerTool.applyPreview) {
                 SelectorBlockerTool.applyPreview(selector);
             } else if (typeof this.applyPreview === 'function') {
@@ -1873,7 +1964,10 @@
 
         // --- 核心交互逻辑 ---
         const onMove = (e) => {
-            if (resultWin.style.display === 'block') return;
+            if (resultWin.style.display === 'block' || isExcluded(e.target)) {
+                overlay.style.display = 'none'; // 如果是排除元素，隐藏遮罩
+                return;
+            }
             const rect = e.target.getBoundingClientRect();
             Object.assign(overlay.style, {
                 display: 'block', width: `${rect.width}px`, height: `${rect.height}px`,
@@ -1882,7 +1976,12 @@
         };
 
         const onClick = (e) => {
-            if (resultWin.style.display === 'block') return;
+
+            if (resultWin.style.display === 'block' || isExcluded(e.target)) {
+                return;
+            }
+
+
             e.preventDefault(); e.stopPropagation();
 
             /** 新增 “所见即所得”（WYSIWYG） */
@@ -1916,7 +2015,6 @@
         };
 
         const destroyTool = () => {
-
             // 1. 核心：清除 SelectorBlockerTool 注入的预览样式和红框
             if (typeof SelectorBlockerTool !== 'undefined') {
                 SelectorBlockerTool.clear();
@@ -1928,6 +2026,9 @@
             overlay.remove(); resultWin.remove(); style.remove();
             document.body.style.cursor = 'default';
         };
+
+        // --- 新增：暴露接口给外部 ---
+        window.stopSelectorTool = destroyTool;
 
         // --- 按钮功能绑定 ---
         resultWin.querySelector('#sel-copy').onclick = () => {
@@ -2013,8 +2114,6 @@
         }
 
     };
-
-
 
     // V26.39.9: 移除 showCustomConfirmLocation
 
@@ -2740,13 +2839,6 @@
         // 绑定保存逻辑
         modalBox.querySelector('#gemini-edit-save').onclick = () => {
 
-            /*
-            const selectors = document.getElementById('gemini-edit-input').value;
-            // 调用 startSelectorTool()
-            window.pendingSelector = selectors.toString()
-            startSelectorTool()
-            */
-
 
             if (updateRemovalChoice(storageKey, oldValue, newValue)) {
                 modalOverlay.remove();
@@ -3015,56 +3107,45 @@
             <div style="padding: 4px 5px; font-size:xx-small;border-bottom: 1px solid #ccc; text-align: center;">
                 
                 <button id="blacklist-toggle" style="
-                    background: ${isBlacklisted ? '#dc3545' : '#1976D2'}; 
+                    background: ${isBlacklisted ? '#dc3545' : 'rgb(8 6 10)'}; 
                     color: white; border: none; padding: 8px 15px; 
                     cursor: pointer; border-radius: 4px; font-weight: bold; width: 100%; margin-bottom: 2px;
                 ">
                     ${isBlacklisted ? '🛡️ 当前为黑名单页 (启用严格沙箱)' : '➕ 标记为黑名单页 (启用严格沙箱)'}
                 </button>
                 
-                <button id="selector-toggle" style="background: #1976D2; color: white; border: none; padding: 8px 15px; cursor: pointer; border-radius: 4px; font-weight: bold; width: 100%; margin-bottom: 2px;">
+                
+                   <button id="selector-toggle">
                     🖱️ 启用选择并屏蔽模式 (xPath)
-                </button>
-                 <button id="selector-debug-click-toggle" style="width:100%; margin-bottom:2px;background:#1976D2;color:white;border: none;padding: 8px 5px;cursor: pointer;border-radius: 4px;font-weight: bold;flex: 1;font-size: xx-small;">
-                    ⚓ 元素CSS选择器获取与调试(关)
                     </button>
+
+                <button id="selector-debug-click-toggle" onclick='window.startSelectorTool_Click()'>
+                    ⚓ 元素CSS选择器获取 (关)
+                    </button>
+
+                   
+                   
+
                 <div style="margin-bottom:2px; display: flex; gap: 2px;">
-                    <button id="element-debug-click-toggle" style="width:100%; margin-bottom:2px;  background: ${isDebuggingElementClick ? 'green' : '#FFB300'}; color: ${isDebuggingElementClick ? 'white' : '#333'}; border: none; padding: 8px 5px; cursor: pointer; border-radius: 4px; font-weight: bold; flex: 1; font-size: xx-small;">
+
+ <button id="element-debug-click-toggle">
                     🛠️ 元素点击调试 (${isDebuggingElementClick ? '开' : '关'})
                     </button>
-                   
-                    <button id="debug-location-toggle" style=" margin-bottom:2px; background: ${isDebuggingLocationHooks ? 'green' : '#FFB300'}; color: ${isDebuggingLocationHooks ? 'white' : '#333'}; border: none; padding: 8px 5px; cursor: pointer; border-radius: 4px; font-weight: bold; flex: 1; font-size: xx-small;">
+
+                 
+
+                    
+                    <button id="debug-location-toggle">
                     ⚙️ JS 重定向调试 (${isDebuggingLocationHooks ? '开' : '关'})
                     </button>
                 </div>
 
+
                 <div style="grid-template-columns: 1fr 1fr;margin-bottom:2px;display: grid;gap: 2px;">
-                <button id="manual-xpath-add" onclick="window.showPageScriptsFloatWindow()" style="
-        background: #879587; /* 使用紫色突出手动操作 */
-        color: white;
-        border: none;
-        padding: 8px 15px;
-        /* margin-bottom:5px; */
-        cursor: pointer;
-        border-radius: 4px;
-        font-weight: bold;
-        width: 100%;
-    ">📟 查看页面上的脚本</button>
 
-    <button id="manual-xpath-runCode" onclick="window.showJsManager()" style="
-        background: #879587; /* 使用紫色突出手动操作 */
-        color: white;
-        border: none;
-        padding: 8px 15px;
-        /* margin-bottom:5px; */
-        cursor: pointer;
-        border-radius: 4px;
-        font-weight: bold;
-        width: 100%;
-    ">🧑‍💻执行JS代码</button>
 
- <button id="showXPath" onclick="showXPathInputWindow()" style="
-        background: #8E24AA; /* 使用紫色突出手动操作 */
+      <button id="showXPath" onclick="showXPathInputWindow()" style="
+        background: #5f6b5f; /* 使用紫色突出手动操作 */
         color: white;
         font-size:xx-small;
         border: none;
@@ -3078,17 +3159,45 @@
         ⌨️ 输入 XPath 屏蔽
     </button>
 
-     <!-- 【V27 NEW】CSS 按钮 -->
-<button id="manual-css-add" onclick="showCssInputWindow()" style="font-size:xx-small;background:#8E24AA; color: white; border: none; padding: 8px 15px; cursor: pointer; border-radius: 4px; font-weight: bold; width: 100%;">
- 🎨 输入 CSS 选择器屏蔽
-</button>
-<button id="manual-css-webdebug" style="font-size:xx-small;background:#8E24AA; color: white; border: none; padding: 8px 15px; cursor: pointer; border-radius: 4px; font-weight: bold; width: 100%;" onclick="window.initWebDebugger()"> ⚙️ Web 存储调试器
+    <button id="manual-css-add" onclick="showCssInputWindow()"
+        style="font-size:xx-small;background:#5f6b5f; color: white; border: none; padding: 8px 15px; cursor: pointer; border-radius: 4px; font-weight: bold; width: 100%;">
+        🎨 输入 CSS 选择器屏蔽
+    </button>
+    
+    <button id="manual-xpath-add" onclick="window.showPageScriptsFloatWindow()" style="
+        background: #879587; /* 使用紫色突出手动操作 */
+        color: white;
+        border: none;
+        padding: 8px 15px;
+        /* margin-bottom:5px; */
+        cursor: pointer;
+        border-radius: 4px;
+        font-weight: bold;
+        width: 100%;
+    ">📟 查看页面上的脚本</button>
+
+    <button id="manual-xpath-runCode" onclick="window.showJsManager()" style="
+        background: rgb(135 149 135); /* 使用紫色突出手动操作 */
+        color: white;
+        border: none;
+        padding: 8px 15px;
+        /* margin-bottom:5px; */
+        cursor: pointer;
+        border-radius: 4px;
+        font-weight: bold;
+        width: 100%;
+    ">🧑‍💻执行JS代码</button>
+
+  
+    <button id="manual-css-webdebug"
+        style="font-size:xx-small;background:rgb(135 149 135); color: white; border: none; padding: 8px 15px; cursor: pointer; border-radius: 4px; font-weight: bold; width: 100%;"
+        onclick="window.initWebDebugger()"> ⚙️ Web 存储调试器
     </button>
     <button id="manual-css-switchClear"
-    style="font-size:xx-small;background:#D32F2F; color: white; border: none; padding: 8px 8px;font-size:xx-small; cursor: pointer; border-radius: 4px; font-weight: bold; width: 100%;">
-    ▶️启动清理透明元素🔴
-</button>
-    </div>
+        style="font-size:xx-small;background:rgb(135 149 135); color: white; border: none; padding: 8px 8px;font-size:xx-small; cursor: pointer; border-radius: 4px; font-weight: bold; width: 100%;">
+        ▶️启动清理透明元素🔴
+    </button>
+</div>
 
 
     
@@ -3183,24 +3292,25 @@
         }
 
         // === 2. 绑定到你的 HTML 按钮上并切换文本 ===
-        document.getElementById('selector-debug-click-toggle').addEventListener('click', function () {
-            const btn = this;
-            const originalText = "⚓ 元素CSS选择器获取与调试"; // 你的原始按钮文字
+
+        window.startSelectorTool_Click = function () {
+            const btn = document.getElementById('selector-debug-click-toggle');
+            const originalText = "⚓ 元素CSS选择器获取 "; // 你的原始按钮文字
 
             // 如果工具已经运行，则不重复执行逻辑
             if (document.getElementById('selector-tool-style-final')) {
+stopSelectorTool()
                 return;
             }
 
             if (localStorage.getItem('gemini_debug_element_click_mode') == 'true') { // 如果元素点击调试模式已经开了，则无法开启 css 选择器获取
+                stopSelectorTool()
                 return;
             }
 
             // 1. 修改按钮文字，告知用户已开启
             btn.innerText = `${originalText}(开)`;
-            btn.style.background = 'rgb(220, 53, 69)'
-            btn.style.color = 'white'
-            //btn.style.color = "#3498db"; // 可选：给按钮文字上个色，增加视觉反馈
+            btn.classList.add('closer')
 
             // 2. 启动工具
             startSelectorTool();
@@ -3212,13 +3322,12 @@
                 if (!document.getElementById('selector-tool-style-final')) {
                     localStorage.setItem(DEBUG_SELECTOR_CLICK_KEY, 'false')
                     btn.innerText = `${originalText}(关)`;
-                    btn.style.background = '#1976D2'
+                    btn.classList.remove('closer')
                     btn.style.color = 'white'
                     clearInterval(checkExit);
                 }
             }, 500); // 每半秒检查一次工具是否还存在
-        });
-
+        }
 
 
         const tabCurrent = document.getElementById('tab-current');
@@ -3311,7 +3420,7 @@
             }
 
             isBlacklisted = isCurrentPageBlacklisted();
-            blacklistToggle.style.background = isBlacklisted ? '#dc3545' : '#1976D2';
+            blacklistToggle.style.background = isBlacklisted ? '#dc3545' : 'rgb(8 6 10)';
             blacklistToggle.textContent = isBlacklisted ? '🛡️ 当前为黑名单页 (启用严格沙箱)' : '➕ 标记为黑名单页 (启用严格沙箱)';
         };
 
@@ -3403,7 +3512,7 @@
 
             if (isSelectionMode) {
                 selectorToggle.textContent = '❌ 退出屏蔽模式';
-                selectorToggle.style.background = '#dc3545';
+                selectorToggle.classList.add('closer')
                 statusBar.textContent = '🖱️ 选择模式已启用：请点击需要屏蔽的元素。';
                 mainContainer.style.cursor = 'default';
 
@@ -3412,14 +3521,13 @@
                 }
 
 
-
             } else {
                 if (currentHoverElement) {
                     currentHoverElement.style.outline = '';
                     currentHoverElement = null;
                 }
                 selectorToggle.textContent = '🖱️ 启用选择并屏蔽模式 (xPath)';
-                selectorToggle.style.background = '#1976D2';
+selectorToggle.classList.remove('closer')
                 statusBar.textContent = '选择模式已禁用。';
             }
         }
@@ -3446,13 +3554,11 @@
 
             // 更新 UI 和状态栏
             if (isDebuggingElementClick) {
-                debugClickToggle.style.background = 'green';
-                debugClickToggle.style.color = 'white';
+                debugClickToggle.classList.add('closer')
                 debugClickToggle.textContent = '🛠️ 元素点击调试 (开)';
                 statusBar.textContent = '✅ 元素点击拦截已开启，**立即生效**。请点击可疑按钮。';
             } else {
-                debugClickToggle.style.background = '#FFB300';
-                debugClickToggle.style.color = '#333';
+                debugClickToggle.classList.remove('closer')
                 debugClickToggle.textContent = '🛠️ 元素点击调试 (关)';
                 statusBar.textContent = '❌ 元素点击拦截已关闭，**立即生效**。';
             }
@@ -3483,8 +3589,8 @@
                 debugClickToggle.textContent = '🛠️ 元素点击调试 (开)';
                 statusBar.textContent = '✅ 元素点击拦截已开启，**立即生效**。请点击可疑按钮。';
             } else {
-                debugClickToggle.style.background = '#FFB300';
-                debugClickToggle.style.color = '#333';
+                debugClickToggle.style.background = 'rgb(96 107 95)';
+                debugClickToggle.style.color = 'white';
                 debugClickToggle.textContent = '🛠️ 元素点击调试 (关)';
                 statusBar.textContent = '❌ 元素点击拦截已关闭，**立即生效**。';
             }
@@ -3510,13 +3616,11 @@
 
 
             if (isDebuggingLocationHooks) {
-                debugLocationToggle.style.background = 'green';
-                debugLocationToggle.style.color = 'white';
+                debugLocationToggle.classList.add('closer')
                 debugLocationToggle.textContent = '⚙️ JS 重定向调试 (开)';
                 statusBar.textContent = '⚠️ JS Hook 模式已开启。**必须刷新页面**才能启用**同步中断**捕获。';
             } else {
-                debugLocationToggle.style.background = '#FFB300';
-                debugLocationToggle.style.color = '#333';
+                debugLocationToggle.classList.remove('closer')
                 debugLocationToggle.textContent = '⚙️ JS 重定向调试 (关)';
                 statusBar.textContent = 'JS 重定向调试已关闭。**必须刷新页面**才能解除 Hook。';
             }
