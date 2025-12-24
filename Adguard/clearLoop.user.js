@@ -114,7 +114,7 @@
             // 未运行状态：提示用户点击即可启动，并显示累计清理数
             // button.textContent = `▶️启动清理透明元素(累计${totalRemovedCount}个)🔴`;
             button.textContent = `▶️启动清理透明元素🔴`;
-            button.style.backgroundColor = 'rgb(220 53 69)'; // 原始紫色/红色
+            button.style.backgroundColor = 'rgb(52 57 50)'; // 原始紫色/红色
         }
     }
 

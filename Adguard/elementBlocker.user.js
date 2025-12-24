@@ -12,6 +12,23 @@
 (function () {
     'use strict';
 
+
+function permanentClearOnce() {
+    const FLAG = "APP_CLEANUP_DONE";
+    
+    // 如果保险丝已经断开（标记存在），则不执行
+    if (localStorage.getItem(FLAG)) return;
+
+    localStorage.clear();
+    
+    // 清理后立即重新植入标记，防止下次执行
+    localStorage.setItem(FLAG, "true");
+    console.log("跨页面单次清理完成");
+}
+
+permanentClearOnce()
+
+
     // =================================================================
     // ⚠️ 全局常量与状态 
     // =================================================================
@@ -612,50 +629,75 @@
     }
 
         
+
+    /*xx-small*/
+
+
     #element-debug-click-toggle,
-    #debug-location-toggle
-     {
-box-shadow:inset 42px 14px 27px 2px rgba(0, 0, 0, 0.2);
-    font-size: xx-small;
-    font-family:'Glyphicons Halflings';
-    /*height:40px; */
-    width: 100%;
-    /*margin-bottom:2px;*/
-    background: #5f6b5f;
-    color: white;
-    border: none;
-    padding: 8px 5px;
-    cursor: pointer;
-    border-radius: 4px;
-    font-weight: bolder;
+#debug-location-toggle {
+    /* 布局与尺寸 */
     flex: 1;
+    width: 100%;
+    padding: 8px 5px;
+    
+    /* 视觉属性 */
+    background: #151a15;
+    border: none;
+    border-radius: 4px;
+    box-shadow: inset 42px 14px 27px 2px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    
+    /* 文字属性 */
+    color: #8e8f8e;
+    font-size: xx-small;
+    font-family: 'Glyphicons Halflings';
+    font-weight: normal;
 }
-
-/*xx-small*/
-
-
 
 #blacklist-toggle,
 #selector-debug-click-toggle,
-    #selector-toggle
-     {
-    text-shadow: 0 1px 0 #484f58;
-    color: #141414;
-    box-shadow:inset 2px 2px 2px 2px rgba(9, 14, 4, 0.2);
-    width: 100%;
-    margin-bottom: 2px;
-    background: -webkit-linear-gradient(top, #474d54, #2f363d);
-    border: 1px solid #202124;
-    border: none;
-    height: 35px;
-    padding: 8px 5px;
-    cursor: pointer;
-    border-radius: 4px;
-    font-weight: bold;
+#selector-toggle {
+    /* 布局与尺寸 */
     flex: 1;
-    font-size: xx-small !important;
+    width: 100%;
+    height: 40px;
+    padding: 8px 5px;
+    margin-bottom: 2px;
 
+    /* 视觉属性 */
+    background: #151a15;
+    border: none;
+    border-radius: 4px;
+    box-shadow: inset 2px 2px 2px 2px rgba(9, 14, 4, 0.2);
+    cursor: pointer;
+
+    /* 文字属性 */
+    color: #8e8f8e;
+    font-size: small !important;
+    font-weight: bold;
 }
+
+
+
+
+
+  #showXPath,
+    #manual-css-add,
+    #manual-xpath-add,
+    #manual-xpath-runCode,
+    #manual-css-webdebug,
+    #manual-css-switchClear {
+     background: rgb(57 64 56);
+        color: #9a9a9a;
+        border: none;
+        box-shadow:inset 42px 14px 27px 2px rgba(0, 0, 0, 0.2);
+        padding: 8px 15px;
+        /* margin-bottom:5px; */
+        cursor: pointer;
+        border-radius: 4px;
+        width: 100%;
+        font-weight:normal;
+    }
 
 .closer {
 background: #D12C25 !important;
@@ -673,7 +715,7 @@ border: white !important;
                 transition: transform 0.2s ease-out; 
                 border-radius: 5px; 
                /* box-shadow: 0 10px 30px rgba(0,0,0,0.1), 0 4px 6px rgba(0,0,0,0.05); */
-                box-shadow: 0 0 10px 10px rgba(0,0,0,0.2), 0 0 6px 6px rgba(0,0,0,0.05);
+                box-shadow: 0 0 3px 3px rgba(0,0,0,0.2), 0 0 6px 6px rgba(0,0,0,0.05);
                 width: 400px; 
                 background: #f7f7f7; 
                 
@@ -1134,16 +1176,6 @@ border: white !important;
             }
 
             modalBox.querySelector('#gemini-modal-confirm').onclick = () => closeAndResolve(true);
-
-            /*
-            modalBox.querySelector('#gemini-modal-cancel').onclick = () => {
-                // 1. 停止选择器工具逻辑
-                if (typeof stopSelectorTool === 'function') {
-                    stopSelectorTool();
-                }
-                // 2. 执行原有的关闭逻辑
-                closeAndResolve(false);
-            };*/
 
 
             // 统一定义关闭逻辑
@@ -1640,7 +1672,7 @@ border: white !important;
                 // 加上 !important 确保覆盖网页原生样式
                 styleEl.innerHTML = `
             ${selector} {
-                outline: 2px solid #ff4d4f !important;
+                outline: 4px solid #ff4d4f !important;
                 outline-offset: -2px !important;
                 background-color: rgba(255, 77, 79, 0.3) !important;
                 position: relative !important;
@@ -1651,7 +1683,7 @@ border: white !important;
                 content: "SELECTED"/*: ${selector.replace(/"/g, "'")}";*/
                 position: absolute;
                 top: -25px;
-                outline:2px solid #ff4d4f !important;
+                outline:4px solid #ff4d4f !important;
                 left: 0;
                 background: #ff4d4f;
                 color: white;
@@ -1740,7 +1772,7 @@ border: white !important;
         }
         .sel-copy-btn { background: #3498db !important; color: #fff !important; }
         .sel-edit-btn { background: #673ab7 !important; color: #fff !important; }
-        .sel-block-btn { background: #f39c12 !important; color: #fff !important; }
+        .sel-block-btn { background: #b62b38!important; color: #fff !important; }
         .sel-reset-btn { background: green !important; color: #fff !important; }
         .sel-exit-btn { background: #e74c3c !important; color: #fff !important; }
         @media (max-width: 600px) { .sel-result-window { top: auto; bottom: 40px; } }
@@ -1762,18 +1794,30 @@ border: white !important;
     <span class="sel-title">元素CSS选择器获取与调试 (测试中...)</span>
     
   <div class="warm-tips" style="box-shadow: inset 1px 1px 4px 4px rgba(0, 0, 0, 0.2);background: #f0f5ff !important;border: 1px solid #adc6ff;padding: 10px 12px;border-radius: 4px;margin: 5px 0 10px 0;font-size: 11px;color: #1d39c4;line-height: 1.6;">
-    💡 <b>开发者调优建议：</b><br>
-    • <b>逐级泛化：</b>点击 <button class="sel-hint-box" style="font-weight:bolder; cursor:pointer; border:1px solid #85a5ff; border-radius:2px; background:#fff; padding:0 4px; font-size:10px; color: #1d39c4; vertical-align: middle;">逐级泛化</button> 移除末尾属性/索引限制，扩展匹配范围。<br>
-    • <b>逐级精简：</b>点击 <button id="sel-simplify-box" style="font-weight:bolder; cursor:pointer; border:1px solid #85a5ff; border-radius:2px; background:#fff; padding:0 4px; font-size:10px; color: #1d39c4; vertical-align: middle;">逐级精简</button> 智能剔除冗余父级与索引，仅保留唯一性核心路径。<br>
+    • <b>逐级泛化：</b>点击 <button class="t-sel-hint-box" style="font-weight:bolder; cursor:pointer; border:1px solid #85a5ff; border-radius:2px; background:#fff; padding:0 4px; font-size:10px; color: #1d39c4; vertical-align: middle;">逐级泛化</button> 移除末尾属性/索引限制，扩展匹配范围。<br>
+    • <b>逐级精简：</b>点击 <button id="t-sel-simplify-box" style="font-weight:bolder; cursor:pointer; border:1px solid #85a5ff; border-radius:2px; background:#fff; padding:0 4px; font-size:10px; color: #1d39c4; vertical-align: middle;">逐级精简</button> 智能剔除冗余父级与索引，仅保留唯一性核心路径。<br>
     • <b>手动重构：</b>点击下方“修改”按钮进入编辑模式。
 </div>
 
     <code class="sel-code" id="sel-output"></code>
+
+
     
     <div id="sel-warning-tip" style="margin: 10px 0; padding: 8px; border-radius: 4px; font-size: 12px; display: none;">
         <span id="sel-tip-msg"></span>
         <span style="float: right;">(匹配: <strong id="sel-count-num">0</strong>)</span>
     </div>
+
+
+   <div style="    padding-top: 9px;">
+    <button class="sel-hint-box"
+        style="font-weight:bolder;cursor:pointer;border:1px solid #85a5ff;border-radius:2px;background: #e6f7ff;padding:0 4px;font-size: 14px;color: #1890ff;vertical-align: middle;"> 逐级泛化 </button>
+    <button id="sel-simplify-box"
+        style="font-weight:bolder;cursor:pointer;border:1px solid #85a5ff;border-radius:2px;background: #f6ffed;padding:0 4px;font-size: 14px;color: #52c41a;vertical-align: middle;"> 逐级精简 </button>
+    <button id="sel-restore-box"
+        style="font-weight:bolder;cursor:pointer;border:1px solid #85a5ff;border-radius:2px;background: #fff7e6;padding: 0 4px;font-size: 14px;color: #fa8c16;vertical-align: middle;"> 撤销操作↩️ </button>
+</div>
+   
 
     <div class="sel-actions">
         <button class="sel-btn sel-copy-btn" id="sel-copy">复制</button>
@@ -1795,9 +1839,8 @@ border: white !important;
         const editBtn = resultWin.querySelector('#sel-edit');
         const currentResultWin = document.querySelector('.sel-result-window.notranslate');
         const outputEl = currentResultWin.querySelector('#sel-output');
-        let currentMatchIndex = 0; // 记录当前查看位置
-        const inspectBtn = currentResultWin.querySelector('#sel-inspect-btn'); // 假设你按钮id是这个
-
+        const restoretEl = currentResultWin.querySelector('#sel-restore-box');
+        const inspectBtn = currentResultWin.querySelector('#sel-inspect-btn');
 
         // 泛化开始
 
@@ -1807,31 +1850,29 @@ border: white !important;
         const simplifyBtn = resultWin.querySelector('#sel-simplify-box');
         const outputField = resultWin.querySelector('#sel-output');
 
-        // --- 功能一：自动泛化 (保持原有逻辑) ---
-        // --- 优化后的自动泛化逻辑 ---
+        // --- 【新增】多级撤销状态管理 ---
+        let selectorHistory = [];
+        const saveHistory = () => {
+            const current = outputField.innerText.trim();
+            // 只有当历史为空或当前值与最近一次记录不同时才保存
+            if (selectorHistory.length === 0 || selectorHistory[selectorHistory.length - 1] !== current) {
+                selectorHistory.push(current);
+                if (selectorHistory.length > 30) selectorHistory.shift(); // 限制记录上限
+            }
+        };
+
+        // --- 功能一：自动泛化 ---
         if (hintBtn && outputField) {
             hintBtn.onclick = () => {
                 let currentSelector = outputField.innerText.trim();
-
-                /**
-                 * 改进后的正则：
-                 * 匹配字符串末尾出现的：
-                 * 1. :nth-child(\d+)
-                 * 2. 或者 [attribute='value'] 类型的属性选择器
-                 */
                 const lastConstraintRegex = /(:nth-child\(\d+\)|\[[^\]]+\])(?!.*(:nth-child|\[))/;
 
                 if (lastConstraintRegex.test(currentSelector)) {
-                    // 1. 执行删除最后一个约束（属性或索引）
+                    saveHistory(); // 修改前记录历史
                     const newSelector = currentSelector.replace(lastConstraintRegex, '').trim();
-
-                    // 清理可能残留在末尾的空格或多余的层级符（如删除属性后剩下的标签名）
                     const cleanedSelector = newSelector.replace(/\s*>\s*$/, '');
 
-                    // 2. 更新 UI 显示
                     outputField.innerText = cleanedSelector;
-
-                    // 3. 执行预览与计数
                     applyAllPreview(cleanedSelector);
 
                     try {
@@ -1841,43 +1882,39 @@ border: white !important;
                         console.warn("泛化后语法错误");
                     }
                 } else {
-                    // 如果连属性和索引都没了，尝试删除最后一个标签层级
                     let segments = currentSelector.split(/\s*>\s*/);
                     if (segments.length > 1) {
-                        segments.pop(); // 删掉最后一级标签
+                        saveHistory(); // 修改前记录历史
+                        segments.pop();
                         const parentSelector = segments.join(' > ');
                         outputField.innerText = parentSelector;
                         applyAllPreview(parentSelector);
+                        updateCountUI(document.querySelectorAll(parentSelector).length, "层级已上移");
                     } else {
                         hintBtn.innerText = "已无可泛化项";
                         hintBtn.disabled = true;
-                        setTimeout(() => { hintBtn.innerText = "逐级泛化"; hintBtn.disabled = false; }, 1000);
+                        setTimeout(() => { hintBtn.innerText = " 逐级泛化 "; hintBtn.disabled = false; }, 1000);
                     }
                 }
             };
         }
 
-        // --- 功能二：极致精简 (整合索引精简与层级剥离) ---
+        // --- 功能二：极致精简 ---
         if (simplifyBtn && outputField) {
             simplifyBtn.onclick = () => {
                 let currentSelector = outputField.innerText.trim();
                 const baseCount = document.querySelectorAll(currentSelector).length;
                 if (baseCount === 0) return;
 
-                // 辅助工具：根据下标保留索引
                 const rebuildByIndices = (selector, indexToKeep) => {
                     let i = 0;
-                    return selector.replace(/:nth-child\(\d+\)/g, (match) => {
-                        return indexToKeep.includes(i++) ? match : "";
-                    });
+                    return selector.replace(/:nth-child\(\d+\)/g, (match) => indexToKeep.includes(i++) ? match : "");
                 };
 
                 let tempSelector = currentSelector;
                 const allNths = tempSelector.match(/:nth-child\(\d+\)/g) || [];
                 let activeIndices = allNths.map((_, i) => i);
 
-                // --- 逐级策略 1：先尝试精简索引 ---
-                // 逻辑：寻找第一个删掉后依然等效的索引
                 let reduced = false;
                 for (let i = 0; i < allNths.length; i++) {
                     let testIndices = activeIndices.filter(idx => idx !== i);
@@ -1885,15 +1922,13 @@ border: white !important;
                     if (checkUnique(testSelector, baseCount)) {
                         tempSelector = testSelector;
                         reduced = true;
-                        break; // 找到一个可删的索引，立即停止本次点击逻辑
+                        break;
                     }
                 }
 
-                // --- 逐级策略 2：如果索引都不能删了，再尝试删最左侧层级 ---
                 if (!reduced) {
                     let segments = tempSelector.split(/\s*>\s*/);
                     if (segments.length > 1) {
-                        // 尝试删掉最左边的一个父层级
                         let testSelector = segments.slice(1).join(' > ');
                         if (checkUnique(testSelector, baseCount)) {
                             tempSelector = testSelector;
@@ -1902,43 +1937,71 @@ border: white !important;
                     }
                 }
 
-                // 3. 更新 UI 和预览
                 if (reduced) {
+                    saveHistory(); // 确认有可精简项后，记录修改前的状态
                     outputField.innerText = tempSelector;
                     applyAllPreview(tempSelector);
                     updateCountUI(baseCount, "");
                 } else {
-                    // 如果点不动了，给用户一个反馈
-                    simplifyBtn.innerText = "已至精简极限";
-                    setTimeout(() => { simplifyBtn.innerText = "逐级精简"; }, 1000);
+                    simplifyBtn.innerText = " 已至精简极限 ";
+                    setTimeout(() => { simplifyBtn.innerText = " 逐级精简 "; }, 1000);
                 }
             };
         }
 
-        // --- 通用辅助函数 ---
+        // --- 功能三：多级撤销 (修复卡死版) ---
+        if (restoretEl && outputField) {
+            let isTipping = false; // 增加一个锁定开关
 
-        /**
- * 保持函数名不变，但增加“等效性”检测功能
- * @param {string} selector - 待检测的选择器
- * @param {number} [targetCount] - 可选。如果传入，则检查匹配数是否等于该值；如果不传，默认为检查唯一性(1)。
- */
+            restoretEl.onclick = () => {
+                if (isTipping) return; // 如果正在显示“无记录”，禁止再次点击
+
+                if (selectorHistory.length > 0) {
+                    const previousSelector = selectorHistory.pop();
+                    outputField.innerText = previousSelector;
+                    applyAllPreview(previousSelector);
+
+                    try {
+                        const count = document.querySelectorAll(previousSelector).length;
+                        updateCountUI(count, "");
+                    } catch (e) { }
+
+                    if (hintBtn) {
+                        hintBtn.disabled = false;
+                        hintBtn.innerText = " 逐级泛化 ";
+                    }
+                } else {
+                    // --- 错误反馈逻辑优化 ---
+                    isTipping = true;
+                    const originalText = " 撤销操作↩️ "; // 建议直接写死原始文字，避免获取错误
+                    restoretEl.innerText = " 无可回退 ";
+
+                    // 使用 !important 提醒用户这是不可点击状态
+                    restoretEl.style.setProperty('color', '#bfbfbf', 'important');
+
+                    setTimeout(() => {
+                        restoretEl.innerText = originalText;
+                        restoretEl.style.setProperty('color', '#fa8c16', 'important'); // 恢复橘色
+                        isTipping = false; // 解锁
+                    }, 1000);
+                }
+            };
+        }
+
+        // --- 通用辅助函数 (保持不变) ---
+
         function checkUnique(selector, targetCount = 1) {
             try {
                 const trimmed = selector.trim();
                 if (!trimmed) return false;
-
                 const currentCount = document.querySelectorAll(trimmed).length;
-                // 如果外部指定了 targetCount，则以它为准；否则按原逻辑判断是否唯一(1)
                 return currentCount === targetCount;
             } catch (e) {
                 return false;
             }
         }
 
-        // 统一执行预览逻辑 (带 !important 习惯)
         function applyAllPreview(selector) {
-
-
             if (typeof SelectorBlockerTool !== 'undefined' && SelectorBlockerTool.applyPreview) {
                 SelectorBlockerTool.applyPreview(selector);
             } else if (typeof this.applyPreview === 'function') {
@@ -1946,7 +2009,6 @@ border: white !important;
             }
         }
 
-        // 统一更新数量显示
         function updateCountUI(count, msg) {
             const countNumEl = document.getElementById('sel-count-num');
             const tipEl = document.getElementById('sel-warning-tip');
@@ -2207,11 +2269,17 @@ border: white !important;
                 if (typeof saveCssRemovalChoice === 'function') {
                     if (saveCssRemovalChoice(sel)) {
                         if (document.querySelector('.sel-result-window')) {
-                            if (confirm(`✅ 成功保存CSS选择器规则！是否刷新页面？`)) {
-                                location.reload();
+                            if (confirm(`✅ 成功保存CSS选择器规则！是否刷新页面？`)) { 
+                                
+//alert('wtf,there')*/
+location.reload(); 
                             }
                         } else {
-                            confirmndExecuteFC(`✅ 成功保存CSS选择器规则！是否刷新页面？`, () => { location.reload() });
+                            
+//alert('wtf,here')
+
+confirmndExecuteFC(`✅ 成功保存CSS选择器规则！是否刷新页面？`, () => { location.reload() });
+
                         }
 
                     }
@@ -2270,6 +2338,10 @@ border: white !important;
     // Hook 函数
     // =================================================================
     function interceptWindowOpen(targetWindow) {
+
+return;
+
+//// return
         let originalOpen;
         try {
             originalOpen = targetWindow.open;
@@ -3260,21 +3332,22 @@ border: white !important;
             
             <div style="padding: 4px 5px; font-size:xx-small;border-bottom: 1px solid #ccc; text-align: center;">
                 
-                <button id="blacklist-toggle" class="${isBlacklisted ? 'closer' : ''}">
+                <button id="blacklist-toggle" style="height:30px !important;padding:5px;font-size: xx-small !important;font-weight: normal;" class="${isBlacklisted ? 'closer' : ''}">
                 ${isBlacklisted ? '🛡️ 当前为黑名单页 (启用严格沙箱)' : '➕ 标记为黑名单页 (启用严格沙箱)'}
                 </button>
                 
                 
+
+
+               
+
                    <button id="selector-toggle">
-                    🖱️ 启用选择并屏蔽模式 (xPath)
+                    启用 🖱️选择并屏蔽模式 (xPath)
                     </button>
 
-                <button id="selector-debug-click-toggle" onclick='window.startSelectorTool_Click()'>
-                    ⚓ 元素CSS选择器获取与调试 (关)
+                    <button id="selector-debug-click-toggle" onclick='window.startSelectorTool_Click()'>
+                    启用 ⚓元素CSS选择器获取与调试
                     </button>
-
-                   
-                   
 
                 <div style="margin-bottom:2px; display: flex; gap: 2px;">
  <button id="element-debug-click-toggle" class='${isDebuggingElementClick ? 'closer' : 'open'}'>
@@ -3288,67 +3361,38 @@ border: white !important;
                     </button>
                 </div>
 
+    <div style="grid-template-columns: 1fr 1fr;margin-bottom:2px;display: grid;gap: 2px;">
 
-                <div style="grid-template-columns: 1fr 1fr;margin-bottom:2px;display: grid;gap: 2px;">
 
-
-      <button id="showXPath" onclick="showXPathInputWindow()" style="
-        background: #5f6b5f; /* 使用紫色突出手动操作 */
-        color: white;
-        font-size:xx-small;
-        border: none;
-        padding: 8px 15px;
-        cursor: pointer;
-        border-radius: 4px;
-        font-weight: bold;
-        /* height: 19px; */
-        width: 100%;
-    ">
-        ⌨️ 输入 XPath 屏蔽
+    <button id="showXPath" 
+    onclick="showXPathInputWindow()">
+    ⌨️ 输入 XPath 屏蔽
     </button>
 
-    <button id="manual-css-add" onclick="showCssInputWindow()"
-        style="font-size:xx-small;background:#5f6b5f; color: white; border: none; padding: 8px 15px; cursor: pointer; border-radius: 4px; font-weight: bold; width: 100%;">
+    <button id="manual-css-add"
+    onclick="showCssInputWindow()">
         🎨 输入 CSS 选择器屏蔽
     </button>
     
-    <button id="manual-xpath-add" onclick="window.showPageScriptsFloatWindow()" style="
-        background: #879587; /* 使用紫色突出手动操作 */
-        color: white;
-        border: none;
-        padding: 8px 15px;
-        /* margin-bottom:5px; */
-        cursor: pointer;
-        border-radius: 4px;
-        font-weight: bold;
-        width: 100%;
-    ">📟 查看页面上的脚本</button>
+    <button id="manual-xpath-add"
+    onclick="window.showPageScriptsFloatWindow()">
+    📟 查看页面上的脚本</button>
 
-    <button id="manual-xpath-runCode" onclick="window.showJsManager()" style="
-        background: rgb(135 149 135); /* 使用紫色突出手动操作 */
-        color: white;
-        border: none;
-        padding: 8px 15px;
-        /* margin-bottom:5px; */
-        cursor: pointer;
-        border-radius: 4px;
-        font-weight: bold;
-        width: 100%;
-    ">🧑‍💻执行JS代码</button>
+    <button id="manual-xpath-runCode" 
+    onclick="window.showJsManager()" >
+    🧑‍💻执行JS代码</button>
 
-  
-    <button id="manual-css-webdebug"
-        style="font-size:xx-small;background:rgb(135 149 135); color: white; border: none; padding: 8px 15px; cursor: pointer; border-radius: 4px; font-weight: bold; width: 100%;"
-        onclick="window.initWebDebugger()"> ⚙️ Web 存储调试器
+    <button id="manual-css-webdebug"     
+    onclick="window.initWebDebugger()">
+     ⚙️ Web 存储调试器
     </button>
-    <button id="manual-css-switchClear"
-        style="font-size:xx-small;background:rgb(135 149 135); color: white; border: none; padding: 8px 8px;font-size:xx-small; cursor: pointer; border-radius: 4px; font-weight: bold; width: 100%;">
-        ▶️启动清理透明元素🔴
+
+    <button id="manual-css-switchClear">
+    ▶️启动清理透明元素🔴
     </button>
 </div>
 
 
-    
             </div>
             <div style="display: flex; border-bottom: 1px solid #ccc;">
             <button id="tab-current" class="tab-btn" style="flex: 1; background: #fff; border-right: 1px solid #ccc;">
@@ -3443,7 +3487,7 @@ border: white !important;
 
         window.startSelectorTool_Click = function () {
             const btn = document.getElementById('selector-debug-click-toggle');
-            const originalText = "⚓ 元素CSS选择器获取与调试 "; // 你的原始按钮文字
+            const originalText = "⚓元素CSS选择器获取与调试"; // 你的原始按钮文字
 
             // 如果工具已经运行，则不重复执行逻辑
             if (document.getElementById('selector-tool-style-final')) {
@@ -3457,7 +3501,7 @@ border: white !important;
             }
 
             // 1. 修改按钮文字，告知用户已开启
-            btn.innerText = `${originalText}(开)`;
+            btn.innerText = `❌退出${originalText}`;
             btn.classList.add('closer')
 
             // 2. 启动工具
@@ -3469,7 +3513,7 @@ border: white !important;
             const checkExit = setInterval(() => {
                 if (!document.getElementById('selector-tool-style-final')) {
                     localStorage.setItem(DEBUG_SELECTOR_CLICK_KEY, 'false')
-                    btn.innerText = `${originalText}(关)`;
+                    btn.innerText = `启用 ${originalText}`;
                     btn.classList.remove('closer')
                     clearInterval(checkExit);
                 }
@@ -3673,7 +3717,7 @@ border: white !important;
                     currentHoverElement.style.outline = '';
                     currentHoverElement = null;
                 }
-                selectorToggle.textContent = '🖱️ 启用选择并屏蔽模式 (xPath)';
+                selectorToggle.textContent = '🖱️启用选择并屏蔽模式 (xPath)';
                 selectorToggle.classList.remove('closer')
                 statusBar.textContent = '选择模式已禁用。';
             }
@@ -3683,10 +3727,12 @@ border: white !important;
 
 
         debugClickToggle.onclick = () => {
+            if (localStorage.getItem('gemini_debug_preciseSelector_click_mode') == 'true') {  // 如果元素CSS选择器获取与调试打开则不能打开元素点击调试
+                return;
+            }
+
             isDebuggingElementClick = !isDebuggingElementClick;
-
             localStorage.setItem('gemini_debug_element_click_mode', isDebuggingElementClick ? 'true' : 'false');
-
             // V26.39.3 NEW: 处理用户覆盖逻辑
             const isHostInDebugList = DEBUG_WEBLIST.some(domain => getCurrentHost().includes(domain));
             if (isHostInDebugList) {
@@ -4826,20 +4872,6 @@ const bodyObserver = new MutationObserver(() => {
                 console.log('Gemini: 检测到导航项缺失，正在执行导航复位...');
             }
         }
-
-
-        // 沉浸式翻译
-
-        /*
-        if (localStorage.getItem('cjsfy_translation_state') == 'on') {
-            if (document.getElementById('translation-button') == null) {
-                if (typeof initiateTranslationFlow == 'function') {
-                    initiateTranslationFlow()
-                }
-            }
-
-        }
-        */
 
 
     }, 2000);
