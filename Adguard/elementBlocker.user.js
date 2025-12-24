@@ -539,51 +539,21 @@
 
 
         // 2. 初始化动态监听，使用独一无二的变量名
-
-        // 2. 初始化动态监听
         const startDynamicCleanup = (cssRemovals) => {
             const targetNode = document.body || document.documentElement;
 
-            let dh_debounceTimer = null;
-
+            // 使用独一无二的变量名，防止与其他脚本或全局变量冲突
             const dh_ElementRemoverObserver = new MutationObserver((mutationsList) => {
-                // 如果页面还在动，重置初始的消停计时器
-                if (dh_debounceTimer) {
-                    clearTimeout(dh_debounceTimer);
-                }
-
-                // 页面消停 2 秒后开始执行任务
-                dh_debounceTimer = setTimeout(() => {
-                    let count = 0; // 内部执行计数器
-
-                    // 定义一个循环执行的函数
-                    const executeSequence = () => {
-                        if (count < 5) {
-                            console.log(`[Gemini屏蔽] 页面已消停，正在执行第 ${count + 1}/5 次清理...`);
-
-                            performCleanupAction(document, cssRemovals);
-                            // 保持你要求的 window 赋值（注意：你的原代码中这行会执行两次函数，这里做了修正）
-                            window.runerformCleanupAction = () => performCleanupAction(document, cssRemovals);
-
-                            count++;
-
-                            // 如果没到 5 次，设定 2 秒后再次执行
-                            if (count < 2) {
-                                setTimeout(executeSequence, 3000);
-                            }
-                        }
-                    };
-
-                    executeSequence(); // 启动序列
-                    dh_debounceTimer = null;
-                }, 2000);
+                // 每次 DOM 变化时执行清理
+                performCleanupAction(document, cssRemovals);
             });
 
+            // 配置并启动
             const dh_ObserverConfig = { childList: true, subtree: true };
             dh_ElementRemoverObserver.observe(targetNode, dh_ObserverConfig);
 
-            // 初始直接执行一次
-            performCleanupAction(document, cssRemovals);
+            // 初始延迟执行一次，确保首屏清理
+            setTimeout(() => performCleanupAction(document, cssRemovals), 1000);
         };
 
         // 调用
@@ -4822,12 +4792,58 @@ const bodyObserver = new MutationObserver(() => {
     debounceTimer = setTimeout(() => {
         console.log('[Gemini屏蔽] 🏁 页面已消停 3 秒，开始执行初始化...');
 
-        // 避免面板被吃掉
-        if (localStorage.getItem('gemini-pin') === "pinned" || localStorage.getItem('gemini_debug_element_click_mode') === "true" || localStorage.getItem('gemini_debug_location_hook_mode') === "true"
+
+
+        // =================================================================
+        // 核心监控逻辑：面板保活与导航组件复位
+        // =================================================================
+
+        /**
+         * 1. 确保管理面板不被意外移除（保活机制）
+         * 检查条件：
+         * - 面板被用户“钉住” (pinned)
+         * - 开启了元素点击调试模式
+         * - 开启了位置钩子（Location Hook）调试模式
+         */
+        if (localStorage.getItem('gemini-pin') === "pinned" ||
+            localStorage.getItem('gemini_debug_element_click_mode') === "true" ||
+            localStorage.getItem('gemini_debug_location_hook_mode') === "true"
         ) {
-            geminiElementBlockerOpenPanel()
+            // 如果满足上述任一条件，且打开面板的函数已定义，则强制重新挂载/显示面板
+            if (typeof geminiElementBlockerOpenPanel == 'function') {
+                geminiElementBlockerOpenPanel();
+            }
+        }
+
+        /**
+         * 2. 导航项丢失检测与自动修复
+         * 逻辑：通过检查特定类名 '.li_global' 的数量来判断导航菜单是否完整。
+         * 场景：防止某些动态加载的网页在渲染过程中将已生成的导航条覆盖或删除。
+         */
+        if (document.querySelectorAll('.li_global').length < 150) {
+            // 如果页面中现存的导航项少于 150 个，判定为“导航条受损”或“未加载完成”
+            if (typeof parentElement_add == 'function') {
+                // 调用父级添加函数，重新执行导航条的初始化或 DOM 注入
+                parentElement_add();
+                console.log('Gemini: 检测到导航项缺失，正在执行导航复位...');
+            }
+        }
+
+
+        // 沉浸式翻译
+
+        /*
+        if (localStorage.getItem('cjsfy_translation_state') == 'on') {
+            if (document.getElementById('translation-button') == null) {
+                if (typeof initiateTranslationFlow == 'function') {
+                    initiateTranslationFlow()
+                }
+            }
 
         }
+        */
+
+
     }, 2000);
 });
 
@@ -4849,3 +4865,109 @@ if (document.body) {
         });
     });
 }
+
+
+
+
+/**
+ * 全局函数：脚本注入状态检测器 (移动端优化版)
+ * 调用方法：window.geminiScriptCheck();
+ */
+window.geminiScriptCheck = function () {
+    'use strict';
+
+    const targetScripts = [
+        { name: "沉浸式翻译", url: "Adblock4limbo.immersiveTranslation.user.js" },
+        { name: "媒体资源查找器", url: "m3u8Andmp4Finder.user.js" },
+        { name: "用户反馈信息", url: "feedBackLinkMake.user.js" },
+        { name: "元素屏蔽器", url: "elementBlocker.user.js" },
+        { name: "视频广告加速", url: "skipVideoAds.user.js" },
+        { name: "WebDebugger", url: "WebDebugger.user.js" },
+        { name: "脚本查看器", url: "ScriptFind.user.js" },
+        { name: "友好确认框", url: "confirmndExecute.user.js" },
+        { name: "外部链接提取器", url: "findAndDisplayExternalLinks.user.js" },
+        { name: "透明元素清理", url: "clearLoop.user.js" },
+        { name: "目标信息提示", url: "showLinkTipsModalOnce.user.js" },
+        { name: "Adguard基础过滤", url: "Adguard.filter.user.js" },
+        { name: "脚本管理器", url: "showJsManager.user.js" },
+        { name: "成人保护模式", url: "pageProtect.user.js" }
+    ];
+
+    const performCheck = () => {
+        const currentScripts = Array.from(document.scripts).map(s => s.src).filter(src => src !== "");
+        return targetScripts.map(item => ({
+            ...item,
+            loaded: currentScripts.some(src => src.includes(item.url))
+        }));
+    };
+
+    const panelId = 'gemini-script-status-panel';
+    let panel = document.getElementById(panelId);
+
+    if (!panel) {
+        panel = document.createElement('div');
+        panel.id = panelId;
+        // 移动端优化点：
+        // 1. 宽度改为 calc(100% - 40px)，自适应屏幕宽度
+        // 2. 增加 touch-action 确保滚动顺畅
+        // 3. 边距改为百分比或较小固定值
+        panel.style.cssText = `
+            position: fixed !important;
+            bottom: 20px !important;
+            left: 50% !important;
+            transform: translateX(-50%) !important;
+            width: calc(100% - 40px) !important;
+            max-width: 320px !important;
+            max-height: 60vh !important;
+            background: rgba(10, 10, 10, 0.92) !important;
+            color: #eee !important;
+            padding: 14px !important;
+            border-radius: 16px !important;
+            font-size: 14px !important;
+            font-family: -apple-system, system-ui, sans-serif !important;
+            z-index: 2147483647 !important;
+            box-shadow: 0 12px 48px rgba(0,0,0,0.7) !important;
+            border: 1px solid rgba(255,255,255,0.15) !important;
+            overflow-y: auto !important;
+            backdrop-filter: blur(15px) !important;
+            -webkit-overflow-scrolling: touch !important;
+            transition: opacity 0.3s ease !important;
+        `;
+        document.body.appendChild(panel);
+    }
+
+    const render = () => {
+        const results = performCheck();
+        const loadedCount = results.filter(r => r.loaded).length;
+
+        panel.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; border-bottom:1px solid #333; padding-bottom:10px;">
+                <span style="font-weight:bold; color:#0affb3; font-size:15px; padding: 4px 0;" id="gemini-recheck-btn">
+                    脚本状态 (${loadedCount}/${targetScripts.length}) 🔄
+                </span>
+                <span style="cursor:pointer; color:#999; font-size:24px; padding: 0 10px; line-height:1;" onclick="document.getElementById('${panelId}').remove()">×</span>
+            </div>
+            <div id="gemini-script-list" style="display: flex; flex-direction: column; gap: 8px;">
+                ${results.map(res => `
+                    <div style="display:flex; justify-content:space-between; align-items:center; font-family:monospace; opacity:${res.loaded ? '1' : '0.4'}">
+                        <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:70%;">${res.name}</span>
+                        <span style="color:${res.loaded ? '#00ff88' : '#ff4d4d'}; font-weight:bold; font-size:11px; background:rgba(255,255,255,0.05); padding:2px 6px; border-radius:4px;">
+                            ${res.loaded ? 'ON' : 'OFF'}
+                        </span>
+                    </div>
+                `).join('')}
+            </div>
+            <div style="margin-top:14px; font-size:11px; color:#666; text-align:center; letter-spacing:1px;">LIMBOPRO ADGUARD SYSTEM</div>
+        `;
+
+        document.getElementById('gemini-recheck-btn').onclick = () => {
+            panel.style.opacity = '0.5';
+            setTimeout(() => {
+                window.geminiScriptCheck();
+                panel.style.opacity = '1';
+            }, 300);
+        };
+    };
+
+    render();
+};

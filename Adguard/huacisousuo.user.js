@@ -43,6 +43,7 @@ function initLimoProSearch() {
 
     const container = document.createElement('div');
     container.id = 'limbopro-search-pro';
+    container.className = 'notranslate';
     Object.assign(container.style, {
         position: 'absolute',
         zIndex: '2147483647',
@@ -287,7 +288,7 @@ function toggleSearchState(x) {
     const searchPro = document.getElementById('limbopro-search-pro'); // 搜索框容器
     if (!searchPro) {
         initLimoProSearch()// 如果不存在，则立即创建
-        document.getElementById('limbopro-search-pro').className = 'cmsnone'
+        document.getElementById('limbopro-search-pro').className = 'cmsnone notranslate'
     }
     const isOn = huacibtn.dataset.state === 'on';
     if (x !== 'false') {
@@ -297,7 +298,7 @@ function toggleSearchState(x) {
             huacibtn.style.backgroundColor = 'red';
             huacibtn.dataset.state = 'off';
             localStorage.setItem('huacisousuo', 'false');
-            searchPro.setAttribute("class", "cmsnone"); // 隐藏
+            searchPro.className = 'cmsnone notranslate' // 隐藏
             setTimeout(() => {
                 //// body_build('false')
             }, 1500)
@@ -307,7 +308,7 @@ function toggleSearchState(x) {
             huacibtn.style.backgroundColor = 'green';
             huacibtn.dataset.state = 'on';
             localStorage.setItem('huacisousuo', 'true');
-            searchPro.setAttribute("class", "cms"); // 显示
+            searchPro.className = 'cms notranslate' // 隐藏
             setTimeout(() => {
                 //// body_build('false')
             }, 1500)
@@ -318,7 +319,7 @@ function toggleSearchState(x) {
         huacibtn.style.backgroundColor = 'red';
         huacibtn.dataset.state = 'off';
         // localStorage.setItem('huacisousuo', 'false');
-        searchPro.setAttribute("class", "cmsnone"); // 隐藏
+        searchPro.className = 'cmsnone notranslate' // 隐藏
         setTimeout(() => {
             //// body_build('false')
         }, 1500)
@@ -349,14 +350,14 @@ waitForElement('#limbopro-search-pro', (el) => {
         huacibtn.textContent = '划词搜索(ON)';
         huacibtn.style.backgroundColor = 'green';
         huacibtn.dataset.state = 'on';
-        searchPro.setAttribute("class", "cms");
+        searchPro.className = 'cms notranslate' // 隐藏
         console.log('划词搜索已开启');
     } else {
         // 默认或 saved === 'false' 或 null
         huacibtn.textContent = '划词搜索(OFF)';
         huacibtn.style.backgroundColor = 'red';
         huacibtn.dataset.state = 'off';
-        searchPro.setAttribute("class", "cmsnone");
+        searchPro.className = 'cmsnone notranslate' // 隐藏
         console.log('划词搜索已关闭');
     }
 });

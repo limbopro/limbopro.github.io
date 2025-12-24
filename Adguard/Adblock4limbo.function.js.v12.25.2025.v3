@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Adblock4limbo——导航及各类功能函数合集.[github]
 // @namespace    https://limbopro.com/Adguard/Adblock4limbo.function.js
-// @version      0.2025.12.24
+// @version      0.2025.12.21
 // @license      CC BY-NC-SA 4.0
 // @description  实用网站导航 —— 沉浸式翻译纯JS版本；M3U8/MP4资源链接提取；广告元素屏蔽器；费在线影视/前端学习/开发者社区/新闻/建站/下载工具/格式转换工具/电子书/新闻/写作/免费漫画等；
 // @author       limbopro
@@ -714,7 +714,7 @@ function getNavigationHTML() {
 </li>
             <li class="li_global"><a class="a_global" id="ifeedback" href="https://limbopro.com/feedback/" target="_blank">匿名留言</a></li>
       <li class="li_global"><button class="crbhms" onclick='daohangMode_switch()' id="hidedaohang">导航按钮(OFF)</button></li>
-      <li class="li_global"><button class="crbhms" id="cjsfy" onclick='window.initImmersiveTranslationManager()' data-state="off" style="background-color:red">沉浸式翻译(OFF)</button></li>
+      <li class="li_global"><button class="crbhms" id="cjsfy" onclick='window.checkcjsfybtn()' data-state="off" style="background-color:red">沉浸式翻译(OFF)</button></li>
             <li class="li_global"><button class="crbhms" id="huacisousuo" onclick='window.toggleSearchState()' data-state="off" style="background-color:red">划词搜索(OFF)</button></li>
       <li class="li_global">
     <button style="background: black;"class="crbhms" id="resetSort">重置排序</button></li>
@@ -775,7 +775,8 @@ function getNavigationHTML() {
 </li>
 
       <li class="li_global"><button class="a_global special yellow" id="zhixingjs" onclick='window.showJsManager()' style="border-radius:4px;background:#c53f3f">🧑‍💻执行JS代码</button></li>
-    <li class="li_global"><button class="a_global special yellow" id="loadjsStatus" onclick='window.geminiScriptCheck()' style="border-radius:4px;background:#c53f3f">JS加载状态</button></li>
+    
+    
       <li class="li_global">
       <button id="adsSkip" class="a_global special yellow ads_skip_on" title="自动跳过广告已开启 (点击关闭)" style="
     width: 106px !important;
@@ -1498,7 +1499,7 @@ async function fetchCodes() { // 获取 JSON 文件内容
     }
 }
 
-//fetchCodes();
+fetchCodes();
 
 // 执行父容器初始化
 parentElement_add();
@@ -2333,6 +2334,11 @@ function ele_dynamicAppend(selector, attribute, txt, style, func, id, array, tag
 }
 
 
+function closeP() {
+    confirmndExecuteFC("部分页面可能无法正常关闭...!届时请手动关闭！请点击确定！");
+    window.close()
+}
+
 // 在番号详情页追加在线预览链接
 window.tmd = function tmd(parentSelector, code, titleText) {
     const formattedCode = code.replace(/-/g, '00');
@@ -2389,151 +2395,235 @@ window.tmd = function tmd(parentSelector, code, titleText) {
 }
 
 
-
-window.addEventListener('load', function () {
-
-
-    loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/huacisousuo.user.js', 'head', 'huacisearch') // 加载过滤脚本
-    // 划词搜索结束 END
+// start filter
+//// loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/filter.user.js', 'head', 'wtf') // 加载过滤脚本
+// end filter
 
 
-    // 沉浸式翻译开始 Start
+loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/huacisousuo.user.js', 'head', 'huacisearch') // 加载过滤脚本
+// 划词搜索结束 END
 
-    window.initImmersiveTranslationManager = function () {
-        const SCRIPT_URL = 'https://limbopro.com/Adguard/Adblock4limbo.immersiveTranslation.user.js';
-        const STORAGE_KEY = 'gemini_immersive_translation_state';
 
-        // 1. 【核心：刷新即读取】先读 localstorage 判断是否要默认加载脚本
-        const savedState = localStorage.getItem(STORAGE_KEY) || 'off';
 
-        if (savedState === 'on') {
-            console.log('[Gemini] 存储值为 ON，立即加载脚本');
-            if (typeof loadExternalResourceFireAndForget === 'function') {
-                loadExternalResourceFireAndForget('script', SCRIPT_URL, 'head', 'immersiveTranslation');
-            } else {
-                const script = document.createElement('script');
-                script.src = SCRIPT_URL;
-                document.head.appendChild(script);
+
+
+
+
+
+
+
+
+// 沉浸式翻译开始 Start
+
+function hiddencjsfy() {
+    const iframeEl = document.querySelector('div.skiptranslate')
+    const translateEl = document.getElementById('google_translate_element');
+    if (iframeEl && translateEl) {
+        translateEl.classList.add('translate-hidden');
+        iframeEl.classList.add('translate-hidden');
+    }
+}
+
+window.showcjsfy = function showcjsfy() {
+    const iframeEl = document.querySelector('div.skiptranslate')
+    const translateEl = document.getElementById('google_translate_element');
+    if (iframeEl && translateEl) {
+        translateEl.classList.remove('translate-hidden');
+        iframeEl.classList.remove('translate-hidden');
+    }
+
+    setTimeout(() => { hiddencjsfy() }, 5000)
+
+}
+
+// 沉浸式翻译切换按钮
+window.cjsfybtn = document.getElementById('cjsfy');
+window.isLimbopro_STORAGE_KEY = 'cjsfy_translation_state'; // 用于 localStorage 的键名
+
+// 这是一个统一的函数，用于根据目标状态更新 UI、执行功能并保存状态
+window.applyState = function applyState(targetState) {
+    if (!cjsfybtn) return;
+
+    // 1. 执行功能和 UI 逻辑
+    if (targetState === 'on') {
+        // --- 激活 (ON) 逻辑 ---
+
+        // A. 运行您的翻译启动代码
+        // 动态加载谷歌翻译脚本
+
+        const wait = setInterval(() => [...document.scripts].some(s => s.src?.includes('limbopro.com/Adguard/Adblock4limbo.immersiveTranslation.user.js') || s.textContent?.includes('Adblock4limbo')) && (clearInterval(wait), startMyCode()), 200);
+        function startMyCode() { console.log('Adblock4limbo.immersiveTranslation.user.js已加载...'); /* ← 你的全部代码写这 */ }
+
+        if (document.getElementById('translation-button') == null) {
+            const scriptUrl = '//limbopro.com/Adguard/Adblock4limbo.immersiveTranslation.user.js';
+            const script = document.createElement('script');
+            script.type = 'text/javascript';
+            script.src = scriptUrl;
+            document.head.appendChild(script);
+        } else {
+            document.getElementById('translation-button').classList.remove('translate-hidden')
+        }
+
+        body_build('false');
+
+        // B. 更新 UI
+        cjsfybtn.textContent = '沉浸式翻译(ON)';
+        cjsfybtn.style.background = 'green';
+
+        cjsfybtn.setAttribute('data-state', 'on');
+
+        let lastScroll = 0;
+        window.addEventListener('scroll', () => {
+            const now = Date.now();
+            if (now - lastScroll > 300 && !window.getSelection().toString().trim());
+            lastScroll = now;
+            // 沉浸式翻译隐藏起来 cjsfy
+            console.log('页面滚动中...')
+            hiddencjsfy();
+        });
+    } else {
+        // --- 去激活 (OFF) 逻辑 ---
+
+        // A. 在这里添加关闭/去激活翻译功能的代码
+        console.log("执行去激活功能 (Placeholder)...");
+
+        // B. 更新 UI
+        cjsfybtn.textContent = '沉浸式翻译(OFF)';
+        cjsfybtn.style.background = 'red';
+        cjsfybtn.setAttribute('data-state', 'off');
+
+        setTimeout(() => {
+            body_build('false')
+            const translationButton = document.getElementById('translation-button');
+            if (translationButton) {
+                document.getElementById('translation-button').classList.add('translate-hidden')
             }
-        }
+        }, 500)
 
-        // 2. 【核心：UI 同步】判断要不要更新按钮文本和背景色
-        const btn = document.getElementById('cjsfy');
-        if (btn) {
-            // 修改 button 显示的文本和背景色
-            btn.dataset.state = savedState;
-            btn.style.background = (savedState === 'on') ? 'green' : 'red';
-            btn.innerText = `沉浸式翻译(${savedState.toUpperCase()})`;
+    }
 
-            // 绑定点击事件，切换状态并存储
-            btn.onclick = function () {
-                const currentState = btn.dataset.state;
-                const newState = currentState === 'off' ? 'on' : 'off';
-
-                // 存储到 localstorage
-                localStorage.setItem(STORAGE_KEY, newState);
-
-                // 修改显示
-                btn.dataset.state = newState;
-                btn.style.background = (newState === 'on') ? 'green' : 'red';
-                btn.innerText = `沉浸式翻译(${newState.toUpperCase()})`;
-
-                if (newState === 'on') {
-                    if (typeof loadExternalResourceFireAndForget === 'function') {
-                        loadExternalResourceFireAndForget('script', SCRIPT_URL, 'head', 'immersiveTranslation');
-                    }
-                } else {
-                    if (typeof confirmndExecuteFC === 'function') {
-                        confirmndExecuteFC('脚本已关闭，但已注入的逻辑可能需要刷新页面才能完全清除。');
-                    }
-                }
-            };
-        }
-    };
-
-    // 执行初始化
-    window.initImmersiveTranslationManager();
-
-    // 沉浸式翻译结束 End
-
-    // 其他函数 媒体资源查找器 mtzyczq 开始 START
-    loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/m3u8Andmp4Finder.user.js', 'head', 'm3u8Andmp4Finder')
-    // 媒体资源M3U8&MP4资源链接查找器结束 END
-
-
-    /*debug*/
-
-    /* 用户反馈信息展示脚本 (重命名版) */
-    // Feedback 开始 START
-    /* 反馈信息展示脚本 (重命名版 - 已增强) */
-    loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/feedBackLinkMake.user.js', 'head', 'feedBackLinkMake')
-    // updateFeedbackLink()
-    // Feedback 结束 END
-
-
-    // 元素屏蔽器开始  START
-    loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/elementBlocker.user.js', 'head', 'elementBlocker')
-    // 元素屏蔽器 END
-
-
-    // 视频广告加速跳过 Start
-    loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/skipVideoAds.user.js', 'head', 'skipVideoAds')
-    // 视频广告加速跳过 END
-
-
-    /**
-     * WebDebugger.js 开始 START
-     * * 独立函数：Web 存储调试器 (Cookies/Local/Session/Config)
-     * * 描述: 创建一个悬浮可拖拽的面板，用于实时查看和编辑 Cookie, LocalStorage, SessionStorage，
-     * 并提取内嵌的 JSON 配置数据。
-     * * 调用方法: 
-     * 1. 引入文件: <script src="path/to/WebDebugger.js"></script>
-     * 2. 执行: window.initWebDebugger();
-     */
-
-    loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/WebDebugger.user.js', 'head', 'WebDebugger')
-    /* WebDebugger.js 结束 END
-    */
-
-
-    // 查看页面上的脚本
-    loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/ScriptFind.user.js', 'head', 'ScriptFind')
-    //  查看页面上的脚本
-
-
-    //  更友好的确认框
-    loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/confirmndExecute.user.js', 'head', 'confirmndExecute')
-
-
-    loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/findAndDisplayExternalLinks.user.js', 'head', 'findAndDisplayExternalLinks')
-    // 示例调用：
-    // findAndDisplayExternalLinks();
-
-    // 循环清理透明元素
-    loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/clearLoop.user.js', 'head', 'clearLoop')
-
-    // 如何利用目标信息
-    loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/showLinkTipsModalOnce.user.js', 'head', 'showLinkTipsModalOnce')
-
-
-    // 加载 Adgurad 基础过滤器（CSS版） START
-    loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/Adguard.filter.user.js', 'head', 'AdguardFilter')
-    // 加载 Adgurad 基础过滤器（CSS版） END
-
-
-    // 脚本管理器 START
-    loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/showJsManager.user.js', 'head', 'showJsManager') // 加载过滤脚本
-    // 脚本管理器 END
+    // 2. 保存状态到本地存储
+    localStorage.setItem(isLimbopro_STORAGE_KEY, targetState);
+}
 
 
 
-    // 成人保护模式 START
-    loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/pageProtect.user.js', 'head', 'pageProtect') // 加载过滤脚本
-    // 成人保护模式 END
+if (cjsfybtn) {
+    if (localStorage.getItem('cjsfy_translation_state') == null && document.getElementById('translation-button') !== null) {
+        // 如果 translation-button 已经存在
+        // B.更新 UI
+        applyState('on');
+    } else if (localStorage.getItem('cjsfy_translation_state') == 'off') {
+        applyState('off');
+    }
+
+    // ===========================================
+    // 步骤 1: 页面加载时，从 localStorage 恢复状态
+    // ===========================================
+    const savedState = localStorage.getItem(isLimbopro_STORAGE_KEY);
+
+    // 如果本地存储中有保存的状态，并且状态是 'on'，则恢复它。
+    if (savedState === 'on') {
+        // 恢复 ON 状态 (会设置 UI 和运行功能代码)
+        applyState('on');
+    } else if (savedState === 'off') {
+    }
+
+    // 如果 savedState 是 'off' 或不存在 (null)，则保持按钮的默认 HTML 状态，不执行任何操作。
+
+    // ===========================================
+    // 步骤 2: 添加点击事件监听器 (用于切换)
+    // ===========================================
+
+    window.checkcjsfybtn = function checkcjsfybtn() {
+        const currentState = cjsfybtn.getAttribute('data-state');
+        // 根据当前状态，确定下一个目标状态
+        const nextState = currentState === 'off' ? 'on' : 'off';
+        // 切换到下一个状态
+        applyState(nextState);
+    }
+}
+
+// 沉浸式翻译结束 End
+
+// 其他函数 媒体资源查找器 mtzyczq 开始 START
+loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/m3u8Andmp4Finder.user.js', 'head', 'm3u8Andmp4Finder')
+// 媒体资源M3U8&MP4资源链接查找器结束 END
 
 
 
-});
+/*debug*/
+
+/* 用户反馈信息展示脚本 (重命名版) */
+// Feedback 开始 START
+/* 反馈信息展示脚本 (重命名版 - 已增强) */
+loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/feedBackLinkMake.user.js', 'head', 'feedBackLinkMake')
+// updateFeedbackLink()
+// Feedback 结束 END
+
+
+// 元素屏蔽器开始  START
+loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/elementBlocker.user.js', 'head', 'elementBlocker')
+// 元素屏蔽器 END
+
+
+// 视频广告加速跳过 Start
+loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/skipVideoAds.user.js', 'head', 'skipVideoAds')
+// 视频广告加速跳过 END
+
+
+
+
+/**
+ * WebDebugger.js 开始 START
+ * * 独立函数：Web 存储调试器 (Cookies/Local/Session/Config)
+ * * 描述: 创建一个悬浮可拖拽的面板，用于实时查看和编辑 Cookie, LocalStorage, SessionStorage，
+ * 并提取内嵌的 JSON 配置数据。
+ * * 调用方法: 
+ * 1. 引入文件: <script src="path/to/WebDebugger.js"></script>
+ * 2. 执行: window.initWebDebugger();
+ */
+
+loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/WebDebugger.user.js', 'head', 'WebDebugger')
+/* WebDebugger.js 结束 END
+*/
+
+
+// 查看页面上的脚本
+loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/ScriptFind.user.js', 'head', 'ScriptFind')
+//  查看页面上的脚本
+
+
+//  更友好的确认框
+loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/confirmndExecute.user.js', 'head', 'confirmndExecute')
+
+
+loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/findAndDisplayExternalLinks.user.js', 'head', 'findAndDisplayExternalLinks')
+// 示例调用：
+// findAndDisplayExternalLinks();
+
+// 循环清理透明元素
+loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/clearLoop.user.js', 'head', 'clearLoop')
+
+// 如何利用目标信息
+loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/showLinkTipsModalOnce.user.js', 'head', 'showLinkTipsModalOnce')
+
+
+// 加载 Adgurad 基础过滤器（CSS版） START
+loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/Adguard.filter.user.js', 'head', 'AdguardFilter')
+// 加载 Adgurad 基础过滤器（CSS版） END
+
+
+// 脚本管理器 START
+loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/showJsManager.user.js', 'head', 'showJsManager') // 加载过滤脚本
+// 脚本管理器 END
+
+
+
+// 成人保护模式 START
+loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/pageProtect.user.js', 'head', 'pageProtect') // 加载过滤脚本
+// 成人保护模式 END
+
 
 // 这里存放导航页各类网站
 
