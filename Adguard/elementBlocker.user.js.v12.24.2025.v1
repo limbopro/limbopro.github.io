@@ -1108,7 +1108,7 @@ color: white;
  */
             window.toggleDebugAndRefresh = function toggleDebugAndRefresh() {
                 const clickedElement = document.getElementById('gemini-modal-protect')
-                const debugPanel = document.getElementById('gemini-element-blocker');
+                const debugPanel = document.getElementById('tmyszzq');
                 debugPanel?.click()
 
                 const debugToggle = document.getElementById('element-debug-click-toggle');
@@ -1759,7 +1759,7 @@ color: white;
   <div class="warm-tips" style="box-shadow: inset 1px 1px 4px 4px rgba(0, 0, 0, 0.2);background: #f0f5ff !important;border: 1px solid #adc6ff;padding: 10px 12px;border-radius: 4px;margin: 5px 0 10px 0;font-size: 11px;color: #1d39c4;line-height: 1.6;">
     💡 <b>开发者调优建议：</b><br>
     • <b>逐级泛化：</b>点击 <button class="sel-hint-box" style="font-weight:bolder; cursor:pointer; border:1px solid #85a5ff; border-radius:2px; background:#fff; padding:0 4px; font-size:10px; color: #1d39c4; vertical-align: middle;">逐级泛化</button> 移除末尾属性/索引限制，扩展匹配范围。<br>
-    • <b>逐级精简：</b>点击 <button id="sel-simplify-box" style="font-weight:bolder; cursor:pointer; border:1px solid #85a5ff; border-radius:2px; background:#fff; padding:0 4px; font-size:10px; color: #1d39c4; vertical-align: middle;">逐级精简</button> 智能剔除冗余父级与索引，仅保留唯一性核心路径。<br>
+    • <b>极致精简：</b>点击 <button id="sel-simplify-box" style="font-weight:bolder; cursor:pointer; border:1px solid #85a5ff; border-radius:2px; background:#fff; padding:0 4px; font-size:10px; color: #1d39c4; vertical-align: middle;">极致精简</button> 智能剔除冗余父级与索引，仅保留唯一性核心路径。<br>
     • <b>手动重构：</b>点击下方“修改”按钮进入编辑模式。
 </div>
 
@@ -1856,8 +1856,6 @@ color: white;
         if (simplifyBtn && outputField) {
             simplifyBtn.onclick = () => {
                 let currentSelector = outputField.innerText.trim();
-                const baseCount = document.querySelectorAll(currentSelector).length;
-                if (baseCount === 0) return;
 
                 // 辅助工具：根据下标保留索引
                 const rebuildByIndices = (selector, indexToKeep) => {
@@ -1868,66 +1866,65 @@ color: white;
                 };
 
                 let tempSelector = currentSelector;
+
+                // 1. 获取初始索引列表
                 const allNths = tempSelector.match(/:nth-child\(\d+\)/g) || [];
                 let activeIndices = allNths.map((_, i) => i);
 
-                // --- 逐级策略 1：先尝试精简索引 ---
-                // 逻辑：寻找第一个删掉后依然等效的索引
-                let reduced = false;
+                // 【步骤 A：从左向右索引精简】
                 for (let i = 0; i < allNths.length; i++) {
                     let testIndices = activeIndices.filter(idx => idx !== i);
                     let testSelector = rebuildByIndices(currentSelector, testIndices);
-                    if (checkUnique(testSelector, baseCount)) {
+                    if (checkUnique(testSelector)) {
+                        activeIndices = testIndices;
                         tempSelector = testSelector;
-                        reduced = true;
-                        break; // 找到一个可删的索引，立即停止本次点击逻辑
-                    }
+                    } else { break; } // 按照要求，左侧遇到关键索引即停止
                 }
 
-                // --- 逐级策略 2：如果索引都不能删了，再尝试删最左侧层级 ---
-                if (!reduced) {
-                    let segments = tempSelector.split(/\s*>\s*/);
-                    if (segments.length > 1) {
-                        // 尝试删掉最左边的一个父层级
-                        let testSelector = segments.slice(1).join(' > ');
-                        if (checkUnique(testSelector, baseCount)) {
+                // 【步骤 B：从右向左索引精简】(保留最后一个索引)
+                if (activeIndices.length > 1) {
+                    for (let j = activeIndices.length - 2; j >= 0; j--) {
+                        let targetIdx = activeIndices[j];
+                        let testIndices = activeIndices.filter(idx => idx !== targetIdx);
+                        let testSelector = rebuildByIndices(currentSelector, testIndices);
+                        if (checkUnique(testSelector)) {
+                            activeIndices = testIndices;
                             tempSelector = testSelector;
-                            reduced = true;
                         }
                     }
                 }
 
-                // 3. 更新 UI 和预览
-                if (reduced) {
-                    outputField.innerText = tempSelector;
-                    applyAllPreview(tempSelector);
-                    updateCountUI(baseCount, "");
-                } else {
-                    // 如果点不动了，给用户一个反馈
-                    simplifyBtn.innerText = "已至精简极限";
-                    setTimeout(() => { simplifyBtn.innerText = "逐级精简"; }, 1000);
+                // 【步骤 C：层级路径剥离】(移除左侧冗余父级)
+                let segments = tempSelector.split(/\s*>\s*/);
+                if (segments.length > 1) {
+                    let finalPath = tempSelector;
+                    for (let k = 0; k < segments.length - 1; k++) {
+                        let testSelector = segments.slice(k + 1).join(' > ');
+                        if (checkUnique(testSelector)) {
+                            finalPath = testSelector;
+                        } else { break; } // 左侧层级是必要的
+                    }
+                    tempSelector = finalPath;
                 }
+
+                // 3. 更新 UI 和预览
+                outputField.innerText = tempSelector;
+                applyAllPreview(tempSelector);
+                updateCountUI(1, "");
+
+                simplifyBtn.innerText = "已极致精简";
+                setTimeout(() => { simplifyBtn.innerText = "极致精简"; }, 1500);
             };
         }
 
         // --- 通用辅助函数 ---
 
-        /**
- * 保持函数名不变，但增加“等效性”检测功能
- * @param {string} selector - 待检测的选择器
- * @param {number} [targetCount] - 可选。如果传入，则检查匹配数是否等于该值；如果不传，默认为检查唯一性(1)。
- */
-        function checkUnique(selector, targetCount = 1) {
+        // 检查选择器在当前页面是否唯一
+        function checkUnique(selector) {
             try {
-                const trimmed = selector.trim();
-                if (!trimmed) return false;
-
-                const currentCount = document.querySelectorAll(trimmed).length;
-                // 如果外部指定了 targetCount，则以它为准；否则按原逻辑判断是否唯一(1)
-                return currentCount === targetCount;
-            } catch (e) {
-                return false;
-            }
+                if (!selector.trim()) return false;
+                return document.querySelectorAll(selector).length === 1;
+            } catch (e) { return false; }
         }
 
         // 统一执行预览逻辑 (带 !important 习惯)
@@ -4740,7 +4737,7 @@ color: white;
 
         document.addEventListener('click', (e) => {
             const target = e.target;
-            if (target.id === 'gemini-element-blocker') {
+            if (target.id === 'tmyszzq') {
                 e.preventDefault();
                 e.stopPropagation();
 
@@ -4763,6 +4760,7 @@ color: white;
         initScript();
     }
 })();
+
 
 
 

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Adblock4limbo——导航及各类功能函数合集.[github]
 // @namespace    https://limbopro.com/Adguard/Adblock4limbo.function.js
-// @version      0.2025.12.21
+// @version      0.2025.12.24
 // @license      CC BY-NC-SA 4.0
 // @description  实用网站导航 —— 沉浸式翻译纯JS版本；M3U8/MP4资源链接提取；广告元素屏蔽器；费在线影视/前端学习/开发者社区/新闻/建站/下载工具/格式转换工具/电子书/新闻/写作/免费漫画等；
 // @author       limbopro
@@ -755,7 +755,7 @@ function getNavigationHTML() {
       <li class="li_global"><a class="a_global special yellow" id="毒奶搜索" href="https://limbopro.com/search.html" target="_blank" style="border-radius:4px;background:#c53f3f">🎬毒奶搜索</a></li>
       <li class="li_global"><a class="a_global special yellow" id="番号搜索" href="https://limbopro.com/btsearch.html" target="_blank" style="border-radius:4px;background:#c53f3f">🔞番号搜索</a></li>
       <li class="li_global"><button class="a_global special yellow" id="mtzyczq"  style="border-radius:4px;background:#c53f3f" onclick="mtzyczq()">🎦媒体资源查找器</button></li>
-      <li class="li_global"><button class="a_global special yellow" id="tmyszzq"  style="border-radius:4px;background:#c53f3f">🔍 元素屏蔽/追踪器</button></li>
+      <li class="li_global"><button class="a_global special yellow" id="gemini-element-blocker"  style="border-radius:4px;background:#c53f3f">🔍 元素屏蔽/追踪器</button></li>
       <li class="li_global">
     <button 
         class="a_global special yellow" 
@@ -1499,7 +1499,7 @@ async function fetchCodes() { // 获取 JSON 文件内容
     }
 }
 
-fetchCodes();
+// fetchCodes();
 
 // 执行父容器初始化
 parentElement_add();
@@ -2239,28 +2239,6 @@ window.promptAndExecute = function promptAndExecute() {
 
 
 
-// =========================================================
-// 初始化和事件绑定
-// =========================================================
-
-/*
-// 1. 注入 CSS 样式
-injectFloatingWindowStyles();
-
-// 2. 获取按钮并绑定事件监听器
-
-window.runButton = document.getElementById('zhixingjs');
-if (runButton) {
-    runButton.addEventListener('click', promptAndExecute);
-}
-*/
-
-
-
-
-// End 运行js代码 zhixingjs
-
-
 // 复制 input 内容
 function copyText(id1, id2, Text) { // 复制文本按钮
     let color = { // 定义常量
@@ -2334,11 +2312,6 @@ function ele_dynamicAppend(selector, attribute, txt, style, func, id, array, tag
 }
 
 
-function closeP() {
-    confirmndExecuteFC("部分页面可能无法正常关闭...!届时请手动关闭！请点击确定！");
-    window.close()
-}
-
 // 在番号详情页追加在线预览链接
 window.tmd = function tmd(parentSelector, code, titleText) {
     const formattedCode = code.replace(/-/g, '00');
@@ -2395,23 +2368,6 @@ window.tmd = function tmd(parentSelector, code, titleText) {
 }
 
 
-// start filter
-//// loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/filter.user.js', 'head', 'wtf') // 加载过滤脚本
-// end filter
-
-
-loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/huacisousuo.user.js', 'head', 'huacisearch') // 加载过滤脚本
-// 划词搜索结束 END
-
-
-
-
-
-
-
-
-
-
 
 // 沉浸式翻译开始 Start
 
@@ -2437,7 +2393,6 @@ window.showcjsfy = function showcjsfy() {
 }
 
 // 沉浸式翻译切换按钮
-window.cjsfybtn = document.getElementById('cjsfy');
 window.isLimbopro_STORAGE_KEY = 'cjsfy_translation_state'; // 用于 localStorage 的键名
 
 // 这是一个统一的函数，用于根据目标状态更新 UI、执行功能并保存状态
@@ -2507,123 +2462,137 @@ window.applyState = function applyState(targetState) {
 }
 
 
+function wtf() {
+    window.cjsfybtn = document.getElementById('cjsfy');
+    if (cjsfybtn) {
+        if (localStorage.getItem('cjsfy_translation_state') == null && document.getElementById('translation-button') !== null) {
+            // 如果 translation-button 已经存在
+            // B.更新 UI
+            applyState('on');
+        } else if (localStorage.getItem('cjsfy_translation_state') == 'off') {
+            applyState('off');
+        }
 
-if (cjsfybtn) {
-    if (localStorage.getItem('cjsfy_translation_state') == null && document.getElementById('translation-button') !== null) {
-        // 如果 translation-button 已经存在
-        // B.更新 UI
-        applyState('on');
-    } else if (localStorage.getItem('cjsfy_translation_state') == 'off') {
-        applyState('off');
-    }
+        // ===========================================
+        // 步骤 1: 页面加载时，从 localStorage 恢复状态
+        // ===========================================
+        const savedState = localStorage.getItem(isLimbopro_STORAGE_KEY);
 
-    // ===========================================
-    // 步骤 1: 页面加载时，从 localStorage 恢复状态
-    // ===========================================
-    const savedState = localStorage.getItem(isLimbopro_STORAGE_KEY);
+        // 如果本地存储中有保存的状态，并且状态是 'on'，则恢复它。
+        if (savedState === 'on') {
+            // 恢复 ON 状态 (会设置 UI 和运行功能代码)
+            applyState('on');
+        } else if (savedState === 'off') {
+        }
 
-    // 如果本地存储中有保存的状态，并且状态是 'on'，则恢复它。
-    if (savedState === 'on') {
-        // 恢复 ON 状态 (会设置 UI 和运行功能代码)
-        applyState('on');
-    } else if (savedState === 'off') {
-    }
+        // 如果 savedState 是 'off' 或不存在 (null)，则保持按钮的默认 HTML 状态，不执行任何操作。
 
-    // 如果 savedState 是 'off' 或不存在 (null)，则保持按钮的默认 HTML 状态，不执行任何操作。
+        // ===========================================
+        // 步骤 2: 添加点击事件监听器 (用于切换)
+        // ===========================================
 
-    // ===========================================
-    // 步骤 2: 添加点击事件监听器 (用于切换)
-    // ===========================================
-
-    window.checkcjsfybtn = function checkcjsfybtn() {
-        const currentState = cjsfybtn.getAttribute('data-state');
-        // 根据当前状态，确定下一个目标状态
-        const nextState = currentState === 'off' ? 'on' : 'off';
-        // 切换到下一个状态
-        applyState(nextState);
+        window.checkcjsfybtn = function checkcjsfybtn() {
+            const currentState = cjsfybtn.getAttribute('data-state');
+            // 根据当前状态，确定下一个目标状态
+            const nextState = currentState === 'off' ? 'on' : 'off';
+            // 切换到下一个状态
+            applyState(nextState);
+        }
     }
 }
 
 // 沉浸式翻译结束 End
 
-// 其他函数 媒体资源查找器 mtzyczq 开始 START
-loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/m3u8Andmp4Finder.user.js', 'head', 'm3u8Andmp4Finder')
-// 媒体资源M3U8&MP4资源链接查找器结束 END
+
+window.addEventListener('load', (event) => {
+
+    wtf()
+
+    console.log('所有资源（图片、CSS等）均已加载完毕！');
+    // 在这里执行你的代码
+
+    // 其他函数 媒体资源查找器 mtzyczq 开始 START
+    loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/m3u8Andmp4Finder.user.js', 'head', 'm3u8Andmp4Finder')
+    // 媒体资源M3U8&MP4资源链接查找器结束 END
+
+
+    /*debug*/
+
+    /* 用户反馈信息展示脚本 (重命名版) */
+    // Feedback 开始 START
+    /* 反馈信息展示脚本 (重命名版 - 已增强) */
+    loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/feedBackLinkMake.user.js', 'head', 'feedBackLinkMake')
+    // updateFeedbackLink()
+    // Feedback 结束 END
 
 
 
-/*debug*/
-
-/* 用户反馈信息展示脚本 (重命名版) */
-// Feedback 开始 START
-/* 反馈信息展示脚本 (重命名版 - 已增强) */
-loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/feedBackLinkMake.user.js', 'head', 'feedBackLinkMake')
-// updateFeedbackLink()
-// Feedback 结束 END
+    // 视频广告加速跳过 Start
+    loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/skipVideoAds.user.js', 'head', 'skipVideoAds')
+    // 视频广告加速跳过 END
 
 
-// 元素屏蔽器开始  START
-loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/elementBlocker.user.js', 'head', 'elementBlocker')
-// 元素屏蔽器 END
+    /**
+     * WebDebugger.js 开始 START
+     * * 独立函数：Web 存储调试器 (Cookies/Local/Session/Config)
+     * * 描述: 创建一个悬浮可拖拽的面板，用于实时查看和编辑 Cookie, LocalStorage, SessionStorage，
+     * 并提取内嵌的 JSON 配置数据。
+     * * 调用方法: 
+     * 1. 引入文件: <script src="path/to/WebDebugger.js"></script>
+     * 2. 执行: window.initWebDebugger();
+     */
+
+    loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/WebDebugger.user.js', 'head', 'WebDebugger')
+    /* WebDebugger.js 结束 END
+    */
 
 
-// 视频广告加速跳过 Start
-loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/skipVideoAds.user.js', 'head', 'skipVideoAds')
-// 视频广告加速跳过 END
+    // 查看页面上的脚本
+    loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/ScriptFind.user.js', 'head', 'ScriptFind')
+    //  查看页面上的脚本
 
 
+    //  更友好的确认框
+    loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/confirmndExecute.user.js', 'head', 'confirmndExecute')
 
 
-/**
- * WebDebugger.js 开始 START
- * * 独立函数：Web 存储调试器 (Cookies/Local/Session/Config)
- * * 描述: 创建一个悬浮可拖拽的面板，用于实时查看和编辑 Cookie, LocalStorage, SessionStorage，
- * 并提取内嵌的 JSON 配置数据。
- * * 调用方法: 
- * 1. 引入文件: <script src="path/to/WebDebugger.js"></script>
- * 2. 执行: window.initWebDebugger();
- */
+    loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/findAndDisplayExternalLinks.user.js', 'head', 'findAndDisplayExternalLinks')
+    // 示例调用：
+    // findAndDisplayExternalLinks();
 
-loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/WebDebugger.user.js', 'head', 'WebDebugger')
-/* WebDebugger.js 结束 END
-*/
+    // 循环清理透明元素
+    loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/clearLoop.user.js', 'head', 'clearLoop')
+
+    // 如何利用目标信息
+    loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/showLinkTipsModalOnce.user.js', 'head', 'showLinkTipsModalOnce')
 
 
-// 查看页面上的脚本
-loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/ScriptFind.user.js', 'head', 'ScriptFind')
-//  查看页面上的脚本
+    // 加载 Adgurad 基础过滤器（CSS版） START
+    loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/Adguard.filter.user.js', 'head', 'AdguardFilter')
+    // 加载 Adgurad 基础过滤器（CSS版） END
 
 
-//  更友好的确认框
-loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/confirmndExecute.user.js', 'head', 'confirmndExecute')
-
-
-loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/findAndDisplayExternalLinks.user.js', 'head', 'findAndDisplayExternalLinks')
-// 示例调用：
-// findAndDisplayExternalLinks();
-
-// 循环清理透明元素
-loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/clearLoop.user.js', 'head', 'clearLoop')
-
-// 如何利用目标信息
-loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/showLinkTipsModalOnce.user.js', 'head', 'showLinkTipsModalOnce')
-
-
-// 加载 Adgurad 基础过滤器（CSS版） START
-loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/Adguard.filter.user.js', 'head', 'AdguardFilter')
-// 加载 Adgurad 基础过滤器（CSS版） END
-
-
-// 脚本管理器 START
-loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/showJsManager.user.js', 'head', 'showJsManager') // 加载过滤脚本
-// 脚本管理器 END
+    // 脚本管理器 START
+    loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/showJsManager.user.js', 'head', 'showJsManager') // 加载过滤脚本
+    // 脚本管理器 END
 
 
 
-// 成人保护模式 START
-loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/pageProtect.user.js', 'head', 'pageProtect') // 加载过滤脚本
-// 成人保护模式 END
+    // 成人保护模式 START
+    loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/pageProtect.user.js', 'head', 'pageProtect') // 加载过滤脚本
+    // 成人保护模式 END
 
+
+
+    loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/huacisousuo.user.js', 'head', 'huacisearch') // 加载过滤脚本
+    // 划词搜索结束 END
+
+
+    // 元素屏蔽器开始  START
+    loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/elementBlocker.user.js', 'head', 'elementBlocker')
+    // 元素屏蔽器 END
+
+});
 
 // 这里存放导航页各类网站
 
