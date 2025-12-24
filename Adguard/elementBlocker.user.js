@@ -478,7 +478,7 @@
 
         // 【V27 NEW】CSS 选择器移除
         // 1. 定义清理函数（保持独立，避免全局冲突）
-        const performCleanupAction = (doc, selectors) => {
+        window.performCleanupAction = (doc, selectors) => {
 
             if (selectors == '') {
                 return;
@@ -525,7 +525,7 @@
                 try {
                     // 检查是否已经包含该类名，避免重复添加
                     if (!x.classList.contains('hiddenbylimbopro')) {
-                        console.log(x, ' 标记隐藏中...');
+                        console.log(selectors, ' 标记隐藏中...');
                         x.classList.add('hiddenbylimbopro');
                     } else {
                         // 如果已经包含，可以选择跳过或记录日志
@@ -539,21 +539,51 @@
 
 
         // 2. 初始化动态监听，使用独一无二的变量名
+
+        // 2. 初始化动态监听
         const startDynamicCleanup = (cssRemovals) => {
             const targetNode = document.body || document.documentElement;
 
-            // 使用独一无二的变量名，防止与其他脚本或全局变量冲突
+            let dh_debounceTimer = null;
+
             const dh_ElementRemoverObserver = new MutationObserver((mutationsList) => {
-                // 每次 DOM 变化时执行清理
-                performCleanupAction(document, cssRemovals);
+                // 如果页面还在动，重置初始的消停计时器
+                if (dh_debounceTimer) {
+                    clearTimeout(dh_debounceTimer);
+                }
+
+                // 页面消停 2 秒后开始执行任务
+                dh_debounceTimer = setTimeout(() => {
+                    let count = 0; // 内部执行计数器
+
+                    // 定义一个循环执行的函数
+                    const executeSequence = () => {
+                        if (count < 5) {
+                            console.log(`[Gemini屏蔽] 页面已消停，正在执行第 ${count + 1}/5 次清理...`);
+
+                            performCleanupAction(document, cssRemovals);
+                            // 保持你要求的 window 赋值（注意：你的原代码中这行会执行两次函数，这里做了修正）
+                            window.runerformCleanupAction = () => performCleanupAction(document, cssRemovals);
+
+                            count++;
+
+                            // 如果没到 5 次，设定 2 秒后再次执行
+                            if (count < 2) {
+                                setTimeout(executeSequence, 3000);
+                            }
+                        }
+                    };
+
+                    executeSequence(); // 启动序列
+                    dh_debounceTimer = null;
+                }, 2000);
             });
 
-            // 配置并启动
             const dh_ObserverConfig = { childList: true, subtree: true };
             dh_ElementRemoverObserver.observe(targetNode, dh_ObserverConfig);
 
-            // 初始延迟执行一次，确保首屏清理
-            setTimeout(() => performCleanupAction(document, cssRemovals), 1000);
+            // 初始直接执行一次
+            performCleanupAction(document, cssRemovals);
         };
 
         // 调用
@@ -565,7 +595,6 @@
                 'Iframe (同源)';
         console.log(`[Gemini屏蔽] 已在 ${docName} 自动移除 ${removedCount} 个元素（含 CSS 选择器）。`);
         return removedCount;
-
 
     }
 
@@ -761,6 +790,7 @@ color: white;
             /* 提示信息样式 (美化) */
             #${windowId} .gemini-tip-text {
                 padding: 15px 15px;
+                line-height: 1.25;
                 background: #fafafa; 
                  /*
             max-height:50px;
@@ -1721,6 +1751,7 @@ color: white;
             cursor: move !important; padding: 10px 0 !important; border-bottom: 1px solid #eee !important;
         }
         .sel-code { 
+            line-height: 1.25;
             background: #f8f9fa !important; color: #d63384 !important; padding: 12px !important; 
             border-radius: 6px !important; font-family: monospace !important; word-break: break-all !important; 
             font-size: 13px !important; border: 1px solid #ccc !important; max-height: 150px !important; 
@@ -2201,7 +2232,6 @@ color: white;
                 document.createDocumentFragment().querySelector(sel);
                 if (typeof saveCssRemovalChoice === 'function') {
                     if (saveCssRemovalChoice(sel)) {
-
                         if (document.querySelector('.sel-result-window')) {
                             if (confirm(`✅ 成功保存CSS选择器规则！是否刷新页面？`)) {
                                 location.reload();
@@ -2210,11 +2240,16 @@ color: white;
                             confirmndExecuteFC(`✅ 成功保存CSS选择器规则！是否刷新页面？`, () => { location.reload() });
                         }
 
-
                     }
                 } else {
+                    if (document.querySelector('.sel-result-window')) {
+                        if (confirm(`${sel} 已模拟屏蔽...`)) {
+                        }
+                    } else {
+                        confirmndExecuteFC(`${sel} 已模拟屏蔽...`);
+                    }
+
                     console.log("拟屏蔽选择器:", sel);
-                    confirmndExecuteFC(`${sel} 已模拟屏蔽...`);
                 }
             } catch (e) {
                 confirmndExecuteFC('CSS语法错误，请检查修改内容。');
@@ -2943,6 +2978,11 @@ color: white;
 
     /** // 修改记录管理 */
     window.showEditModal = function showEditModal(oldValue, storageKey) {
+
+        if (document.getElementById('gemini-edit-modal-overlay')) {
+            return;
+        } // 避免重复创建修改框
+
         const modalOverlay = document.createElement('div');
         modalOverlay.id = 'gemini-edit-modal-overlay';
         modalOverlay.classList.add('notranslate')
@@ -3015,6 +3055,7 @@ color: white;
     }
 
     window.renderFloatWindow = function renderFloatWindow(targetDocs) {
+
 
         /*
         新增
@@ -3396,7 +3437,7 @@ color: white;
             </div>
 
             <div class="gemini-tip-text">
-                🌟**提示:** <a href='https://www.google.com/search?q=xpath+%E6%98%AF%E4%BB%80%E4%B9%88' target='_blank' style='color:blue !important;'>了解 xPath</a>；*CSS选择器屏蔽：使用 <a style="color:blue !important" href='https://www.google.com/search?q=mutationobserver+%E4%BB%8B%E7%BB%8D'>MutationObserver</a> & <a style="color:blue !important" href='https://www.google.com/search?q=querySelectorAll()+%E6%96%B9%E6%B3%95'>querySelectorAll()</a> 方法遍历添加类.hiddenbylimbopro，不影响网页<a href='https://developer.chrome.com/docs/devtools/dom?hl=zh-cn' target='_blank' style='color:blue !important'>DOM</a> 结构。<a href='https://www.google.com/search?q=iframe+sandbox%E5%B1%9E%E6%80%A7' target='_blank' style='color:blue !important;'>了解沙箱化</a>；
+                🌟**提示:** 右上角📍及调试模式用完记得手动关闭；<a href='https://www.google.com/search?q=xpath+%E6%98%AF%E4%BB%80%E4%B9%88' target='_blank' style='color:blue !important;'>了解 xPath</a>；*CSS选择器屏蔽：使用 <a style="color:blue !important" href='https://www.google.com/search?q=mutationobserver+%E4%BB%8B%E7%BB%8D'>MutationObserver</a> & <a style="color:blue !important" href='https://www.google.com/search?q=querySelectorAll()+%E6%96%B9%E6%B3%95'>querySelectorAll()</a> 方法遍历添加类.hiddenbylimbopro，不影响网页<a href='https://developer.chrome.com/docs/devtools/dom?hl=zh-cn' target='_blank' style='color:blue !important'>DOM</a> 结构。<a href='https://www.google.com/search?q=iframe+sandbox%E5%B1%9E%E6%80%A7' target='_blank' style='color:blue !important;'>了解沙箱化</a>；
             </div>
         `;
 
@@ -3940,6 +3981,9 @@ color: white;
         document.addEventListener('touchend', dragEnd);
 
 
+
+
+        // 📝 修改屏蔽规则
         let activeObserver = null;
         let activeInputHandler = null;
 
@@ -3955,20 +3999,15 @@ color: white;
 
                 if (!inputEl) return;
 
-                // --- 1. 彻底清理旧的监听（防止重叠和内存泄漏） ---
-                if (activeObserver) activeObserver.disconnect();
-                if (activeInputHandler && inputEl) {
-                    inputEl.removeEventListener('input', activeInputHandler);
+                // --- 1. 清理旧的 Observer (确保单例) ---
+                if (activeObserver) {
+                    activeObserver.disconnect();
+                    activeObserver = null;
                 }
 
-                // --- 2. 核心逻辑：计数并检查元素存活状态 ---
                 const updateCount = () => {
-                    // 关键：检查元素是否还在 DOM 树中
-                    if (!document.contains(inputEl)) {
-                        cleanup();
-                        return;
-                    }
-
+                    // 如果元素不在文档中了，停止执行
+                    if (!document.body.contains(inputEl)) return;
                     try {
                         const val = inputEl.value.trim();
                         lengthEl.textContent = val ? document.querySelectorAll(val).length : 0;
@@ -3977,35 +4016,25 @@ color: white;
                     }
                 };
 
-                // --- 3. 定义清理函数 ---
-                const cleanup = () => {
-                    if (activeObserver) {
-                        activeObserver.disconnect();
-                        activeObserver = null;
-                    }
-                    // 设为 null 释放内存引用
-                    activeInputHandler = null;
-                    console.log('检测到 ID 为 gemini-edit-input 的元素已移除，监听器已销毁。');
-                };
-
-                // --- 4. 绑定监听 ---
+                // --- 2. 绑定事件 ---
                 activeInputHandler = updateCount;
                 inputEl.addEventListener('input', updateCount);
 
-                // --- 5. 监控属性变化 & 元素消失 ---
-                activeObserver = new MutationObserver(() => {
-                    // 每次发生变化都确认一次元素是否存在
-                    if (!document.contains(inputEl)) {
-                        cleanup();
-                    } else {
-                        updateCount();
+                // --- 3. 监控移除逻辑：监视 body 确保能抓到 inputEl 的消失 ---
+                activeObserver = new MutationObserver((mutations, obs) => {
+                    if (!document.body.contains(inputEl)) {
+                        console.log('检测到元素已移除，清理资源');
+                        inputEl.removeEventListener('input', activeInputHandler);
+                        obs.disconnect();
+                        activeObserver = null;
+                        activeInputHandler = null;
                     }
                 });
 
-                // 监视属性变化
-                activeObserver.observe(inputEl, { attributes: true, attributeFilter: ['value'] });
+                // 监视整个 body 及其子树的变化
+                activeObserver.observe(document.body, { childList: true, subtree: true });
 
-                // 初始化
+                // 初始化执行
                 updateCount();
             }
         });
@@ -4634,6 +4663,8 @@ color: white;
     // =================================================================
     function initScript() {
 
+        window.isInitScript = 'true';
+
         // 1. 立即注入 CSS 样式
         if (!document.getElementById('style-limbopro')) {
             const style = document.createElement('style');
@@ -4738,21 +4769,6 @@ color: white;
             }
         }
 
-        document.addEventListener('click', (e) => {
-            const target = e.target;
-            if (target.id === 'gemini-element-blocker') {
-                e.preventDefault();
-                e.stopPropagation();
-
-                if (!document.getElementById(containerId)) {
-                    const updatedTargetDocuments = getTargetDocuments();
-                    renderFloatWindow(updatedTargetDocuments);
-                    if (typeof body_build === 'function') {
-                        try { body_build('false'); } catch (e) { }
-                    }
-                }
-            }
-        }, true);
 
         console.log(`[Gemini屏蔽] 脚本已初始化 (V26.39.10)。当前页面在黑名单中: ${isCurrentPageBlacklisted() ? '是' : '否'}。`);
     }
@@ -4763,6 +4779,31 @@ color: white;
         initScript();
     }
 })();
+
+
+
+
+
+
+// 全局调出元素屏蔽/追踪器面板
+window.geminiElementBlockerOpenPanel = () => {
+    const containerId = 'gemini-main-container'; // 确保能访问到这个 ID
+    if (!document.getElementById(containerId)) {
+        const targetDocs = [window.document];
+        if (typeof renderFloatWindow === 'function') {
+            renderFloatWindow(targetDocs);
+            if (typeof body_build === 'function') {
+                try { body_build('false'); } catch (e) { }
+            }
+        }
+    } else {
+        // 如果面板已存在，确保它是可见的
+        const panel = document.getElementById(containerId);
+        panel.style.setProperty('display', 'block', 'important');
+    }
+};
+
+
 
 
 
@@ -4781,16 +4822,16 @@ const bodyObserver = new MutationObserver(() => {
     debounceTimer = setTimeout(() => {
         console.log('[Gemini屏蔽] 🏁 页面已消停 3 秒，开始执行初始化...');
 
-        // 执行你的核心函数
-        if (typeof initScript === 'function') {
-            try {
-                initScript();
-            } catch (e) {
-                console.error('[Gemini屏蔽] 执行 initScript 出错:', e);
-            }
+        // 避免面板被吃掉
+        if (localStorage.getItem('gemini-pin') === "pinned" || localStorage.getItem('gemini_debug_element_click_mode') === "true" || localStorage.getItem('gemini_debug_location_hook_mode') === "true"
+        ) {
+            geminiElementBlockerOpenPanel()
+
         }
     }, 2000);
 });
+
+
 
 // 3. 开始对 body 进行深度监控
 if (document.body) {
