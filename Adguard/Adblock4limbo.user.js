@@ -838,7 +838,9 @@ function adsDomain_switch(x) { // 匹配参数值 执行相应函数
         case 'avple':
             //cloudflare_captchaBypass();
             css_adsRemove(adsMax.css.avple);
-            third_party_fileX("script", adsMax.js.avple, "body")
+            if (typeof third_party_fileX == 'function') {
+            	            third_party_fileX("script", adsMax.js.avple, "body")
+}
             break;
         case '18comic':
             css_adsRemove(adsMax.css.comic_18);
@@ -2540,9 +2542,11 @@ function daohang_build() { // 如果导航按钮不存在，则引入外部脚�
 
                 if (!isFunctionxLoaded) {
                     // 首次尝试加载脚本
+                    if (typeof third_party_fileX == 'function') {
                     third_party_fileX("script", adsMax.js.functionx, "body"); // js 外部引用 标签 <script>
                     console.log('functionx.js 首次引用成功，等待生效...');
                     clearInterval(daohang); // 首次加载后就停止检查
+                    }
 
                 } else if (hasHomePage) { // *** 使用新的变量名 ***
                     // 脚本已加载且导航容器已存在

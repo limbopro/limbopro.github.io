@@ -576,6 +576,7 @@
     function injectStyles(containerId, windowId) { // 真正注入样式CSS
         const style = document.createElement('style');
         style.textContent = `
+
        
 
         .gemini-debug-exit {
@@ -615,13 +616,13 @@
     #element-debug-click-toggle,
     #debug-location-toggle
      {
-box-shadow:inset 42px 14px 27px 2px rgba(0, 0, 0, 0.2);
+
     font-size: xx-small;
     font-family:'Glyphicons Halflings';
     /*height:40px; */
     width: 100%;
     /*margin-bottom:2px;*/
-    background: #5f6b5f;
+    background: rgb(8 6 10);
     color: white;
     border: none;
     padding: 8px 5px;
@@ -634,20 +635,16 @@ box-shadow:inset 42px 14px 27px 2px rgba(0, 0, 0, 0.2);
 /*xx-small*/
 
 
-
-#blacklist-toggle,
 #selector-debug-click-toggle,
     #selector-toggle
      {
-    text-shadow: 0 1px 0 #484f58;
-    color: #141414;
-    box-shadow:inset 2px 2px 2px 2px rgba(9, 14, 4, 0.2);
+    font-family:'Glyphicons Halflings';
     width: 100%;
     margin-bottom: 2px;
-    background: -webkit-linear-gradient(top, #474d54, #2f363d);
-    border: 1px solid #202124;
+    background:#0D3869;
+    color: white;
     border: none;
-    height: 35px;
+height:35px;
     padding: 8px 5px;
     cursor: pointer;
     border-radius: 4px;
@@ -659,8 +656,7 @@ box-shadow:inset 42px 14px 27px 2px rgba(0, 0, 0, 0.2);
 
 .closer {
 background: #D12C25 !important;
-color: white !important;
-border: white !important;
+color: white;
 }
 
 
@@ -3260,8 +3256,12 @@ border: white !important;
             
             <div style="padding: 4px 5px; font-size:xx-small;border-bottom: 1px solid #ccc; text-align: center;">
                 
-                <button id="blacklist-toggle" class="${isBlacklisted ? 'closer' : ''}">
-                ${isBlacklisted ? '🛡️ 当前为黑名单页 (启用严格沙箱)' : '➕ 标记为黑名单页 (启用严格沙箱)'}
+                <button id="blacklist-toggle" style="
+                    background: ${isBlacklisted ? '#dc3545' : 'rgb(8 6 10)'}; 
+                    color: white; border: none; padding: 8px 15px; 
+                    cursor: pointer; border-radius: 4px; font-weight: bold; width: 100%; margin-bottom: 2px;
+                ">
+                    ${isBlacklisted ? '🛡️ 当前为黑名单页 (启用严格沙箱)' : '➕ 标记为黑名单页 (启用严格沙箱)'}
                 </button>
                 
                 
@@ -3471,6 +3471,7 @@ border: white !important;
                     localStorage.setItem(DEBUG_SELECTOR_CLICK_KEY, 'false')
                     btn.innerText = `${originalText}(关)`;
                     btn.classList.remove('closer')
+                    btn.style.color = 'white'
                     clearInterval(checkExit);
                 }
             }, 500); // 每半秒检查一次工具是否还存在
@@ -3567,7 +3568,7 @@ border: white !important;
             }
 
             isBlacklisted = isCurrentPageBlacklisted();
-            blacklistToggle.className = isBlacklisted ? 'closer' : '';
+            blacklistToggle.style.background = isBlacklisted ? '#dc3545' : 'rgb(8 6 10)';
             blacklistToggle.textContent = isBlacklisted ? '🛡️ 当前为黑名单页 (启用严格沙箱)' : '➕ 标记为黑名单页 (启用严格沙箱)';
         };
 
@@ -3641,8 +3642,8 @@ border: white !important;
         };
 
 
-        function toggleSelectionMode(forceState) { // 🖱️ 启用选择并屏蔽模式 (xPath)
-            if (localStorage.getItem('gemini_debug_element_click_mode') == 'true' || localStorage.getItem('gemini_debug_preciseSelector_click_mode') == 'true') { // 元素调试模式跟选择并屏蔽模式只能开一个
+        function toggleSelectionMode(forceState) {
+            if (localStorage.getItem('gemini_debug_element_click_mode') == 'true') { // 元素调试模式跟选择并屏蔽模式只能开一个
                 return;
             }
 
@@ -3850,6 +3851,7 @@ border: white !important;
                 if (togglePageBlacklist(false, pageKey)) {
                     if (pageKey === getCurrentPageKey()) {
                         isBlacklisted = false;
+                        blacklistToggle.style.background = '#1976D2';
                         blacklistToggle.textContent = '➕ 标记为黑名单页 (启用严格沙箱)';
                     }
                     statusBar.textContent = `✅ 已移除黑名单 ${safeTruncate(pageKey, 15)}。请刷新页面。`;
