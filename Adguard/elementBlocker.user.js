@@ -952,13 +952,15 @@ color: white;
 
 <div style="display: flex; justify-content: space-around; flex-direction:column ;margin-top: 10px; margin-bottom: 0px; gap: 0px;">
     
-    <button id="gemini-modal-confirm" style="background: #b62b38; color: white; border: none; flex: 1;">
-        🛡️ 立即屏蔽 (xPath)
-    </button>
+    
 
     <button onclick='window.blockImmediatelyBySelector()' id="gemini-modal-confirm-css"
         style="background: #b62b38; color: white; border: none; flex: 1;" class="skiptranslate is-processing">
         🛡️ 立即屏蔽 (CSS选择器)
+    </button>
+
+    <button id="gemini-modal-confirm" style="background: #b62b38; color: white; border: none; flex: 1;">
+        🛡️ 立即屏蔽 (xPath)
     </button>
 
     </div>
@@ -1097,30 +1099,25 @@ color: white;
 
     /**
 * 使模态框内容支持双端拖拽（鼠标 + 触摸）
-* @param {string} overlayId - 遮罩层的 ID
+* @param {string} selectorOrId - 遮罩层的 ID
 */
-    window.makeModalDraggable = function makeModalDraggable(overlayId) {
 
-        const overlay = document.getElementById(overlayId);
-        if (!overlay || overlay.dataset.dragInitialized) return; // 防止重复初始化
 
-        console.warn('已捕获', overlayId)
+    window.makeModalDraggable = function makeModalDraggable(elementId) {
+        const el = document.getElementById(elementId);
+        if (!el || el.dataset.dragInitialized) return;
 
-        const target = overlay.firstElementChild;
+        // 核心修正：如果元素本身就是窗口，则直接使用 el；否则才去找子元素
+        const target = el.classList.contains('sel-result-window') ? el : el.firstElementChild;
         if (!target) return;
 
         let isDragging = false;
         let startX, startY, initialLeft, initialTop;
 
-        const startAction = (e) => {
-            // 排除 #targetInform 及其子元素
-            if (e.target.id === 'targetInform' || e.target.closest('#targetInform')) {
-                isDragging = false;
-                return;
-            }
 
-            const ignoreTags = ['INPUT', 'TEXTAREA', 'BUTTON', 'A', 'SELECT'];
-            if (ignoreTags.includes(e.target.tagName)) return;
+        const startAction = (e) => {
+            // 增加排除判断：如果点的是 tips 区域内的按钮或文本，允许拖拽（但按钮本身除外）
+            if (e.target.closest('button, code, #sel-output')) return;
 
             const touch = e.touches ? e.touches[0] : e;
             isDragging = true;
@@ -1131,48 +1128,70 @@ color: white;
             initialLeft = rect.left;
             initialTop = rect.top;
 
-            // 切换为绝对定位
-            overlay.style.display = 'block';
-            target.style.margin = '0';
-            target.style.transform = 'none';
-            target.style.position = 'absolute';
+            // --- 关键修正：彻底击穿内联 inset ---
+            target.style.setProperty('position', 'fixed', 'important');
+            target.style.setProperty('inset', 'auto', 'important'); // 清除整体
+            target.style.setProperty('bottom', 'auto', 'important'); // 显式清除
+            target.style.setProperty('right', 'auto', 'important');  // 显式清除
+            target.style.setProperty('margin', '0', 'important');
+            target.style.setProperty('transform', 'none', 'important');
+
             target.style.setProperty('left', initialLeft + 'px', 'important');
             target.style.setProperty('top', initialTop + 'px', 'important');
 
-            if (!e.touches) e.preventDefault();
+            if (e.cancelable) e.preventDefault();
         };
+
+        /*
+        const startAction = (e) => {
+            // 排除掉代码块和按钮，防止无法点击/复制代码
+            if (e.target.closest('button, code, #sel-output')) return;
+
+            const touch = e.touches ? e.touches[0] : e;
+            isDragging = true;
+
+            const rect = target.getBoundingClientRect();
+            startX = touch.clientX;
+            startY = touch.clientY;
+            initialLeft = rect.left;
+            initialTop = rect.top;
+
+            // 核心修正：移除 CSS 中可能存在的居中偏移和内联 inset 干扰
+            target.style.setProperty('margin', '0', 'important');
+            target.style.setProperty('transform', 'none', 'important');
+            target.style.setProperty('position', 'fixed', 'important'); // 确保在 body 下自由浮动
+            target.style.setProperty('inset', 'auto', 'important'); // 清除原本 style 中的 inset 限制
+
+            target.style.setProperty('left', initialLeft + 'px', 'important');
+            target.style.setProperty('top', initialTop + 'px', 'important');
+
+            if (e.cancelable) e.preventDefault();
+        };
+        */
 
         const moveAction = (e) => {
             if (!isDragging) return;
-
-            // 只有正在拖拽时才阻止背景滚动
             if (e.cancelable) e.preventDefault();
-
             const touch = e.touches ? e.touches[0] : e;
-            const dx = touch.clientX - startX;
-            const dy = touch.clientY - startY;
-
-            target.style.setProperty('left', `${initialLeft + dx}px`, 'important');
-            target.style.setProperty('top', `${initialTop + dy}px`, 'important');
+            target.style.setProperty('left', (initialLeft + (touch.clientX - startX)) + 'px', 'important');
+            target.style.setProperty('top', (initialTop + (touch.clientY - startY)) + 'px', 'important');
         };
 
-        const endAction = () => {
-            isDragging = false;
-        };
+        const endAction = () => { isDragging = false; };
 
-        // 绑定事件到 target 而非 overlay 整体，减少误触
+        // 绑定事件（兼容移动端）
+        target.style.setProperty('touch-action', 'none', 'important');
         target.addEventListener('mousedown', startAction);
         target.addEventListener('touchstart', startAction, { passive: false });
-
-        // 全局监听移动和结束
         document.addEventListener('mousemove', moveAction, { passive: false });
-        document.addEventListener('mouseup', endAction);
         document.addEventListener('touchmove', moveAction, { passive: false });
+        document.addEventListener('mouseup', endAction);
         document.addEventListener('touchend', endAction);
 
-        // 标记已初始化
-        overlay.dataset.dragInitialized = "true";
+        el.dataset.dragInitialized = "true";
     };
+
+
 
 
     // =================================================================
@@ -1628,6 +1647,8 @@ color: white;
 
         const resultWin = document.createElement('div');
         resultWin.className = 'sel-result-window notranslate';
+        resultWin.id = 'sel-tool-window';
+
 
         // --- 1. UI 渲染 ---
         resultWin.innerHTML = `
@@ -1652,8 +1673,12 @@ color: white;
         <button class="sel-btn sel-edit-btn" id="sel-edit">修改</button>
         <button class="sel-btn sel-inspect-btn" id="sel-inspect-btn" style="min-width: 65px; color:black; background:#f2f2f2;">定位</button>
         <button class="sel-btn sel-block-btn" id="sel-block">屏蔽</button>
-        <button class="sel-btn sel-reset-btn" id="sel-reset">重选元素</button>
-        <button class="sel-btn sel-exit-btn" id="sel-exit">退出</button>
+
+        
+<button class="sel-btn sel-reset-btn" id="sel-reset">重选元素</button>
+
+<button class="sel-btn sel-exit-btn" id="sel-exit">退出</button>
+        
     </div>
 `;
         document.body.appendChild(resultWin);
@@ -2824,7 +2849,7 @@ color: white;
 
         modalBox.innerHTML = `
         <h3 style="margin-top: 0; color: #2196F3; border-bottom: 2px solid #eee; padding-bottom: 10px;">📝 修改屏蔽规则</h3>
-        <p style="font-size: 12px; color: #666;">您正在修改当前的 CSS 选择器或路径：匹配 <strong id='editLength'></strong> 个元素；
+        <p style="font-size: 12px; color: #666;">您正在修改当前的 CSS 选择器或路径：共匹配 <strong id='editLength'></strong> 个元素(当前页面)；
 </p>
         <textarea id="gemini-edit-input" style="width: 100%; height: 80px; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-family: monospace; font-size: 13px; box-sizing: border-box; resize: vertical;">${oldValue}</textarea>
         <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px;">
@@ -3127,15 +3152,13 @@ color: white;
                    
 
                 <div style="margin-bottom:2px; display: flex; gap: 2px;">
-
- <button id="element-debug-click-toggle">
+ <button id="element-debug-click-toggle" class='${isDebuggingElementClick ? 'closer' : 'open'}'>
                     🛠️ 元素点击调试 (${isDebuggingElementClick ? '开' : '关'})
                     </button>
 
                  
 
-                    
-                    <button id="debug-location-toggle">
+                    <button id="debug-location-toggle" class='${isDebuggingLocationHooks ? 'closer' : 'open'}'>
                     ⚙️ JS 重定向调试 (${isDebuggingLocationHooks ? '开' : '关'})
                     </button>
                 </div>
@@ -3299,7 +3322,7 @@ color: white;
 
             // 如果工具已经运行，则不重复执行逻辑
             if (document.getElementById('selector-tool-style-final')) {
-stopSelectorTool()
+                stopSelectorTool()
                 return;
             }
 
@@ -3527,7 +3550,7 @@ stopSelectorTool()
                     currentHoverElement = null;
                 }
                 selectorToggle.textContent = '🖱️ 启用选择并屏蔽模式 (xPath)';
-selectorToggle.classList.remove('closer')
+                selectorToggle.classList.remove('closer')
                 statusBar.textContent = '选择模式已禁用。';
             }
         }
@@ -3554,8 +3577,8 @@ selectorToggle.classList.remove('closer')
 
             // 更新 UI 和状态栏
             if (isDebuggingElementClick) {
-                debugClickToggle.classList.add('closer')
                 debugClickToggle.textContent = '🛠️ 元素点击调试 (开)';
+                debugClickToggle.classList.add('closer')
                 statusBar.textContent = '✅ 元素点击拦截已开启，**立即生效**。请点击可疑按钮。';
             } else {
                 debugClickToggle.classList.remove('closer')
@@ -3584,13 +3607,11 @@ selectorToggle.classList.remove('closer')
 
             // 更新 UI 和状态栏
             if (isDebuggingElementClick) {
-                debugClickToggle.style.background = 'green';
-                debugClickToggle.style.color = 'white';
+                debugClickToggle.classList.add('closer')
                 debugClickToggle.textContent = '🛠️ 元素点击调试 (开)';
                 statusBar.textContent = '✅ 元素点击拦截已开启，**立即生效**。请点击可疑按钮。';
             } else {
-                debugClickToggle.style.background = 'rgb(96 107 95)';
-                debugClickToggle.style.color = 'white';
+                debugClickToggle.classList.remove('closer')
                 debugClickToggle.textContent = '🛠️ 元素点击调试 (关)';
                 statusBar.textContent = '❌ 元素点击拦截已关闭，**立即生效**。';
             }
@@ -3945,13 +3966,10 @@ selectorToggle.classList.remove('closer')
             }
         }
 
-
         setTimeout(() => {
             // 1. 先定义好函数 (或确保函数已在 window 作用域)
             if (typeof window.makeModalDraggable === 'function') {
-                // 2. 直接初始化，不要放在 if (e.target...) 的点击判断里
-                // window.makeModalDraggable('gemini-custom-modal-overlay');
-                makeModalDraggable('.sel-result-window')
+                window.makeModalDraggable('sel-tool-window');
             }
         }, 750)
     });
