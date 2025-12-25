@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Adblock4limbo——导航及各类功能函数合集.[github]
 // @namespace    https://limbopro.com/Adguard/Adblock4limbo.function.js
-// @version      0.2025.12.24
+// @version      0.2025.12.25
 // @license      CC BY-NC-SA 4.0
 // @description  实用网站导航 —— 沉浸式翻译纯JS版本；M3U8/MP4资源链接提取；广告元素屏蔽器；费在线影视/前端学习/开发者社区/新闻/建站/下载工具/格式转换工具/电子书/新闻/写作/免费漫画等；
 // @author       limbopro
@@ -35,6 +35,8 @@
 
 
 
+
+
 (function () {
     const css = `
 /* 给到悬浮窗用 Adblock4limbo 4 function */
@@ -46,7 +48,7 @@
     display: flex !important;
     justify-content: center !important;
     align-items: center;
-    z-index: 9998 !important;
+    z-index: 114154 !important;
     opacity: 0;
     visibility: hidden;
     transition: opacity .2s, visibility .2s;
@@ -249,8 +251,6 @@ function tripleClick() {
             } else {
                 number = 0;
                 console.log("number被重设为0");
-                //hiddencjsfy()
-                showcjsfy()
             }
         }, 850)
     }
@@ -448,6 +448,10 @@ function position() {
 // 先新建一个按钮
 function initializeFloatingNavigationButton(x, csp) {
 
+    if (typeof getResponsiveButtonSize == 'function') {
+        x = getResponsiveButtonSize();
+    }
+
     if (document.getElementById('dh_buttonContainer')) return;
 
     // 新建 dh_buttonContainer
@@ -478,7 +482,6 @@ function initializeFloatingNavigationButton(x, csp) {
 
     if (csp == 'nocsp') {
         console.log('创建不带CSP属性按钮...')
-
         const BUTTON_CSS = `
   border-radius: 5px 0 0 5px;
   padding: 0;
@@ -490,7 +493,6 @@ function initializeFloatingNavigationButton(x, csp) {
   background: transparent url("https://raw.githubusercontent.com/limbopro/Adblock4limbo/main/Adguard/Adblock4limbo.png") no-repeat;
   background-size: 100%;
 `.replace(/\s+/g, ' ').trim() + ';';
-
         _button.style.cssText = BUTTON_CSS;
         _button.setAttribute("onclick", "body_build('true')");
         document.getElementById('dh_buttonMain').appendChild(_button); // 在 dh_buttonMain 下添加按钮
@@ -501,7 +503,6 @@ function initializeFloatingNavigationButton(x, csp) {
         _button.style = csp;
         _button.textContent = '导航';
         document.getElementById('dh_buttonMain').appendChild(_button); // 在 dh_buttonMain 下添加按钮
-        //_button.setAttribute("class", "cspButton");
         document.getElementById('dh_button').style.height = x;
         document.getElementById('dh_button').style.width = x;
         if (window.innerHeight < 600) {
@@ -525,7 +526,7 @@ function initializeFloatingNavigationButton(x, csp) {
     document.getElementById('dh_button').addEventListener("mouseover", (event) => {
         document.getElementById('dh_buttonContainer').classList.remove('pointer-events-none')
         setTimeout(() => {
-            document.getElementById('dh_buttonContainer').classList.add('pointer-events-none')
+            document.getElementById('dh_buttonContainer')?.classList.add('pointer-events-none')
         }, 4000)
     });
 
@@ -634,19 +635,23 @@ var csp_regex = new RegExp(/\b(twitter|xvideos|google)\b/i);
 window.fc_str_ua = navigator.userAgent.toLowerCase();
 window.regexp = /(.*)(iphone\sos\s)(\d{2})(.*)/;
 window.ios_version = fc_str_ua.replace(regexp, '$3');
-
 var csp = ['twitter', 'xvideos'];
-var number_x = 0;
-if (/\b(google|bing)\b/i.test(window.location.href.toLowerCase())) { // 谷歌和必应均不插入导航按钮
-} else if (csp_regex.test(window.location.href.toLowerCase()) && !(/\b(mobile)\b/i.test(navigator.userAgent.toLowerCase()))) { // 如果是带有CSP的网站则带上参数 csp // 2333
-    initializeFloatingNavigationButton(getResponsiveButtonSize(), 'csp');
-    _onclick_button();
-}
-else {
-    initializeFloatingNavigationButton(getResponsiveButtonSize(), 'nocsp'); // 反之则不带
-    _onclick_button();
+
+function create_dh_button() {
+    const height = getResponsiveButtonSize()
+    if (/\b(google|bing)\b/i.test(window.location.href.toLowerCase())) { // 谷歌和必应均不插入导航按钮
+    } else if (csp_regex.test(window.location.href.toLowerCase()) && !(/\b(mobile)\b/i.test(navigator.userAgent.toLowerCase()))) { // 如果是带有CSP的网站则带上参数 csp // 2333
+        initializeFloatingNavigationButton(height, 'csp');
+        _onclick_button();
+    }
+    else {
+        initializeFloatingNavigationButton(height, 'nocsp'); // 反之则不带
+        _onclick_button();
+    }
 }
 
+
+create_dh_button()
 
 
 // 初始化导航容器
@@ -775,7 +780,7 @@ function getNavigationHTML() {
 </li>
 
       <li class="li_global"><button class="a_global special yellow" id="zhixingjs" onclick='window.showJsManager()' style="border-radius:4px;background:#c53f3f">🧑‍💻执行JS代码</button></li>
-    <li class="li_global"><button class="a_global special yellow" id="loadjsStatus" onclick='window.geminiScriptCheck()' style="border-radius:4px;background:#c53f3f">JS加载状态</button></li>
+    <li class="li_global"><button class="a_global special yellow" id="loadjsStatus" onclick='window.geminiScriptCheck()' style="border-radius:4px;background:#c53f3f">🟢JS加载状态</button></li>
       <li class="li_global">
       <button id="adsSkip" class="a_global special yellow ads_skip_on" title="自动跳过广告已开启 (点击关闭)" style="
     width: 106px !important;
@@ -1108,18 +1113,93 @@ function boom() {
 /* Start 判断是否显示导航 可不删 */
 window.body_build = function body_build(x) { // 判断导航显示与否
 
-    if (x == "true") {
-        ////console.log("// body_build() 输入为 true，开始创建导航...")
 
-        initFloatingNav(1, 114118, 1, 'auto')
+    navCheck()
 
-    } else if (x == "false") {
-        initFloatingNav(0, -114154, 1, 'none')
+    if (typeof initFloatingNav == 'function') {
         setTimeout(() => {
-        }, 750)
+            if (x == "true") {
+                initFloatingNav(1, 114118, 1, 'auto')
+            } else if (x == "false") {
+                initFloatingNav(0, -114154, 1, 'none')
+                setTimeout(() => {
+                }, 350)
+            }
+        }, 250)
     }
 
 }
+
+
+
+function navCheck() {
+    /**
+         * 2. 导航项丢失检测与自动修复
+         * 逻辑：通过检查特定类名 '.li_global' 的数量来判断导航菜单是否完整。
+         * 场景：防止某些动态加载的网页在渲染过程中将已生成的导航条覆盖或删除。
+         */
+    if (document.querySelectorAll('.li_global').length < 150) {
+        // 如果页面中现存的导航项少于 150 个，判定为“导航条受损”或“未加载完成”
+        if (typeof parentElement_add == 'function') {
+            // 调用父级添加函数，重新执行导航条的初始化或 DOM 注入
+            parentElement_add();
+            console.log('Gemini: 检测到导航项缺失，正在执行导航复位...');
+        }
+
+    }
+
+
+    if (typeof initImmersiveTranslationManager == 'function') {
+        // 沉浸式翻译按钮显示
+        if (localStorage.getItem('gemini_immersive_translation_state') == 'on') {
+            if (document.getElementById('cjsfy')?.textContent.indexOf('ON') == '-1') {
+                window.initImmersiveTranslationManager()
+                console.log('Gemini: 检测到沉浸式翻译按钮显示不正确，正在执行按钮复位...');
+            }
+        }
+    }
+
+
+    // 创建导航按钮
+    if (typeof initializeFloatingNavigationButton == 'function') {
+        if (document.getElementById('dh_button') == null) {
+            initializeFloatingNavigationButton('', 'nocsp')
+            setTimeout(() => {
+                if (document.getElementById('dh_button')) {
+                    document.getElementById('dh_button').style.height = '45px';
+                    document.getElementById('dh_button').style.width = '45px';
+                }
+            }, 500)
+
+        }
+    }
+
+    // 导航页导航按钮OFF/ON显示BUG
+
+
+    setTimeout(() => {
+        (function syncDaohangUI() {
+            const btnToggle = document.getElementById('hidedaohang');
+            // 检查依赖：如果找不到按钮或 getCookie 函数，直接跳出
+            if (typeof getCookie !== 'function' || !btnToggle) return;
+
+            const mode = getCookie("daohangMode_yourChoice");
+
+            // 逻辑更改：只有明确为 'hidden' 时才显示 OFF，其余情况（包括空）均显示 ON
+            if (mode === 'hidden') {
+                btnToggle.textContent = '导航按钮(OFF)';
+                btnToggle.style.setProperty('background', 'red', 'important');
+            } else {
+                btnToggle.textContent = '导航按钮(ON)';
+                btnToggle.style.setProperty('background', 'green', 'important');
+            }
+        })();
+    }, 250)
+
+
+
+}
+
 
 function _blank() {
     const url_now = window.location.href.toLowerCase();
@@ -1696,49 +1776,64 @@ function getCookie(cname) {
 
 var click_sum = 0;
 
-function daohangMode_switch(x) {
-    if (x == 'hidden') {
-        fcsetCookie("daohangMode_yourChoice", 'hidden', 400);
-        document.querySelector('button#dh_button')?.setAttribute("class", "cmsnone " + bottom());
-        document.querySelector('#dh_buttonContainer')?.setAttribute("class", "cmsnone");
-        updateNavigationButtonDisplay('hidden'); // 隐藏按钮
-        document.querySelector('button#hidedaohang').textContent = "导航按钮(OFF)"
-        document.querySelector('button#hidedaohang').style.background = 'red'
 
-        if (click_sum++ == -1) { // 引导用户使用快捷方式唤起导航🧭详情页
-            confirmndExecuteFC('已隐藏页面右下角的导航按钮；(快捷唤起导航🧭页面)的方法? -> 1秒内，电脑用户(连续敲击2次ESC键)，iOS用户(在页面空白处连续点击4次及以上)')
+
+function daohangMode_switch(x) {
+    // 1. 获取 DOM 引用 (减少重复查询)
+    const btnDh = document.querySelector('button#dh_button');
+    const containerDh = document.querySelector('#dh_buttonContainer');
+    const btnToggle = document.querySelector('button#hidedaohang');
+
+    // 2. 处理自动切换逻辑 (将无参数或 Cookie 检查逻辑前置)
+    if (!x) {
+        const currentChoice = getCookie("daohangMode_yourChoice");
+        x = (currentChoice === '' || currentChoice === 'hidden') ? 'show' : 'hidden';
+    }
+
+    // 3. 执行具体分支
+    if (x === 'hidden') {
+        fcsetCookie("daohangMode_yourChoice", 'hidden', 400);
+
+        btnDh?.setAttribute("class", "cmsnone " + bottom());
+        containerDh?.setAttribute("class", "cmsnone");
+
+        updateNavigationButtonDisplay('hidden');
+
+        if (btnToggle) {
+            btnToggle.textContent = "导航按钮(OFF)";
+            // 使用 !important 防止被原网页样式覆盖
+            btnToggle.style.setProperty('background', 'red', 'important');
         }
 
-        setTimeout(() => {
-            //// body_build('false')
-        }, 1500)
+        // 引导逻辑
+        if (typeof click_sum !== 'undefined' && click_sum++ === -1) {
+            confirmndExecuteFC('已隐藏页面右下角的导航按钮；(快捷唤起导航🧭页面)的方法? -> 1秒内，电脑用户(连续敲击2次ESC键)，iOS用户(在页面空白处连续点击4次及以上)');
+        }
 
-    } else if (x == 'show') {
+    } else if (x === 'show') {
         fcsetCookie("daohangMode_yourChoice", 'show', 400);
 
-        if (document.querySelector('button#dh_button') == null) {
-            initializeFloatingNavigationButton('45px', 'nocsp');
+        // 如果按钮不存在，则初始化
+        if (!btnDh) {
+            body_build('true');
             return;
         }
 
-        document.querySelector('button#dh_button').setAttribute("class", "cms " + bottom());
-        document.querySelector('#dh_buttonContainer').setAttribute("class", "cms pointer-events-none notranslate");
-        document.querySelector('button#hidedaohang').textContent = "导航按钮(ON)"
-        document.querySelector('button#hidedaohang').style.background = 'green'
-        updateNavigationButtonDisplay('1') // 显示按钮
+        btnDh.setAttribute("class", "cms " + bottom());
+        containerDh?.setAttribute("class", "cms pointer-events-none notranslate");
+
+        if (btnToggle) {
+            btnToggle.textContent = "导航按钮(ON)";
+            btnToggle.style.setProperty('background', 'green', 'important');
+        }
+
+        updateNavigationButtonDisplay('1');
 
         setTimeout(() => {
-            body_build('false')
-        }, 1000)
-
-
-    } else if (getCookie("daohangMode_yourChoice") == '' || getCookie("daohangMode_yourChoice") == 'hidden') {
-        daohangMode_switch('show')
-    } else if (getCookie("daohangMode_yourChoice") == 'show') {
-        daohangMode_switch('hidden')
+            body_build('false');
+        }, 1000);
     }
 }
-
 
 // 隐藏按钮选项
 
@@ -2390,150 +2485,163 @@ window.tmd = function tmd(parentSelector, code, titleText) {
 
 
 
-window.addEventListener('load', function () {
+//window.addEventListener('load', function () {
 
 
-    loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/huacisousuo.user.js', 'head', 'huacisearch') // 加载过滤脚本
-    // 划词搜索结束 END
+loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/huacisousuo.user.js', 'head', 'huacisearch') // 加载过滤脚本
+// 划词搜索结束 END
 
 
-    // 沉浸式翻译开始 Start
+// 沉浸式翻译开始 Start
 
-    window.initImmersiveTranslationManager = function () {
-        const SCRIPT_URL = 'https://limbopro.com/Adguard/Adblock4limbo.immersiveTranslation.user.js';
-        const STORAGE_KEY = 'gemini_immersive_translation_state';
+window.initImmersiveTranslationManager = function () {
+    const SCRIPT_URL = 'https://limbopro.com/Adguard/Adblock4limbo.immersiveTranslation.user.js';
+    const STORAGE_KEY = 'gemini_immersive_translation_state';
 
-        // 1. 【核心：刷新即读取】先读 localstorage 判断是否要默认加载脚本
-        const savedState = localStorage.getItem(STORAGE_KEY) || 'off';
+    // 1. 【核心：刷新即读取】先读 localstorage 判断是否要默认加载脚本
+    const savedState = localStorage.getItem(STORAGE_KEY) || 'off';
 
-        if (savedState === 'on') {
-            console.log('[Gemini] 存储值为 ON，立即加载脚本');
-            if (typeof loadExternalResourceFireAndForget === 'function') {
-                loadExternalResourceFireAndForget('script', SCRIPT_URL, 'head', 'immersiveTranslation');
-            } else {
-                const script = document.createElement('script');
-                script.src = SCRIPT_URL;
-                document.head.appendChild(script);
-            }
+    if (savedState === 'on') {
+        console.log('[Gemini] 存储值为 ON，立即加载脚本');
+        if (typeof loadExternalResourceFireAndForget === 'function') {
+            loadExternalResourceFireAndForget('script', SCRIPT_URL, 'head', 'immersiveTranslation');
+        } else {
+            const script = document.createElement('script');
+            script.src = SCRIPT_URL;
+            document.head.appendChild(script);
         }
+    }
 
-        // 2. 【核心：UI 同步】判断要不要更新按钮文本和背景色
-        const btn = document.getElementById('cjsfy');
-        if (btn) {
-            // 修改 button 显示的文本和背景色
-            btn.dataset.state = savedState;
-            btn.style.background = (savedState === 'on') ? 'green' : 'red';
-            btn.innerText = `沉浸式翻译(${savedState.toUpperCase()})`;
+    // 2. 【核心：UI 同步】判断要不要更新按钮文本和背景色
+    const btn = document.getElementById('cjsfy');
+    if (btn) {
+        // 修改 button 显示的文本和背景色
+        btn.dataset.state = savedState;
+        btn.style.background = (savedState === 'on') ? 'green' : 'red';
+        btn.innerText = `沉浸式翻译(${savedState.toUpperCase()})`;
 
-            // 绑定点击事件，切换状态并存储
-            btn.onclick = function () {
-                const currentState = btn.dataset.state;
-                const newState = currentState === 'off' ? 'on' : 'off';
+        // 绑定点击事件，切换状态并存储
+        btn.onclick = function () {
+            const currentState = btn.dataset.state;
+            const newState = currentState === 'off' ? 'on' : 'off';
 
-                // 存储到 localstorage
-                localStorage.setItem(STORAGE_KEY, newState);
+            // 存储到 localstorage
+            localStorage.setItem(STORAGE_KEY, newState);
 
-                // 修改显示
-                btn.dataset.state = newState;
-                btn.style.background = (newState === 'on') ? 'green' : 'red';
-                btn.innerText = `沉浸式翻译(${newState.toUpperCase()})`;
+            // 修改显示
+            btn.dataset.state = newState;
+            btn.style.background = (newState === 'on') ? 'green' : 'red';
+            btn.innerText = `沉浸式翻译(${newState.toUpperCase()})`;
 
-                if (newState === 'on') {
-                    if (typeof loadExternalResourceFireAndForget === 'function') {
-                        loadExternalResourceFireAndForget('script', SCRIPT_URL, 'head', 'immersiveTranslation');
+            if (newState === 'on') {
+                if (typeof loadExternalResourceFireAndForget === 'function') {
+                    loadExternalResourceFireAndForget('script', SCRIPT_URL, 'head', 'immersiveTranslation');
+                    if (document.getElementById('translation-button')) {
+                        document.getElementById('translation-button').classList.remove('scroll-hidden')
                     }
-                } else {
                     if (typeof confirmndExecuteFC === 'function') {
-                        confirmndExecuteFC('脚本已关闭，但已注入的逻辑可能需要刷新页面才能完全清除。');
+                        confirmndExecuteFC('脚本已加载，使用过程中1秒内连续点击页面空白处3次可切换显示或隐藏翻译按钮🔘');
+                    } else {
+                        confirm('脚本已加载，使用过程中1秒内连续点击页面空白处3次可切换显示或隐藏翻译按钮🔘')
                     }
                 }
-            };
-        }
-    };
-
-    // 执行初始化
-    window.initImmersiveTranslationManager();
-
-    // 沉浸式翻译结束 End
-
-    // 其他函数 媒体资源查找器 mtzyczq 开始 START
-    loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/m3u8Andmp4Finder.user.js', 'head', 'm3u8Andmp4Finder')
-    // 媒体资源M3U8&MP4资源链接查找器结束 END
-
-
-    /*debug*/
-
-    /* 用户反馈信息展示脚本 (重命名版) */
-    // Feedback 开始 START
-    /* 反馈信息展示脚本 (重命名版 - 已增强) */
-    loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/feedBackLinkMake.user.js', 'head', 'feedBackLinkMake')
-    // updateFeedbackLink()
-    // Feedback 结束 END
+            } else {
+                if (typeof confirmndExecuteFC === 'function') {
+                    confirmndExecuteFC('脚本已关闭，但已注入的逻辑可能需要刷新页面才能完全清除。');
+                } else {
+                    if (document.getElementById('translation-button')) {
+                        document.getElementById('translation-button').classList.add('scroll-hidden')
+                    }
+                    confirm('脚本已关闭，但已注入的逻辑可能需要刷新页面才能完全清除。')
+                }
+            }
+        };
+    }
+};
 
 
-    // 元素屏蔽器开始  START
-    loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/elementBlocker.user.js', 'head', 'elementBlocker')
-    // 元素屏蔽器 END
+// 执行初始化
+window.initImmersiveTranslationManager();
+// 沉浸式翻译结束 End
+
+// 其他函数 媒体资源查找器 mtzyczq 开始 START
+loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/m3u8Andmp4Finder.user.js', 'head', 'm3u8Andmp4Finder')
+// 媒体资源M3U8&MP4资源链接查找器结束 END
 
 
-    // 视频广告加速跳过 Start
-    loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/skipVideoAds.user.js', 'head', 'skipVideoAds')
-    // 视频广告加速跳过 END
+/*debug*/
+
+/* 用户反馈信息展示脚本 (重命名版) */
+// Feedback 开始 START
+/* 反馈信息展示脚本 (重命名版 - 已增强) */
+loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/feedBackLinkMake.user.js', 'head', 'feedBackLinkMake')
+// updateFeedbackLink()
+// Feedback 结束 END
 
 
-    /**
-     * WebDebugger.js 开始 START
-     * * 独立函数：Web 存储调试器 (Cookies/Local/Session/Config)
-     * * 描述: 创建一个悬浮可拖拽的面板，用于实时查看和编辑 Cookie, LocalStorage, SessionStorage，
-     * 并提取内嵌的 JSON 配置数据。
-     * * 调用方法: 
-     * 1. 引入文件: <script src="path/to/WebDebugger.js"></script>
-     * 2. 执行: window.initWebDebugger();
-     */
-
-    loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/WebDebugger.user.js', 'head', 'WebDebugger')
-    /* WebDebugger.js 结束 END
-    */
+// 元素屏蔽器开始  START
+loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/elementBlocker.user.js', 'head', 'elementBlocker')
+// 元素屏蔽器 END
 
 
-    // 查看页面上的脚本
-    loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/ScriptFind.user.js', 'head', 'ScriptFind')
-    //  查看页面上的脚本
+// 视频广告加速跳过 Start
+loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/skipVideoAds.user.js', 'head', 'skipVideoAds')
+// 视频广告加速跳过 END
 
 
-    //  更友好的确认框
-    loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/confirmndExecute.user.js', 'head', 'confirmndExecute')
+/**
+ * WebDebugger.js 开始 START
+ * * 独立函数：Web 存储调试器 (Cookies/Local/Session/Config)
+ * * 描述: 创建一个悬浮可拖拽的面板，用于实时查看和编辑 Cookie, LocalStorage, SessionStorage，
+ * 并提取内嵌的 JSON 配置数据。
+ * * 调用方法: 
+ * 1. 引入文件: <script src="path/to/WebDebugger.js"></script>
+ * 2. 执行: window.initWebDebugger();
+ */
+
+loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/WebDebugger.user.js', 'head', 'WebDebugger')
+/* WebDebugger.js 结束 END
+*/
 
 
-    loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/findAndDisplayExternalLinks.user.js', 'head', 'findAndDisplayExternalLinks')
-    // 示例调用：
-    // findAndDisplayExternalLinks();
-
-    // 循环清理透明元素
-    loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/clearLoop.user.js', 'head', 'clearLoop')
-
-    // 如何利用目标信息
-    loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/showLinkTipsModalOnce.user.js', 'head', 'showLinkTipsModalOnce')
+// 查看页面上的脚本
+loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/ScriptFind.user.js', 'head', 'ScriptFind')
+//  查看页面上的脚本
 
 
-    // 加载 Adgurad 基础过滤器（CSS版） START
-    loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/Adguard.filter.user.js', 'head', 'AdguardFilter')
-    // 加载 Adgurad 基础过滤器（CSS版） END
+//  更友好的确认框
+loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/confirmndExecute.user.js', 'head', 'confirmndExecute')
 
 
-    // 脚本管理器 START
-    loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/showJsManager.user.js', 'head', 'showJsManager') // 加载过滤脚本
-    // 脚本管理器 END
+loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/findAndDisplayExternalLinks.user.js', 'head', 'findAndDisplayExternalLinks')
+// 示例调用：
+// findAndDisplayExternalLinks();
+
+// 循环清理透明元素
+loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/clearLoop.user.js', 'head', 'clearLoop')
+
+// 如何利用目标信息
+loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/showLinkTipsModalOnce.user.js', 'head', 'showLinkTipsModalOnce')
+
+
+// 加载 Adgurad 基础过滤器（CSS版） START
+loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/Adguard.filter.user.js', 'head', 'AdguardFilter')
+// 加载 Adgurad 基础过滤器（CSS版） END
+
+
+// 脚本管理器 START
+loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/showJsManager.user.js', 'head', 'showJsManager') // 加载过滤脚本
+// 脚本管理器 END
 
 
 
-    // 成人保护模式 START
-    loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/pageProtect.user.js', 'head', 'pageProtect') // 加载过滤脚本
-    // 成人保护模式 END
+// 成人保护模式 START
+loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/pageProtect.user.js', 'head', 'pageProtect') // 加载过滤脚本
+// 成人保护模式 END
 
 
 
-});
+//});
 
 // 这里存放导航页各类网站
 
