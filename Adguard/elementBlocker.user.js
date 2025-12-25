@@ -26,7 +26,7 @@
         console.log("跨页面单次清理完成");
     }
 
-    permanentClearOnce()
+    //permanentClearOnce()
 
 
     // =================================================================
@@ -4845,8 +4845,6 @@ border: white !important;
 
 
 
-
-
 // 全局调出元素屏蔽/追踪器面板
 window.geminiElementBlockerOpenPanel = () => {
     const containerId = 'gemini-main-container'; // 确保能访问到这个 ID
@@ -4868,79 +4866,68 @@ window.geminiElementBlockerOpenPanel = () => {
 
 
 
-
-// 1. 定义防抖计时器
 let debounceTimer = null;
+let lastNavCount = -1; // 记录上一次检查时的数量
 
-// 2. 创建 MutationObserver
-const bodyObserver = new MutationObserver(() => {
-    // 每当 body 发生变化，先清除之前的计时器
-    if (debounceTimer) {
-        clearTimeout(debounceTimer);
-    }
+const bodyObserver = new MutationObserver((mutations) => {
+    // 过滤掉由脚本自身引起的属性修改（可选，提升性能）
+    // 如果 parentElement_add 只是增加节点，这一行能过滤掉不必要的干扰
+    if (mutations.every(m => m.target.closest && m.target.closest('.gemini-managed'))) return;
+    if (debounceTimer) clearTimeout(debounceTimer);
 
-    // 重新开启一个 2 秒（2000 毫秒）的计时器
-    // 只有在 2 秒内没有任何新变化，才会真正触发里面的函数
     debounceTimer = setTimeout(() => {
-        console.log('[Gemini屏蔽] 🏁 页面已消停 3 秒，开始执行初始化...');
+        const currentNavCount = document.querySelectorAll('.li_global').length;
 
+        // 【核心逻辑】只有当导航项数量发生变化，才进行深度检查
+        if (currentNavCount !== lastNavCount) {
+            console.log(`[Gemini监控] 检测到页面变化，导航项当前数量: ${currentNavCount}`);
 
+            // 1. 面板保活
+            const isPinned = localStorage.getItem('gemini-pin') === "pinned" ||
+                localStorage.getItem('gemini_debug_element_click_mode') === "true" ||
+                localStorage.getItem('gemini_debug_location_hook_mode') === "true";
 
-        // =================================================================
-        // 核心监控逻辑：面板保活与导航组件复位
-        // =================================================================
-
-        /**
-         * 1. 确保管理面板不被意外移除（保活机制）
-         * 检查条件：
-         * - 面板被用户“钉住” (pinned)
-         * - 开启了元素点击调试模式
-         * - 开启了位置钩子（Location Hook）调试模式
-         */
-        if (localStorage.getItem('gemini-pin') === "pinned" ||
-            localStorage.getItem('gemini_debug_element_click_mode') === "true" ||
-            localStorage.getItem('gemini_debug_location_hook_mode') === "true"
-        ) {
-            // 如果满足上述任一条件，且打开面板的函数已定义，则强制重新挂载/显示面板
-            if (typeof geminiElementBlockerOpenPanel == 'function') {
+            if (isPinned && typeof geminiElementBlockerOpenPanel == 'function') {
                 geminiElementBlockerOpenPanel();
             }
-        }
 
-        /**
-         * 2. 导航项丢失检测与自动修复
-         * 逻辑：通过检查特定类名 '.li_global' 的数量来判断导航菜单是否完整。
-         * 场景：防止某些动态加载的网页在渲染过程中将已生成的导航条覆盖或删除。
-         */
-        if (document.querySelectorAll('.li_global').length < 150) {
-            // 如果页面中现存的导航项少于 150 个，判定为“导航条受损”或“未加载完成”
-            if (typeof parentElement_add == 'function') {
-                // 调用父级添加函数，重新执行导航条的初始化或 DOM 注入
-                parentElement_add();
-                console.log('Gemini: 检测到导航项缺失，正在执行导航复位...');
+            // 2. 导航内容破坏检测
+            if (currentNavCount < 150) {
+                if (typeof parentElement_add == 'function') {
+                    console.warn('Gemini: 导航内容疑似被破坏或尚未加载，正在尝试复位...');
+
+                    // 执行修复
+                    parentElement_add();
+
+                    // 修复后立即更新计数，防止 parentElement_add 产生的节点变化导致下一次重复触发
+                    lastNavCount = document.querySelectorAll('.li_global').length;
+                }
+            } else {
+                // 数量充足，同步当前计数
+                lastNavCount = currentNavCount;
             }
+
+            /*
+            // 3.沉浸式翻译不加载
+            setTimeout(() => {
+                if (localStorage.getItem('gemini_immersive_translation_state') == 'on' && document.getElementById('translation-button') == null) {
+                    loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/Adblock4limbo.immersiveTranslation.user.js', 'head', 'm3u8Andmp4Finder')
+                } else {
+                    document.getElementById('translation-button').classList.remove('scroll-hidden')
+                }
+            }, 5000)
+            */
+
         }
-
-
     }, 2000);
 });
 
-
-
-// 3. 开始对 body 进行深度监控
+// 开始监控
 if (document.body) {
     bodyObserver.observe(document.body, {
-        childList: true, // 监控子节点增减
-        subtree: true,    // 监控所有后代节点
-        attributes: false // 如果不需要监听属性（如 class 变化），设为 false 性能更好
-    });
-} else {
-    // 预防 body 还没加载的情况
-    window.addEventListener('DOMContentLoaded', () => {
-        bodyObserver.observe(document.body, {
-            childList: true,
-            subtree: true
-        });
+        childList: true,
+        subtree: true,
+        attributes: false // 除非导航条被隐藏是通过 style 改变的，否则不建议监听属性，太耗性能
     });
 }
 

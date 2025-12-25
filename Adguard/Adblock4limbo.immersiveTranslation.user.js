@@ -1235,7 +1235,7 @@ initAdblockLoader();
                 // 延迟结束时，如果队列里依然只有 3 次（没有第4次加入），则触发
                 if (clickTimes.length === 3) {
                     if (btn) {
-                        btn.classList.toggle('hidden-toggle');
+                        btn.classList.toggle('scroll-hidden');
                         console.log("暗号匹配成功：3次点击。");
                     }
                     clickTimes = []; // 执行后重置
