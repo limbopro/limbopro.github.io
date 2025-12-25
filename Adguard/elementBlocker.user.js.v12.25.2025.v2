@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         元素屏蔽/追踪器 (V26.39.10 - 拦截程序化点击和 PostMessage)
 // @namespace    http://tampermonkey.net/
-// @version      26.39.12
+// @version      26.39.11
 // @description  V26.39.11：在 V26.39.9 同步中断的基础上，新增拦截 Element.prototype.click（用于程序化重定向）和 window.postMessage（用于跨框架侧信道重定向）。这是对高级绕过机制的最后防线。
 // @author       Gemini
 // @match        *://*/*
@@ -13,20 +13,20 @@
     'use strict';
 
 
-    function permanentClearOnce() {
-        const FLAG = "APP_CLEANUP_DONE";
+function permanentClearOnce() {
+    const FLAG = "APP_CLEANUP_DONE";
+    
+    // 如果保险丝已经断开（标记存在），则不执行
+    if (localStorage.getItem(FLAG)) return;
 
-        // 如果保险丝已经断开（标记存在），则不执行
-        if (localStorage.getItem(FLAG)) return;
+    localStorage.clear();
+    
+    // 清理后立即重新植入标记，防止下次执行
+    localStorage.setItem(FLAG, "true");
+    console.log("跨页面单次清理完成");
+}
 
-        localStorage.clear();
-
-        // 清理后立即重新植入标记，防止下次执行
-        localStorage.setItem(FLAG, "true");
-        console.log("跨页面单次清理完成");
-    }
-
-    permanentClearOnce()
+permanentClearOnce()
 
 
     // =================================================================
@@ -1680,7 +1680,7 @@ border: white !important;
                 // 加上 !important 确保覆盖网页原生样式
                 styleEl.innerHTML = `
             ${selector} {
-                outline: 6px solid #ff4d4f !important;
+                outline: 4px solid #ff4d4f !important;
                 outline-offset: -2px !important;
                 background-color: rgba(255, 77, 79, 0.3) !important;
                 position: relative !important;
@@ -1691,7 +1691,7 @@ border: white !important;
                 content: "SELECTED"/*: ${selector.replace(/"/g, "'")}";*/
                 position: absolute;
                 top: -25px;
-                outline:6px solid #ff4d4f !important;
+                outline:4px solid #ff4d4f !important;
                 left: 0;
                 background: #ff4d4f;
                 color: white;
@@ -1739,55 +1739,12 @@ border: white !important;
             border: 2px dashed #3498db !important; transition: all 0.05s; display: none; 
         }
 
-   
-/* 基础按钮样式 */
-.sel-btn-base {
-    font-weight: bolder !important;
-    cursor: pointer !important;
-    border: 1px solid #85a5ff !important;
-    border-radius: 2px !important;
-    padding: 0 4px !important;
-    font-size: 14px !important;
-    vertical-align: middle !important;
-    transition: all 0.2s ease !important; /* 平滑过渡效果 */
-    outline: none !important;
-}
-
-/* 点击时的通用缩放效果 */
-.sel-btn-base:active {
-    transform: scale(0.95) !important;
-}
-
-/* --- 逐级泛化 (蓝色) --- */
-.sel-hint-box {
-    background: #e6f7ff !important;
-    color: #1890ff !important;
-}
-.sel-hint-box:hover {
-    background: #bae7ff !important; /* 悬停背景加深 */
-    border-color: #69c0ff !important;
-}
-
-/* --- 逐级精简 (绿色) --- */
-.sel-simplify-box {
-    background: #f6ffed !important;
-    color: #52c41a !important;
-}
-.sel-simplify-box:hover {
-    background: #d9f7be !important;
-    border-color: #95de64 !important;
-}
-
-/* --- 撤销操作 (橙色) --- */
-.sel-restore-box {
-    background: #fff7e6 !important;
-    color: #fa8c16 !important;
-}
-.sel-restore-box:hover {
-    background: #ffe7ba !important;
-    border-color: #ffc069 !important;
-}
-
+        .sel-hint-box {
+    background: red;
+    padding: 5px;
+    border-radius: 2px;
+    color: white;
+        }
 
         .sel-result-window { 
             
@@ -1861,10 +1818,13 @@ border: white !important;
 
 
    <div style="    padding-top: 9px;">
-   <button class="sel-btn-base sel-hint-box"> 逐级泛化 </button>
-<button id="sel-simplify-box" class="sel-btn-base sel-simplify-box"> 逐级精简 </button>
-<button id="sel-restore-box" class="sel-btn-base sel-restore-box"> 撤销操作↩️ </button>
-   </div>
+    <button class="sel-hint-box"
+        style="font-weight:bolder;cursor:pointer;border:1px solid #85a5ff;border-radius:2px;background: #e6f7ff;padding:0 4px;font-size: 14px;color: #1890ff;vertical-align: middle;"> 逐级泛化 </button>
+    <button id="sel-simplify-box"
+        style="font-weight:bolder;cursor:pointer;border:1px solid #85a5ff;border-radius:2px;background: #f6ffed;padding:0 4px;font-size: 14px;color: #52c41a;vertical-align: middle;"> 逐级精简 </button>
+    <button id="sel-restore-box"
+        style="font-weight:bolder;cursor:pointer;border:1px solid #85a5ff;border-radius:2px;background: #fff7e6;padding: 0 4px;font-size: 14px;color: #fa8c16;vertical-align: middle;"> 撤销操作↩️ </button>
+</div>
    
 
     <div class="sel-actions">
@@ -2317,16 +2277,16 @@ border: white !important;
                 if (typeof saveCssRemovalChoice === 'function') {
                     if (saveCssRemovalChoice(sel)) {
                         if (document.querySelector('.sel-result-window')) {
-                            if (confirm(`✅ 成功保存CSS选择器规则！是否刷新页面？`)) {
-
-                                //alert('wtf,there')*/
-                                location.reload();
+                            if (confirm(`✅ 成功保存CSS选择器规则！是否刷新页面？`)) { 
+                                
+//alert('wtf,there')*/
+location.reload(); 
                             }
                         } else {
+                            
+//alert('wtf,here')
 
-                            //alert('wtf,here')
-
-                            confirmndExecuteFC(`✅ 成功保存CSS选择器规则！是否刷新页面？`, () => { location.reload() });
+confirmndExecuteFC(`✅ 成功保存CSS选择器规则！是否刷新页面？`, () => { location.reload() });
 
                         }
 
@@ -2387,9 +2347,9 @@ border: white !important;
     // =================================================================
     function interceptWindowOpen(targetWindow) {
 
-        return;
+return;
 
-        //// retur
+//// retur
         let originalOpen;
         try {
             originalOpen = targetWindow.open;

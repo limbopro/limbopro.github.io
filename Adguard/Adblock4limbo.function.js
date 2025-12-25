@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Adblock4limbo——导航及各类功能函数合集.[github]
 // @namespace    https://limbopro.com/Adguard/Adblock4limbo.function.js
-// @version      0.2025.12.24
+// @version      0.2025.12.25
 // @license      CC BY-NC-SA 4.0
 // @description  实用网站导航 —— 沉浸式翻译纯JS版本；M3U8/MP4资源链接提取；广告元素屏蔽器；费在线影视/前端学习/开发者社区/新闻/建站/下载工具/格式转换工具/电子书/新闻/写作/免费漫画等；
 // @author       limbopro
@@ -35,6 +35,8 @@
 
 
 
+
+
 (function () {
     const css = `
 /* 给到悬浮窗用 Adblock4limbo 4 function */
@@ -46,7 +48,7 @@
     display: flex !important;
     justify-content: center !important;
     align-items: center;
-    z-index: 9998 !important;
+    z-index: 114154 !important;
     opacity: 0;
     visibility: hidden;
     transition: opacity .2s, visibility .2s;
@@ -249,8 +251,6 @@ function tripleClick() {
             } else {
                 number = 0;
                 console.log("number被重设为0");
-                //hiddencjsfy()
-                showcjsfy()
             }
         }, 850)
     }
@@ -634,19 +634,22 @@ var csp_regex = new RegExp(/\b(twitter|xvideos|google)\b/i);
 window.fc_str_ua = navigator.userAgent.toLowerCase();
 window.regexp = /(.*)(iphone\sos\s)(\d{2})(.*)/;
 window.ios_version = fc_str_ua.replace(regexp, '$3');
-
 var csp = ['twitter', 'xvideos'];
-var number_x = 0;
-if (/\b(google|bing)\b/i.test(window.location.href.toLowerCase())) { // 谷歌和必应均不插入导航按钮
-} else if (csp_regex.test(window.location.href.toLowerCase()) && !(/\b(mobile)\b/i.test(navigator.userAgent.toLowerCase()))) { // 如果是带有CSP的网站则带上参数 csp // 2333
-    initializeFloatingNavigationButton(getResponsiveButtonSize(), 'csp');
-    _onclick_button();
-}
-else {
-    initializeFloatingNavigationButton(getResponsiveButtonSize(), 'nocsp'); // 反之则不带
-    _onclick_button();
+
+function create_dh_button() {
+    if (/\b(google|bing)\b/i.test(window.location.href.toLowerCase())) { // 谷歌和必应均不插入导航按钮
+    } else if (csp_regex.test(window.location.href.toLowerCase()) && !(/\b(mobile)\b/i.test(navigator.userAgent.toLowerCase()))) { // 如果是带有CSP的网站则带上参数 csp // 2333
+        initializeFloatingNavigationButton(getResponsiveButtonSize(), 'csp');
+        _onclick_button();
+    }
+    else {
+        initializeFloatingNavigationButton(getResponsiveButtonSize(), 'nocsp'); // 反之则不带
+        _onclick_button();
+    }
 }
 
+
+create_dh_button()
 
 
 // 初始化导航容器
@@ -775,7 +778,7 @@ function getNavigationHTML() {
 </li>
 
       <li class="li_global"><button class="a_global special yellow" id="zhixingjs" onclick='window.showJsManager()' style="border-radius:4px;background:#c53f3f">🧑‍💻执行JS代码</button></li>
-    <li class="li_global"><button class="a_global special yellow" id="loadjsStatus" onclick='window.geminiScriptCheck()' style="border-radius:4px;background:#c53f3f">JS加载状态</button></li>
+    <li class="li_global"><button class="a_global special yellow" id="loadjsStatus" onclick='window.geminiScriptCheck()' style="border-radius:4px;background:#c53f3f">🟢JS加载状态</button></li>
       <li class="li_global">
       <button id="adsSkip" class="a_global special yellow ads_skip_on" title="自动跳过广告已开启 (点击关闭)" style="
     width: 106px !important;
@@ -1108,16 +1111,53 @@ function boom() {
 /* Start 判断是否显示导航 可不删 */
 window.body_build = function body_build(x) { // 判断导航显示与否
 
-    if (x == "true") {
-        ////console.log("// body_build() 输入为 true，开始创建导航...")
 
-        initFloatingNav(1, 114118, 1, 'auto')
+    /**
+         * 2. 导航项丢失检测与自动修复
+         * 逻辑：通过检查特定类名 '.li_global' 的数量来判断导航菜单是否完整。
+         * 场景：防止某些动态加载的网页在渲染过程中将已生成的导航条覆盖或删除。
+         */
+    if (document.querySelectorAll('.li_global').length < 150) {
+        // 如果页面中现存的导航项少于 150 个，判定为“导航条受损”或“未加载完成”
+        if (typeof parentElement_add == 'function') {
+            // 调用父级添加函数，重新执行导航条的初始化或 DOM 注入
+            parentElement_add();
+            console.log('Gemini: 检测到导航项缺失，正在执行导航复位...');
+        }
 
-    } else if (x == "false") {
-        initFloatingNav(0, -114154, 1, 'none')
-        setTimeout(() => {
-        }, 750)
+
     }
+
+
+    if (typeof initImmersiveTranslationManager == 'function') {
+        // 沉浸式翻译按钮显示
+        if (localStorage.getItem('gemini_immersive_translation_state') == 'on') {
+            if (document.getElementById('cjsfy')?.textContent.indexOf('ON') == '-1') {
+                window.initImmersiveTranslationManager()
+                console.log('Gemini: 检测到沉浸式翻译按钮显示不正确，正在执行按钮复位...');
+            }
+        }
+    }
+
+
+
+    // 创建导航按钮
+    if (document.getElementById('dh_button') == null) {
+
+
+
+    }
+
+
+    setTimeout(() => {
+        if (x == "true") {
+            initFloatingNav(1, 114118, 1, 'auto')
+        } else if (x == "false") {
+            initFloatingNav(0, -114154, 1, 'none')
+            setTimeout(() => {
+            }, 350)
+        }
+    }, 250)
 
 }
 
@@ -2441,15 +2481,23 @@ window.addEventListener('load', function () {
                 if (newState === 'on') {
                     if (typeof loadExternalResourceFireAndForget === 'function') {
                         loadExternalResourceFireAndForget('script', SCRIPT_URL, 'head', 'immersiveTranslation');
+                        if (typeof confirmndExecuteFC === 'function') {
+                            confirmndExecuteFC('脚本已加载，使用过程中1秒内连续点击页面空白处3次可切换显示或隐藏翻译按钮🔘');
+                        } else {
+                            confirm('脚本已加载，使用过程中1秒内连续点击页面空白处3次可切换显示或隐藏翻译按钮🔘')
+                        }
                     }
                 } else {
                     if (typeof confirmndExecuteFC === 'function') {
                         confirmndExecuteFC('脚本已关闭，但已注入的逻辑可能需要刷新页面才能完全清除。');
+                    } else {
+                        confirm('脚本已关闭，但已注入的逻辑可能需要刷新页面才能完全清除。')
                     }
                 }
             };
         }
     };
+
 
     // 执行初始化
     window.initImmersiveTranslationManager();
