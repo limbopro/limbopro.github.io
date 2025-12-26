@@ -283,6 +283,7 @@ window.initWebDebugger = function showDebuggerPanel() {
     // --- DOM 结构创建 和 拖拽功能 ---
     const panel = document.createElement('div');
     panel.id = 'storage-control-panel';
+    panel.className = 'notranslate';
 
     const header = document.createElement('h3');
     header.innerHTML = '⚙️ Web 存储调试器 (Cookies/Local/Session/Config)';

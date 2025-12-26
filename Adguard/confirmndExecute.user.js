@@ -12,7 +12,7 @@ const fccmsNoneCSS = `
     display: flex !important;
     justify-content: center !important;
     align-items: center;
-    z-index: 114122 !important;
+    z-index: 2147483647 !important;
     opacity: 0;
     visibility: hidden;
     transition: opacity .2s, visibility .2s;

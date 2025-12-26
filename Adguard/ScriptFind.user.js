@@ -191,6 +191,7 @@ window.showPageScriptsFloatWindow = function showPageScriptsFloatWindow() {
     // 4. 创建 DOM 结构 (省略重复代码...)
     const newFloatWindow = document.createElement('div');
     newFloatWindow.id = WINDOW_ID;
+    newFloatWindow.className = 'notranslate';
 
     const header = document.createElement('div');
     header.id = 'script-viewer-header';

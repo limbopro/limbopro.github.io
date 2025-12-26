@@ -586,179 +586,225 @@
 
     // 修改选择器对应的内联样式 开始
 
+
     /**
- * InlineStyleManager - 终极增强版 (无透明度拖拽)
- * 功能：当前选择器置顶、结构提取、计算样式参考、已存样式回显、不透明拖拽
- */
-const InlineStyleManager = {
-    STORAGE_KEY: 'user_inline_styles_data',
+     * InlineStyleManager - 完美同步版 (清空记录后同步刷新下拉列表)
+     */
+    const InlineStyleManager = {
+        STORAGE_KEY: 'user_inline_styles_data',
+        activeSelector: null,
 
-    init() {
-        // 使用事件捕获委托，确保在复杂窗口中也能响应点击
-        document.addEventListener('click', (e) => {
-            if (e.target && e.target.id === 'sel-edit-css') {
-                e.preventDefault();
-                this.openEditor();
-            }
-        }, true);
+        init() {
+            document.addEventListener('click', (e) => {
+                if (e.target && e.target.id === 'sel-edit-css') {
+                    e.preventDefault();
+                    this.openEditor();
+                }
+            }, true);
+            this.applyAll();
+            setInterval(() => this.applyAll(), 2000);
+        },
 
-        this.applyAll();
-        // 持续监控动态生成的元素
-        setInterval(() => this.applyAll(), 2000);
-    },
+        _getElementInfo(selector) {
+            try {
+                const el = document.querySelector(selector);
+                const savedData = JSON.parse(localStorage.getItem(this.STORAGE_KEY) || '{}');
+                const previousStyle = savedData[selector] || "";
 
-    // 提取详尽的元素信息
-    _getElementInfo(selector) {
-        try {
-            const el = document.querySelector(selector);
-            if (!el) return { header: "⚠️ 元素已消失", computed: "", saved: "" };
+                let header = el ?
+                    `[ 标签 ] : ${el.tagName.toLowerCase()}\n[ ID ]   : ${el.id ? '#' + el.id : '无'}\n[ 类名 ] : ${el.className ? '.' + el.className.trim().replace(/\s+/g, '.') : '无'}` :
+                    "⚠️ 提示：该元素当前未在页面上显示";
 
-            // 1. 获取本地保存过的样式
+                let computedStr = "";
+                if (el) {
+                    const computed = window.getComputedStyle(el);
+                    const props = ['color', 'background-color', 'font-size', 'display', 'margin', 'padding', 'width', 'height', 'position'];
+                    props.forEach(p => { computedStr += `${p}: ${computed.getPropertyValue(p)};\n`; });
+                } else {
+                    computedStr = "无法获取实时计算样式";
+                }
+
+                return { header, computed: computedStr, saved: previousStyle };
+            } catch (e) { return { header: "⚠️ 解析错误", computed: "", saved: "" }; }
+        },
+
+        // 核心改进：确保下拉菜单与 localStorage 实时同步
+        _updateEditorContent(selector) {
+            this.activeSelector = selector;
+            const info = this._getElementInfo(selector);
+
+            document.getElementById('mgr-cur-sel-display').innerText = selector;
+            document.getElementById('mgr-struct-display').innerText = info.header;
+            document.getElementById('mgr-computed-display').innerText = info.computed;
+            document.getElementById('inline-css-input').value = info.saved;
+
+            // 同步刷新下拉列表
             const savedData = JSON.parse(localStorage.getItem(this.STORAGE_KEY) || '{}');
-            const previousStyle = savedData[selector] || "";
+            const allSavedSelectors = Object.keys(savedData);
+            const historySelect = document.getElementById('mgr-history-select');
 
-            // 2. 构造基础结构信息
-            let header = `[ 标签 ] : ${el.tagName.toLowerCase()}\n`;
-            header += `[ ID ]   : ${el.id ? '#' + el.id : '无'}\n`;
-            header += `[ 类名 ] : ${el.className ? '.' + el.className.trim().replace(/\s+/g, '.') : '无'}\n`;
+            if (historySelect) {
+                if (allSavedSelectors.length === 0) {
+                    historySelect.innerHTML = '<option value="">暂无编辑记录</option>';
+                } else {
+                    historySelect.innerHTML = `
+                    <option value="">快速切换已编辑的记录 (${allSavedSelectors.length}) ...</option>
+                    ${allSavedSelectors.map(sel => `<option value="${sel}" ${sel === selector ? 'selected' : ''}>${sel}</option>`).join('')}
+                `;
+                }
+            }
+        },
 
-            // 3. 构造计算样式信息
-            const computed = window.getComputedStyle(el);
-            const props = ['color', 'background-color', 'font-size', 'display', 'margin', 'padding', 'width', 'height', 'position'];
-            let computedStr = "";
-            props.forEach(p => {
-                computedStr += `${p}: ${computed.getPropertyValue(p)};\n`;
-            });
-            
-            return { header, computed: computedStr, saved: previousStyle };
-        } catch (e) {
-            return { header: "⚠️ 解析错误", computed: "", saved: "" };
-        }
-    },
+        openEditor(specificSelector = null) {
+            const outputElem = document.querySelector('#sel-output');
+            let initialSelector = specificSelector || (outputElem ? (outputElem.innerText || outputElem.value).trim() : '');
 
-    openEditor() {
-        const outputElem = document.querySelector('#sel-output');
-        const selector = outputElem ? (outputElem.innerText || outputElem.value).trim() : '';
-        
-        if (!selector) return alert("请先获取选择器");
-        if (document.getElementById('style-editor-ui')) return;
+            if (!initialSelector) return alert("请先获取选择器");
 
-        const info = this._getElementInfo(selector);
+            if (document.getElementById('style-editor-ui')) {
+                this._updateEditorContent(initialSelector);
+                return;
+            }
 
-        const modal = document.createElement('div');
-        modal.id = 'style-editor-ui';
-        modal.style.cssText = `
-            position: fixed !important; top: 10% !important; left: 50% !important;
-            width: 90vw !important; max-width: 400px !important;
-            transform: translateX(-50%) !important;
-            background: #ffffff !important; border: 1px solid #adc6ff !important;
-            box-shadow: 0 15px 45px rgba(0,0,0,0.3) !important;
-            z-index: 2147483647 !important; border-radius: 12px !important;
-            font-family: SFMono-Regular, Consolas, monospace !important;
-            overflow: hidden !important; touch-action: none;
-            opacity: 1 !important; /* 确保初始不透明 */
-        `;
+            this.activeSelector = initialSelector;
+            const savedData = JSON.parse(localStorage.getItem(this.STORAGE_KEY) || '{}');
+            const allSavedSelectors = Object.keys(savedData);
+            const info = this._getElementInfo(initialSelector);
+            const placeholderText = "提示：此前未保存过样式。\n参考：color: red; font-size: 16px;";
 
-        modal.innerHTML = `
-            <div id="style-editor-handle" style="background: #f0f5ff; padding: 12px; cursor: move; border-bottom: 1px solid #d6e4ff; display: flex; justify-content: space-between; align-items: center; user-select: none;">
-                <span style="font-size: 13px; font-weight: bold; color: #1d39c4;">⠿ 样式管理器</span>
-                <span id="close-style-ui" style="cursor: pointer; font-size: 24px; line-height: 1; color: #999;">&times;</span>
+            const modal = document.createElement('div');
+            modal.id = 'style-editor-ui';
+            modal.className = 'notranslate';
+            modal.style.cssText = `position:fixed;top:10%;left:50%;width:90vw;max-width:390px;transform:translateX(-50%);background:#fff;border:1px solid #adc6ff;box-shadow:0 15px 45px rgba(0,0,0,0.3);z-index:2147483640;border-radius:12px;font-family:SFMono-Regular,Consolas,monospace;overflow:hidden;touch-action:none;opacity:1 !important;`;
+
+            modal.innerHTML = `
+            <div id="style-editor-handle" style="background:#f0f5ff;padding:12px;cursor:move;border-bottom:1px solid #d6e4ff;display:flex;justify-content:space-between;align-items:center;user-select:none;">
+                <span style="font-size:13px;font-weight:bold;color:#1d39c4;">⠿ 样式管理器</span>
+                <span id="close-style-ui" style="cursor:pointer;font-size:24px;line-height:1;color:#999;">&times;</span>
             </div>
-            <div style="padding: 16px; max-height: 80vh; overflow-y: auto;">
+            <div style="padding:16px;max-height:80vh;overflow-y:auto;">
                 
-                <div style="font-size: 11px; font-weight: bold; color: #2f54eb; margin-bottom: 4px;">CURRENT SELECTOR (当前选择器):</div>
-                <div style="background: #e6f7ff; padding: 8px; font-size: 12px; border-radius: 4px; margin-bottom: 12px; border: 1px solid #91d5ff; color: #003a8c; word-break: break-all;">${selector}</div>
+                <div style="font-size:11px;font-weight:bold;color:#888;margin-bottom:4px;">HISTORY RECORDS (编辑历史):</div>
+                <select id="mgr-history-select" style="width:100%;margin-bottom:12px;padding:4px;font-size:11px;border:1px solid #d9d9d9;border-radius:4px;background:#f5f5f5;color:#666;">
+                    <option value="">快速切换已编辑的记录 (${allSavedSelectors.length}) ...</option>
+                    ${allSavedSelectors.map(sel => `<option value="${sel}" ${sel === initialSelector ? 'selected' : ''}>${sel}</option>`).join('')}
+                </select>
 
-                <div style="font-size: 11px; font-weight: bold; color: #888; margin-bottom: 4px;">STRUCTURE & ID/CLASS:</div>
-                <pre style="background: #f8f9fa; padding: 8px; font-size: 11px; border-radius: 4px; margin-bottom: 12px; border: 1px solid #eee; color: #333;">${info.header}</pre>
+                <div style="font-size:11px;font-weight:bold;color:#2f54eb;margin-bottom:4px;">CURRENT SELECTOR (当前选择器):</div>
+                <div id="mgr-cur-sel-display" style="background:#e6f7ff;padding:8px;font-size:11px;border-radius:4px;margin-bottom:12px;border:1px solid #91d5ff;color:#003a8c;word-break:break-all;">${initialSelector}</div>
+
+                <div style="font-size:11px;font-weight:bold;color:#888;margin-bottom:4px;">STRUCTURE & ID/CLASS (结构与身份):</div>
+                <pre id="mgr-struct-display" style="background:#f8f9fa;padding:8px;font-size:11px;border-radius:4px;margin-bottom:12px;border:1px solid #eee;color:#333;">${info.header}</pre>
                 
-                <div style="font-size: 11px; font-weight: bold; color: #888; margin-bottom: 4px;">REAL-TIME COMPUTED (参考值):</div>
-                <pre style="background: #282c34; padding: 10px; font-size: 11px; max-height: 100px; overflow-y: auto; border-radius: 6px; margin-bottom: 12px; color: #abb2bf; border: 1px solid #181a1f;">${info.computed}</pre>
+                <div style="font-size:11px;font-weight:bold;color:#888;margin-bottom:4px;">REAL-TIME COMPUTED (实时计算样式):</div>
+                <pre id="mgr-computed-display" style="background:#282c34;padding:10px;font-size:11px;max-height:80px;overflow-y:auto;border-radius:6px;margin-bottom:12px;color:#abb2bf;border:1px solid #181a1f;">${info.computed}</pre>
                 
-                <div style="font-size: 11px; font-weight: bold; color: #1d39c4; margin-bottom: 4px;">EDIT INLINE STYLE (修改后刷新生效):</div>
-                <textarea id="inline-css-input" placeholder="输入 CSS 样式..." 
-                    style="width: 100% !important; height: 100px !important; border: 1px solid #2f54eb !important; border-radius: 6px !important; padding: 10px !important; font-size: 13px !important; box-sizing: border-box !important; background: #fff; color: #000;">${info.saved}</textarea>
+                <div style="font-size:11px;font-weight:bold;color:#1d39c4;margin-bottom:4px;">EDIT INLINE STYLE (编辑内联样式):</div>
+                <textarea id="inline-css-input" placeholder="${placeholderText}" 
+                    style="width:100% !important;height:100px !important;border:1px solid #2f54eb !important;border-radius:6px !important;padding:10px !important;font-size:13px !important;box-sizing:border-box !important;">${info.saved}</textarea>
                 
-                <div style="display: flex; gap: 10px; margin-top: 15px;">
-                     <button id="clear-style-ui" style="flex: 1; padding: 10px; background: #fff; border: 1px solid #ff4d4f; color: #ff4d4f; border-radius: 6px; font-size: 12px; cursor: pointer;">清空记录</button>
-                     <button id="save-style-ui" style="flex: 2; padding: 10px; background: #2f54eb; color: #fff; border: none; border-radius: 6px; font-size: 13px; font-weight: bold; cursor: pointer;">应用并保存</button>
+                <div style="display:flex;gap:10px;margin-top:15px;">
+                     <button id="clear-style-ui" style="flex:1;padding:10px;background:#fff;border:1px solid #ff4d4f;color:#ff4d4f;border-radius:6px;font-size:12px;cursor:pointer;">清空记录</button>
+                     <button id="save-style-ui" style="flex:2;padding:10px;background:#2f54eb;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:bold;cursor:pointer;">应用并保存</button>
                 </div>
             </div>
         `;
 
-        document.body.appendChild(modal);
+            document.body.appendChild(modal);
+            this._initDrag(modal, document.getElementById('style-editor-handle'));
 
-        this._initDrag(modal, document.getElementById('style-editor-handle'));
-        
-        document.getElementById('close-style-ui').onclick = () => modal.remove();
-        
-        document.getElementById('save-style-ui').onclick = () => {
-            const cssValue = document.getElementById('inline-css-input').value;
-            this.save(selector, cssValue);
-            modal.remove();
-        };
-
-        document.getElementById('clear-style-ui').onclick = () => {
-            if(confirm("确定要删除此选择器的自定义样式吗？")) {
-                this.save(selector, "");
-                modal.remove();
+            const historySelect = document.getElementById('mgr-history-select');
+            if (historySelect) {
+                historySelect.onchange = (e) => {
+                    const selectedSel = e.target.value;
+                    if (selectedSel) this._updateEditorContent(selectedSel);
+                };
             }
-        };
-    },
 
-    _initDrag(el, handle) {
-        let offsetX = 0, offsetY = 0, isDragging = false;
-        const start = (e) => {
-            isDragging = true;
-            const event = e.type === 'touchstart' ? e.touches[0] : e;
-            offsetX = event.clientX - el.getBoundingClientRect().left;
-            offsetY = event.clientY - el.getBoundingClientRect().top;
-            // 已删除 el.style.opacity 逻辑，保持全显
-        };
-        const move = (e) => {
-            if (!isDragging) return;
-            const event = e.type === 'touchmove' ? e.touches[0] : e;
-            el.style.left = (event.clientX - offsetX) + 'px';
-            el.style.top = (event.clientY - offsetY) + 'px';
-            el.style.transform = "none";
-        };
-        const end = () => { isDragging = false; };
-        
-        handle.addEventListener('mousedown', start);
-        window.addEventListener('mousemove', move);
-        window.addEventListener('mouseup', end);
-        handle.addEventListener('touchstart', start, { passive: true });
-        window.addEventListener('touchmove', move, { passive: false });
-        window.addEventListener('touchend', end);
-    },
+            document.getElementById('close-style-ui').onclick = () => modal.remove();
+            document.getElementById('save-style-ui').onclick = () => {
+                this.save(this.activeSelector, document.getElementById('inline-css-input').value);
+                modal.remove();
+            };
 
-    save(selector, cssString) {
-        const savedData = JSON.parse(localStorage.getItem(this.STORAGE_KEY) || '{}');
-        if (!cssString || cssString.trim() === "") {
-            delete savedData[selector];
-            localStorage.setItem(this.STORAGE_KEY, JSON.stringify(savedData));
-            location.reload(); 
-        } else {
-            savedData[selector] = cssString;
-            localStorage.setItem(this.STORAGE_KEY, JSON.stringify(savedData));
-            this.applyAll();
+            document.getElementById('clear-style-ui').onclick = () => {
+
+
+                if (typeof confirmndExecuteFC == 'function') {
+                    confirmndExecuteFC(`确定要删除此选择器的自定义样式吗？`, () => {
+                        this.save(this.activeSelector, "");
+                        this._updateEditorContent(this.activeSelector);
+                    });
+                } else {
+
+                    if (confirm("确定要删除此选择器的自定义样式吗？")) {
+                        this.save(this.activeSelector, "");
+                        this._updateEditorContent(this.activeSelector);
+                    }
+                }
+
+            };
+        },
+
+        _initDrag(el, handle) {
+            let offsetX = 0, offsetY = 0, isDragging = false;
+            const start = (e) => {
+                isDragging = true;
+                const event = e.type === 'touchstart' ? e.touches[0] : e;
+                offsetX = event.clientX - el.getBoundingClientRect().left;
+                offsetY = event.clientY - el.getBoundingClientRect().top;
+            };
+            const move = (e) => {
+                if (!isDragging) return;
+                const event = e.type === 'touchmove' ? e.touches[0] : e;
+                el.style.left = (event.clientX - offsetX) + 'px';
+                el.style.top = (event.clientY - offsetY) + 'px';
+                el.style.transform = "none";
+            };
+            const end = () => isDragging = false;
+            handle.addEventListener('mousedown', start);
+            window.addEventListener('mousemove', move);
+            window.addEventListener('mouseup', end);
+            handle.addEventListener('touchstart', start, { passive: true });
+            window.addEventListener('touchmove', move, { passive: false });
+            window.addEventListener('touchend', end);
+        },
+
+        save(selector, cssString) {
+            const savedData = JSON.parse(localStorage.getItem(this.STORAGE_KEY) || '{}');
+            if (!cssString || cssString.trim() === "") {
+                if (savedData[selector]) {
+                    delete savedData[selector];
+                    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(savedData));
+                    if (typeof confirmndExecuteFC == 'function') {
+                        confirmndExecuteFC(`该记录已清空。请手动刷新页面以完全恢复原始样式。`, () => {
+                        });
+                    } else {
+                        alert("该记录已清空。请手动刷新页面以完全恢复原始样式。");
+
+                    }
+                }
+            } else {
+                savedData[selector] = cssString;
+                localStorage.setItem(this.STORAGE_KEY, JSON.stringify(savedData));
+                this.applyAll();
+            }
+        },
+
+        applyAll() {
+            const savedData = JSON.parse(localStorage.getItem(this.STORAGE_KEY) || '{}');
+            for (const [selector, style] of Object.entries(savedData)) {
+                try {
+                    const elements = document.querySelectorAll(selector);
+                    const importantStyle = style.split(';')
+                        .map(s => s.trim()).filter(s => s !== "")
+                        .map(s => s.includes('!important') ? s : `${s} !important`)
+                        .join('; ');
+                    elements.forEach(el => el.style.cssText += `; ${importantStyle}`);
+                } catch (e) { }
+            }
         }
-    },
-
-    applyAll() {
-        const savedData = JSON.parse(localStorage.getItem(this.STORAGE_KEY) || '{}');
-        for (const [selector, style] of Object.entries(savedData)) {
-            try {
-                const elements = document.querySelectorAll(selector);
-                const importantStyle = style.split(';')
-                    .map(s => s.trim()).filter(s => s !== "")
-                    .map(s => s.includes('!important') ? s : `${s} !important`)
-                    .join('; ');
-                elements.forEach(el => el.style.cssText += `; ${importantStyle}`);
-            } catch (e) {}
-        }
-    }
-};
+    };
 
 
     // 修改选择器对应的内联样式 结束
@@ -1883,7 +1929,7 @@ border: white !important;
                 font-size: 10px;
                 padding: 2px 6px;
                 white-space: nowrap;
-                z-index: 2147483647;
+                z-index: 2147483630;
                 border-radius: 2px;
                 pointer-events: none;
             }
@@ -1919,7 +1965,7 @@ border: white !important;
         style.id = 'selector-tool-style-final';
         style.innerHTML = `
         .sel-overlay { 
-            position: fixed; z-index: 2147483647; pointer-events: none; 
+            position: fixed; z-index: 2147483645; pointer-events: none; 
             background: rgba(52, 152, 219, 0.2) !important; 
             border: 2px dashed #3498db !important; transition: all 0.05s; display: none; 
         }
@@ -1980,7 +2026,7 @@ border: white !important;
             outline: none !important;
 
             position: fixed; top: 20%; left: 50%; transform: translateX(-50%); 
-            z-index: 2147483647; width: 90%; max-width: 450px; height:auto !important;
+            z-index: 2147483631; width: 90%; max-width: 450px; height:auto !important;
             background: #ffffff !important; border-radius: 6px !important;
             box-shadow: 0 10px 40px rgba(0,0,0,0.4) !important; font-family: sans-serif !important; 
             padding: 16px !important; border: 1px solid #ddd !important; display: none;
@@ -2000,8 +2046,9 @@ border: white !important;
             overflow-y: auto !important; display: block !important; white-space: pre-wrap !important;
             user-select: text !important; -webkit-user-select: text !important;
         }
-        .sel-actions { margin-top: 15px !important; display: flex !important; flex-wrap: wrap !important; gap: 8px !important; }
+        .sel-actions { margin-top: 10px !important; display: flex !important; flex-wrap: wrap !important; gap: 8px !important; }
         .sel-btn { 
+        box-shadow:inset 15px 19px 14px 0px rgb(31 10 10 / 36%), 0px 1px 1px 0px rgba(255, 255, 255, 2.05);
             flex: 1; min-width: 60px; min-height: 40px;
             padding: 5px !important; border: none !important; border-radius: 8px !important; 
             cursor: pointer !important; font-weight: bold !important; font-size: 12px !important;
@@ -2027,18 +2074,26 @@ border: white !important;
 
         // --- 1. UI 渲染 ---
         resultWin.innerHTML = `
+
+        <div id="sel-close-main" style="
+        position: absolute;
+        top: 8px;
+        right: 12px;
+        cursor: pointer;
+        font-size: 20px;
+        color: #999;
+        font-weight: bold;
+        line-height: 1;
+        z-index: 10;
+    " onmouseover="this.style.color='#ff4d4f'" onmouseout="this.style.color='#999'">&times;</div>
+
     <span class="sel-title">元素CSS选择器获取与调试 (测试中...)</span>
-    
   <div class="warm-tips" style="box-shadow: inset 1px 1px 4px 4px rgba(0, 0, 0, 0.2);background: #f0f5ff !important;border: 1px solid #adc6ff;padding: 10px 12px;border-radius: 4px;margin: 5px 0 10px 0;font-size: 11px;color: #1d39c4;line-height: 1.6;">
     • <b>逐级泛化：</b>点击 <button class="t-sel-hint-box" style="font-weight:bolder; cursor:pointer; border:1px solid #85a5ff; border-radius:2px; background:#fff; padding:0 4px; font-size:10px; color: #1d39c4; vertical-align: middle;">逐级泛化</button> 移除末尾属性/索引限制，扩展匹配范围。<br>
     • <b>逐级精简：</b>点击 <button id="t-sel-simplify-box" style="font-weight:bolder; cursor:pointer; border:1px solid #85a5ff; border-radius:2px; background:#fff; padding:0 4px; font-size:10px; color: #1d39c4; vertical-align: middle;">逐级精简</button> 智能剔除冗余父级与索引，仅保留唯一性核心路径。<br>
     • <b>手动重构：</b>点击下方“修改”按钮进入编辑模式。
 </div>
-
     <code class="sel-code" id="sel-output"></code>
-
-
-    
     <div id="sel-warning-tip" style="margin: 10px 0; padding: 8px; border-radius: 4px; font-size: 12px; display: none;">
         <span id="sel-tip-msg"></span>
         <span style="float: right;">(匹配: <strong id="sel-count-num">0</strong>)</span>
@@ -2071,16 +2126,18 @@ border: white !important;
     margin-top: 5px !important;
 ">
     <button class="sel-btn sel-edit-btn" id="sel-edit-css" style="
-    margin-top: 4px;
-    font-size: xx-small !important;
     font-weight: lighter !important;
     width: 100%;
-">获取并编辑当前元素CSS选择器的内联样式</button>
+">编辑元素内联样式</button>
 </div>
 
 `;
         document.body.appendChild(resultWin);
 
+        // 绑定主窗口关闭事件
+        document.getElementById('sel-close-main').onclick = () => {
+            resetMode()
+        };
 
         // 1. 获取刚刚生成的元素引用
         const editBtn = resultWin.querySelector('#sel-edit');
@@ -2513,14 +2570,16 @@ border: white !important;
                 if (typeof saveCssRemovalChoice === 'function') {
                     if (saveCssRemovalChoice(sel)) {
                         if (document.querySelector('.sel-result-window')) {
-                            if (confirm(`✅ 成功保存CSS选择器规则！是否刷新页面？`)) {
 
-                                //alert('wtf,there')*/
+                            confirmndExecuteFC(`✅ 成功保存CSS选择器规则！是否刷新页面？`, () => { location.reload() });
+
+                            /*
+                            if (confirm(`✅ 成功保存CSS选择器规则！是否刷新页面？`)) {
                                 location.reload();
                             }
-                        } else {
+                            */
 
-                            //alert('wtf,here')
+                        } else {
 
                             confirmndExecuteFC(`✅ 成功保存CSS选择器规则！是否刷新页面？`, () => { location.reload() });
 
