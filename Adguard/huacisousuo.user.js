@@ -294,7 +294,7 @@ waitForElement('#huacisousuo', (huacibtn) => {
     const saved = localStorage.getItem('huacisousuo');
     const searchPro = document.getElementById('limbopro-search-pro');
 
-    if (saved === 'true' || saved === null) {
+    if (saved === 'true'  /* || saved === null*/) {
         huacibtn.textContent = '划词搜索(ON)';
         huacibtn.style.setProperty('background-color', 'green', 'important');
         huacibtn.dataset.state = 'on';
@@ -307,6 +307,13 @@ waitForElement('#huacisousuo', (huacibtn) => {
     }
 });
 
-if (localStorage.getItem('huacisousuo') === 'true' || localStorage.getItem('huacisousuo') === null) {
+if (localStorage.getItem('huacisousuo') === 'true' /* || localStorage.getItem('huacisousuo') === null*/) {
     initLimoProSearch();
 }
+
+
+const style = document.createElement('style');
+style.textContent = `
+    .cmsnone { display: none !important; }
+`;
+document.head.appendChild(style);

@@ -27,7 +27,6 @@
 
     //permanentClearOnce()
 
-
     // =================================================================
     // ⚠️ 全局常量与状态 
     // =================================================================
@@ -585,6 +584,185 @@
     }
 
 
+    // 修改选择器对应的内联样式 开始
+
+    /**
+ * InlineStyleManager - 终极增强版 (无透明度拖拽)
+ * 功能：当前选择器置顶、结构提取、计算样式参考、已存样式回显、不透明拖拽
+ */
+const InlineStyleManager = {
+    STORAGE_KEY: 'user_inline_styles_data',
+
+    init() {
+        // 使用事件捕获委托，确保在复杂窗口中也能响应点击
+        document.addEventListener('click', (e) => {
+            if (e.target && e.target.id === 'sel-edit-css') {
+                e.preventDefault();
+                this.openEditor();
+            }
+        }, true);
+
+        this.applyAll();
+        // 持续监控动态生成的元素
+        setInterval(() => this.applyAll(), 2000);
+    },
+
+    // 提取详尽的元素信息
+    _getElementInfo(selector) {
+        try {
+            const el = document.querySelector(selector);
+            if (!el) return { header: "⚠️ 元素已消失", computed: "", saved: "" };
+
+            // 1. 获取本地保存过的样式
+            const savedData = JSON.parse(localStorage.getItem(this.STORAGE_KEY) || '{}');
+            const previousStyle = savedData[selector] || "";
+
+            // 2. 构造基础结构信息
+            let header = `[ 标签 ] : ${el.tagName.toLowerCase()}\n`;
+            header += `[ ID ]   : ${el.id ? '#' + el.id : '无'}\n`;
+            header += `[ 类名 ] : ${el.className ? '.' + el.className.trim().replace(/\s+/g, '.') : '无'}\n`;
+
+            // 3. 构造计算样式信息
+            const computed = window.getComputedStyle(el);
+            const props = ['color', 'background-color', 'font-size', 'display', 'margin', 'padding', 'width', 'height', 'position'];
+            let computedStr = "";
+            props.forEach(p => {
+                computedStr += `${p}: ${computed.getPropertyValue(p)};\n`;
+            });
+            
+            return { header, computed: computedStr, saved: previousStyle };
+        } catch (e) {
+            return { header: "⚠️ 解析错误", computed: "", saved: "" };
+        }
+    },
+
+    openEditor() {
+        const outputElem = document.querySelector('#sel-output');
+        const selector = outputElem ? (outputElem.innerText || outputElem.value).trim() : '';
+        
+        if (!selector) return alert("请先获取选择器");
+        if (document.getElementById('style-editor-ui')) return;
+
+        const info = this._getElementInfo(selector);
+
+        const modal = document.createElement('div');
+        modal.id = 'style-editor-ui';
+        modal.style.cssText = `
+            position: fixed !important; top: 10% !important; left: 50% !important;
+            width: 90vw !important; max-width: 400px !important;
+            transform: translateX(-50%) !important;
+            background: #ffffff !important; border: 1px solid #adc6ff !important;
+            box-shadow: 0 15px 45px rgba(0,0,0,0.3) !important;
+            z-index: 2147483647 !important; border-radius: 12px !important;
+            font-family: SFMono-Regular, Consolas, monospace !important;
+            overflow: hidden !important; touch-action: none;
+            opacity: 1 !important; /* 确保初始不透明 */
+        `;
+
+        modal.innerHTML = `
+            <div id="style-editor-handle" style="background: #f0f5ff; padding: 12px; cursor: move; border-bottom: 1px solid #d6e4ff; display: flex; justify-content: space-between; align-items: center; user-select: none;">
+                <span style="font-size: 13px; font-weight: bold; color: #1d39c4;">⠿ 样式管理器</span>
+                <span id="close-style-ui" style="cursor: pointer; font-size: 24px; line-height: 1; color: #999;">&times;</span>
+            </div>
+            <div style="padding: 16px; max-height: 80vh; overflow-y: auto;">
+                
+                <div style="font-size: 11px; font-weight: bold; color: #2f54eb; margin-bottom: 4px;">CURRENT SELECTOR (当前选择器):</div>
+                <div style="background: #e6f7ff; padding: 8px; font-size: 12px; border-radius: 4px; margin-bottom: 12px; border: 1px solid #91d5ff; color: #003a8c; word-break: break-all;">${selector}</div>
+
+                <div style="font-size: 11px; font-weight: bold; color: #888; margin-bottom: 4px;">STRUCTURE & ID/CLASS:</div>
+                <pre style="background: #f8f9fa; padding: 8px; font-size: 11px; border-radius: 4px; margin-bottom: 12px; border: 1px solid #eee; color: #333;">${info.header}</pre>
+                
+                <div style="font-size: 11px; font-weight: bold; color: #888; margin-bottom: 4px;">REAL-TIME COMPUTED (参考值):</div>
+                <pre style="background: #282c34; padding: 10px; font-size: 11px; max-height: 100px; overflow-y: auto; border-radius: 6px; margin-bottom: 12px; color: #abb2bf; border: 1px solid #181a1f;">${info.computed}</pre>
+                
+                <div style="font-size: 11px; font-weight: bold; color: #1d39c4; margin-bottom: 4px;">EDIT INLINE STYLE (修改后刷新生效):</div>
+                <textarea id="inline-css-input" placeholder="输入 CSS 样式..." 
+                    style="width: 100% !important; height: 100px !important; border: 1px solid #2f54eb !important; border-radius: 6px !important; padding: 10px !important; font-size: 13px !important; box-sizing: border-box !important; background: #fff; color: #000;">${info.saved}</textarea>
+                
+                <div style="display: flex; gap: 10px; margin-top: 15px;">
+                     <button id="clear-style-ui" style="flex: 1; padding: 10px; background: #fff; border: 1px solid #ff4d4f; color: #ff4d4f; border-radius: 6px; font-size: 12px; cursor: pointer;">清空记录</button>
+                     <button id="save-style-ui" style="flex: 2; padding: 10px; background: #2f54eb; color: #fff; border: none; border-radius: 6px; font-size: 13px; font-weight: bold; cursor: pointer;">应用并保存</button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        this._initDrag(modal, document.getElementById('style-editor-handle'));
+        
+        document.getElementById('close-style-ui').onclick = () => modal.remove();
+        
+        document.getElementById('save-style-ui').onclick = () => {
+            const cssValue = document.getElementById('inline-css-input').value;
+            this.save(selector, cssValue);
+            modal.remove();
+        };
+
+        document.getElementById('clear-style-ui').onclick = () => {
+            if(confirm("确定要删除此选择器的自定义样式吗？")) {
+                this.save(selector, "");
+                modal.remove();
+            }
+        };
+    },
+
+    _initDrag(el, handle) {
+        let offsetX = 0, offsetY = 0, isDragging = false;
+        const start = (e) => {
+            isDragging = true;
+            const event = e.type === 'touchstart' ? e.touches[0] : e;
+            offsetX = event.clientX - el.getBoundingClientRect().left;
+            offsetY = event.clientY - el.getBoundingClientRect().top;
+            // 已删除 el.style.opacity 逻辑，保持全显
+        };
+        const move = (e) => {
+            if (!isDragging) return;
+            const event = e.type === 'touchmove' ? e.touches[0] : e;
+            el.style.left = (event.clientX - offsetX) + 'px';
+            el.style.top = (event.clientY - offsetY) + 'px';
+            el.style.transform = "none";
+        };
+        const end = () => { isDragging = false; };
+        
+        handle.addEventListener('mousedown', start);
+        window.addEventListener('mousemove', move);
+        window.addEventListener('mouseup', end);
+        handle.addEventListener('touchstart', start, { passive: true });
+        window.addEventListener('touchmove', move, { passive: false });
+        window.addEventListener('touchend', end);
+    },
+
+    save(selector, cssString) {
+        const savedData = JSON.parse(localStorage.getItem(this.STORAGE_KEY) || '{}');
+        if (!cssString || cssString.trim() === "") {
+            delete savedData[selector];
+            localStorage.setItem(this.STORAGE_KEY, JSON.stringify(savedData));
+            location.reload(); 
+        } else {
+            savedData[selector] = cssString;
+            localStorage.setItem(this.STORAGE_KEY, JSON.stringify(savedData));
+            this.applyAll();
+        }
+    },
+
+    applyAll() {
+        const savedData = JSON.parse(localStorage.getItem(this.STORAGE_KEY) || '{}');
+        for (const [selector, style] of Object.entries(savedData)) {
+            try {
+                const elements = document.querySelectorAll(selector);
+                const importantStyle = style.split(';')
+                    .map(s => s.trim()).filter(s => s !== "")
+                    .map(s => s.includes('!important') ? s : `${s} !important`)
+                    .join('; ');
+                elements.forEach(el => el.style.cssText += `; ${importantStyle}`);
+            } catch (e) {}
+        }
+    }
+};
+
+
+    // 修改选择器对应的内联样式 结束
+
 
     // =================================================================
     // 模态框函数 (V26.39.6 更新 - 保持不变)
@@ -640,7 +818,8 @@
     padding: 8px 5px;
     
     /* 视觉属性 */
-    background: #151a15;
+    /*background: #151a15;*/
+    background:#000000d6;
     border: none;
     border-radius: 4px;
     box-shadow: inset 42px 14px 27px 2px rgba(0, 0, 0, 0.2);
@@ -664,10 +843,16 @@
     margin-bottom: 2px;
 
     /* 视觉属性 */
+    /*
     background: #151a15;
+    */
+    background:#000000d6;
     border: none;
     border-radius: 4px;
+    /*
     box-shadow: inset 2px 2px 2px 2px rgba(9, 14, 4, 0.2);
+    */
+    box-shadow:inset 0px 4px 8px 0px rgb(0 0 0 / 80%), 0px 1px 1px 0px rgba(255, 255, 255, 2.05);
     cursor: pointer;
 
     /* 文字属性 */
@@ -702,6 +887,7 @@
 background: #D12C25 !important;
 color: white !important;
 border: white !important;
+box-shadow: inset 0px 4px 8px 0px rgb(0 0 0 / 40%), 0px 1px 1px 0px rgba(255, 255, 255, 2.05) !important
 }
 
 .greener {
@@ -1878,6 +2064,20 @@ border: white !important;
 <!--button class="sel-btn sel-exit-btn" id="sel-exit">退出</button--!>
         
     </div>
+
+
+    <!-- 新增修改内联样式的选择 --!>
+  <div class="sel-actions" style="
+    margin-top: 5px !important;
+">
+    <button class="sel-btn sel-edit-btn" id="sel-edit-css" style="
+    margin-top: 4px;
+    font-size: xx-small !important;
+    font-weight: lighter !important;
+    width: 100%;
+">获取并编辑当前元素CSS选择器的内联样式</button>
+</div>
+
 `;
         document.body.appendChild(resultWin);
 
@@ -2068,9 +2268,6 @@ border: white !important;
         }
 
         // 泛化结束
-
-
-
 
         // 在外部或 SelectorBlockerTool 中定义一个变量记录定时器
         window.inspectTimer = null;
@@ -3330,41 +3527,6 @@ border: white !important;
         }
 
 
-        /*
-            function renderZeroOpacityList(elements) {
-            if (elements.length === 0) {
-                return '<li style="padding: 10px; text-align: center; color: #888;">当前页面没有透明元素。</li>';
-            }
-            return elements.map(item => {
-                let docLabel = '';
-                if (isCurrentInTopWindow) {
-                    docLabel = item.document === document ? '主页' : 'Iframe';
-                } else {
-                    docLabel = 'Iframe (自身)';
-                }
-
-                return `
-                <li style="display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; border-bottom: 1px solid #eee; transition: background 0.2s;" 
-                    data-xpath="${item.xpath}"
-                    data-doc-url="${item.document.URL.split('/').pop()}"
-                >
-                    <div class="element-info" style="cursor: pointer; flex-grow: 1;" title="点击高亮">
-                        <span style="color: #555; margin-right: 5px; font-weight: bold;">[${docLabel}]</span>
-                        <span style="color: #6a0dad;">${item.tagName}</span>
-                        <span style="color: #1976D2;">#${item.id || item.className.split(' ')[0] || 'N/A'}</span>
-                        <span style="color: #333; margin-left: 10px;">${item.width}x${item.height}px</span>
-                    </div>
-                    
-                    <button class="remove-btn" style="
-                        background: #dc3545; color: white; border: none; padding: 2px 6px; 
-                        margin-left: 10px; cursor: pointer; border-radius: 3px; font-size: 11px;
-                    " data-xpath="${item.xpath}">移除并保存</button>
-                </li>
-            `;
-            }).join('');
-        }
-       */
-
 
         let isBlacklisted = isCurrentPageBlacklisted();
         const totalSavedCount = getSavedRemovals().length + getIframeRemovals().length + getPageBlacklist().length + getSavedCssRemovals().length;
@@ -4098,13 +4260,7 @@ border: white !important;
                 updateCount();
             }
         });
-
-
-
     }
-
-
-
 
 
     // 无论你的 HTML 什么时候生成，这段代码都能监听到那个按钮的点击
@@ -4141,6 +4297,14 @@ border: white !important;
             }
         }
 
+
+        if (e.target && e.target.id === 'gemini-close-btn') {
+            if (typeof stopSelectorTool == 'function') {
+                stopSelectorTool(); // 关闭 ⚓ 元素CSS选择器获取 
+                // 如果用户关闭元素屏蔽/追踪器面板
+            }
+        }
+
         setTimeout(() => {
             // 1. 先定义好函数 (或确保函数已在 window 作用域)
             if (typeof window.makeModalDraggable === 'function') {
@@ -4164,11 +4328,50 @@ border: white !important;
         'popunder.',
         'exoclick.',
         'adnetwork.',
+        // --- 国际顶级广告平台 ---
+        'doubleclick.',
+        'googleadservices.',
+        'taboola.',
+        'outbrain.',
+        'adroll.',
+        'adnxs.',
+        'ads-twitter.',
+        'facebook.com/tr/',
+        'amazon-adsystem.',
+        'criteo.',
+        'mgid.',
+        // --- 强力弹窗与网盟 ---
+        'propellerads.',
+        'onclickads.',
+        'popmyads.',
+        'juicyads.',
+        'ero-advertising.',
+        'trafficjunky.',
+        'onclickultra.',
+        // --- 追踪与统计 (通常是跳转中转站) ---
+        'clickcease.',
+        'voluumtrk.',
+        'trackinglink.',
+        'bitly.com/a/ads/',
+        'pixel.ads.',
+        'ssp.',
+        'dsp.',
+        // --- 国内常见及跳转特征 ---
+        'pos.baidu.com',
+        'cpro.baidustatic.',
+        'union.baidu.',
+        'tanx.com',
+        'alimama.',
+        'clk.amap.com',
+        'g.alicdn.com/alilog',
+        'pangle.io', // 穿山甲
+        'adkwai.com', // 快手联盟
+        'e.qq.com/ads'
     ];
+
     const ALLOW_ONCE_ATTRIBUTE = 'data-gemini-allow';
 
     function applyClickDebugFilter(doc) {
-
 
         // 高亮
 
@@ -4272,90 +4475,121 @@ border: white !important;
         };
 
 
-
         const eventListenerFunction = async (e) => {
             const targetElement = e.target;
 
-            if (document.getElementById('gemini-main-container' == null || localStorage.getItem('gemini_debug_element_click_mode') !== 'true')) {
-                return; // 如果元素屏蔽/追踪器面板未打开则不监控
+            // --- [独立拦截流程：严格遵循 AD_DOMAINS 且无私自改动] ---
+            const isLink = targetElement.closest(' a');
+            const href = isLink ? isLink.href : '';
+            const isAdLink = AD_DOMAINS.some(domain => href.includes(domain));
+
+            if (isAdLink) {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+
+                // 注入视觉提示 (!important)
+                targetElement.style.setProperty('background-color', 'rgba(255, 0, 0, 0.15)', 'important');
+                targetElement.style.setProperty('outline', '2px dashed red', 'important');
+                targetElement.style.setProperty('cursor', 'not-allowed', 'important');
+
+                // 注入 Ads 标签
+                const rect = targetElement.getBoundingClientRect();
+                const adsTag = document.createElement('div');
+                adsTag.innerText = 'Ads';
+                adsTag.style.cssText = `
+                    position: absolute !important;
+                    top: ${rect.top + window.scrollY}px !important;
+                    left: ${rect.right - 35 + window.scrollX}px !important;
+                    background-color: #ff0000 !important;
+                    color: #ffffff !important;
+                    font-size: 10px !important;
+                    font-weight: bold !important;
+                    padding: 2px 4px !important;
+                    border-radius: 0 0 0 4px !important;
+                    z-index: 2147483647 !important;
+                    pointer-events: none !important;
+                    font-family: sans-serif !important;
+                    line-height: 1 !important;
+                `;
+                document.body.appendChild(adsTag);
+                setTimeout(() => adsTag.remove(), 3000);
+
+                if (e.type === 'click') {
+                    console.warn(`[Gemini屏蔽] 命中 isAdLink 独立拦截: ${href}`);
+                }
+                return;
+            }
+            // --- [独立拦截流程结束] ---
+
+
+            // 1. 获取调试模式状态
+            const currentIsDebuggingElementClick = localStorage.getItem('gemini_debug_element_click_mode') === 'true';
+            const hasMainContainer = document.getElementById('gemini-main-container') !== null;
+
+            // 2. 【核心修改】判断是否需要进入调试拦截逻辑
+            // 如果调试模式未开启，或者面板没打开，直接退出，不执行任何拦截
+            // 这样用户点击 a 链接就是原生的单次跳转，无需点击两次
+            if (!currentIsDebuggingElementClick || !hasMainContainer) {
+                return;
             }
 
-            // V26.39.7 新增：只拦截 click, mousedown, touchstart
+            // --- 以下逻辑仅在 Debug 模式开启时运行 (保持你以前的原则) ---
+
+            // 3. 检查放行标记 (用于 Debug 模式下的二次放行)
+            if (targetElement.hasAttribute(ALLOW_ONCE_ATTRIBUTE)) {
+                targetElement.removeAttribute(ALLOW_ONCE_ATTRIBUTE);
+                console.log(`[Gemini屏蔽] ➡️ 调试模式：临时放行标记生效。`);
+                return;
+            }
+
+            // V26.39.7 逻辑：只处理特定的交互事件
             if (e.type !== 'click' && e.type !== 'mousedown' && e.type !== 'touchstart') {
                 return;
             }
 
-            // 注意：closest() 方法只会查找祖先元素，所以最好使用 id 匹配。 // 真 / 元素调试模式不抓这里
+            // 排除逻辑：调试工具自身的 UI 排除
             if (doc.defaultView === window && targetElement.closest('.notranslate, #storage-control-panel,[id="input-prompt-container"],[class*="confirm"],[id*="script-viewer"],[id*="gemini"], #ellCloseX, #dh_buttonContainer, #dh_pageContainer')) {
-                return; // 排除逻辑
+                return;
             }
 
-
-
-
-            const isLink = targetElement.closest(' a');
-            const href = isLink ? isLink.href : '';
+            //const isLink = targetElement.closest(' a');
+            //const href = isLink ? isLink.href : '';
             const opensNewTab = isLink ? isLink.target === '_blank' : false;
-            const isAdLink = AD_DOMAINS.some(domain => href.includes(domain));
+            //const isAdLink = AD_DOMAINS.some(domain => href.includes(domain));
 
-            const currentIsDebuggingElementClick = localStorage.getItem('gemini_debug_element_click_mode') === 'true';
-            let shouldIntercept = isAdLink || (opensNewTab && href && href !== '#') || currentIsDebuggingElementClick;
+            // 保持以前的原则：在调试模式下，这三者都会触发拦截
+            let shouldIntercept = (opensNewTab && href && href !== '#') || currentIsDebuggingElementClick;
 
             if (shouldIntercept && targetElement.tagName !== 'HTML' && targetElement.tagName !== 'BODY') {
 
-                if (targetElement.hasAttribute(ALLOW_ONCE_ATTRIBUTE)) {
-                    targetElement.removeAttribute(ALLOW_ONCE_ATTRIBUTE);
-                    console.log(`[Gemini屏蔽 V26.39.7] ➡️ 临时放行标记生效，允许原始事件继续。`);
-                    return;
-                }
-
-                // ⚠️ 核心修复：在 mousedown/touchstart 阶段就阻止传播，防止异步重定向
+                // 调试模式下：同步拦截
                 e.preventDefault();
                 e.stopImmediatePropagation();
 
-                // 只有在 Click 事件时才弹窗，避免 mousedown/touchstart 频繁弹窗
+                // 只有在 Click 事件时才唤起调试模态框
                 if (e.type !== 'click') {
-                    console.log(`[Gemini屏蔽 V26.39.7] 🛡️ ${e.type} 已被阻止，等待 Click 事件触发调试模态框...`);
+                    console.log(`[Gemini屏蔽] 🛡️ ${e.type} 已阻止，等待 Click 唤起模态框...`);
                     return;
                 }
 
-
-
                 const xpath = getElementXPath(targetElement);
-                // 🚀 V26.39.4 新增：获取 TagName 和 CSS Selector
                 const tagName = targetElement.tagName;
                 const cssSelector = getElementCssSelector(targetElement);
-
-                let message = `此元素点击已被调试模式捕获。请选择操作：`;
-
-                // ⬇️ V26.39.6 增强信息
                 const rect = targetElement.getBoundingClientRect();
                 const computedStyle = targetElement.ownerDocument.defaultView.getComputedStyle(targetElement);
                 const parentElement = targetElement.parentElement;
-
-                /*
-                const parentInfo = parentElement
-                    ? `${parentElement.tagName}${parentElement.id || ''}${'.' + parentElement.className.split(' ')[0] || ''}`
-                    : '[无父级]';
-                    */
-
-                // ⬇️ 修改后的逻辑
                 const parentInfo = parentElement
                     ? `${parentElement.tagName}${(parentElement.classList && parentElement.classList.length > 0) ? '.' + parentElement.classList[0] : ''}`
                     : '[无父级]';
-
-                // 检查主要的内联事件处理器
                 const inlineClick = targetElement.getAttribute('onclick') ||
-                    targetElement.getAttribute('onmous edown') ||
+                    targetElement.getAttribute('onmousedown') ||
                     targetElement.getAttribute('onmouseup') ||
                     targetElement.getAttribute('onpointerdown');
-
 
                 const elementInfo = {
                     href: href || '[不含链接]',
                     tagName: tagName,
                     cssSelector: cssSelector,
-                    // V26.39.6 增强信息
                     width: rect.width.toFixed(0),
                     height: rect.height.toFixed(0),
                     zIndex: computedStyle.zIndex,
@@ -4363,58 +4597,42 @@ border: white !important;
                     position: computedStyle.position,
                     parent: parentInfo,
                     inlineClick: inlineClick,
-                    preciseSelector: getSmartSelector_element_click_debug_mode(targetElement),   // 包含 nth-child 的精确选择器 [新属性]
-                    // ✅ 直接调用已定义好的工具函数
+                    preciseSelector: getSmartSelector_element_click_debug_mode(targetElement),
                     nthChild: window.getElementNthChild(targetElement),
                 };
 
-                // 绝对CSS选择器
-
                 window.absoluteSelector = getSmartSelector_selector_get(targetElement).toString().replace(/"/g, "'");
-
-                window.targetElementInform = window.getElementNthChild(targetElement)
-                if (window.targetElementInform.val == '无关键属性') {
-                    window.targetElementInformAppend = ''
-                } else {
-                    window.targetElementInformAppend = window.targetElementInform.val
-                }
+                window.targetElementInform = window.getElementNthChild(targetElement);
+                window.targetElementInformAppend = window.targetElementInform.val == '无关键属性' ? '' : window.targetElementInform.val;
 
                 setTimeout(() => {
                     if (typeof window.makeModalDraggable == 'function') {
                         window.makeModalDraggable('gemini-custom-modal-overlay');
                     }
-                }, 500)
+                }, 500);
 
                 const confirmBlock = await showCustomConfirm(
-                    message,
-                    elementInfo, // <-- Pass the elementInfo object (V26.39.6)
+                    `此元素点击已被调试模式捕获。请选择操作：`,
+                    elementInfo,
                     xpath || "XPath 获取失败"
                 );
 
-
-
-
                 if (confirmBlock) {
                     if (xpath && targetElement.parentNode) {
-                        // Element Click Debugging is for general elements (not Iframes)
                         if (targetElement.tagName === 'IFRAME') {
                             saveIframeRemovalChoice(xpath);
-                            console.log("✅ Iframe 已永久屏蔽，请刷新页面。");
                         } else {
                             saveRemovalChoice(xpath);
-                            console.log("✅ 元素已永久屏蔽，请刷新页面。");
                         }
                         targetElement.remove();
-                    } else {
-                        console.error('❌ 屏蔽失败：XPath 获取失败，无法进行永久屏蔽。');
                     }
                 } else {
+                    // 保持以前的原则：用户点取消后，设置标记，需要用户【再次点击】才放行
                     targetElement.setAttribute(ALLOW_ONCE_ATTRIBUTE, 'true');
                     console.log("🚫 已取消永久屏蔽。请**再次点击**此元素，点击将在第二次被放行。");
                 }
                 return;
             }
-
         };
 
         // ⭐️ V26.39.7 核心修复：Hook 早期事件以阻止异步调度
@@ -4774,39 +4992,38 @@ border: white !important;
 
         injectStyles(containerId, windowId);
 
+        InlineStyleManager.init(); // 修改内联样式
         blockMetaRefresh(document);
 
         const targetDocuments = getTargetDocuments();
 
 
         /* 默认拦截
-
-        
-enableWindowOpenHook();
-interceptWindowLocation();
-
-// ⬇️⬇️⬇️ Hook 所有重定向相关 API (V26.39.10 核心：同步中断) ⬇️⬇️⬇️
-
-// 1. Hook History API
-interceptHistoryAPI(window, 'window');
-if (window.parent !== window) { interceptHistoryAPI(window.parent, 'parent'); }
-if (window.top !== window) { interceptHistoryAPI(window.top, 'top'); }
-
-// 2. Hook Form 表单提交
-interceptFormSubmission();
-
-// 3. Hook document.write
-interceptDocumentWrite();
-
-// ⭐️ 4. Hook Element.prototype.click (程序化点击拦截 - V26.39.10 NEW)
-interceptElementClick();
-
-// ⭐️ 5. Hook window.postMessage (跨框架侧信道拦截 - V26.39.10 NEW)
-interceptPostMessage();
-
-// ⬆️⬆️⬆️ Hook 所有重定向相关 API ⬆️⬆️⬆️
-
-*/
+        enableWindowOpenHook();
+        interceptWindowLocation();
+    
+        // ⬇️⬇️⬇️ Hook 所有重定向相关 API (V26.39.10 核心：同步中断) ⬇️⬇️⬇️
+    
+        // 1. Hook History API
+        interceptHistoryAPI(window, 'window');
+        if (window.parent !== window) { interceptHistoryAPI(window.parent, 'parent'); }
+        if (window.top !== window) { interceptHistoryAPI(window.top, 'top'); }
+    
+        // 2. Hook Form 表单提交
+        interceptFormSubmission();
+    
+        // 3. Hook document.write
+        interceptDocumentWrite();
+    
+        // ⭐️ 4. Hook Element.prototype.click (程序化点击拦截 - V26.39.10 NEW)
+        interceptElementClick();
+    
+        // ⭐️ 5. Hook window.postMessage (跨框架侧信道拦截 - V26.39.10 NEW)
+        interceptPostMessage();
+    
+        // ⬆️⬆️⬆️ Hook 所有重定向相关 API ⬆️⬆️⬆️
+    
+        */
 
         setupAdLinkFilter(); // 元素点击调试监听器放在这里
 
@@ -4847,8 +5064,6 @@ interceptPostMessage();
         initScript();
     }
 })();
-
-
 
 
 // 全局调出元素屏蔽/追踪器面板
