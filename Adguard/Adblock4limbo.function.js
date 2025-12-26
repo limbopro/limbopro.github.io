@@ -2589,6 +2589,12 @@ loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/skipVi
 // 视频广告加速跳过 END
 
 
+
+// 测试小脚本 Start
+loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/little.code.user.js', 'head', 'littleCode')
+// 测试小脚本 END
+
+
 /**
  * WebDebugger.js 开始 START
  * * 独立函数：Web 存储调试器 (Cookies/Local/Session/Config)
@@ -2639,7 +2645,9 @@ loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/showJs
 loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/pageProtect.user.js', 'head', 'pageProtect') // 加载过滤脚本
 // 成人保护模式 END
 
-
+// 检查脚本是否已正常挂载 START
+loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/geminiScriptCheck.user.js', 'head', 'geminiScriptCheck') // 加载过滤脚本
+// 检查脚本是否已正常挂载 END
 
 //});
 
