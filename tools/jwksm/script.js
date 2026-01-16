@@ -110,7 +110,7 @@ async function fetchCodes() {
     // 组合数据到 dataList 对象
 
 
-    dataList['2025年新片已阅推荐✨🌅🧡'] = yearsViewedW['yearsViewed_2025']
+    dataList['2025年已阅推荐✨🌅🧡'] = yearsViewedW['yearsViewed_2025']
 
 
     /*
