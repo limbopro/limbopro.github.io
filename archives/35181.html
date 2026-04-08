@@ -606,10 +606,10 @@ input.gsc-input {color:black !important}
                 <li class="wrapper b-b m-b-sm bg-info m-n">
                   <span class="arrow top hidden-folded arrow-info"></span>
                   <div>
-                                                  <p>早上好，永远年轻，永远热泪盈眶</p>
+                                                <p>晚上好，注意早点休息</p>
                                   </div>
                   <div class="progress progress-xs m-b-none dker">
-                    <div class="progress-bar bg-white" data-toggle="tooltip" data-original-title="时间已经度过41.67%" style="width: 41.67%"></div>
+                    <div class="progress-bar bg-white" data-toggle="tooltip" data-original-title="时间已经度过79.17%" style="width: 79.17%"></div>
                   </div>
                 </li>
               </ul>
@@ -801,7 +801,7 @@ data-toggle="tooltip" data-placement="right" data-original-title="阅读模式">
                     <!--文字数目-->
                     <li class="meta-word"><span class="post-icons"><i data-feather="pen-tool"></i></span><span
                             class="meta-value">
-                            9265                            字数                        </span></li>
+                            10818                            字数                        </span></li>
                     <!--分类-->
                     <li class="meta-categories"><span class="post-icons"><i data-feather="hash"></i></span><span
                             class="sr-only">
@@ -1011,6 +1011,50 @@ data-toggle="tooltip" data-placement="right" data-original-title="阅读模式">
 <p><img src="https://limbopro.com/usr/uploads/2026/04/3934950499.jpg" alt="Mac-系统设置-隐私与安全性.jpg" /></p>
 <p><strong>在 Mac 上更改隐私与安全性设置</strong>：在 Mac 上，使用“隐私与安全性”设置管理 Mac 上可供互联网或网络中其他用户访问的信息，以及保护你的加密数据。</p>
 <p>若要更改这些设置，请选取苹果 菜单  &gt;“<strong>系统设置</strong>”，然后点按边栏中的“<strong>隐私与安全性</strong>” 。（你可能需要向下滚动。） 详情参阅：<span class="external-link"><a class="no-external-link" href="https://support.apple.com/zh-cn/guide/mac-help/mchl211c911f/mac" target="_blank">https://support.apple.com/zh-cn/guide/mac-help/mchl211c911f/mac<i data-feather='external-link'></i></a></span></p>
+<h4>其他你应该知道的</h4>
+<blockquote>
+<p>“<strong>Apple无法验证“xx.app”是否包含可能危害Mac安全或泄漏隐私的恶意软件。</strong>” </p>
+<blockquote>
+<p>Apple 无法确认该软件的代码签名是否来自已注册的开发者。这种提示是 macOS Gatekeeper（门禁） 机制的体现，是一种“默认拒绝”策略，旨在防止用户无意中运行未受信任的二进制文件。<strong>如果你不确定该应用的来源，建议先将其上传至 VirusTotal 进行安全扫描（见本文后文 VirusTotal 部分），确认无误后再手动放行</strong>。</p>
+</blockquote>
+</blockquote>
+<blockquote>
+<p>选择“<strong>仍要打开</strong>”是否会直接导致隐私泄露或安全问题？</p>
+<blockquote>
+<p><strong>应用运行的瞬间，它并非处于真空</strong>，而是处于 macOS 的 <strong>Sandbox（沙箱）</strong> 和 <strong>TCC（透明度、意愿与控制）</strong> 机制的监控下。即使你手动放行了 Gatekeeper，macOS 的 TCC (Transparency, Consent, and Control) 机制依然在生效。<strong>应用可以运行，但当它尝试访问受保护的隐私数据（如摄像头、麦克风、地理位置、通讯录、磁盘上的照片/文档）时，系统会强制弹窗请求你的许可</strong>。</p>
+</blockquote>
+</blockquote>
+<p>除 macOS，Android（Android 6.0 及以上）/ Windows11 均有该机制；iPhone 不越狱的情况下稳如老狗；</p>
+<h4>macOS 安全机制扩展</h4>
+<h5> 1. TCC (Transparency, Consent, and Control) —— 权限卫士</h5>
+<p>TCC 是 macOS 安全框架的核心数据库。即使是一个拥有 root 权限的应用，也无法通过常规路径读取你的相册。</p>
+<ul>
+<li>
+<p><strong>物理隔离存储</strong>：相册、定位、日历、麦克风等数据被标记为“敏感类别”。</p>
+</li>
+<li>
+<p><strong>强校验逻辑</strong>：每当应用尝试调用 <code>Photos.framework</code>（相册框架）或 <code>CoreLocation</code>（定位框架）时，操作系统内核会先去查询 TCC 数据库。</p>
+</li>
+<li>
+<p><strong>用户意图确认</strong>：如果数据库中没有你的手动“允许”记录，内核会<strong>挂起该进程</strong>，并由系统进程（而不是应用本身）弹出一个无法被应用干扰的透明窗口询问你。</p>
+</li>
+<li>
+<p><strong>结论</strong>：<strong>应用无法绕过系统弹窗直接读取这些 API 接口。</strong></p>
+</li>
+</ul>
+<h5> 2. 磁盘全访问权限 (Full Disk Access) 的限制</h5>
+<p>你可能担心应用扫描整个硬盘。在 macOS Mojave 之后，即便应用拥有“读写权限”，它也默认<strong>无法访问</strong>以下目录：</p>
+<ul>
+<li><code>~/Library/Messages</code> (短信)</li>
+<li><code>~/Library/Mail</code> (邮件)</li>
+<li><code>~/Library/Safari</code> (浏览器记录)</li>
+<li><strong>结论</strong>：<strong>除非你在“系统设置”中手动把该应用拖进“完全磁盘访问权限”列表</strong>，否则这些核心隐私目录对它来说是<strong>不可见</strong>的。</li>
+</ul>
+<h5> 3. 数据层面的加密隔离</h5>
+<p>即使攻击者通过底层手段拿到了磁盘原始镜像，如果没有你的登录密码，存储在加密分区（APFS Encrypted）中的数据也是一堆乱码。</p>
+<h5>4. 普通文件夹</h5>
+<p><strong>普通文件</strong>：如果你下载的是非沙箱应用（如大部分工具类软件，通过dmg文件安装...），它理论上可以读取你“下载”文件夹或“桌面”上<strong>未被系统锁定</strong>的文件。</p>
+<p>如果你依然担心，可以在 “<strong>系统设置 -&gt; 隐私与安全性 -&gt; 文件与文件夹</strong>” 中，查看哪些应用有权限访问你的“下载”或“桌面”文件夹，并手动关掉它们。</p>
 <h3>iPhone 隐私与安全设置</h3>
 <p><img src="https://limbopro.com/usr/uploads/2026/04/3079557620.jpg" alt="iPhone 隐私与安全性.jpg" /></p>
 <p>iPhone 隐私权限的本质是<strong>资源访问控制（Access Control）</strong>。其核心逻辑在于：<strong>隔离（Isolation）</strong>与<strong>授权（Authorization）</strong>。系统默认对所有第三方应用关闭核心数据访问权，通过“沙盒机制”强制应用在获取数据前必须经过用户的显式许可。</p>
@@ -1074,7 +1118,7 @@ data-toggle="tooltip" data-placement="right" data-original-title="阅读模式">
 <p>参阅：<span class="external-link"><a class="no-external-link" href="https://support.microsoft.com/zh-cn/windows/%E5%BA%94%E7%94%A8%E4%BD%BF%E7%94%A8%E7%9A%84-windows-%E9%9A%90%E7%A7%81%E8%AE%BE%E7%BD%AE-8b7f2cf4-c359-bf99-0f69-2123cc9ddfc1" target="_blank">应用使用的 Windows 隐私设置<i data-feather='external-link'></i></a></span></p>
 <h2 id="virustotal_可疑程序扫描"> virustotal 可疑程序扫描</h2>
 <p><img src="https://limbopro.com/usr/uploads/2026/04/2321993939.jpg" alt="Gemini_Generated_Image_e3r8h2e3r8h2e3r8.jpg" /></p>
-<p><div class="tip inlineBlock info">使用 <span class="external-link"><a class="no-external-link" href="https://www.virustotal.com/" target="_blank">https://www.virustotal.com/<i data-feather='external-link'></i></a></span> 上传安装包进行扫描分析；</div>
+<p><div class="tip inlineBlock info">使用 <span class="external-link"><a class="no-external-link" href="https://www.virustotal.com/" target="_blank">https://www.virustotal.com/<i data-feather='external-link'></i></a></span> 上传安装包进行安全扫描分析；</div>
 <h3>virustotal 介绍</h3>
 <p>VirusTotal (VT) 是目前全球安全行业最专业、公认度最高的威胁情报分析平台，没有之一。</p>
 <p><div class="tip inlineBlock info">VT 目前隶属于 Google (Google Cloud/Google Threat Intelligence)。</div>
@@ -1158,7 +1202,7 @@ data-toggle="tooltip" data-placement="right" data-original-title="阅读模式">
                                                                 <!--文章的页脚部件：打赏和其他信息的输出-->
                                 <div class="show-foot"><div class="notebook">
                      <i class="fontello fontello-clock-o"></i>
-                     <span>最后修改：2026 年 04 月 08 日 10 : 19  AM</span>
+                     <span>最后修改：2026 年 04 月 08 日 07 : 02  PM</span>
                  </div><div class="copyright" data-toggle="tooltip" data-html="true" data-original-title="转载请保留本文转载地址，著作权归作者所有"><span>© 允许规范转载</span>
                  </div>
              </div>
@@ -1361,15 +1405,15 @@ data-toggle="tooltip" data-placement="right" data-original-title="阅读模式">
        <section id="tag_cloud-2" class="widget widget_tag_cloud wrapper-md clear">
        <h5 class="widget-title m-t-none text-md">热门文章推荐</h5>
        <li class="list-group-item">
-                <a href="https://limbopro.com/archives/8.html" class="pull-left thumb-sm m-r"><img src="https://limbopro.com/usr/themes/handsome/assets/img/sj2/7.jpg" class="img-40px normal-shadow img-square"></a>
+                <a href="https://limbopro.com/archives/8.html" class="pull-left thumb-sm m-r"><img src="https://limbopro.com/usr/themes/handsome/assets/img/sj2/10.jpg" class="img-40px normal-shadow img-square"></a>
                 <div class="clear">
                     <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/8.html" title="权力的游戏丨第八季 😍"> 权力的游戏丨第八季 😍 </a></h4>
                     </div></li><li class="list-group-item">
-                <a href="https://limbopro.com/archives/17.html" class="pull-left thumb-sm m-r"><img src="https://limbopro.com/usr/themes/handsome/assets/img/sj2/6.jpg" class="img-40px normal-shadow img-square"></a>
+                <a href="https://limbopro.com/archives/17.html" class="pull-left thumb-sm m-r"><img src="https://limbopro.com/usr/themes/handsome/assets/img/sj2/2.jpg" class="img-40px normal-shadow img-square"></a>
                 <div class="clear">
                     <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/17.html" title="谢春花丨还想听你的故事"> 谢春花丨还想听你的故事 </a></h4>
                     </div></li><li class="list-group-item">
-                <a href="https://limbopro.com/archives/19.html" class="pull-left thumb-sm m-r"><img src="https://limbopro.com/usr/themes/handsome/assets/img/sj2/5.jpg" class="img-40px normal-shadow img-square"></a>
+                <a href="https://limbopro.com/archives/19.html" class="pull-left thumb-sm m-r"><img src="https://limbopro.com/usr/themes/handsome/assets/img/sj2/3.jpg" class="img-40px normal-shadow img-square"></a>
                 <div class="clear">
                     <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/19.html" title="韩国画家丨zipcy 梁世恩"> 韩国画家丨zipcy 梁世恩 </a></h4>
                     </div></li><li class="list-group-item">
@@ -1387,29 +1431,29 @@ data-toggle="tooltip" data-placement="right" data-original-title="阅读模式">
        <section id="tag_cloud-2" class="widget widget_tag_cloud wrapper-md clear">
        <h5 class="widget-title m-t-none text-md">随机文章推荐</h5>
        <li class="list-group-item">
-                <a href="https://limbopro.com/archives/1346.html"</a>
+                <a href="https://limbopro.com/archives/yoga-girl.html"</a>
                 <div class="clear">
-                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/1346.html" title="七龙珠丨国语版"> 七龙珠丨国语版 </a></h4>
+                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/yoga-girl.html" title="Instagram 美女账号精选丨第11期  - 穿瑜伽裤的漂亮女孩们"> Instagram 美女账号精选丨第11期  - 穿瑜伽裤的漂亮女孩们 </a></h4>
                     </div></li><li class="list-group-item">
-                <a href="https://limbopro.com/archives/Sub-Store.html"</a>
+                <a href="https://limbopro.com/archives/My_Own_Swordsman.html"</a>
                 <div class="clear">
-                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/Sub-Store.html" title="Sub-Store 轻松上手教程 - 适用于 QX、Loon、Surge、Stash 和 Shadowrocket的高级订阅管理工具。"> Sub-Store 轻松上手教程 - 适用于 QX、Loon、Surge、Stash 和 Shadowrocket的高级订阅管理工具。 </a></h4>
+                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/My_Own_Swordsman.html" title="我的电子榨菜"> 我的电子榨菜 </a></h4>
                     </div></li><li class="list-group-item">
-                <a href="https://limbopro.com/archives/responsive_iframes_with_js.html"</a>
+                <a href="https://limbopro.com/archives/12299.html"</a>
                 <div class="clear">
-                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/responsive_iframes_with_js.html" title="JavaScript 最佳实践 —— 使嵌入文章内的YouTube 视频宽度自适应文章页面宽度 js/css"> JavaScript 最佳实践 —— 使嵌入文章内的YouTube 视频宽度自适应文章页面宽度 js/css </a></h4>
+                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/12299.html" title="JAV番号推荐集合（2026年）"> JAV番号推荐集合（2026年） </a></h4>
                     </div></li><li class="list-group-item">
-                <a href="https://limbopro.com/archives/346.html"</a>
+                <a href="https://limbopro.com/archives/1560.html"</a>
                 <div class="clear">
-                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/346.html" title="拉萨。"> 拉萨。 </a></h4>
+                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/1560.html" title="Pornhub/Youtube/Instagram/Twitter/抖音/小红书视频及图片下载的方法（iOS捷径/在线解析/Chrome扩展/App）"> Pornhub/Youtube/Instagram/Twitter/抖音/小红书视频及图片下载的方法（iOS捷径/在线解析/Chrome扩展/App） </a></h4>
                     </div></li><li class="list-group-item">
-                <a href="https://limbopro.com/archives/12782.html"</a>
+                <a href="https://limbopro.com/archives/25356.html"</a>
                 <div class="clear">
-                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/12782.html" title="如何利用 Quantumult X 替换/嵌入/移除网页中的元素实现去广告的目的（涉及正则表达式的运用以及开发者工具、调试）"> 如何利用 Quantumult X 替换/嵌入/移除网页中的元素实现去广告的目的（涉及正则表达式的运用以及开发者工具、调试） </a></h4>
+                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/25356.html" title="为什么坚持很难？?"> 为什么坚持很难？? </a></h4>
                     </div></li><li class="list-group-item">
-                <a href="https://limbopro.com/archives/14044.html"</a>
+                <a href="https://limbopro.com/archives/flyingbird.html"</a>
                 <div class="clear">
-                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/14044.html" title="重写类型 302/307/reject 的用法丨利用 Quantumult X 替换URL链接实现请求重定向（正则表达式）"> 重写类型 302/307/reject 的用法丨利用 Quantumult X 替换URL链接实现请求重定向（正则表达式） </a></h4>
+                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/flyingbird.html" title="飞鸟机场—100GB/￥15/月起（IEPL专线/ChatGPT/Netflix等流媒体解锁/季付9折起，最高享8折优惠）"> 飞鸟机场—100GB/￥15/月起（IEPL专线/ChatGPT/Netflix等流媒体解锁/季付9折起，最高享8折优惠） </a></h4>
                     </div></li>       </section>
        <!--随机文章推荐-->
 
@@ -1418,29 +1462,29 @@ data-toggle="tooltip" data-placement="right" data-original-title="阅读模式">
             <h5 class="widget-title m-t-none text-md">随机文章</h5>
             <ul class="list-group no-bg no-borders pull-in">
             <li class="list-group-item">
-                <a href="https://limbopro.com/archives/1498.html"</a>
+                <a href="https://limbopro.com/archives/%E6%AF%92%E5%A5%B6.html"</a>
                 <div class="clear">
-                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/1498.html" title="好好说话：新鲜有趣的话术精进技巧丨书单推荐第4期"> 好好说话：新鲜有趣的话术精进技巧丨书单推荐第4期 </a></h4>
+                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/%E6%AF%92%E5%A5%B6.html" title="毒奶博客一周年"> 毒奶博客一周年 </a></h4>
                     </div></li><li class="list-group-item">
-                <a href="https://limbopro.com/archives/TpCache.html"</a>
+                <a href="https://limbopro.com/archives/148.html"</a>
                 <div class="clear">
-                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/TpCache.html" title="Typecho优化 - 响应速度&amp;性能优化 -  TpCache缓存插件安装"> Typecho优化 - 响应速度&amp;性能优化 -  TpCache缓存插件安装 </a></h4>
+                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/148.html" title="最好用的自动发卡网站丨快发卡及其他几个（2020）"> 最好用的自动发卡网站丨快发卡及其他几个（2020） </a></h4>
                     </div></li><li class="list-group-item">
-                <a href="https://limbopro.com/archives/the-best-google-chrome-extensions.html"</a>
+                <a href="https://limbopro.com/archives/10349.html"</a>
                 <div class="clear">
-                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/the-best-google-chrome-extensions.html" title="值得安装的N个浏览器扩展程序推荐 - Chrome"> 值得安装的N个浏览器扩展程序推荐 - Chrome </a></h4>
+                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/10349.html" title="《有闲阶级论》丨书单推荐第10期   "> 《有闲阶级论》丨书单推荐第10期    </a></h4>
                     </div></li><li class="list-group-item">
-                <a href="https://limbopro.com/archives/1267.html"</a>
+                <a href="https://limbopro.com/archives/7599.html"</a>
                 <div class="clear">
-                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/1267.html" title="我为什么选择Typecho？"> 我为什么选择Typecho？ </a></h4>
+                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/7599.html" title="iOS 以图搜图捷径推荐（聚合版/Google）丨毒奶捷径推荐清单"> iOS 以图搜图捷径推荐（聚合版/Google）丨毒奶捷径推荐清单 </a></h4>
                     </div></li><li class="list-group-item">
-                <a href="https://limbopro.com/archives/32084.html"</a>
+                <a href="https://limbopro.com/archives/8420.html"</a>
                 <div class="clear">
-                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/32084.html" title="如何将Mac屏幕截图默认保存格式更改为 JPG"> 如何将Mac屏幕截图默认保存格式更改为 JPG </a></h4>
+                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/8420.html" title="Instagram 美女账号精选丨第09期  "> Instagram 美女账号精选丨第09期   </a></h4>
                     </div></li><li class="list-group-item">
-                <a href="https://limbopro.com/archives/1409.html"</a>
+                <a href="https://limbopro.com/archives/32148.html"</a>
                 <div class="clear">
-                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/1409.html" title="Ctrl+Shift+T"> Ctrl+Shift+T </a></h4>
+                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/32148.html" title="iPhone必要的隐私与安全设置——定位？App无法保存图片？禁止读取粘贴板？将 iPhone 设置还原至默认状态"> iPhone必要的隐私与安全设置——定位？App无法保存图片？禁止读取粘贴板？将 iPhone 设置还原至默认状态 </a></h4>
                     </div></li>            </ul>
         </div>
        </div>
@@ -1467,11 +1511,11 @@ data-toggle="tooltip" data-placement="right" data-original-title="阅读模式">
 
            <li class="list-group-item"><span class="blog-info-icons"> <i data-feather="activity"></i></span> <span
                        class="badge
-           pull-right">10 小时前</span>最后活动</li>
+           pull-right">19 小时前</span>最后活动</li>
 
            <li class="list-group-item"><span class="blog-info-icons"> <i data-feather="cpu"></i></span> <span
                        class="badge
-           pull-right">248 ms</span>TTFB</li>
+           pull-right">238 ms</span>TTFB</li>
 
            <!--分享按钮-->
 
@@ -1525,29 +1569,29 @@ data-toggle="tooltip" data-placement="right" data-original-title="阅读模式">
           <section id="tag_cloud-2" class="widget widget_tag_cloud wrapper-md clear">
 <h5 class="widget-title m-t-none text-md">更多文章推荐</h5>
 <li class="list-group-item">
+                <a href="https://limbopro.com/archives/35181.html"</a>
+                <div class="clear">
+                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/35181.html" title="隐私与安全性设置：将你的iPhone/Mac/iPad/Android/Windows 牢牢掌握在自己手里"> 隐私与安全性设置：将你的iPhone/Mac/iPad/Android/Windows 牢牢掌握在自己手里 </a></h4>
+                    </div></li><li class="list-group-item">
+                <a href="https://limbopro.com/archives/9187.html"</a>
+                <div class="clear">
+                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/9187.html" title="NSFW - 14期丨Air Bra "> NSFW - 14期丨Air Bra  </a></h4>
+                    </div></li><li class="list-group-item">
                 <a href="https://limbopro.com/archives/1964.html"</a>
                 <div class="clear">
                     <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/1964.html" title="Need 4 speed丨05期  "> Need 4 speed丨05期   </a></h4>
                     </div></li><li class="list-group-item">
-                <a href="https://limbopro.com/archives/8515.html"</a>
+                <a href="https://limbopro.com/archives/373.html"</a>
                 <div class="clear">
-                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/8515.html" title="无需翻墙，通过修改hosts文件以访问被墙网站（如机场/毒奶博客）"> 无需翻墙，通过修改hosts文件以访问被墙网站（如机场/毒奶博客） </a></h4>
+                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/373.html" title="毒药测速DuyaoSS吃瓜吹水群"> 毒药测速DuyaoSS吃瓜吹水群 </a></h4>
                     </div></li><li class="list-group-item">
-                <a href="https://limbopro.com/archives/21070.html"</a>
+                <a href="https://limbopro.com/archives/34562.html"</a>
                 <div class="clear">
-                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/21070.html" title="右键「使用 Google 搜索图片」菜单不见了？谷歌以图搜图启用方法，禁用 Lens feature即可；"> 右键「使用 Google 搜索图片」菜单不见了？谷歌以图搜图启用方法，禁用 Lens feature即可； </a></h4>
+                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/34562.html" title="让 Grok 帮写了一个网页划词搜索🔍🔞油猴脚本?👌"> 让 Grok 帮写了一个网页划词搜索🔍🔞油猴脚本?👌 </a></h4>
                     </div></li><li class="list-group-item">
-                <a href="https://limbopro.com/archives/1363.html"</a>
+                <a href="https://limbopro.com/archives/2487.html"</a>
                 <div class="clear">
-                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/1363.html" title="HyperDown丨PHP Markdown解析器"> HyperDown丨PHP Markdown解析器 </a></h4>
-                    </div></li><li class="list-group-item">
-                <a href="https://limbopro.com/archives/torproject.html"</a>
-                <div class="clear">
-                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/torproject.html" title="使用洋葱浏览器 - Tor 进行匿名上网"> 使用洋葱浏览器 - Tor 进行匿名上网 </a></h4>
-                    </div></li><li class="list-group-item">
-                <a href="https://limbopro.com/archives/29202.html"</a>
-                <div class="clear">
-                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/29202.html" title="ClashX/CFW/CFA apk 备份安装包下载..."> ClashX/CFW/CFA apk 备份安装包下载... </a></h4>
+                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/2487.html" title="10个优秀的资讯、科普、涨姿势网站推荐"> 10个优秀的资讯、科普、涨姿势网站推荐 </a></h4>
                     </div></li></section>
           <!--随机文章推荐-->
 
@@ -1735,6 +1779,50 @@ data-toggle="tooltip" data-placement="right" data-original-title="阅读模式">
 <p><img src="https://limbopro.com/usr/uploads/2026/04/3934950499.jpg" alt="Mac-系统设置-隐私与安全性.jpg" /></p>
 <p><strong>在 Mac 上更改隐私与安全性设置</strong>：在 Mac 上，使用“隐私与安全性”设置管理 Mac 上可供互联网或网络中其他用户访问的信息，以及保护你的加密数据。</p>
 <p>若要更改这些设置，请选取苹果 菜单  &gt;“<strong>系统设置</strong>”，然后点按边栏中的“<strong>隐私与安全性</strong>” 。（你可能需要向下滚动。） 详情参阅：<span class="external-link"><a class="no-external-link" href="https://support.apple.com/zh-cn/guide/mac-help/mchl211c911f/mac" target="_blank">https://support.apple.com/zh-cn/guide/mac-help/mchl211c911f/mac<i data-feather='external-link'></i></a></span></p>
+<h4>其他你应该知道的</h4>
+<blockquote>
+<p>“<strong>Apple无法验证“xx.app”是否包含可能危害Mac安全或泄漏隐私的恶意软件。</strong>” </p>
+<blockquote>
+<p>Apple 无法确认该软件的代码签名是否来自已注册的开发者。这种提示是 macOS Gatekeeper（门禁） 机制的体现，是一种“默认拒绝”策略，旨在防止用户无意中运行未受信任的二进制文件。<strong>如果你不确定该应用的来源，建议先将其上传至 VirusTotal 进行安全扫描（见本文后文 VirusTotal 部分），确认无误后再手动放行</strong>。</p>
+</blockquote>
+</blockquote>
+<blockquote>
+<p>选择“<strong>仍要打开</strong>”是否会直接导致隐私泄露或安全问题？</p>
+<blockquote>
+<p><strong>应用运行的瞬间，它并非处于真空</strong>，而是处于 macOS 的 <strong>Sandbox（沙箱）</strong> 和 <strong>TCC（透明度、意愿与控制）</strong> 机制的监控下。即使你手动放行了 Gatekeeper，macOS 的 TCC (Transparency, Consent, and Control) 机制依然在生效。<strong>应用可以运行，但当它尝试访问受保护的隐私数据（如摄像头、麦克风、地理位置、通讯录、磁盘上的照片/文档）时，系统会强制弹窗请求你的许可</strong>。</p>
+</blockquote>
+</blockquote>
+<p>除 macOS，Android（Android 6.0 及以上）/ Windows11 均有该机制；iPhone 不越狱的情况下稳如老狗；</p>
+<h4>macOS 安全机制扩展</h4>
+<h5> 1. TCC (Transparency, Consent, and Control) —— 权限卫士</h5>
+<p>TCC 是 macOS 安全框架的核心数据库。即使是一个拥有 root 权限的应用，也无法通过常规路径读取你的相册。</p>
+<ul>
+<li>
+<p><strong>物理隔离存储</strong>：相册、定位、日历、麦克风等数据被标记为“敏感类别”。</p>
+</li>
+<li>
+<p><strong>强校验逻辑</strong>：每当应用尝试调用 <code>Photos.framework</code>（相册框架）或 <code>CoreLocation</code>（定位框架）时，操作系统内核会先去查询 TCC 数据库。</p>
+</li>
+<li>
+<p><strong>用户意图确认</strong>：如果数据库中没有你的手动“允许”记录，内核会<strong>挂起该进程</strong>，并由系统进程（而不是应用本身）弹出一个无法被应用干扰的透明窗口询问你。</p>
+</li>
+<li>
+<p><strong>结论</strong>：<strong>应用无法绕过系统弹窗直接读取这些 API 接口。</strong></p>
+</li>
+</ul>
+<h5> 2. 磁盘全访问权限 (Full Disk Access) 的限制</h5>
+<p>你可能担心应用扫描整个硬盘。在 macOS Mojave 之后，即便应用拥有“读写权限”，它也默认<strong>无法访问</strong>以下目录：</p>
+<ul>
+<li><code>~/Library/Messages</code> (短信)</li>
+<li><code>~/Library/Mail</code> (邮件)</li>
+<li><code>~/Library/Safari</code> (浏览器记录)</li>
+<li><strong>结论</strong>：<strong>除非你在“系统设置”中手动把该应用拖进“完全磁盘访问权限”列表</strong>，否则这些核心隐私目录对它来说是<strong>不可见</strong>的。</li>
+</ul>
+<h5> 3. 数据层面的加密隔离</h5>
+<p>即使攻击者通过底层手段拿到了磁盘原始镜像，如果没有你的登录密码，存储在加密分区（APFS Encrypted）中的数据也是一堆乱码。</p>
+<h5>4. 普通文件夹</h5>
+<p><strong>普通文件</strong>：如果你下载的是非沙箱应用（如大部分工具类软件，通过dmg文件安装...），它理论上可以读取你“下载”文件夹或“桌面”上<strong>未被系统锁定</strong>的文件。</p>
+<p>如果你依然担心，可以在 “<strong>系统设置 -&gt; 隐私与安全性 -&gt; 文件与文件夹</strong>” 中，查看哪些应用有权限访问你的“下载”或“桌面”文件夹，并手动关掉它们。</p>
 <h3>iPhone 隐私与安全设置</h3>
 <p><img src="https://limbopro.com/usr/uploads/2026/04/3079557620.jpg" alt="iPhone 隐私与安全性.jpg" /></p>
 <p>iPhone 隐私权限的本质是<strong>资源访问控制（Access Control）</strong>。其核心逻辑在于：<strong>隔离（Isolation）</strong>与<strong>授权（Authorization）</strong>。系统默认对所有第三方应用关闭核心数据访问权，通过“沙盒机制”强制应用在获取数据前必须经过用户的显式许可。</p>
@@ -1798,7 +1886,7 @@ data-toggle="tooltip" data-placement="right" data-original-title="阅读模式">
 <p>参阅：<span class="external-link"><a class="no-external-link" href="https://support.microsoft.com/zh-cn/windows/%E5%BA%94%E7%94%A8%E4%BD%BF%E7%94%A8%E7%9A%84-windows-%E9%9A%90%E7%A7%81%E8%AE%BE%E7%BD%AE-8b7f2cf4-c359-bf99-0f69-2123cc9ddfc1" target="_blank">应用使用的 Windows 隐私设置<i data-feather='external-link'></i></a></span></p>
 <h2 id="virustotal_可疑程序扫描"> virustotal 可疑程序扫描</h2>
 <p><img src="https://limbopro.com/usr/uploads/2026/04/2321993939.jpg" alt="Gemini_Generated_Image_e3r8h2e3r8h2e3r8.jpg" /></p>
-<p><div class="tip inlineBlock info">使用 <span class="external-link"><a class="no-external-link" href="https://www.virustotal.com/" target="_blank">https://www.virustotal.com/<i data-feather='external-link'></i></a></span> 上传安装包进行扫描分析；</div>
+<p><div class="tip inlineBlock info">使用 <span class="external-link"><a class="no-external-link" href="https://www.virustotal.com/" target="_blank">https://www.virustotal.com/<i data-feather='external-link'></i></a></span> 上传安装包进行安全扫描分析；</div>
 <h3>virustotal 介绍</h3>
 <p>VirusTotal (VT) 是目前全球安全行业最专业、公认度最高的威胁情报分析平台，没有之一。</p>
 <p><div class="tip inlineBlock info">VT 目前隶属于 Google (Google Cloud/Google Threat Intelligence)。</div>
@@ -1978,37 +2066,41 @@ var registCommentEvent = function() {
                         input.type = 'hidden';
                         input.name = '_';
                             input.value = (function () {
-    var _5O5BkVo = /* '6A'//'6A' */''+'3'//'y1'
-+//'7'
-'02d'+//'C'
-'1'+//'7LB'
-'2'+//'KJy'
-'1'+'5e'//'4'
-+''///*'Yz'*/'Yz'
-+'bea'//'T'
-+//'w3'
-'19'+//'ww'
-'4ed'+'oP'//'oP'
-+'7a'//'G'
-+'bce'//'Na'
-+''///*'LX4'*/'LX4'
-+//'iGY'
-'iGY'+//'fp'
-'d'+//'ogv'
-'74'+'Xk'//'Xk'
-+//'BqU'
-'5c4'+'9'//'He'
-+//'UDZ'
-'97'+//'o7'
-'o7'+'Lo'//'Lo'
-+'5'//'PjD'
-, _1n0Mbn = [[17,19],[22,25],[25,27],[31,33],[31,33]];
+    var _SH0 = //'X'
+'3'+'W'//'W'
++//'RT'
+'02d'+'Uc'//'Uc'
++'1'//'D'
++'S2'//'S2'
++//'Z0Q'
+'2'+'15'//'M'
++//'qC'
+'qC'+'eb'//'6Zq'
++'ea1'//'3XG'
++//'P'
+'94e'+//'nL'
+'d7'+//'5'
+'abc'+''///*'dn'*/'dn'
++/* 'QF'//'QF' */''+//'Tz'
+'ed'+'7'//'a'
++//'Gm'
+'4'+'5'//'uA'
++//'DD'
+'DD'+''///*'5t'*/'5t'
++'6'//'6'
++//'yW'
+'c'+/* 'BiU'//'BiU' */''+'4'//'V'
++//'bd7'
+'99'+'7'//'Og2'
++'rW5'//'rW5'
++//'D7'
+'5', _smf = [[1,2],[4,6],[5,7],[8,10],[26,28],[26,27],[31,34]];
     
-    for (var i = 0; i < _1n0Mbn.length; i ++) {
-        _5O5BkVo = _5O5BkVo.substring(0, _1n0Mbn[i][0]) + _5O5BkVo.substring(_1n0Mbn[i][1]);
+    for (var i = 0; i < _smf.length; i ++) {
+        _SH0 = _SH0.substring(0, _smf[i][0]) + _SH0.substring(_smf[i][1]);
     }
 
-    return _5O5BkVo;
+    return _SH0;
 })();
                     
                         f.appendChild(input);
@@ -2038,8 +2130,8 @@ var registCommentEvent = function() {
           src="https://limbopro.com/usr/uploads/2021/07/2816325337.png" style="width: 50px;"></a>
       <a target="_blank" href="https://github.com/limbopro/"><img
           src="https://limbopro.com/usr/uploads/2021/07/3392286942.png" style="width: 40px;"></a>
-      451.61 W 字符
-      丨1人在线丨      <!-- 底部状态设置/阅读数/在线人数 -->
+      452.62 W 字符
+      丨3人在线丨      <!-- 底部状态设置/阅读数/在线人数 -->
 
       Powered by <a target="_blank" href="http://www.typecho.org">Typecho</a>&nbsp;|&nbsp;Theme by <a target="_blank"
         href="https://www.ihewro.com/archives/489/">handsome</a>
