@@ -140,7 +140,7 @@ async function fetchCodes() {
         ...dataBestrated['2020_best_netflav']
     ]; // 新增 2020 年评价最佳分类
 
-    dataList['本月热门🔥🔞'] = dailyBestW['monthly']
+    dataList['当下热门🔥🔞'] = dailyBestW['monthly']
     dataList["综合分类破2万人收藏🧸ྀི"] = dataBestrated['2wFav']
     dataList["综合分类破3万人收藏🧸ྀི"] = dataBestrated['40000Fav']
     //dataList['昨日热门🔥🔞'] = dailyBestW['old']
@@ -168,7 +168,9 @@ async function fetchCodes() {
 
     // dataList['综合分类破万收藏🧸ྀི'] = historyBest([dataMax['chugui'], dataMax['juru'], dataMax['renqi'], dataMax['yongzhuang'], dataMax['duop'], dataMax['roumangaibian'], dataMax['office'], dataMax['zhifuyouhuo'], dataMostwanted['most_wanted_201511']])
     // 多个分类中都出现的番号，然后汇集到一起
-    const onlyDuplicates = findDuplicates(dataMax['chugui'], dataMax['juru'], dataMax['renqi'], dataMax['yongzhuang'], dataMax['duop'], dataMax['roumangaibian'], dataMax['office'], dataMax['zhifuyouhuo'], dataMostwanted['most_wanted_201511']);
+
+    const onlyDuplicates = findDuplicates(dataMax['chugui'], dataMax['juru'], dataMax['renqi'], dataMax['yongzhuang'], dataMax['duop'], dataMax['roumangaibian'], dataMax['office'], dataMax['zhifuyouhuo'], dataMostwanted['most_wanted_201511'], dataBestrated['2wFav'], dataBestrated['40000Fav']);
+
     // 对汇集到一起的番号再进行一次去重
     dataList['综合分类破万人收藏🧸ྀི'] = deduplicateByNumberMaxFav(onlyDuplicates, 'no')
     dataList['综合●'] = [
