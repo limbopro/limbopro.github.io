@@ -68,7 +68,7 @@
         <meta http-equiv="x-dns-prefetch-control" content="on">
 
     <!-- <meta name="description" content="本文目录 [隐藏] 序 DMM/发行商 黄金紳士倶楽部 水無月三日 フリーハンド魂 manno 桂あいり オレンジミモザ でんぶ腿🔞 灰司 yukiyoshi mamizu ほーすている spe..." />
-<meta name="keywords" content="番号搜索,番号推荐,工口漫画" />
+<meta name="keywords" content="番号搜索,番号推荐,工口漫画,av推荐" />
 <meta name="generator" content="Typecho 1.2.0" />
 <meta name="template" content="handsome" />
 <link rel="alternate" type="application/rss+xml" title="Jav番号推荐——那些由工口漫画改编的经典番号（漫改） &raquo; 毒奶 - 欢迎使用代理访问本站。 &raquo; RSS 2.0" href="https://limbopro.com/feed/archives/33206.html" />
@@ -90,7 +90,7 @@
     "@type" : "Article",
     "headline" : "Jav番号推荐——那些由工口漫画改编的经典番号（漫改） - 毒奶 - 欢迎使用代理访问本站。",
             "description" : "经典漫改AV番号精选",
-        "keywords" : "番号搜索,番号推荐,工口漫画",
+        "keywords" : "番号搜索,番号推荐,工口漫画,av推荐",
     "author" : [{
     "@type" : "Person",
     "name" : "推特账号",
@@ -105,7 +105,7 @@
     "url" : "https://www.instagram.com/limboprossr"
     }],
     "datePublished" : "2024-02-14",
-    "dateModified" : "2026-05-22",
+    "dateModified" : "2026-08-18",
     "inLanguage":["zh"],
             "image" : "https://limbopro.com/usr/uploads/2020/09/2436656934.jpg",
         "url" : "https://limbopro.com/archives/33206.html",
@@ -370,7 +370,7 @@ a {
 
 
 div.entry-thumbnail .img-responsive {
-    display:none !importm;
+    display:none !important;
 }
 
 #body {
@@ -464,6 +464,193 @@ padding:0px !important;
 
 .confirm-footer .cancel:hover {
   background: #e0e0e0;
+}
+
+
+/* ==========================================================================
+   全层级“激光渐变文字”大字号排版方案 (基于 #212121 终极适配)
+   ========================================================================== */
+
+/* H1 - 巨型文章大标题：白夜星云渐变 */
+#post-content h1 {
+    font-size: 3.75rem !important; /* ~60px */
+    font-weight: 800 !important;
+    line-height: 1.1 !important;
+    letter-spacing: -0.04em !important; /* 极紧字距 */
+    
+    /* 渐变文本核心配置 */
+    background: linear-gradient(135deg, #ffffff 0%, #e2e8f0 50%, #c084fc 100%) !important;
+    -webkit-background-clip: text !important;
+    background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    
+    margin-top: 0 !important;
+    margin-bottom: 3rem !important;
+}
+
+/* H2 - 核心大章节：应您要求的 2.875rem，极光科技渐变 */
+#post-content h2 {
+    font-size: 2.875rem !important; /* ~46px */
+    font-weight: 800 !important;
+    line-height: 1.2 !important;
+    letter-spacing: -0.03em !important;
+    
+    /* 渐变文本核心配置 */
+    background: linear-gradient(135deg, #a855f7 0%, #3b82f6 100%) !important;
+    -webkit-background-clip: text !important;
+    background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    
+    margin-top: 5rem !important; /* 巨幅上留白，给大字号绝对的呼吸空间 */
+    margin-bottom: 2rem !important;
+}
+
+/* H3 - 子级小节：电弧青绿渐变 */
+#post-content h3 {
+    font-size: 2rem !important; /* ~32px */
+    font-weight: 700 !important;
+    line-height: 1.3 !important;
+    letter-spacing: -0.02em !important;
+    
+    /* 渐变文本核心配置 */
+    background: linear-gradient(135deg, #2563eb 0%, #06b6d4 50%, #10b981 100%) !important;
+    -webkit-background-clip: text !important;
+    background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    
+    margin-top: 4rem !important;
+    margin-bottom: 1.5rem !important;
+}
+
+/* H4 - 微型标题 / 标签：夕阳落日渐变 */
+#post-content h4 {
+    font-size: 1.375rem !important; /* ~22px */
+    font-weight: 600 !important;
+    line-height: 1.4 !important;
+    letter-spacing: -0.01em !important;
+    
+    /* 渐变文本核心配置：小字号下采用高饱和暖色调以增强可读性 */
+    background: linear-gradient(135deg, #f43f5e 0%, #f59e0b 100%) !important;
+    -webkit-background-clip: text !important;
+    background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    
+    margin-top: 3rem !important;
+    margin-bottom: 1.25rem !important;
+}
+
+
+
+/* 针对手机端移动设备的屏幕适配 */
+@media (max-width: 768px) {
+    #post-content h1 {
+        font-size: 2.5rem !important; /* 手机端 H1 适度缩小 */
+        margin-bottom: 1.75rem !important;
+    }
+    #post-content h2 {
+        font-size: 2rem !important; /* 手机端 H2 降至约 32px */
+        margin-top: 3rem !important;
+        margin-bottom: 1.25rem !important;
+    }
+    #post-content h3 {
+        font-size: 1.5rem !important;
+        margin-top: 2.5rem !important;
+    }
+    #post-content h4 {
+        font-size: 1.15rem !important;
+        margin-top: 2rem !important;
+    }
+}
+
+
+
+/* ==========================================================================
+   沉浸式列表容器排版方案 (基于 #212121 背景，UL 适度加深)
+   ========================================================================== */
+
+/* UL - 无序列表：微调加深背景，融入高质感呼吸边框 */
+#post-content ul {
+    background: #181818 !important; /* 比 #212121 略深，形成内敛的容器感 */
+    border: 1px solid rgba(255, 255, 255, 0.03) !important; /* 极淡的边缘微光，防止死黑 */
+    padding: 1.5rem 2rem !important; /* 换算为现代响应式单位，约 24px 32px，给予充足呼吸感 */
+    border-radius: 8px !important; /* 配合大字号标题的现代圆角方案 */
+    margin-top: 1.5rem !important;
+    margin-bottom: 2rem !important;
+    list-style: none !important; /* 隐去浏览器自带的简陋实心圆点 */
+}
+
+/* UL 列表项：定制激光渐变前缀点 */
+#post-content ul li {
+    position: relative !important;
+    font-size: 1.125rem !important; /* 适配大字号正文 */
+    color: #CCCCCC !important; /* 温和不刺眼的文本色 */
+    line-height: 1.8 !important;
+    padding-left: 1.75rem !important; /* 为自定义前缀留出空间 */
+    margin-bottom: 0.75rem !important; /* 列表项之间的间距 */
+}
+
+#post-content ul li:last-child {
+    margin-bottom: 0 !important; /* 消除最后一项的底部外边距 */
+}
+
+/* 伪元素：打造呼应 H2 标题的“科技蓝”精致核心小原点 */
+#post-content ul li::before {
+    content: "" !important;
+    position: absolute !important;
+    left: 0.25rem !important;
+    top: 0.65rem !important; /* 完美居中于 1.8 行高 */
+    width: 6px !important;
+    height: 6px !important;
+    background: #3b82f6 !important; /* 采用科技蓝，与 H2 激光渐变的终点色联动 */
+    border-radius: 50% !important;
+    box-shadow: 0 0 8px rgba(59, 130, 246, 0.6) !important; /* 带来微弱的赛博发光感 */
+}
+
+
+/* ==========================================================================
+   【建议联动】OL - 有序列表：同步加深，保持全站视觉闭环
+   ========================================================================== */
+#post-content ol {
+    background: #181818 !important;
+    border: 1px solid rgba(255, 255, 255, 0.03) !important;
+    padding: 1.5rem 2rem !important;
+    border-radius: 8px !important;
+    margin-top: 1.5rem !important;
+    margin-bottom: 2rem !important;
+    counter-reset: typo-counter !important; /* 自定义数字计数器，彻底掌控数字样式 */
+    list-style: none !important;
+}
+
+/* OL 列表项 */
+#post-content ol li {
+    position: relative !important;
+    font-size: 1.125rem !important;
+    color: #CCCCCC !important;
+    line-height: 1.8 !important;
+    padding-left: 2rem !important;
+    margin-bottom: 0.75rem !important;
+}
+
+#post-content ol li:last-child {
+    margin-bottom: 0 !important;
+}
+
+/* 伪元素：将有序列表的“数字”转化为极具工业感的霓虹紫色小标签 */
+#post-content ol li::before {
+    counter-increment: typo-counter !important;
+    content: counter(typo-counter) !important; /* 动态注入数字 */
+    position: absolute !important;
+    left: 0 !important;
+    top: 0.25rem !important;
+    font-size: 0.875rem !important;
+    font-weight: 700 !important;
+    color: #a855f7 !important; /* 采用霓虹紫，与 H2 激光渐变的起点色联动 */
+    background: rgba(168, 85, 247, 0.1) !important; /* 淡淡的紫色背景框 */
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+    line-height: 1.25rem !important;
+    text-align: center !important;
+    border-radius: 4px !important;
 }    .nav-tabs-alt .nav-tabs>li[data-index="2"].active~.navs-slider-bar {
         transform: translateX(405%);
     }
@@ -607,10 +794,10 @@ input.gsc-input {color:black !important}
                 <li class="wrapper b-b m-b-sm bg-info m-n">
                   <span class="arrow top hidden-folded arrow-info"></span>
                   <div>
-                                                  <p>下午好，是时候打个盹了</p>
+                                                <p>晚上好，注意早点休息</p>
                                   </div>
                   <div class="progress progress-xs m-b-none dker">
-                    <div class="progress-bar bg-white" data-toggle="tooltip" data-original-title="时间已经度过58.33%" style="width: 58.33%"></div>
+                    <div class="progress-bar bg-white" data-toggle="tooltip" data-original-title="时间已经度过4.17%" style="width: 4.17%"></div>
                   </div>
                 </li>
               </ul>
@@ -661,7 +848,7 @@ input.gsc-input {color:black !important}
                   </li>
                   <!--循环输出分类-->
 
-                    <li class="category-level-0 category-parent"><a  href="https://limbopro.com/category/ssr/"><b class="badge pull-right">43</b>科学上网</a></li><li class="category-level-0 category-parent"><a class="auto" href="https://limbopro.com/category/builder/"><span class="pull-right text-muted">
+                    <li class="category-level-0 category-parent"><a  href="https://limbopro.com/category/ssr/"><b class="badge pull-right">44</b>科学上网</a></li><li class="category-level-0 category-parent"><a class="auto" href="https://limbopro.com/category/builder/"><span class="pull-right text-muted">
                     <i class="fontello icon-fw fontello-angle-right text"></i>
                     <i class="fontello icon-fw fontello-angle-down text-active"></i>
                   </span><span class="parent_name">建站优化</span></a><ul class="nav nav-sub dk child-nav"><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/LNMP/"><b class="badge pull-right">38</b>建站指南</a></li><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/Typecho/"><b class="badge pull-right">61</b>网站优化</a></li><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/Bulletin/"><b class="badge pull-right">9</b>运营通报</a></li><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/website-protection/"><b class="badge pull-right">10</b>网站防御</a></li></ul></li><li class="category-level-0 category-parent"><a class="auto" href="https://limbopro.com/category/shares/"><span class="pull-right text-muted">
@@ -670,22 +857,22 @@ input.gsc-input {color:black !important}
                   </span><span class="parent_name">实用分享</span></a><ul class="nav nav-sub dk child-nav"><li class="category-level-1 category-child category-level-odd"><a class="auto" href="https://limbopro.com/category/tools/"><span class="pull-right text-muted">
                     <i class="fontello icon-fw fontello-angle-right text"></i>
                     <i class="fontello icon-fw fontello-angle-down text-active"></i>
-                  </span><span class="parent_name">实用工具</span></a><ul class="nav nav-sub dk child-nav"><li class="category-level-2 category-child category-level-even"><a  href="https://limbopro.com/category/downloader/"><b class="badge pull-right">13</b>下载工具</a></li></ul></li><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/software-skills/"><b class="badge pull-right">136</b>软件百科</a></li><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/Toilet-reading/"><b class="badge pull-right">31</b>书单推荐</a></li><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/AfterFQ/"><b class="badge pull-right">4</b>毒奶世界</a></li><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/master-care/"><b class="badge pull-right">30</b>无主杂记</a></li><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/shell/"><b class="badge pull-right">15</b>常用命令</a></li></ul></li><li class="category-level-0 category-parent"><a class="auto" href="https://limbopro.com/category/beautyandsex/"><span class="pull-right text-muted">
+                  </span><span class="parent_name">实用工具</span></a><ul class="nav nav-sub dk child-nav"><li class="category-level-2 category-child category-level-even"><a  href="https://limbopro.com/category/downloader/"><b class="badge pull-right">13</b>下载工具</a></li></ul></li><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/software-skills/"><b class="badge pull-right">136</b>软件百科</a></li><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/Toilet-reading/"><b class="badge pull-right">31</b>书单推荐</a></li><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/AfterFQ/"><b class="badge pull-right">4</b>毒奶世界</a></li><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/master-care/"><b class="badge pull-right">31</b>无主杂记</a></li><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/shell/"><b class="badge pull-right">15</b>常用命令</a></li></ul></li><li class="category-level-0 category-parent"><a class="auto" href="https://limbopro.com/category/beautyandsex/"><span class="pull-right text-muted">
                     <i class="fontello icon-fw fontello-angle-right text"></i>
                     <i class="fontello icon-fw fontello-angle-down text-active"></i>
-                  </span><span class="parent_name">开车美图</span></a><ul class="nav nav-sub dk child-nav"><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/NSFW/"><b class="badge pull-right">36</b>开车专栏</a></li><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/instagram/"><b class="badge pull-right">25</b>美图欣赏</a></li><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/technologyart/"><b class="badge pull-right">3</b>科技美学</a></li></ul></li><li class="category-level-0 category-parent"><a class="auto" href="https://limbopro.com/category/movies/"><span class="pull-right text-muted">
+                  </span><span class="parent_name">开车美图</span></a><ul class="nav nav-sub dk child-nav"><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/NSFW/"><b class="badge pull-right">37</b>开车专栏</a></li><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/instagram/"><b class="badge pull-right">25</b>美图欣赏</a></li><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/technologyart/"><b class="badge pull-right">3</b>科技美学</a></li></ul></li><li class="category-level-0 category-parent"><a class="auto" href="https://limbopro.com/category/movies/"><span class="pull-right text-muted">
                     <i class="fontello icon-fw fontello-angle-right text"></i>
                     <i class="fontello icon-fw fontello-angle-down text-active"></i>
                   </span><span class="parent_name">影视剧集</span></a><ul class="nav nav-sub dk child-nav"><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/hot-movies/"><b class="badge pull-right">36</b>追剧小组</a></li><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/films-recommend/"><b class="badge pull-right">45</b>电影推荐</a></li></ul></li><li class="category-level-0 category-parent"><a class="auto" href="https://limbopro.com/category/%E8%AE%B0%E5%BD%95/"><span class="pull-right text-muted">
                     <i class="fontello icon-fw fontello-angle-right text"></i>
                     <i class="fontello icon-fw fontello-angle-down text-active"></i>
-                  </span><span class="parent_name">历史记录</span></a><ul class="nav nav-sub dk child-nav"><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/telegram-anecdote/"><b class="badge pull-right">13</b>电报奇闻</a></li><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/Internetlog/"><b class="badge pull-right">19</b>联网观察</a></li></ul></li><li class="category-level-0 category-parent"><a class="auto" href="https://limbopro.com/category/bztj/"><span class="pull-right text-muted">
+                  </span><span class="parent_name">历史记录</span></a><ul class="nav nav-sub dk child-nav"><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/telegram-anecdote/"><b class="badge pull-right">13</b>电报奇闻</a></li><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/Internetlog/"><b class="badge pull-right">22</b>联网观察</a></li></ul></li><li class="category-level-0 category-parent"><a class="auto" href="https://limbopro.com/category/bztj/"><span class="pull-right text-muted">
                     <i class="fontello icon-fw fontello-angle-right text"></i>
                     <i class="fontello icon-fw fontello-angle-down text-active"></i>
                   </span><span class="parent_name">博主推荐</span></a><ul class="nav nav-sub dk child-nav"><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/%E6%B8%B8%E6%88%8F%E6%8E%A8%E8%8D%90/"><b class="badge pull-right">2</b>游戏推荐</a></li></ul></li><li class="category-level-0 category-parent"><a class="auto" href="https://limbopro.com/category/Best_Practices/"><span class="pull-right text-muted">
                     <i class="fontello icon-fw fontello-angle-right text"></i>
                     <i class="fontello icon-fw fontello-angle-down text-active"></i>
-                  </span><span class="parent_name">最佳实践</span></a><ul class="nav nav-sub dk child-nav"><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/%E5%89%8D%E7%AB%AF%E5%AE%9E%E8%B7%B5/"><b class="badge pull-right">9</b>前端实践</a></li></ul></li>                    
+                  </span><span class="parent_name">最佳实践</span></a><ul class="nav nav-sub dk child-nav"><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/%E5%89%8D%E7%AB%AF%E5%AE%9E%E8%B7%B5/"><b class="badge pull-right">10</b>前端实践</a></li></ul></li>                    
                     <!--/循环输出分类-->
 
                 </ul>
@@ -708,7 +895,7 @@ input.gsc-input {color:black !important}
                     </a>
                   </li><!--这个字段不会被显示出来-->
                   <!--循环输出独立页面-->
-                                                                                   <li><a href="https://limbopro.com/865.html"><span>机场推荐（2026年5月22日更新）</span></a></li>
+                                                                                   <li><a href="https://limbopro.com/865.html"><span>机场推荐（2026年8月17日更新）</span></a></li>
                                                                  <li><a href="https://limbopro.com/cross.html"><span>闲言碎语</span></a></li>
                                                                  <li><a href="https://limbopro.com/win-win.html"><span>商务合作</span></a></li>
                                                                  <li><a href="https://limbopro.com/allpages.html"><span>文章归档</span></a></li>
@@ -1199,7 +1386,7 @@ MUDR-125 教师 深田えいみ 阴キャ美少女は、担任に犯されても
                                                                 <!--文章的页脚部件：打赏和其他信息的输出-->
                                 <div class="show-foot"><div class="notebook">
                      <i class="fontello fontello-clock-o"></i>
-                     <span>最后修改：2026 年 05 月 22 日 02 : 03  PM</span>
+                     <span>最后修改：2026 年 08 月 18 日 01 : 38  AM</span>
                  </div><div class="copyright" data-toggle="tooltip" data-html="true" data-original-title="转载请保留本文转载地址，著作权归作者所有"><span>© 允许规范转载</span>
                  </div>
              </div>
@@ -1214,7 +1401,7 @@ MUDR-125 教师 深田えいみ 阴キャ美少女は、担任に犯されても
 下一篇 </a></li>                            <a class="glyphicon glyphicon-share" target="_blank" style="height: 20px; font-weight: 700;background: #1d9bf0;border-radius: 7px;color: white;padding: 2px 12px 2px 12px;"
                         href="https://x.com/intent/tweet?text=发现一篇好文，分享给你🎉  &raquo; Jav番号推荐——那些由工口漫画改编的经典番号（漫改）&url=https://limbopro.com/archives/33206.html&nbsp;作者&nbsp;@limboprossr"
                         class="twitter-mention-button" data-lang="zh-cn">分享本文至Twitter</a>
-                            <li class="previous"> <a class="box-shadow-wrap-normal" href="https://limbopro.com/archives/35537.html" title="收藏数破万系列——不伦番号推荐" data-toggle="tooltip"> 上一篇 </a></li>
+                            <li class="previous"> <a class="box-shadow-wrap-normal" href="https://limbopro.com/archives/35537.html" title="收藏数破万系列——不伦av番号推荐" data-toggle="tooltip"> 上一篇 </a></li>
                         </ul>
                     </nav>
                     <!--评论-->
@@ -1224,7 +1411,7 @@ MUDR-125 教师 深田えいみ 阴キャ美少女は、担任に犯されても
     <h5 class="widget-title m-t-none text-md">
       文章标签    </h5>
     <div class="post-tags tags l-h-2x">
-      <a href="https://limbopro.com/tag/%E7%95%AA%E5%8F%B7%E6%90%9C%E7%B4%A2/">番号搜索</a> <a href="https://limbopro.com/tag/%E7%95%AA%E5%8F%B7%E6%8E%A8%E8%8D%90/">番号推荐</a> <a href="https://limbopro.com/tag/%E5%B7%A5%E5%8F%A3%E6%BC%AB%E7%94%BB/">工口漫画</a>    </div>
+      <a href="https://limbopro.com/tag/%E7%95%AA%E5%8F%B7%E6%90%9C%E7%B4%A2/">番号搜索</a> <a href="https://limbopro.com/tag/%E7%95%AA%E5%8F%B7%E6%8E%A8%E8%8D%90/">番号推荐</a> <a href="https://limbopro.com/tag/%E5%B7%A5%E5%8F%A3%E6%BC%AB%E7%94%BB/">工口漫画</a> <a href="https://limbopro.com/tag/av%E6%8E%A8%E8%8D%90/">av推荐</a>    </div>
   </section>
 </div>
 
@@ -1261,10 +1448,12 @@ MUDR-125 教师 深田えいみ 阴キャ美少女は、担任に犯されても
 <h5 class="widget-title m-t-none text-md">
   相关文章推荐</h5>
 <p></p>
+  <li class="list-group-item"><a href="https://limbopro.com/archives/35583.html"
+      title="好看的“经典系列”番号推荐 [2026年]">好看的“经典系列”番号推荐 [2026年]</a></li>
   <li class="list-group-item"><a href="https://limbopro.com/archives/JAV_Recommendation.html"
-      title="番号推荐——日本JAV经典番号精选（2026年5月更新）">番号推荐——日本JAV经典番号精选（2026年5月更新）</a></li>
+      title="番号推荐——日本JAV经典番号精选（2026年8月更新）">番号推荐——日本JAV经典番号精选（2026年8月更新）</a></li>
   <li class="list-group-item"><a href="https://limbopro.com/archives/35537.html"
-      title="收藏数破万系列——不伦番号推荐">收藏数破万系列——不伦番号推荐</a></li>
+      title="收藏数破万系列——不伦av番号推荐">收藏数破万系列——不伦av番号推荐</a></li>
   <li class="list-group-item"><a href="https://limbopro.com/archives/34454.html"
       title="收藏数破万系列——家庭伦理番号推荐">收藏数破万系列——家庭伦理番号推荐</a></li>
   <li class="list-group-item"><a href="https://limbopro.com/archives/33284.html"
@@ -1285,11 +1474,11 @@ MUDR-125 教师 深田えいみ 阴キャ美少女は、担任に犯されても
 <h5 class="widget-title m-t-none text-md">
   最新文章推荐</h5>
 <p></p>
-    <li class="list-group-item"><a href="https://limbopro.com/archives/35565.html">玩转 AI 新体验：如何在 Chrome 浏览器中高效使用 Gemini</a></li>
-      <li class="list-group-item"><a href="https://limbopro.com/archives/30340.html">一周互联网观察 👀 —— 05.14.2026 ♻️ 更新☁️</a></li>
-      <li class="list-group-item"><a href="https://limbopro.com/archives/35506.html">告别A.I.焦虑：工欲善其事，必先利其器</a></li>
-      <li class="list-group-item"><a href="https://limbopro.com/archives/35498.html">2026年1季度阅读书单分享🔥 </a></li>
-      <li class="list-group-item"><a href="https://limbopro.com/archives/35213.html">隐私与安全，以及关于使用机场的几个实用性建议</a></li>
+    <li class="list-group-item"><a href="https://limbopro.com/archives/35751.html">实用建议：如果你不想熬夜，目前只有一个办法...</a></li>
+      <li class="list-group-item"><a href="https://limbopro.com/archives/35747.html">人生回报率最高8件事是什么？</a></li>
+      <li class="list-group-item"><a href="https://limbopro.com/archives/30340.html">一周互联网观察 👀 —— 07.17.2026 ♻️ 更新☁️</a></li>
+      <li class="list-group-item"><a href="https://limbopro.com/archives/35649.html">让 Gemini 协助修改了博客文章的CSS样式，表现感人！</a></li>
+      <li class="list-group-item"><a href="https://limbopro.com/archives/35611.html">每个人都两次生命</a></li>
   <p></p>
 
 
@@ -1411,7 +1600,7 @@ MUDR-125 教师 深田えいみ 阴キャ美少女は、担任に犯されても
        
        <li class="list-group-item text-second"><span class="nav-icon"><i data-feather="navigation-2"></i></span>
        <span class="badge pull-right" style="color:white"><a target="_self" href="https://limbopro.com/category/ssr/">
-       46</a></span>
+       47</a></span>
        <a target="_self" href="https://limbopro.com/category/ssr/">科学上网</a></li>
        
        </section>
@@ -1424,19 +1613,19 @@ MUDR-125 教师 深田えいみ 阴キャ美少女は、担任に犯されても
                 <div class="clear">
                     <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/8.html" title="权力的游戏丨第八季 😍"> 权力的游戏丨第八季 😍 </a></h4>
                     </div></li><li class="list-group-item">
-                <a href="https://limbopro.com/archives/17.html" class="pull-left thumb-sm m-r"><img src="https://limbopro.com/usr/themes/handsome/assets/img/sj2/2.jpg" class="img-40px normal-shadow img-square"></a>
+                <a href="https://limbopro.com/archives/17.html" class="pull-left thumb-sm m-r"><img src="https://limbopro.com/usr/themes/handsome/assets/img/sj2/3.jpg" class="img-40px normal-shadow img-square"></a>
                 <div class="clear">
                     <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/17.html" title="谢春花丨还想听你的故事"> 谢春花丨还想听你的故事 </a></h4>
                     </div></li><li class="list-group-item">
-                <a href="https://limbopro.com/archives/19.html" class="pull-left thumb-sm m-r"><img src="https://limbopro.com/usr/themes/handsome/assets/img/sj2/10.jpg" class="img-40px normal-shadow img-square"></a>
+                <a href="https://limbopro.com/archives/19.html" class="pull-left thumb-sm m-r"><img src="https://limbopro.com/usr/themes/handsome/assets/img/sj2/2.jpg" class="img-40px normal-shadow img-square"></a>
                 <div class="clear">
                     <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/19.html" title="韩国画家丨zipcy 梁世恩"> 韩国画家丨zipcy 梁世恩 </a></h4>
                     </div></li><li class="list-group-item">
-                <a href="https://limbopro.com/archives/22.html" class="pull-left thumb-sm m-r"><img src="https://limbopro.com/usr/themes/handsome/assets/img/sj2/9.jpg" class="img-40px normal-shadow img-square"></a>
+                <a href="https://limbopro.com/archives/22.html" class="pull-left thumb-sm m-r"><img src="https://limbopro.com/usr/themes/handsome/assets/img/sj2/7.jpg" class="img-40px normal-shadow img-square"></a>
                 <div class="clear">
                     <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/22.html" title="恰当抑郁"> 恰当抑郁 </a></h4>
                     </div></li><li class="list-group-item">
-                <a href="https://limbopro.com/archives/243.html" class="pull-left thumb-sm m-r"><img src="https://limbopro.com/usr/themes/handsome/assets/img/sj2/7.jpg" class="img-40px normal-shadow img-square"></a>
+                <a href="https://limbopro.com/archives/243.html" class="pull-left thumb-sm m-r"><img src="https://limbopro.com/usr/themes/handsome/assets/img/sj2/10.jpg" class="img-40px normal-shadow img-square"></a>
                 <div class="clear">
                     <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/243.html" title="查看 Google 搜索结果中的缓存版网页"> 查看 Google 搜索结果中的缓存版网页 </a></h4>
                     </div></li>       
@@ -1446,29 +1635,29 @@ MUDR-125 教师 深田えいみ 阴キャ美少女は、担任に犯されても
        <section id="tag_cloud-2" class="widget widget_tag_cloud wrapper-md clear">
        <h5 class="widget-title m-t-none text-md">随机文章推荐</h5>
        <li class="list-group-item">
-                <a href="https://limbopro.com/archives/25807.html"</a>
+                <a href="https://limbopro.com/archives/30588.html"</a>
                 <div class="clear">
-                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/25807.html" title="《软技能》- 代码之外的生存指南丨书单推荐第19期"> 《软技能》- 代码之外的生存指南丨书单推荐第19期 </a></h4>
+                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/30588.html" title="JavaScript 最佳实践——forEach() 方法"> JavaScript 最佳实践——forEach() 方法 </a></h4>
                     </div></li><li class="list-group-item">
-                <a href="https://limbopro.com/archives/4909.html"</a>
+                <a href="https://limbopro.com/archives/1115.html"</a>
                 <div class="clear">
-                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/4909.html" title="Instagram 美女账号精选丨第07期"> Instagram 美女账号精选丨第07期 </a></h4>
+                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/1115.html" title="新世界 신세계 (2013)丨本周电影推荐 "> 新世界 신세계 (2013)丨本周电影推荐  </a></h4>
                     </div></li><li class="list-group-item">
-                <a href="https://limbopro.com/archives/274.html"</a>
+                <a href="https://limbopro.com/archives/1196.html"</a>
                 <div class="clear">
-                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/274.html" title="什么是爱情？"> 什么是爱情？ </a></h4>
+                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/1196.html" title="芳华丨本周电影推荐"> 芳华丨本周电影推荐 </a></h4>
                     </div></li><li class="list-group-item">
-                <a href="https://limbopro.com/archives/2487.html"</a>
+                <a href="https://limbopro.com/archives/Regular_Expressions.html"</a>
                 <div class="clear">
-                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/2487.html" title="10个优秀的资讯、科普、涨姿势网站推荐"> 10个优秀的资讯、科普、涨姿势网站推荐 </a></h4>
+                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/Regular_Expressions.html" title="必知必会 - 正则表达式（regular expression），从入门到精通！"> 必知必会 - 正则表达式（regular expression），从入门到精通！ </a></h4>
                     </div></li><li class="list-group-item">
-                <a href="https://limbopro.com/archives/34346.html"</a>
+                <a href="https://limbopro.com/archives/12279.html"</a>
                 <div class="clear">
-                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/34346.html" title="提升幸福感的4种“快乐物质”😄"> 提升幸福感的4种“快乐物质”😄 </a></h4>
+                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/12279.html" title="如何保持热忱"> 如何保持热忱 </a></h4>
                     </div></li><li class="list-group-item">
-                <a href="https://limbopro.com/archives/7795.html"</a>
+                <a href="https://limbopro.com/archives/24076.html"</a>
                 <div class="clear">
-                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/7795.html" title="大数据，隐私保护以及信息孤岛丨一周互联网观察（02.04.2020）"> 大数据，隐私保护以及信息孤岛丨一周互联网观察（02.04.2020） </a></h4>
+                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/24076.html" title="正则表达式最佳实践 - 从文本中提取域名"> 正则表达式最佳实践 - 从文本中提取域名 </a></h4>
                     </div></li>       </section>
        <!--随机文章推荐-->
 
@@ -1477,29 +1666,29 @@ MUDR-125 教师 深田えいみ 阴キャ美少女は、担任に犯されても
             <h5 class="widget-title m-t-none text-md">随机文章</h5>
             <ul class="list-group no-bg no-borders pull-in">
             <li class="list-group-item">
-                <a href="https://limbopro.com/archives/670.html"</a>
+                <a href="https://limbopro.com/archives/weibo-pretty-girls.html"</a>
                 <div class="clear">
-                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/670.html" title="2001太空漫游丨本周电影推荐"> 2001太空漫游丨本周电影推荐 </a></h4>
+                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/weibo-pretty-girls.html" title="Instagram 美女账号精选丨微博美女账号分享推荐（令人心情愉悦）"> Instagram 美女账号精选丨微博美女账号分享推荐（令人心情愉悦） </a></h4>
                     </div></li><li class="list-group-item">
-                <a href="https://limbopro.com/archives/5710.html"</a>
+                <a href="https://limbopro.com/archives/13333.html"</a>
                 <div class="clear">
-                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/5710.html" title="NSFW - 11期丨阿朱啊，未公开 67P Wanimal 王动作品 美女人体艺术写真集合"> NSFW - 11期丨阿朱啊，未公开 67P Wanimal 王动作品 美女人体艺术写真集合 </a></h4>
+                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/13333.html" title="NSFW - 16期丨Naked"> NSFW - 16期丨Naked </a></h4>
                     </div></li><li class="list-group-item">
-                <a href="https://limbopro.com/archives/Immersive-Translate.html"</a>
+                <a href="https://limbopro.com/archives/1282.html"</a>
                 <div class="clear">
-                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/Immersive-Translate.html" title="沉浸式翻译 —— [学习/必备浏览器扩展] 如果你英语/外语不是很好，但又想更好的了解“局域网”之外的世界？那么推荐你安装这款浏览器扩展。"> 沉浸式翻译 —— [学习/必备浏览器扩展] 如果你英语/外语不是很好，但又想更好的了解“局域网”之外的世界？那么推荐你安装这款浏览器扩展。 </a></h4>
+                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/1282.html" title="个人博客 DDoS 攻击的防范教程丨低成本&amp;可执行"> 个人博客 DDoS 攻击的防范教程丨低成本&amp;可执行 </a></h4>
                     </div></li><li class="list-group-item">
-                <a href="https://limbopro.com/archives/imazing.html"</a>
+                <a href="https://limbopro.com/archives/userscripts.html"</a>
                 <div class="clear">
-                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/imazing.html" title="iMazing 使用教程（免费备份IPA/恢复及其他抓包旧版IPA）"> iMazing 使用教程（免费备份IPA/恢复及其他抓包旧版IPA） </a></h4>
+                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/userscripts.html" title="iOS - Stay/UserScripts for Safari - iPhone 上特别好用且开源的（油猴）用户脚本管理器！"> iOS - Stay/UserScripts for Safari - iPhone 上特别好用且开源的（油猴）用户脚本管理器！ </a></h4>
                     </div></li><li class="list-group-item">
-                <a href="https://limbopro.com/archives/932.html"</a>
+                <a href="https://limbopro.com/archives/34170.html"</a>
                 <div class="clear">
-                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/932.html" title="五折开通QQ音乐豪华绿钻年费会员，100有效%！"> 五折开通QQ音乐豪华绿钻年费会员，100有效%！ </a></h4>
+                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/34170.html" title="《逐利而生》3000年公司演变史💬"> 《逐利而生》3000年公司演变史💬 </a></h4>
                     </div></li><li class="list-group-item">
-                <a href="https://limbopro.com/archives/27813.html"</a>
+                <a href="https://limbopro.com/archives/8488.html"</a>
                 <div class="clear">
-                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/27813.html" title="如何提高你的提问的水平？来看看 Google Bard（已更名为Google Gemini） 的回答。"> 如何提高你的提问的水平？来看看 Google Bard（已更名为Google Gemini） 的回答。 </a></h4>
+                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/8488.html" title="网站压力测试工具（2023年）"> 网站压力测试工具（2023年） </a></h4>
                     </div></li>            </ul>
         </div>
        </div>
@@ -1510,7 +1699,7 @@ MUDR-125 教师 深田えいみ 阴キャ美少女は、担任に犯されても
        <ul class="list-group box-shadow-wrap-normal">
                       <li class="list-group-item"><span class="blog-info-icons"> <i data-feather="award"></i></span> <span
                        class="badge
-           pull-right">511</span>文章数目</li>
+           pull-right">517</span>文章数目</li>
           
          <!--  <li class="list-group-item"> <span class="blog-info-icons"> <i data-feather="message-circle"></i></span>
                <span class="badge
@@ -1518,19 +1707,19 @@ MUDR-125 教师 深田えいみ 阴キャ美少女は、担任に犯されても
 
            <li class="list-group-item"><span class="blog-info-icons"> <i data-feather="calendar"></i></span>
                <span class="badge
-           pull-right">7年12天</span>建站已有</li>
+           pull-right">7年100天</span>建站已有</li>
 
            <li class="list-group-item"><span class="blog-info-icons"> <i data-feather="clock"></i></span>
                <span class="badge
-           pull-right">1875天</span>关站倒计时</li>
+           pull-right">1787天</span>关站倒计时</li>
 
            <li class="list-group-item"><span class="blog-info-icons"> <i data-feather="activity"></i></span> <span
                        class="badge
-           pull-right">2 天前</span>最后活动</li>
+           pull-right">2 小时前</span>最后活动</li>
 
            <li class="list-group-item"><span class="blog-info-icons"> <i data-feather="cpu"></i></span> <span
                        class="badge
-           pull-right">205 ms</span>TTFB</li>
+           pull-right">242 ms</span>TTFB</li>
 
            <!--分享按钮-->
 
@@ -1577,36 +1766,36 @@ MUDR-125 教师 深田えいみ 阴キャ美少女は、担任に犯されても
           <section id="tag_cloud-2" class="widget widget_tag_cloud wrapper-md clear">
               <h5 class="widget-title m-t-none text-md">标签云</h5>
               <div class="post-tags tags l-h-2x">
-                  <a href="https://limbopro.com/tag/%E7%95%AA%E5%8F%B7%E6%90%9C%E7%B4%A2/">番号搜索</a> <a href="https://limbopro.com/tag/%E7%95%AA%E5%8F%B7%E6%8E%A8%E8%8D%90/">番号推荐</a> <a href="https://limbopro.com/tag/%E5%B7%A5%E5%8F%A3%E6%BC%AB%E7%94%BB/">工口漫画</a>              </div>
+                  <a href="https://limbopro.com/tag/%E7%95%AA%E5%8F%B7%E6%90%9C%E7%B4%A2/">番号搜索</a> <a href="https://limbopro.com/tag/%E7%95%AA%E5%8F%B7%E6%8E%A8%E8%8D%90/">番号推荐</a> <a href="https://limbopro.com/tag/%E5%B7%A5%E5%8F%A3%E6%BC%AB%E7%94%BB/">工口漫画</a> <a href="https://limbopro.com/tag/av%E6%8E%A8%E8%8D%90/">av推荐</a>              </div>
           </section>
 
           <!--随机文章推荐-->
           <section id="tag_cloud-2" class="widget widget_tag_cloud wrapper-md clear">
 <h5 class="widget-title m-t-none text-md">更多文章推荐</h5>
 <li class="list-group-item">
-                <a href="https://limbopro.com/archives/maozhua.html"</a>
+                <a href="https://limbopro.com/archives/28292.html"</a>
                 <div class="clear">
-                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/maozhua.html" title="猫爪——M3U8/MP4/flv...音视频及图片等“网页媒体资源”嗅探解析工具&amp;支持批量下载（Chrome/Edge/Firefox可用）"> 猫爪——M3U8/MP4/flv...音视频及图片等“网页媒体资源”嗅探解析工具&amp;支持批量下载（Chrome/Edge/Firefox可用） </a></h4>
+                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/28292.html" title="拖延症患者"> 拖延症患者 </a></h4>
                     </div></li><li class="list-group-item">
-                <a href="https://limbopro.com/archives/34518.html"</a>
+                <a href="https://limbopro.com/archives/westworld-Season-3.html"</a>
                 <div class="clear">
-                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/34518.html" title="让 Grok 帮写了一个电报匿名留言板💬 [底部新增服务可用性提示]"> 让 Grok 帮写了一个电报匿名留言板💬 [底部新增服务可用性提示] </a></h4>
+                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/westworld-Season-3.html" title="西部世界第三季全集在线丨1-8丨追剧小组（更新中）"> 西部世界第三季全集在线丨1-8丨追剧小组（更新中） </a></h4>
                     </div></li><li class="list-group-item">
-                <a href="https://limbopro.com/archives/21171.html"</a>
+                <a href="https://limbopro.com/archives/22841.html"</a>
                 <div class="clear">
-                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/21171.html" title="iPhone上如何设置链接的默认打开方式？是在浏览器中打开或跳转到它对应的官方App中打开？（iOS）"> iPhone上如何设置链接的默认打开方式？是在浏览器中打开或跳转到它对应的官方App中打开？（iOS） </a></h4>
+                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/22841.html" title="I/O - 输入决定输出(?)，我的学习方法论。"> I/O - 输入决定输出(?)，我的学习方法论。 </a></h4>
                     </div></li><li class="list-group-item">
-                <a href="https://limbopro.com/archives/21738.html"</a>
+                <a href="https://limbopro.com/archives/13595.html"</a>
                 <div class="clear">
-                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/21738.html" title="如何将 Surge/QuantumultX 等代理软件当做“油猴脚本管理器”使用？"> 如何将 Surge/QuantumultX 等代理软件当做“油猴脚本管理器”使用？ </a></h4>
+                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/13595.html" title="Linux常用命令 - 利用脚本排序、去重、删除文本中多余的重复行"> Linux常用命令 - 利用脚本排序、去重、删除文本中多余的重复行 </a></h4>
                     </div></li><li class="list-group-item">
-                <a href="https://limbopro.com/archives/25934.html"</a>
+                <a href="https://limbopro.com/archives/lover.html"</a>
                 <div class="clear">
-                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/25934.html" title="Typora 平替 - MarkText，超好用的 Markdown 编辑器（且开源免费）。"> Typora 平替 - MarkText，超好用的 Markdown 编辑器（且开源免费）。 </a></h4>
+                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/lover.html" title="R级片《情人》未删减 "> R级片《情人》未删减  </a></h4>
                     </div></li><li class="list-group-item">
-                <a href="https://limbopro.com/archives/28626.html"</a>
+                <a href="https://limbopro.com/archives/3221.html"</a>
                 <div class="clear">
-                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/28626.html" title="[2024] 免拔卡且无需额外代理软件MITM解锁🔓，大陆用户刷Tiktok App实用小技巧。"> [2024] 免拔卡且无需额外代理软件MITM解锁🔓，大陆用户刷Tiktok App实用小技巧。 </a></h4>
+                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/3221.html" title="肖申克的救赎 The Shawshank Redemption (1994)"> 肖申克的救赎 The Shawshank Redemption (1994) </a></h4>
                     </div></li></section>
           <!--随机文章推荐-->
 
@@ -2077,37 +2266,31 @@ var registCommentEvent = function() {
                         input.type = 'hidden';
                         input.name = '_';
                             input.value = (function () {
-    var _VMq = ''///*'MaO'*/'MaO'
-+/* 'Bx'//'Bx' */''+'11'//'fz7'
-+//'W'
-'f'+'d2b'//'3Zi'
-+'4'//'9'
-+'b20'//'G'
-+'a8'//'rd'
-+'95b'//'qK'
-+//'SHv'
-'2a'+//'Hh'
-'Hh'+'93'//'mQV'
-+//'15E'
-'30'+'g'//'g'
-+'8'//'V6S'
-+/* 'wuP'//'wuP' */''+'b'//'7'
-+'m'//'m'
-+'7b'//'2oB'
-+'53'//'zZ'
-+'e9'//'e9'
-+'3'//'6EN'
-+//'B'
-'e'+''///*'j'*/'j'
-+'f'//'a'
-+//'5'
-'f9', _MlK8oTM = [[17,19],[21,22],[23,24],[27,29]];
+    var _Iz37 = //'UIq'
+'11'+//'Lm'
+'f'+//'1Ts'
+'d2b'+'4b'//'sX'
++/* 'ak1'//'ak1' */''+/* '78N'//'78N' */''+//'P'
+'20'+/* 'sB'//'sB' */''+'a'//'Cel'
++'895'//'2'
++'b2a'//'y'
++/* 'BYW'//'BYW' */''+'9'//'cl'
++/* 'Hgn'//'Hgn' */''+//'O'
+'33'+/* '2'//'2' */''+'08'//'CW'
++//'f'
+'b7'+'b'//'M'
++'53'//'9LE'
++/* 'C3H'//'C3H' */''+''///*'ldK'*/'ldK'
++//'vZ5'
+'3'+'ef'//'R'
++/* '8vC'//'8vC' */''+'f9'//'t9w'
+, _5pfN6 = [];
     
-    for (var i = 0; i < _MlK8oTM.length; i ++) {
-        _VMq = _VMq.substring(0, _MlK8oTM[i][0]) + _VMq.substring(_MlK8oTM[i][1]);
+    for (var i = 0; i < _5pfN6.length; i ++) {
+        _Iz37 = _Iz37.substring(0, _5pfN6[i][0]) + _Iz37.substring(_5pfN6[i][1]);
     }
 
-    return _VMq;
+    return _Iz37;
 })();
                     
                         f.appendChild(input);
@@ -2137,7 +2320,7 @@ var registCommentEvent = function() {
           src="https://limbopro.com/usr/uploads/2021/07/2816325337.png" style="width: 50px;"></a>
       <a target="_blank" href="https://github.com/limbopro/"><img
           src="https://limbopro.com/usr/uploads/2021/07/3392286942.png" style="width: 40px;"></a>
-      459.41 W 字符
+      488.09 W 字符
       丨2人在线丨      <!-- 底部状态设置/阅读数/在线人数 -->
 
       Powered by <a target="_blank" href="http://www.typecho.org">Typecho</a>&nbsp;|&nbsp;Theme by <a target="_blank"
@@ -2488,6 +2671,9 @@ disable-menu='false'
   </div>
 
 <script src="/Adguard/Adblock4limbo.function.js" defer></script>
+
+
+<!--改变文章样式-->
 <!-- <<script src="/usr/themes/handsome/instantpage.js" type="module"></script> -->
 
 </body>
