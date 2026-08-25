@@ -2264,3 +2264,94 @@ function findDuplicates(...arrays) {
 // console.log("重复出现的记录：", onlyDuplicates);
 
 // End
+
+
+/* Google CSE 搜索框右侧添加搜索按钮 */
+(function () {
+    'use strict';
+
+    function addSearchButton() {
+
+        // 找到 Google CSE 搜索框
+        const searchBox = document.querySelector(
+            '.gsc-search-box table.gsc-search-box'
+        );
+
+        if (!searchBox) return;
+
+        // 防止重复添加
+        if (searchBox.querySelector('.limbo-custom-search-button')) {
+            return;
+        }
+
+        // 找到 Google CSE 原生搜索按钮
+        const nativeSearchCell = searchBox.querySelector(
+            'td.gsc-search-button'
+        );
+
+        if (!nativeSearchCell) return;
+
+        // 创建新的 td
+        const td = document.createElement('td');
+
+        td.className = 'limbo-custom-search-cell';
+
+        td.style.paddingLeft = '2px';
+
+        // 创建自定义搜索按钮
+        const button = document.createElement('button');
+
+        button.type = 'button';
+
+        button.className = 'limbo-custom-search-button';
+
+        button.innerHTML = '🔍';
+
+        button.style.height = '58px';
+        button.style.padding = '0 10px';
+        button.style.border = '0';
+        button.style.borderRadius = '6px';
+        button.style.cursor = 'pointer';
+        button.style.fontSize = '14px';
+        button.style.background = '#5750e0';
+        button.style.color = '#fff';
+        button.style.whiteSpace = 'nowrap';
+
+        // 点击自定义按钮
+        button.addEventListener('click', function () {
+
+            const nativeButton = searchBox.querySelector(
+                'td.gsc-search-button button.gsc-search-button-v2'
+            );
+
+            if (nativeButton) {
+                nativeButton.click();
+            }
+
+        });
+
+        td.appendChild(button);
+
+        // 插入到 Google 原生搜索按钮后面
+        nativeSearchCell.parentNode.insertBefore(
+            td,
+            nativeSearchCell.nextSibling
+        );
+    }
+
+
+    // Google CSE 是异步加载的
+    const observer = new MutationObserver(function () {
+        addSearchButton();
+    });
+
+    observer.observe(document.body, {
+        childList: true,
+        subtree: true
+    });
+
+
+    // 如果搜索框已经存在，立即添加
+    addSearchButton();
+
+})();
