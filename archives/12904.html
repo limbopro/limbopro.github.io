@@ -105,7 +105,7 @@
     "url" : "https://www.instagram.com/limboprossr"
     }],
     "datePublished" : "2020-11-01",
-    "dateModified" : "2025-12-27",
+    "dateModified" : "2026-08-27",
     "inLanguage":["zh"],
             "image" : "https://limbopro.com/usr/uploads/2020/11/887520402.png",
         "url" : "https://limbopro.com/archives/12904.html",
@@ -370,7 +370,7 @@ a {
 
 
 div.entry-thumbnail .img-responsive {
-    display:none !importm;
+    display:none !important;
 }
 
 #body {
@@ -464,6 +464,193 @@ padding:0px !important;
 
 .confirm-footer .cancel:hover {
   background: #e0e0e0;
+}
+
+
+/* ==========================================================================
+   全层级“激光渐变文字”大字号排版方案 (基于 #212121 终极适配)
+   ========================================================================== */
+
+/* H1 - 巨型文章大标题：白夜星云渐变 */
+#post-content h1 {
+    font-size: 3.75rem !important; /* ~60px */
+    font-weight: 800 !important;
+    line-height: 1.1 !important;
+    letter-spacing: -0.04em !important; /* 极紧字距 */
+    
+    /* 渐变文本核心配置 */
+    background: linear-gradient(135deg, #ffffff 0%, #e2e8f0 50%, #c084fc 100%) !important;
+    -webkit-background-clip: text !important;
+    background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    
+    margin-top: 0 !important;
+    margin-bottom: 3rem !important;
+}
+
+/* H2 - 核心大章节：应您要求的 2.875rem，极光科技渐变 */
+#post-content h2 {
+    font-size: 2.875rem !important; /* ~46px */
+    font-weight: 800 !important;
+    line-height: 1.2 !important;
+    letter-spacing: -0.03em !important;
+    
+    /* 渐变文本核心配置 */
+    background: linear-gradient(135deg, #a855f7 0%, #3b82f6 100%) !important;
+    -webkit-background-clip: text !important;
+    background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    
+    margin-top: 5rem !important; /* 巨幅上留白，给大字号绝对的呼吸空间 */
+    margin-bottom: 2rem !important;
+}
+
+/* H3 - 子级小节：电弧青绿渐变 */
+#post-content h3 {
+    font-size: 2rem !important; /* ~32px */
+    font-weight: 700 !important;
+    line-height: 1.3 !important;
+    letter-spacing: -0.02em !important;
+    
+    /* 渐变文本核心配置 */
+    background: linear-gradient(135deg, #2563eb 0%, #06b6d4 50%, #10b981 100%) !important;
+    -webkit-background-clip: text !important;
+    background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    
+    margin-top: 4rem !important;
+    margin-bottom: 1.5rem !important;
+}
+
+/* H4 - 微型标题 / 标签：夕阳落日渐变 */
+#post-content h4 {
+    font-size: 1.375rem !important; /* ~22px */
+    font-weight: 600 !important;
+    line-height: 1.4 !important;
+    letter-spacing: -0.01em !important;
+    
+    /* 渐变文本核心配置：小字号下采用高饱和暖色调以增强可读性 */
+    background: linear-gradient(135deg, #f43f5e 0%, #f59e0b 100%) !important;
+    -webkit-background-clip: text !important;
+    background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    
+    margin-top: 3rem !important;
+    margin-bottom: 1.25rem !important;
+}
+
+
+
+/* 针对手机端移动设备的屏幕适配 */
+@media (max-width: 768px) {
+    #post-content h1 {
+        font-size: 2.5rem !important; /* 手机端 H1 适度缩小 */
+        margin-bottom: 1.75rem !important;
+    }
+    #post-content h2 {
+        font-size: 2rem !important; /* 手机端 H2 降至约 32px */
+        margin-top: 3rem !important;
+        margin-bottom: 1.25rem !important;
+    }
+    #post-content h3 {
+        font-size: 1.5rem !important;
+        margin-top: 2.5rem !important;
+    }
+    #post-content h4 {
+        font-size: 1.15rem !important;
+        margin-top: 2rem !important;
+    }
+}
+
+
+
+/* ==========================================================================
+   沉浸式列表容器排版方案 (基于 #212121 背景，UL 适度加深)
+   ========================================================================== */
+
+/* UL - 无序列表：微调加深背景，融入高质感呼吸边框 */
+#post-content ul {
+    background: #181818 !important; /* 比 #212121 略深，形成内敛的容器感 */
+    border: 1px solid rgba(255, 255, 255, 0.03) !important; /* 极淡的边缘微光，防止死黑 */
+    padding: 1.5rem 2rem !important; /* 换算为现代响应式单位，约 24px 32px，给予充足呼吸感 */
+    border-radius: 8px !important; /* 配合大字号标题的现代圆角方案 */
+    margin-top: 1.5rem !important;
+    margin-bottom: 2rem !important;
+    list-style: none !important; /* 隐去浏览器自带的简陋实心圆点 */
+}
+
+/* UL 列表项：定制激光渐变前缀点 */
+#post-content ul li {
+    position: relative !important;
+    font-size: 1.125rem !important; /* 适配大字号正文 */
+    color: #CCCCCC !important; /* 温和不刺眼的文本色 */
+    line-height: 1.8 !important;
+    padding-left: 1.75rem !important; /* 为自定义前缀留出空间 */
+    margin-bottom: 0.75rem !important; /* 列表项之间的间距 */
+}
+
+#post-content ul li:last-child {
+    margin-bottom: 0 !important; /* 消除最后一项的底部外边距 */
+}
+
+/* 伪元素：打造呼应 H2 标题的“科技蓝”精致核心小原点 */
+#post-content ul li::before {
+    content: "" !important;
+    position: absolute !important;
+    left: 0.25rem !important;
+    top: 0.65rem !important; /* 完美居中于 1.8 行高 */
+    width: 6px !important;
+    height: 6px !important;
+    background: #3b82f6 !important; /* 采用科技蓝，与 H2 激光渐变的终点色联动 */
+    border-radius: 50% !important;
+    box-shadow: 0 0 8px rgba(59, 130, 246, 0.6) !important; /* 带来微弱的赛博发光感 */
+}
+
+
+/* ==========================================================================
+   【建议联动】OL - 有序列表：同步加深，保持全站视觉闭环
+   ========================================================================== */
+#post-content ol {
+    background: #181818 !important;
+    border: 1px solid rgba(255, 255, 255, 0.03) !important;
+    padding: 1.5rem 2rem !important;
+    border-radius: 8px !important;
+    margin-top: 1.5rem !important;
+    margin-bottom: 2rem !important;
+    counter-reset: typo-counter !important; /* 自定义数字计数器，彻底掌控数字样式 */
+    list-style: none !important;
+}
+
+/* OL 列表项 */
+#post-content ol li {
+    position: relative !important;
+    font-size: 1.125rem !important;
+    color: #CCCCCC !important;
+    line-height: 1.8 !important;
+    padding-left: 2rem !important;
+    margin-bottom: 0.75rem !important;
+}
+
+#post-content ol li:last-child {
+    margin-bottom: 0 !important;
+}
+
+/* 伪元素：将有序列表的“数字”转化为极具工业感的霓虹紫色小标签 */
+#post-content ol li::before {
+    counter-increment: typo-counter !important;
+    content: counter(typo-counter) !important; /* 动态注入数字 */
+    position: absolute !important;
+    left: 0 !important;
+    top: 0.25rem !important;
+    font-size: 0.875rem !important;
+    font-weight: 700 !important;
+    color: #a855f7 !important; /* 采用霓虹紫，与 H2 激光渐变的起点色联动 */
+    background: rgba(168, 85, 247, 0.1) !important; /* 淡淡的紫色背景框 */
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+    line-height: 1.25rem !important;
+    text-align: center !important;
+    border-radius: 4px !important;
 }    .nav-tabs-alt .nav-tabs>li[data-index="2"].active~.navs-slider-bar {
         transform: translateX(405%);
     }
@@ -607,10 +794,10 @@ input.gsc-input {color:black !important}
                 <li class="wrapper b-b m-b-sm bg-info m-n">
                   <span class="arrow top hidden-folded arrow-info"></span>
                   <div>
-                                                <p>晚上好，注意早点休息</p>
+                                                  <p>早上好，永远年轻，永远热泪盈眶</p>
                                   </div>
                   <div class="progress progress-xs m-b-none dker">
-                    <div class="progress-bar bg-white" data-toggle="tooltip" data-original-title="时间已经度过4.17%" style="width: 4.17%"></div>
+                    <div class="progress-bar bg-white" data-toggle="tooltip" data-original-title="时间已经度过45.83%" style="width: 45.83%"></div>
                   </div>
                 </li>
               </ul>
@@ -661,31 +848,31 @@ input.gsc-input {color:black !important}
                   </li>
                   <!--循环输出分类-->
 
-                    <li class="category-level-0 category-parent"><a  href="https://limbopro.com/category/ssr/"><b class="badge pull-right">42</b>科学上网</a></li><li class="category-level-0 category-parent"><a class="auto" href="https://limbopro.com/category/builder/"><span class="pull-right text-muted">
+                    <li class="category-level-0 category-parent"><a  href="https://limbopro.com/category/ssr/"><b class="badge pull-right">45</b>科学上网</a></li><li class="category-level-0 category-parent"><a class="auto" href="https://limbopro.com/category/builder/"><span class="pull-right text-muted">
                     <i class="fontello icon-fw fontello-angle-right text"></i>
                     <i class="fontello icon-fw fontello-angle-down text-active"></i>
-                  </span><span class="parent_name">建站优化</span></a><ul class="nav nav-sub dk child-nav"><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/LNMP/"><b class="badge pull-right">38</b>建站指南</a></li><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/Typecho/"><b class="badge pull-right">60</b>网站优化</a></li><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/Bulletin/"><b class="badge pull-right">9</b>运营通报</a></li><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/website-protection/"><b class="badge pull-right">10</b>网站防御</a></li></ul></li><li class="category-level-0 category-parent"><a class="auto" href="https://limbopro.com/category/shares/"><span class="pull-right text-muted">
+                  </span><span class="parent_name">建站优化</span></a><ul class="nav nav-sub dk child-nav"><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/LNMP/"><b class="badge pull-right">38</b>建站指南</a></li><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/Typecho/"><b class="badge pull-right">62</b>网站优化</a></li><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/Bulletin/"><b class="badge pull-right">9</b>运营通报</a></li><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/website-protection/"><b class="badge pull-right">10</b>网站防御</a></li></ul></li><li class="category-level-0 category-parent"><a class="auto" href="https://limbopro.com/category/shares/"><span class="pull-right text-muted">
                     <i class="fontello icon-fw fontello-angle-right text"></i>
                     <i class="fontello icon-fw fontello-angle-down text-active"></i>
                   </span><span class="parent_name">实用分享</span></a><ul class="nav nav-sub dk child-nav"><li class="category-level-1 category-child category-level-odd"><a class="auto" href="https://limbopro.com/category/tools/"><span class="pull-right text-muted">
                     <i class="fontello icon-fw fontello-angle-right text"></i>
                     <i class="fontello icon-fw fontello-angle-down text-active"></i>
-                  </span><span class="parent_name">实用工具</span></a><ul class="nav nav-sub dk child-nav"><li class="category-level-2 category-child category-level-even"><a  href="https://limbopro.com/category/downloader/"><b class="badge pull-right">13</b>下载工具</a></li></ul></li><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/software-skills/"><b class="badge pull-right">131</b>软件百科</a></li><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/Toilet-reading/"><b class="badge pull-right">30</b>书单推荐</a></li><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/AfterFQ/"><b class="badge pull-right">4</b>毒奶世界</a></li><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/master-care/"><b class="badge pull-right">30</b>无主杂记</a></li><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/shell/"><b class="badge pull-right">15</b>常用命令</a></li></ul></li><li class="category-level-0 category-parent"><a class="auto" href="https://limbopro.com/category/beautyandsex/"><span class="pull-right text-muted">
+                  </span><span class="parent_name">实用工具</span></a><ul class="nav nav-sub dk child-nav"><li class="category-level-2 category-child category-level-even"><a  href="https://limbopro.com/category/downloader/"><b class="badge pull-right">13</b>下载工具</a></li></ul></li><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/software-skills/"><b class="badge pull-right">136</b>软件百科</a></li><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/Toilet-reading/"><b class="badge pull-right">31</b>书单推荐</a></li><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/AfterFQ/"><b class="badge pull-right">4</b>毒奶世界</a></li><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/master-care/"><b class="badge pull-right">31</b>无主杂记</a></li><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/shell/"><b class="badge pull-right">15</b>常用命令</a></li></ul></li><li class="category-level-0 category-parent"><a class="auto" href="https://limbopro.com/category/beautyandsex/"><span class="pull-right text-muted">
                     <i class="fontello icon-fw fontello-angle-right text"></i>
                     <i class="fontello icon-fw fontello-angle-down text-active"></i>
-                  </span><span class="parent_name">开车美图</span></a><ul class="nav nav-sub dk child-nav"><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/NSFW/"><b class="badge pull-right">35</b>开车专栏</a></li><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/instagram/"><b class="badge pull-right">25</b>美图欣赏</a></li><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/technologyart/"><b class="badge pull-right">3</b>科技美学</a></li></ul></li><li class="category-level-0 category-parent"><a class="auto" href="https://limbopro.com/category/movies/"><span class="pull-right text-muted">
+                  </span><span class="parent_name">开车美图</span></a><ul class="nav nav-sub dk child-nav"><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/NSFW/"><b class="badge pull-right">37</b>开车专栏</a></li><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/instagram/"><b class="badge pull-right">25</b>美图欣赏</a></li><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/technologyart/"><b class="badge pull-right">3</b>科技美学</a></li></ul></li><li class="category-level-0 category-parent"><a class="auto" href="https://limbopro.com/category/movies/"><span class="pull-right text-muted">
                     <i class="fontello icon-fw fontello-angle-right text"></i>
                     <i class="fontello icon-fw fontello-angle-down text-active"></i>
                   </span><span class="parent_name">影视剧集</span></a><ul class="nav nav-sub dk child-nav"><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/hot-movies/"><b class="badge pull-right">36</b>追剧小组</a></li><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/films-recommend/"><b class="badge pull-right">45</b>电影推荐</a></li></ul></li><li class="category-level-0 category-parent"><a class="auto" href="https://limbopro.com/category/%E8%AE%B0%E5%BD%95/"><span class="pull-right text-muted">
                     <i class="fontello icon-fw fontello-angle-right text"></i>
                     <i class="fontello icon-fw fontello-angle-down text-active"></i>
-                  </span><span class="parent_name">历史记录</span></a><ul class="nav nav-sub dk child-nav"><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/telegram-anecdote/"><b class="badge pull-right">13</b>电报奇闻</a></li><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/Internetlog/"><b class="badge pull-right">15</b>联网观察</a></li></ul></li><li class="category-level-0 category-parent"><a class="auto" href="https://limbopro.com/category/bztj/"><span class="pull-right text-muted">
+                  </span><span class="parent_name">历史记录</span></a><ul class="nav nav-sub dk child-nav"><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/telegram-anecdote/"><b class="badge pull-right">13</b>电报奇闻</a></li><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/Internetlog/"><b class="badge pull-right">22</b>联网观察</a></li></ul></li><li class="category-level-0 category-parent"><a class="auto" href="https://limbopro.com/category/bztj/"><span class="pull-right text-muted">
                     <i class="fontello icon-fw fontello-angle-right text"></i>
                     <i class="fontello icon-fw fontello-angle-down text-active"></i>
                   </span><span class="parent_name">博主推荐</span></a><ul class="nav nav-sub dk child-nav"><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/%E6%B8%B8%E6%88%8F%E6%8E%A8%E8%8D%90/"><b class="badge pull-right">2</b>游戏推荐</a></li></ul></li><li class="category-level-0 category-parent"><a class="auto" href="https://limbopro.com/category/Best_Practices/"><span class="pull-right text-muted">
                     <i class="fontello icon-fw fontello-angle-right text"></i>
                     <i class="fontello icon-fw fontello-angle-down text-active"></i>
-                  </span><span class="parent_name">最佳实践</span></a><ul class="nav nav-sub dk child-nav"><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/%E5%89%8D%E7%AB%AF%E5%AE%9E%E8%B7%B5/"><b class="badge pull-right">9</b>前端实践</a></li></ul></li>                    
+                  </span><span class="parent_name">最佳实践</span></a><ul class="nav nav-sub dk child-nav"><li class="category-level-1 category-child category-level-odd"><a  href="https://limbopro.com/category/%E5%89%8D%E7%AB%AF%E5%AE%9E%E8%B7%B5/"><b class="badge pull-right">10</b>前端实践</a></li></ul></li>                    
                     <!--/循环输出分类-->
 
                 </ul>
@@ -708,7 +895,7 @@ input.gsc-input {color:black !important}
                     </a>
                   </li><!--这个字段不会被显示出来-->
                   <!--循环输出独立页面-->
-                                                                                   <li><a href="https://limbopro.com/865.html"><span>稳定好用的SS/Trojan/v2Ray机场推荐（2025年12月20日更新）✨❤️</span></a></li>
+                                                                                   <li><a href="https://limbopro.com/865.html"><span>机场推荐（2026年8月19日更新）</span></a></li>
                                                                  <li><a href="https://limbopro.com/cross.html"><span>闲言碎语</span></a></li>
                                                                  <li><a href="https://limbopro.com/win-win.html"><span>商务合作</span></a></li>
                                                                  <li><a href="https://limbopro.com/allpages.html"><span>文章归档</span></a></li>
@@ -802,7 +989,7 @@ data-toggle="tooltip" data-placement="right" data-original-title="阅读模式">
                     <!--文字数目-->
                     <li class="meta-word"><span class="post-icons"><i data-feather="pen-tool"></i></span><span
                             class="meta-value">
-                            38706                            字数                        </span></li>
+                            39121                            字数                        </span></li>
                     <!--分类-->
                     <li class="meta-categories"><span class="post-icons"><i data-feather="hash"></i></span><span
                             class="sr-only">
@@ -855,7 +1042,7 @@ data-toggle="tooltip" data-placement="right" data-original-title="阅读模式">
 
 
 
-<!- toc end ->
+<!-- toc end -->
 
 <hr><p><img src="https://limbopro.com/usr/uploads/2021/08/3373964069.jpg" alt="毒奶去网页广告计划 - Quantumult X 去广告效果.jpg" /></p>
 <p>via <span class="external-link"><a class="no-external-link" href="https://twitter.com/limboprossr/status/1319689504316219393" target="_blank">Twitter<i data-feather='external-link'></i></a></span>；</p>
@@ -877,7 +1064,8 @@ data-toggle="tooltip" data-placement="right" data-original-title="阅读模式">
 </div>
 <!-- .post-inser ####-->
 </div></p>
-<p><div class="tip inlineBlock share">如果你更喜欢使用 <strong>Safari</strong> for iOS/iPad/Mac，那么博主推荐搭配使用 <strong>Safari + 内容拦截器</strong>，拦截器支持对 <strong>更多网站</strong> 上网页广告的屏蔽移除；</div>
+<p><div class="tip inlineBlock share">如果你更喜欢使用 <strong>Safari</strong> for iOS/iPad/Mac，那么博主推荐搭配使用 <strong>Safari + 内容拦截器</strong>，拦截器支持对 <strong>更多网站</strong> 上网页广告的屏蔽移除；也可以在此基础上配合油猴脚本管理器 <strong>Stay</strong> 安装：具体见本文 <strong>去网页广告配置教程（油猴）</strong> 部分；</div>
+<pre><code>https://github.com/limbopro/Adblock4limbo/raw/refs/heads/main/Adguard/Adblock4limbo.user.js</code></pre>
 <h4>安卓用户</h4>
 <p><div class="preview">
 <div class="post-inser post box-shadow-wrap-normal">
@@ -947,11 +1135,11 @@ via Twitter；前序（必看/Mac/Windows/Android/网页广告拦截方案）选
 <h4>JavaScript</h4>
 <p>window.open-defuser.js ，脚本来自 <span class="external-link"><a class="no-external-link" href="https://github.com/gorhill/uBlock/wiki/Resources-Library#windowopen-defuserjs-" target="_blank">https://github.com/gorhill/uBlock/wiki/Resources-Library#windowopen-defuserjs-<i data-feather='external-link'></i></a></span> ；可将其追加嵌入网页响应体的 <code>&lt;head&gt;</code> 标签开始之后 或 <code>&lt;/body&gt;</code> 标签结束之前，即可打断 <strong>弹窗</strong>；</p>
 <p>window.open-defuser.js </p>
-<p><div class="panel panel-default collapse-panel box-shadow-wrap-lg"><div class="panel-heading panel-collapse" data-toggle="collapse" data-target="#collapse-3f7e9c9f5c1284ce418bdf410bce5e954" aria-expanded="true"><div class="accordion-toggle"><span>window.open-defuser.js 源码</span>
+<p><div class="panel panel-default collapse-panel box-shadow-wrap-lg"><div class="panel-heading panel-collapse" data-toggle="collapse" data-target="#collapse-4a793dff82e6b3b46ccf57133be1b5db18" aria-expanded="true"><div class="accordion-toggle"><span>window.open-defuser.js 源码</span>
 <i class="pull-right fontello icon-fw fontello-angle-right"></i>
 </div>
 </div>
-<div id="collapse-3f7e9c9f5c1284ce418bdf410bce5e954" class="panel-body collapse">
+<div id="collapse-4a793dff82e6b3b46ccf57133be1b5db18" class="panel-body collapse">
 </p>
 <pre><code>function window_open_defuser() {
     'use strict';
@@ -1062,23 +1250,23 @@ via Twitter；前序（必看/Mac/Windows/Android/网页广告拦截方案）选
 <strong>urlhaus-filter</strong>：<span class="external-link"><a class="no-external-link" href="https://gitlab.com/malware-filter/urlhaus-filter#full-version；https://urlhaus.abuse.ch/" target="_blank">https://gitlab.com/malware-filter/urlhaus-filter#full-version；https://urlhaus.abuse.ch/<i data-feather='external-link'></i></a></span>；<br />
 <strong>油猴-Tampermonkey®-技术文档</strong>：<span class="external-link"><a class="no-external-link" href="https://www.tampermonkey.net/documentation.php?locale=zh" target="_blank">https://www.tampermonkey.net/documentation.php?locale=zh<i data-feather='external-link'></i></a></span>；</div>
 <h2 id="去网页广告计划介绍（在维护的网站列表及功能更新日志）"> 去网页广告计划介绍（在维护的网站列表及功能更新日志）</h2>
-<p>毒奶导航上线新功能；如何配置？查看本文 <strong>如何为任意网页引入导航</strong>？部分，QX/Surge/Shadowrocket/Loon/Stash.../油猴支持；</p>
-<h3>在网页上执行JS代码</h3>
+<p>毒奶导航上线新功能；如何配置？查看本文 <strong>如何为任意网页引入导航</strong>？部分，QX/Surge/Shadowrocket/Loon/Stash.../油猴支持；[新Feature]</p>
+<h3>在网页上执行JS代码[新Feature]</h3>
 <p><div class="tip inlineBlock info">12.22.2025 在 AI 协助下，<strong>执行JS</strong> 脚本管理器更新；用户可以直接在网页上运行JS脚本以及加载 .js 文件；效果参阅：<span class="external-link"><a class="no-external-link" href="https://t.me/limboprossr/3464" target="_blank">https://t.me/limboprossr/3464<i data-feather='external-link'></i></a></span></div>
-<h3>手动屏蔽广告元素</h3>
+<h3>手动屏蔽广告元素[新Feature]</h3>
 <p><img src="https://limbopro.com/usr/uploads/2025/12/3091316524.jpg" alt="毒奶导航-元素屏蔽/追踪器.jpg" /></p>
 <p><div class="tip inlineBlock info">12.26.2025 更新：已支持修改元素内联样式；效果参阅：<span class="external-link"><a class="no-external-link" href="https://t.me/limboprossr/3467?single" target="_blank">https://t.me/limboprossr/3467?single<i data-feather='external-link'></i></a></span></div>
 <p><div class="tip inlineBlock info">12.25.2025 更新：已支持逐级泛化/逐级精简，帮你最快找到所有广告元素，分分钟屏蔽；效果参阅 ：<span class="external-link"><a class="no-external-link" href="https://t.me/limboprossr/3471" target="_blank">https://t.me/limboprossr/3471<i data-feather='external-link'></i></a></span> P.S. 以后大家自己私藏小网站就可以自己动手屏蔽了；如何配置？查看本文 <strong>如何为任意网页引入导航</strong>？部分，QX/Surge/Shadowrocket/Loon/Stash.../油猴支持；</div>
 <p><div class="tip inlineBlock info">12.13.2025 在 AI 协助下，正式上线 <strong>元素屏蔽/追踪器</strong>；用户可以直接在有广告的页面上<strong>自行移除广告元素</strong>；效果参阅：<span class="external-link"><a class="no-external-link" href="https://t.me/limboprossr/3459" target="_blank">https://t.me/limboprossr/3459<i data-feather='external-link'></i></a></span></div>
-<h3>沉浸式翻译纯JS版及媒体资源查找器</h3>
+<h3>沉浸式翻译纯JS版及媒体资源查找器[新Feature]</h3>
 <p><div class="tip inlineBlock info">12.12.2025 在 AI 协助下，导航详情页新增<strong>沉浸式翻译</strong>[英文/中文对照翻译]以及M3U8/MP4资源查询器（如果页面存在视频，可点击提取视频对应的.m3u8或mp4 URL链接）；相关功能效果参阅：<span class="external-link"><a class="no-external-link" href="https://t.me/limboprossr/3445" target="_blank">TG<i data-feather='external-link'></i></a></span> <span class="external-link"><a class="no-external-link" href="https://t.me/limboprossr/3445" target="_blank">https://t.me/limboprossr/3445<i data-feather='external-link'></i></a></span> ，<strong>你可在任意网站网页引入导航页，享受其带功能</strong>（如上，以及来自Adguard1.8万+ 的基础过滤器 + 中文过滤器，足以消灭大部分图片广告 P.S. 个性化设置，不再默认加载，<strong>需去导航-工具箱里开启</strong>！）；</div>
-<h3>历史更新</h3>
+<h3>历史更新[基础功能]</h3>
 <p><div class="tip inlineBlock success"><strong>毒奶去网页广告计划</strong>，<strong>导航</strong>、<strong>移除特定网站上的广告并新增额外特性(如提取M3U8文件/视频下载指引/视频网站搜索集成/<a href="https://limbopro.com/archives/34562.html">划词搜索</a>等)</strong>，手机用户需配合代理App使用（如<strong>Surge/QuantumultX/Shadowrocket/Loon</strong>==）；电脑桌面浏览器用户推荐配合<strong>油猴</strong>使用，<strong>具体操作步骤参阅后文教程部分</strong>；</div>
 <p><div class="tip inlineBlock warning">本计划<strong>只对特定网站生效</strong>，具体查看后文<strong>如何反馈问题/提交新网站（重要）</strong>的<strong>在维护网站列表</strong>部分；另外，请确保自己有一定的代理软件（Surge/QX...）/油猴脚本的使用经验，<strong>基本的问题排查能力</strong>，反馈问题时能<strong>提供足够的细节</strong>，提建议时<strong>有自己见解</strong>；</div>
 <p><div class="tip inlineBlock info">言而总之，本计划仍<strong>出于业余爱好更新维护</strong>；对于能提出好的建议或意见的用户，我们<strong>热烈欢迎，赞赏</strong>；</div>
 <p><div class="tip inlineBlock info">起作用的三个脚本：<br />
 1.<strong>Adblock4limbo.js</strong> —— 重写脚本 <span class="external-link"><a class="no-external-link" href="https://github.com/limbopro/Adblock4limbo/blob/main/Adguard/Adblock4limbo.js" target="_blank">https://github.com/limbopro/Adblock4limbo/blob/main/Adguard/Adblock4limbo.js<i data-feather='external-link'></i></a></span> （QX/Surge/Loon等代理app重写会用到，它告诉代理软件如何插入 Adblock4limbo.user.js；你可以在 .conf，.sgmodule...里看到它的踪影，见后文如何在QX...配置部分；）<br />
-<br>2.<strong>Adblock4limbo.user.js</strong> —— 去网页广告源码 <span class="external-link"><a class="no-external-link" href="https://github.com/limbopro/Adblock4limbo/blob/main/Adguard/Adblock4limbo.user.js" target="_blank">https://github.com/limbopro/Adblock4limbo/blob/main/Adguard/Adblock4limbo.user.js<i data-feather='external-link'></i></a></span> （<strong>实现去广告功能部分</strong>，可由代理软件调用插入网页的body标签或head标签，具体参考 Adblock4limbo.js 写的规则；Adblock4limbo.user.js ，PC用户可通过油猴即篡改猴进行安装；）<br />
+<br>2.<strong>Adblock4limbo.user.js</strong> —— 去网页广告源码 <span class="external-link"><a class="no-external-link" href="https://github.com/limbopro/Adblock4limbo/blob/main/Adguard/Adblock4limbo.user.js" target="_blank">https://github.com/limbopro/Adblock4limbo/blob/main/Adguard/Adblock4limbo.user.js<i data-feather='external-link'></i></a></span> <span class="external-link"><a class="no-external-link" href="https://github.com/limbopro/Adblock4limbo/raw/refs/heads/main/Adguard/Adblock4limbo.user.js" target="_blank">raw<i data-feather='external-link'></i></a></span> （<strong>实现去广告功能部分</strong>，可由代理软件调用插入网页的body标签或head标签，具体参考 Adblock4limbo.js 写的规则；Adblock4limbo.user.js ，PC用户可通过油猴即篡改猴进行安装；）<br />
 <br>3.<strong>Adblock4limbo.function.js</strong> —— 右下角导航页源码 <span class="external-link"><a class="no-external-link" href="https://github.com/limbopro/Adblock4limbo/blob/main/Adguard/Adblock4limbo.function.js" target="_blank">https://github.com/limbopro/Adblock4limbo/blob/main/Adguard/Adblock4limbo.function.js<i data-feather='external-link'></i></a></span> （<strong>导航按钮/导航详情页功能部分</strong>，通过 Adblock4limbo.user.js 引入网页）</div>
 <h3>毒奶去网页广告计划支持时间线</h3>
 <p><div class="tip inlineBlock info"><strong>毒奶去网页广告计划支持时间线</strong>：<br />
@@ -1092,7 +1280,7 @@ via Twitter；前序（必看/Mac/Windows/Android/网页广告拦截方案）选
 04.13.2022 新增对 油猴的支持（按油猴的格式重写了用户脚本）；<br />
 03.21.2022 新增对 Surge的支持（移植自Quantumult X）；<br />
 28.10.2020 新增对 Quantumult X的支持；</div>
-<h3>导航功能一览</h3>
+<h3>导航功能一览[导航按钮]</h3>
 <p><video src="https://limbopro.com/usr/uploads/2023/10/1625924739.mp4" style="background-image:url(https://limbopro.com/usr/uploads/2023/10/2427552253.png);background-size: cover;"></video></p>
 <p><div class="tip inlineBlock info">导航及功能使用操作视频；</div>
 <p><img src="https://limbopro.com/usr/uploads/2023/10/400222393.png" alt="功能截图 - 页面右下角按钮.png" /><br />
@@ -1394,7 +1582,7 @@ via Twitter；前序（必看/Mac/Windows/Android/网页广告拦截方案）选
 使用到的手机：iPhone?<br />
 使用到的应用：QuantumultX ？ Stay？ Surge？<br />
 使用到的重写：<a href="https://limbopro.com/Adblock4limbo.conf">https://limbopro.com/Adblock4limbo.conf</a> ..?<br />
-使用到的脚本：<span class="external-link"><a class="no-external-link" href="https://github.com/limbopro/Adblock4limbo/raw/main/Adguard/Adblock4limbo.user.js" target="_blank">https://github.com/limbopro/Adblock4limbo/raw/main/Adguard/Adblock4limbo.user.js<i data-feather='external-link'></i></a></span><br />
+使用到的脚本：<span class="external-link"><a class="no-external-link" href="https://github.com/limbopro/Adblock4limbo/raw/refs/heads/main/Adguard/Adblock4limbo.user.js" target="_blank">https://github.com/limbopro/Adblock4limbo/raw/refs/heads/main/Adguard/Adblock4limbo.user.js<i data-feather='external-link'></i></a></span><br />
 自行尝试：是否尝试清理浏览器缓存？使用无痕模式浏览该网页问题是否仍在？开启或关闭重写/模块再打开该网页是否有不同？哪里不同？==<br />
 截图：出现广告的位置的截图（涉及🔞请打码）？错误日志或提示信息截图..<br />
 其他细节...<br />
@@ -1601,7 +1789,40 @@ Credit Pexel；推荐序方便快捷/转换自动化突发奇想，写了一个 
 <p><div class="tip inlineBlock success">如无特别说明，【毒奶去网页广告计划】在对以上网站网页广告去除过程中，代理软件（如Surge、<strong>QuantumultX（最优先适配）</strong>、Shadowrocket等）将优先支持，油猴用户次之或不完美支持，PC、Mac等桌面浏览器用户优先推荐安装 <a href="https://limbopro.com/archives/1098.html">ublock origin</a> 等浏览器扩展，Android 用户推荐安装 <a href="https://limbopro.com/archives/26805.html">Firefox 浏览器 + ublock origin 组合</a> 以屏蔽网页广告。</div>
 <p><div class="tip inlineBlock success">注意！如果你是 iPhone/iPad 用户，装有代理软件如 QuantumultX/Surge/Shadowrocket/Loon/Stash 其一，且代理软件处于正常使用状态，请优先按本文之前 <strong>相应代理软件配置</strong> 的使用说明<strong>在代理软件上进行操作</strong>，操作完成后无论是使用 Chrome/Safari/Edge，还是 Firefox 都可以得到无差别的去相应网站网页广告体验，无需再使用第三方用户脚本管理器（如Stay）为 Safari 安装用户脚本；<strong>本去网页广告计划优先支持代理软件</strong>；</div>
 <h2 id="去网页广告配置教程（油猴）"> 去网页广告配置教程（油猴）</h2>
-<pre><code>https://github.com/limbopro/Adblock4limbo/raw/main/Adguard/Adblock4limbo.user.js</code></pre>
+<p><div class="preview">
+<div class="post-inser post box-shadow-wrap-normal">
+<a href="https://limbopro.com/archives/greasyfork.html" target="_blank" class="post_inser_a no-external-link">
+<div class="inner-image bg" style="background-image: url(https://limbopro.com/usr/uploads/2020/11/3462920050.png);background-size: cover;"></div>
+
+<div class="inner-content" >
+<p class="inser-title">油猴脚本轻松使用指南 - Greasy Fork/Sleazy Fork-安全、实用的用户脚本大全</p>
+<div class="inster-summary text-muted">
+本文隶属于 实用工具分类，点击分类名称可以查看更多相关文章；主理人说谁的浏览器还没有个油猴脚本呢？装就够了。油猴脚...
+</div>
+</div>
+</a>
+<!-- .inner-content #####-->
+</div>
+<!-- .post-inser ####-->
+</div></p>
+<p><div class="preview">
+<div class="post-inser post box-shadow-wrap-normal">
+<a href="https://limbopro.com/archives/userscripts.html" target="_blank" class="post_inser_a no-external-link">
+<div class="inner-image bg" style="background-image: url(https://limbopro.com/usr/uploads/2022/04/2783480189.png);background-size: cover;"></div>
+
+<div class="inner-content" >
+<p class="inser-title">iOS - Stay/UserScripts for Safari - iPhone 上特别好用且开源的（油猴）用户脚本管理器！</p>
+<div class="inster-summary text-muted">
+主理人序JavaScript yyds。如果你喜欢用 Chrome for iOS，那么你也可以试试通过 Quan...
+</div>
+</div>
+</a>
+<!-- .inner-content #####-->
+</div>
+<!-- .post-inser ####-->
+</div></p>
+<p>毒奶去网页广告计划油猴脚本URL：</p>
+<pre><code>https://github.com/limbopro/Adblock4limbo/raw/refs/heads/main/Adguard/Adblock4limbo.user.js</code></pre>
 <p><div class="tip inlineBlock info"><strong>复制上述<span class="external-link"><a class="no-external-link" href="https://github.com/limbopro/Adblock4limbo/raw/main/Adguard/Adblock4limbo.user.js" target="_blank">用户脚本<i data-feather='external-link'></i></a></span>链接</strong>，并在已安装 <strong>Tampermonkey</strong> 扩展的浏览器打开，即可进行安装；</div>
 <p><div class="tip inlineBlock info">专为 油猴 - Tampermonkey 浏览器扩展打造（<strong>更多的是 Chrome/Firefox </strong>桌面浏览器<strong>用户（Windows/Mac）/Firefox for Android 用户</strong>），致力于通过 Tampermonkey 引入 JS/CSS 文件的方式去除网页上的广告内容（包括横幅、JS弹出广告等等）； <strong>Android -&gt; Firefox -&gt; 附加组件 -&gt; 安装 Tampermonkey</strong> -&gt; 安装<span class="external-link"><a class="no-external-link" href="https://github.com/limbopro/Adblock4limbo/raw/main/Adguard/Adblock4limbo.user.js" target="_blank">用户脚本<i data-feather='external-link'></i></a></span> / iOS -&gt; Safari -&gt; 安装 Stay /或其他用户脚本管理器 -&gt; 安装<span class="external-link"><a class="no-external-link" href="https://github.com/limbopro/Adblock4limbo/raw/main/Adguard/Adblock4limbo.user.js" target="_blank">用户脚本<i data-feather='external-link'></i></a></span>；详细步骤可参阅后文；</div>
 <p><video src="https://limbopro.com/usr/uploads/2023/10/1625924739.mp4" style="background-image:url(https://limbopro.com/usr/uploads/2023/10/2427552253.png);background-size: cover;"></video></p>
@@ -1949,12 +2170,12 @@ via 春潮频道； 想屏蔽全部广告且享受 YouTube premium 服务（离�
 <!-- .post-inser ####-->
 </div></p>
 <h3>测试</h3>
-<p><span class="external-link"><a class="no-external-link" href="https://limbopro.com/Adblock4limbo.html" target="_blank">新窗口打开<i data-feather='external-link'></i></a></span></p><hr class="content-copyright" style="margin-top:50px" /><blockquote class="content-copyright" style="font-style:normal"><p class="content-copyright">版权属于：毒奶 <br> <p class="content-copyright">联系我们：<a class="content-copyright" href="https://limbopro.com/6.html"         target="_blank">https://limbopro.com/6.html</a><br>毒奶搜索：<a class="content-copyright"         href="https://limbopro.com/search.html" target="_blank">https://limbopro.com/search.html</a> <br>番号搜索：<a class="content-copyright"         href="https://limbopro.com/btsearch.html" target="_blank">https://limbopro.com/btsearch.html</a>     <br>机场推荐：<a class="content-copyright" href="https://limbopro.com/865.html"         target="_blank">https://limbopro.com/865.html</a>  IEPL专线/100Gb/¥15/月起(最高享8折优惠)   <br>毒奶导航：<a class="content-copyright" href="https://limbopro.com/daohang/index.html"         target="_blank">https://limbopro.com/daohang/index.html</a> </p></p><p class="content-copyright">本文链接：<a class="content-copyright" href="https://limbopro.com/archives/12904.html">https://limbopro.com/archives/12904.html</a> <span style="color:#666">· 镜像：</span><a class="content-copyright" href="https://limbopro.github.io/archives/12904.html" rel="nofollow">https://limbopro.github.io/archives/12904.html</a></p><p class="content-copyright"><p class="content-copyright"><a rel="license" href="https://creativecommons.org/licenses/by-nc/4.0/deed.zh-Hans" target="_blank"><img alt="知识共享许可协议" style="border-width:0" src="../by-nc-sa.png"></a><br>本文采用 <a rel="license" href="https://creativecommons.org/licenses/by-nc/4.0/deed.zh-Hans" target="_blank">CC BY-NC-SA 4.0 许可协议</a>，转载或引用本文时请遵守许可协议，注明出处、不得用于商业用途！</p></blockquote></div>
+<p><span class="external-link"><a class="no-external-link" href="https://limbopro.com/Adblock4limbo.html" target="_blank">新窗口打开<i data-feather='external-link'></i></a></span></p><hr class="content-copyright" style="margin-top:50px" /><blockquote class="content-copyright" style="font-style:normal"><p class="content-copyright">版权属于：毒奶 <br> <p class="content-copyright">联系我们：<a class="content-copyright" href="https://limbopro.com/6.html"         target="_blank">https://limbopro.com/6.html</a><br>毒奶搜索：<a class="content-copyright"         href="https://limbopro.com/search.html" target="_blank">https://limbopro.com/search.html</a> <br>番号搜索：<a class="content-copyright"         href="https://limbopro.com/btsearch.html" target="_blank">https://limbopro.com/btsearch.html</a>     <br>机场推荐：<a class="content-copyright" href="https://limbopro.com/865.html"         target="_blank">https://limbopro.com/865.html</a>  IEPL专线/150Gb/¥14/月起   <br>毒奶导航：<a class="content-copyright" href="https://limbopro.com/daohang/index.html"         target="_blank">https://limbopro.com/daohang/index.html</a> </p></p><p class="content-copyright">本文链接：<a class="content-copyright" href="https://limbopro.com/archives/12904.html">https://limbopro.com/archives/12904.html</a> <span style="color:#666">· 镜像：</span><a class="content-copyright" href="https://limbopro.github.io/archives/12904.html" rel="nofollow">https://limbopro.github.io/archives/12904.html</a></p><p class="content-copyright"><p class="content-copyright"><a rel="license" href="https://creativecommons.org/licenses/by-nc/4.0/deed.zh-Hans" target="_blank"><img alt="知识共享许可协议" style="border-width:0" src="../by-nc-sa.png"></a><br>本文采用 <a rel="license" href="https://creativecommons.org/licenses/by-nc/4.0/deed.zh-Hans" target="_blank">CC BY-NC-SA 4.0 许可协议</a>，转载或引用本文时请遵守许可协议，注明出处、不得用于商业用途！</p></blockquote></div>
 
                                                                 <!--文章的页脚部件：打赏和其他信息的输出-->
                                 <div class="show-foot"><div class="notebook">
                      <i class="fontello fontello-clock-o"></i>
-                     <span>最后修改：2025 年 12 月 27 日 01 : 06  AM</span>
+                     <span>最后修改：2026 年 08 月 27 日 11 : 34  AM</span>
                  </div><div class="copyright" data-toggle="tooltip" data-html="true" data-original-title="转载请保留本文转载地址，著作权归作者所有"><span>© 允许规范转载</span>
                  </div>
              </div>
@@ -2016,37 +2237,37 @@ via 春潮频道； 想屏蔽全部广告且享受 YouTube premium 服务（离�
 <h5 class="widget-title m-t-none text-md">
   相关文章推荐</h5>
 <p></p>
+  <li class="list-group-item"><a href="https://limbopro.com/archives/35649.html"
+      title="让 Gemini 协助修改了博客文章的CSS样式，表现感人！">让 Gemini 协助修改了博客文章的CSS样式，表现感人！</a></li>
+  <li class="list-group-item"><a href="https://limbopro.com/archives/35565.html"
+      title="玩转 AI 新体验：如何在 Chrome 浏览器中高效使用 Gemini">玩转 AI 新体验：如何在 Chrome 浏览器中高效使用 Gemini</a></li>
+  <li class="list-group-item"><a href="https://limbopro.com/archives/35021.html"
+      title="从开环到闭环：通过第一性原理重构你的认知反馈引擎">从开环到闭环：通过第一性原理重构你的认知反馈引擎</a></li>
+  <li class="list-group-item"><a href="https://limbopro.com/archives/34932.html"
+      title="AI时代——为什么我们要学习的反而更多了？">AI时代——为什么我们要学习的反而更多了？</a></li>
+  <li class="list-group-item"><a href="https://limbopro.com/archives/35635.html"
+      title="iOS Nextin 客户端局域网共享代理使用方法">iOS Nextin 客户端局域网共享代理使用方法</a></li>
+  <li class="list-group-item"><a href="https://limbopro.com/archives/34899.html"
+      title="Gemini Prompt 提示词分享以及全局 Prompt 新增，修改与删除 —— 让AI更像你的私人贾维斯">Gemini Prompt 提示词分享以及全局 Prompt 新增，修改与删除 —— 让AI更像你的私人贾维斯</a></li>
+  <li class="list-group-item"><a href="https://limbopro.com/archives/34896.html"
+      title="Gemini 生成脚本分享 —— Redis 服务状态自动监控与 Telegram 实时通知">Gemini 生成脚本分享 —— Redis 服务状态自动监控与 Telegram 实时通知</a></li>
+  <li class="list-group-item"><a href="https://limbopro.com/archives/34879.html"
+      title="优越感的终结：为什么我们必须在这个充满信息差的世界里写作？">优越感的终结：为什么我们必须在这个充满信息差的世界里写作？</a></li>
   <li class="list-group-item"><a href="https://limbopro.com/archives/34813.html"
       title="[浏览器开发者工具] 获取元素精准CSS选择器及xPath等">[浏览器开发者工具] 获取元素精准CSS选择器及xPath等</a></li>
   <li class="list-group-item"><a href="https://limbopro.com/archives/34678.html"
       title="[AI Q&amp;A] Ai给普通人带来的最大好处是什么？🤖">[AI Q&amp;A] Ai给普通人带来的最大好处是什么？🤖</a></li>
-  <li class="list-group-item"><a href="https://limbopro.com/archives/34562.html"
-      title="让 Grok 帮写了一个网页划词搜索🔍🔞油猴脚本?👌">让 Grok 帮写了一个网页划词搜索🔍🔞油猴脚本?👌</a></li>
-  <li class="list-group-item"><a href="https://limbopro.com/archives/34518.html"
-      title="让 Grok 帮写了一个电报匿名留言板💬 [底部新增服务可用性提示]">让 Grok 帮写了一个电报匿名留言板💬 [底部新增服务可用性提示]</a></li>
-  <li class="list-group-item"><a href="https://limbopro.com/archives/34295.html"
-      title="如何使用 Google Gemini(Nano Banana) 生成个性化公仔手办模型？">如何使用 Google Gemini(Nano Banana) 生成个性化公仔手办模型？</a></li>
-  <li class="list-group-item"><a href="https://limbopro.com/archives/32208.html"
-      title="xAI Grok 3 Beta 发布 —— 免费使用，直至服务器爆炸💥！[18🈲]">xAI Grok 3 Beta 发布 —— 免费使用，直至服务器爆炸💥！[18🈲]</a></li>
-  <li class="list-group-item"><a href="https://limbopro.com/archives/32148.html"
-      title="iPhone必要的隐私与安全设置——定位？App无法保存图片？禁止读取粘贴板？将 iPhone 设置还原至默认状态">iPhone必要的隐私与安全设置——定位？App无法保存图片？禁止读取粘贴板？将 iPhone 设置还原至默认状态</a></li>
-  <li class="list-group-item"><a href="https://limbopro.com/archives/31887.html"
-      title="利用AI——Github Copilot/DeepSeek/Claude/Google Gemini 从0开始学习写代码/写作✍️">利用AI——Github Copilot/DeepSeek/Claude/Google Gemini 从0开始学习写代码/写作✍️</a></li>
-  <li class="list-group-item"><a href="https://limbopro.com/archives/must-have-apps-for-iphone.html"
-      title="[必备App🔥] 11个iPhone 必备应用程序推荐">[必备App🔥] 11个iPhone 必备应用程序推荐</a></li>
-  <li class="list-group-item"><a href="https://limbopro.com/archives/30972.html"
-      title="Script-Hub —— Script Converter for QX, Loon, Surge, Stash, Egern, LanceX and Shadowrocket - 重写 &amp; 规则集转换">Script-Hub —— Script Converter for QX, Loon, Surge, Stash, Egern, LanceX and Shadowrocket - 重写 &amp; 规则集转换</a></li>
 <p></p>
 
 <br>
 <h5 class="widget-title m-t-none text-md">
   最新文章推荐</h5>
 <p></p>
-    <li class="list-group-item"><a href="https://limbopro.com/archives/34813.html">[浏览器开发者工具] 获取元素精准CSS选择器及xPath等</a></li>
-      <li class="list-group-item"><a href="https://limbopro.com/archives/30340.html">一周互联网观察 👀 —— 12.04.2025 ♻️ 更新☁️</a></li>
-      <li class="list-group-item"><a href="https://limbopro.com/archives/34687.html">[亲测有效] 2025年+86用户如何申请谷歌邮箱？</a></li>
-      <li class="list-group-item"><a href="https://limbopro.com/archives/34678.html">[AI Q&amp;A] Ai给普通人带来的最大好处是什么？🤖</a></li>
-      <li class="list-group-item"><a href="https://limbopro.com/archives/34562.html">让 Grok 帮写了一个网页划词搜索🔍🔞油猴脚本?👌</a></li>
+    <li class="list-group-item"><a href="https://limbopro.com/archives/35832.html">一次 Typecho 文章崩溃的排查：我和 AI 一起解决了 Call to a member function find() on boolean</a></li>
+      <li class="list-group-item"><a href="https://limbopro.com/archives/35751.html">实用建议：如果你不想熬夜，目前只有一个办法...</a></li>
+      <li class="list-group-item"><a href="https://limbopro.com/archives/35747.html">人生回报率最高8件事是什么？</a></li>
+      <li class="list-group-item"><a href="https://limbopro.com/archives/30340.html">一周互联网观察 👀 —— 07.17.2026 ♻️ 更新☁️</a></li>
+      <li class="list-group-item"><a href="https://limbopro.com/archives/35649.html">让 Gemini 协助修改了博客文章的CSS样式，表现感人！</a></li>
   <p></p>
 
 
@@ -2143,12 +2364,12 @@ via 春潮频道； 想屏蔽全部广告且享受 YouTube premium 服务（离�
        
        <li class="list-group-item text-second"><span class="nav-icon"><i data-feather="tool"></i></span>
        <span class="badge pull-right" style="color:white"><a target="_self" href="https://limbopro.com/category/tools/">
-       86</a></span>
+       87</a></span>
        <a target="_self" href="https://limbopro.com/category/tools/">实用工具</a></li>
        
        <li class="list-group-item text-second"><span class="nav-icon"><i data-feather="box"></i></span>
        <span class="badge pull-right" style="color:white"><a target="_self" href="https://limbopro.com/category/software-skills/">
-       131</a></span>
+       136</a></span>
        <a target="_self" href="https://limbopro.com/category/software-skills/">软件百科</a></li>
 
        <li class="list-group-item text-second"><span class="nav-icon"><i data-feather="hash"></i></span>
@@ -2168,7 +2389,7 @@ via 春潮频道； 想屏蔽全部广告且享受 YouTube premium 服务（离�
        
        <li class="list-group-item text-second"><span class="nav-icon"><i data-feather="navigation-2"></i></span>
        <span class="badge pull-right" style="color:white"><a target="_self" href="https://limbopro.com/category/ssr/">
-       45</a></span>
+       48</a></span>
        <a target="_self" href="https://limbopro.com/category/ssr/">科学上网</a></li>
        
        </section>
@@ -2177,15 +2398,15 @@ via 春潮频道； 想屏蔽全部广告且享受 YouTube premium 服务（离�
        <section id="tag_cloud-2" class="widget widget_tag_cloud wrapper-md clear">
        <h5 class="widget-title m-t-none text-md">热门文章推荐</h5>
        <li class="list-group-item">
-                <a href="https://limbopro.com/archives/8.html" class="pull-left thumb-sm m-r"><img src="https://limbopro.com/usr/themes/handsome/assets/img/sj2/9.jpg" class="img-40px normal-shadow img-square"></a>
+                <a href="https://limbopro.com/archives/8.html" class="pull-left thumb-sm m-r"><img src="https://limbopro.com/usr/themes/handsome/assets/img/sj2/10.jpg" class="img-40px normal-shadow img-square"></a>
                 <div class="clear">
                     <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/8.html" title="权力的游戏丨第八季 😍"> 权力的游戏丨第八季 😍 </a></h4>
                     </div></li><li class="list-group-item">
-                <a href="https://limbopro.com/archives/17.html" class="pull-left thumb-sm m-r"><img src="https://limbopro.com/usr/themes/handsome/assets/img/sj2/2.jpg" class="img-40px normal-shadow img-square"></a>
+                <a href="https://limbopro.com/archives/17.html" class="pull-left thumb-sm m-r"><img src="https://limbopro.com/usr/themes/handsome/assets/img/sj2/3.jpg" class="img-40px normal-shadow img-square"></a>
                 <div class="clear">
                     <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/17.html" title="谢春花丨还想听你的故事"> 谢春花丨还想听你的故事 </a></h4>
                     </div></li><li class="list-group-item">
-                <a href="https://limbopro.com/archives/19.html" class="pull-left thumb-sm m-r"><img src="https://limbopro.com/usr/themes/handsome/assets/img/sj2/10.jpg" class="img-40px normal-shadow img-square"></a>
+                <a href="https://limbopro.com/archives/19.html" class="pull-left thumb-sm m-r"><img src="https://limbopro.com/usr/themes/handsome/assets/img/sj2/1.jpg" class="img-40px normal-shadow img-square"></a>
                 <div class="clear">
                     <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/19.html" title="韩国画家丨zipcy 梁世恩"> 韩国画家丨zipcy 梁世恩 </a></h4>
                     </div></li><li class="list-group-item">
@@ -2193,7 +2414,7 @@ via 春潮频道； 想屏蔽全部广告且享受 YouTube premium 服务（离�
                 <div class="clear">
                     <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/22.html" title="恰当抑郁"> 恰当抑郁 </a></h4>
                     </div></li><li class="list-group-item">
-                <a href="https://limbopro.com/archives/243.html" class="pull-left thumb-sm m-r"><img src="https://limbopro.com/usr/themes/handsome/assets/img/sj2/8.jpg" class="img-40px normal-shadow img-square"></a>
+                <a href="https://limbopro.com/archives/243.html" class="pull-left thumb-sm m-r"><img src="https://limbopro.com/usr/themes/handsome/assets/img/sj2/4.jpg" class="img-40px normal-shadow img-square"></a>
                 <div class="clear">
                     <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/243.html" title="查看 Google 搜索结果中的缓存版网页"> 查看 Google 搜索结果中的缓存版网页 </a></h4>
                     </div></li>       
@@ -2203,29 +2424,29 @@ via 春潮频道； 想屏蔽全部广告且享受 YouTube premium 服务（离�
        <section id="tag_cloud-2" class="widget widget_tag_cloud wrapper-md clear">
        <h5 class="widget-title m-t-none text-md">随机文章推荐</h5>
        <li class="list-group-item">
-                <a href="https://limbopro.com/archives/1247.html"</a>
+                <a href="https://limbopro.com/archives/432.html"</a>
                 <div class="clear">
-                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/1247.html" title="Instagram 美女账号精选丨第05期"> Instagram 美女账号精选丨第05期 </a></h4>
+                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/432.html" title="一串清单"> 一串清单 </a></h4>
                     </div></li><li class="list-group-item">
-                <a href="https://limbopro.com/archives/google_bard.html"</a>
+                <a href="https://limbopro.com/archives/3892.html"</a>
                 <div class="clear">
-                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/google_bard.html" title="Google Gemini - 大型语言模型：免费且好用！仅需一个谷歌账号，零封号风险！"> Google Gemini - 大型语言模型：免费且好用！仅需一个谷歌账号，零封号风险！ </a></h4>
+                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/3892.html" title="致命女人 Why Women Kill （第1季）完结"> 致命女人 Why Women Kill （第1季）完结 </a></h4>
                     </div></li><li class="list-group-item">
-                <a href="https://limbopro.com/archives/27192.html"</a>
+                <a href="https://limbopro.com/archives/32084.html"</a>
                 <div class="clear">
-                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/27192.html" title="徒手搓Shell脚本 - 防Linux 远程SSH登录爆力破解"> 徒手搓Shell脚本 - 防Linux 远程SSH登录爆力破解 </a></h4>
+                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/32084.html" title="如何将Mac屏幕截图默认保存格式更改为 JPG"> 如何将Mac屏幕截图默认保存格式更改为 JPG </a></h4>
                     </div></li><li class="list-group-item">
-                <a href="https://limbopro.com/archives/6484.html"</a>
+                <a href="https://limbopro.com/archives/8324.html"</a>
                 <div class="clear">
-                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/6484.html" title="起初丨一周互联网观察（12.21.2019）"> 起初丨一周互联网观察（12.21.2019） </a></h4>
+                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/8324.html" title="下辈子我再好好过丨追剧小组（完结）"> 下辈子我再好好过丨追剧小组（完结） </a></h4>
                     </div></li><li class="list-group-item">
-                <a href="https://limbopro.com/archives/1079.html"</a>
+                <a href="https://limbopro.com/archives/26217.html"</a>
                 <div class="clear">
-                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/1079.html" title="提问的智慧"> 提问的智慧 </a></h4>
+                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/26217.html" title="Anthropic Claude 3 - 大型语言模型发布，可能是世界上“最安全的人工智能聊天机器人”"> Anthropic Claude 3 - 大型语言模型发布，可能是世界上“最安全的人工智能聊天机器人” </a></h4>
                     </div></li><li class="list-group-item">
-                <a href="https://limbopro.com/archives/1343.html"</a>
+                <a href="https://limbopro.com/archives/14545.html"</a>
                 <div class="clear">
-                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/1343.html" title="新世纪福音战士丨Netflix（网飞/奈飞）修复版"> 新世纪福音战士丨Netflix（网飞/奈飞）修复版 </a></h4>
+                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/14545.html" title="Cloudflare 入门 - 初学者使用手册（官方）"> Cloudflare 入门 - 初学者使用手册（官方） </a></h4>
                     </div></li>       </section>
        <!--随机文章推荐-->
 
@@ -2234,29 +2455,29 @@ via 春潮频道； 想屏蔽全部广告且享受 YouTube premium 服务（离�
             <h5 class="widget-title m-t-none text-md">随机文章</h5>
             <ul class="list-group no-bg no-borders pull-in">
             <li class="list-group-item">
-                <a href="https://limbopro.com/archives/school.html"</a>
+                <a href="https://limbopro.com/archives/teenage-dream.html"</a>
                 <div class="clear">
-                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/school.html" title="死库水是什么"> 死库水是什么 </a></h4>
+                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/teenage-dream.html" title="Instagram 找图丨青年梦想（28P）"> Instagram 找图丨青年梦想（28P） </a></h4>
                     </div></li><li class="list-group-item">
-                <a href="https://limbopro.com/archives/1229.html"</a>
+                <a href="https://limbopro.com/archives/5710.html"</a>
                 <div class="clear">
-                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/1229.html" title="出来混，错了就要认，挨打要立正"> 出来混，错了就要认，挨打要立正 </a></h4>
+                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/5710.html" title="NSFW - 11期丨阿朱啊，未公开 67P Wanimal 王动作品 美女人体艺术写真集合"> NSFW - 11期丨阿朱啊，未公开 67P Wanimal 王动作品 美女人体艺术写真集合 </a></h4>
                     </div></li><li class="list-group-item">
-                <a href="https://limbopro.com/archives/1852.html"</a>
+                <a href="https://limbopro.com/archives/5198.html"</a>
                 <div class="clear">
-                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/1852.html" title="Cloudflare 下 Nginx限制单个IP的并发连接数"> Cloudflare 下 Nginx限制单个IP的并发连接数 </a></h4>
+                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/5198.html" title="好莱坞往事（2019）"> 好莱坞往事（2019） </a></h4>
                     </div></li><li class="list-group-item">
-                <a href="https://limbopro.com/archives/torproject.html"</a>
+                <a href="https://limbopro.com/archives/17714.html"</a>
                 <div class="clear">
-                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/torproject.html" title="使用洋葱浏览器 - Tor 进行匿名上网"> 使用洋葱浏览器 - Tor 进行匿名上网 </a></h4>
+                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/17714.html" title="世间美好收集器（Bot）- 云溪溪（神明少女）🐻"> 世间美好收集器（Bot）- 云溪溪（神明少女）🐻 </a></h4>
                     </div></li><li class="list-group-item">
-                <a href="https://limbopro.com/archives/2929.html"</a>
+                <a href="https://limbopro.com/archives/crisp-chat.html"</a>
                 <div class="clear">
-                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/2929.html" title="纪录片丨徒手攀岩 Free Solo (2018)"> 纪录片丨徒手攀岩 Free Solo (2018) </a></h4>
+                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/crisp-chat.html" title="Crisp chat-免费给你的网站部署在线客服聊天系统"> Crisp chat-免费给你的网站部署在线客服聊天系统 </a></h4>
                     </div></li><li class="list-group-item">
-                <a href="https://limbopro.com/archives/5674.html"</a>
+                <a href="https://limbopro.com/archives/HandBrake.html"</a>
                 <div class="clear">
-                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/5674.html" title="Raining.fm / 小睡眠丨助眠神器 App（白噪音/ASMR）"> Raining.fm / 小睡眠丨助眠神器 App（白噪音/ASMR） </a></h4>
+                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/HandBrake.html" title="免费开源的万能转码神器 - HandBrake"> 免费开源的万能转码神器 - HandBrake </a></h4>
                     </div></li>            </ul>
         </div>
        </div>
@@ -2267,7 +2488,7 @@ via 春潮频道； 想屏蔽全部广告且享受 YouTube premium 服务（离�
        <ul class="list-group box-shadow-wrap-normal">
                       <li class="list-group-item"><span class="blog-info-icons"> <i data-feather="award"></i></span> <span
                        class="badge
-           pull-right">500</span>文章数目</li>
+           pull-right">519</span>文章数目</li>
           
          <!--  <li class="list-group-item"> <span class="blog-info-icons"> <i data-feather="message-circle"></i></span>
                <span class="badge
@@ -2275,19 +2496,19 @@ via 春潮频道； 想屏蔽全部广告且享受 YouTube premium 服务（离�
 
            <li class="list-group-item"><span class="blog-info-icons"> <i data-feather="calendar"></i></span>
                <span class="badge
-           pull-right">6年231天</span>建站已有</li>
+           pull-right">7年109天</span>建站已有</li>
 
            <li class="list-group-item"><span class="blog-info-icons"> <i data-feather="clock"></i></span>
                <span class="badge
-           pull-right">2021天</span>关站倒计时</li>
+           pull-right">1778天</span>关站倒计时</li>
 
            <li class="list-group-item"><span class="blog-info-icons"> <i data-feather="activity"></i></span> <span
                        class="badge
-           pull-right">1 星期前</span>最后活动</li>
+           pull-right">6 天前</span>最后活动</li>
 
            <li class="list-group-item"><span class="blog-info-icons"> <i data-feather="cpu"></i></span> <span
                        class="badge
-           pull-right">555 ms</span>TTFB</li>
+           pull-right">433 ms</span>TTFB</li>
 
            <!--分享按钮-->
 
@@ -2341,29 +2562,29 @@ via 春潮频道； 想屏蔽全部广告且享受 YouTube premium 服务（离�
           <section id="tag_cloud-2" class="widget widget_tag_cloud wrapper-md clear">
 <h5 class="widget-title m-t-none text-md">更多文章推荐</h5>
 <li class="list-group-item">
-                <a href="https://limbopro.com/archives/4672.html"</a>
+                <a href="https://limbopro.com/archives/safari-content-blocker.html"</a>
                 <div class="clear">
-                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/4672.html" title="去他*的世界末日"> 去他*的世界末日 </a></h4>
+                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/safari-content-blocker.html" title="iPhone/iPad/Mac Safari + 内容拦截器 - 无死角去网页广告（免费，开源，社区维护）"> iPhone/iPad/Mac Safari + 内容拦截器 - 无死角去网页广告（免费，开源，社区维护） </a></h4>
                     </div></li><li class="list-group-item">
-                <a href="https://limbopro.com/archives/tips-of-google.html"</a>
+                <a href="https://limbopro.com/archives/673.html"</a>
                 <div class="clear">
-                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/tips-of-google.html" title="3个提高谷歌搜索效率的小技巧（2020）"> 3个提高谷歌搜索效率的小技巧（2020） </a></h4>
+                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/673.html" title="大佬吹牛群"> 大佬吹牛群 </a></h4>
                     </div></li><li class="list-group-item">
-                <a href="https://limbopro.com/archives/M3U8-HLS-Downloader.html"</a>
+                <a href="https://limbopro.com/archives/5890.html"</a>
                 <div class="clear">
-                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/M3U8-HLS-Downloader.html" title="m3u8 格式视频下载丨HLS Downloader（for Chrome）"> m3u8 格式视频下载丨HLS Downloader（for Chrome） </a></h4>
+                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/5890.html" title="毒奶特供 —— 机场专用分流规则（100+机场）"> 毒奶特供 —— 机场专用分流规则（100+机场） </a></h4>
                     </div></li><li class="list-group-item">
-                <a href="https://limbopro.com/archives/3709.html"</a>
+                <a href="https://limbopro.com/archives/35498.html"</a>
                 <div class="clear">
-                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/3709.html" title="提问的智慧：如何正确的提问？一个萌新的自我修养"> 提问的智慧：如何正确的提问？一个萌新的自我修养 </a></h4>
+                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/35498.html" title="2026年1季度阅读书单分享🔥 "> 2026年1季度阅读书单分享🔥  </a></h4>
                     </div></li><li class="list-group-item">
-                <a href="https://limbopro.com/archives/nginx2openresty.html"</a>
+                <a href="https://limbopro.com/archives/11131.html"</a>
                 <div class="clear">
-                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/nginx2openresty.html" title="进阶教程丨Nginx 平滑迁移至 Openresty "> 进阶教程丨Nginx 平滑迁移至 Openresty  </a></h4>
+                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/11131.html" title="Quantumult X 资源解析器配置及使用简易教程"> Quantumult X 资源解析器配置及使用简易教程 </a></h4>
                     </div></li><li class="list-group-item">
-                <a href="https://limbopro.com/archives/15845.html"</a>
+                <a href="https://limbopro.com/archives/19265.html"</a>
                 <div class="clear">
-                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/15845.html" title="2024年好看的电视剧电影推荐 - 美剧/日剧/韩剧推荐（Netflix/HBO/Disney+/Apple tv+/Hulu）"> 2024年好看的电视剧电影推荐 - 美剧/日剧/韩剧推荐（Netflix/HBO/Disney+/Apple tv+/Hulu） </a></h4>
+                    <h4 class="h5 l-h text-second"> <a href="https://limbopro.com/archives/19265.html" title="机场流媒体解锁批量检测 - BoxJS 安装及订阅（With Quantumult X/Surge） - Disney+ 和 Netflix 策略组批量解锁检测"> 机场流媒体解锁批量检测 - BoxJS 安装及订阅（With Quantumult X/Surge） - Disney+ 和 Netflix 策略组批量解锁检测 </a></h4>
                     </div></li></section>
           <!--随机文章推荐-->
 
@@ -2394,7 +2615,7 @@ via 春潮频道； 想屏蔽全部广告且享受 YouTube premium 服务（离�
 
 
 
-<!- toc end ->
+<!-- toc end -->
 
 <hr><p><img src="https://limbopro.com/usr/uploads/2021/08/3373964069.jpg" alt="毒奶去网页广告计划 - Quantumult X 去广告效果.jpg" /></p>
 <p>via <span class="external-link"><a class="no-external-link" href="https://twitter.com/limboprossr/status/1319689504316219393" target="_blank">Twitter<i data-feather='external-link'></i></a></span>；</p>
@@ -2416,7 +2637,8 @@ via 春潮频道； 想屏蔽全部广告且享受 YouTube premium 服务（离�
 </div>
 <!-- .post-inser ####-->
 </div></p>
-<p><div class="tip inlineBlock share">如果你更喜欢使用 <strong>Safari</strong> for iOS/iPad/Mac，那么博主推荐搭配使用 <strong>Safari + 内容拦截器</strong>，拦截器支持对 <strong>更多网站</strong> 上网页广告的屏蔽移除；</div>
+<p><div class="tip inlineBlock share">如果你更喜欢使用 <strong>Safari</strong> for iOS/iPad/Mac，那么博主推荐搭配使用 <strong>Safari + 内容拦截器</strong>，拦截器支持对 <strong>更多网站</strong> 上网页广告的屏蔽移除；也可以在此基础上配合油猴脚本管理器 <strong>Stay</strong> 安装：具体见本文 <strong>去网页广告配置教程（油猴）</strong> 部分；</div>
+<pre><code>https://github.com/limbopro/Adblock4limbo/raw/refs/heads/main/Adguard/Adblock4limbo.user.js</code></pre>
 <h4>安卓用户</h4>
 <p><div class="preview">
 <div class="post-inser post box-shadow-wrap-normal">
@@ -2486,11 +2708,11 @@ via Twitter；前序（必看/Mac/Windows/Android/网页广告拦截方案）选
 <h4>JavaScript</h4>
 <p>window.open-defuser.js ，脚本来自 <span class="external-link"><a class="no-external-link" href="https://github.com/gorhill/uBlock/wiki/Resources-Library#windowopen-defuserjs-" target="_blank">https://github.com/gorhill/uBlock/wiki/Resources-Library#windowopen-defuserjs-<i data-feather='external-link'></i></a></span> ；可将其追加嵌入网页响应体的 <code>&lt;head&gt;</code> 标签开始之后 或 <code>&lt;/body&gt;</code> 标签结束之前，即可打断 <strong>弹窗</strong>；</p>
 <p>window.open-defuser.js </p>
-<p><div class="panel panel-default collapse-panel box-shadow-wrap-lg"><div class="panel-heading panel-collapse" data-toggle="collapse" data-target="#collapse-0dad8d02a0160290ad49a94067a9360944" aria-expanded="true"><div class="accordion-toggle"><span>window.open-defuser.js 源码</span>
+<p><div class="panel panel-default collapse-panel box-shadow-wrap-lg"><div class="panel-heading panel-collapse" data-toggle="collapse" data-target="#collapse-518dd7e47ad53a6ddec20eb9d79fb4b360" aria-expanded="true"><div class="accordion-toggle"><span>window.open-defuser.js 源码</span>
 <i class="pull-right fontello icon-fw fontello-angle-right"></i>
 </div>
 </div>
-<div id="collapse-0dad8d02a0160290ad49a94067a9360944" class="panel-body collapse">
+<div id="collapse-518dd7e47ad53a6ddec20eb9d79fb4b360" class="panel-body collapse">
 </p>
 <pre><code>function window_open_defuser() {
     'use strict';
@@ -2601,23 +2823,23 @@ via Twitter；前序（必看/Mac/Windows/Android/网页广告拦截方案）选
 <strong>urlhaus-filter</strong>：<span class="external-link"><a class="no-external-link" href="https://gitlab.com/malware-filter/urlhaus-filter#full-version；https://urlhaus.abuse.ch/" target="_blank">https://gitlab.com/malware-filter/urlhaus-filter#full-version；https://urlhaus.abuse.ch/<i data-feather='external-link'></i></a></span>；<br />
 <strong>油猴-Tampermonkey®-技术文档</strong>：<span class="external-link"><a class="no-external-link" href="https://www.tampermonkey.net/documentation.php?locale=zh" target="_blank">https://www.tampermonkey.net/documentation.php?locale=zh<i data-feather='external-link'></i></a></span>；</div>
 <h2 id="去网页广告计划介绍（在维护的网站列表及功能更新日志）"> 去网页广告计划介绍（在维护的网站列表及功能更新日志）</h2>
-<p>毒奶导航上线新功能；如何配置？查看本文 <strong>如何为任意网页引入导航</strong>？部分，QX/Surge/Shadowrocket/Loon/Stash.../油猴支持；</p>
-<h3>在网页上执行JS代码</h3>
+<p>毒奶导航上线新功能；如何配置？查看本文 <strong>如何为任意网页引入导航</strong>？部分，QX/Surge/Shadowrocket/Loon/Stash.../油猴支持；[新Feature]</p>
+<h3>在网页上执行JS代码[新Feature]</h3>
 <p><div class="tip inlineBlock info">12.22.2025 在 AI 协助下，<strong>执行JS</strong> 脚本管理器更新；用户可以直接在网页上运行JS脚本以及加载 .js 文件；效果参阅：<span class="external-link"><a class="no-external-link" href="https://t.me/limboprossr/3464" target="_blank">https://t.me/limboprossr/3464<i data-feather='external-link'></i></a></span></div>
-<h3>手动屏蔽广告元素</h3>
+<h3>手动屏蔽广告元素[新Feature]</h3>
 <p><img src="https://limbopro.com/usr/uploads/2025/12/3091316524.jpg" alt="毒奶导航-元素屏蔽/追踪器.jpg" /></p>
 <p><div class="tip inlineBlock info">12.26.2025 更新：已支持修改元素内联样式；效果参阅：<span class="external-link"><a class="no-external-link" href="https://t.me/limboprossr/3467?single" target="_blank">https://t.me/limboprossr/3467?single<i data-feather='external-link'></i></a></span></div>
 <p><div class="tip inlineBlock info">12.25.2025 更新：已支持逐级泛化/逐级精简，帮你最快找到所有广告元素，分分钟屏蔽；效果参阅 ：<span class="external-link"><a class="no-external-link" href="https://t.me/limboprossr/3471" target="_blank">https://t.me/limboprossr/3471<i data-feather='external-link'></i></a></span> P.S. 以后大家自己私藏小网站就可以自己动手屏蔽了；如何配置？查看本文 <strong>如何为任意网页引入导航</strong>？部分，QX/Surge/Shadowrocket/Loon/Stash.../油猴支持；</div>
 <p><div class="tip inlineBlock info">12.13.2025 在 AI 协助下，正式上线 <strong>元素屏蔽/追踪器</strong>；用户可以直接在有广告的页面上<strong>自行移除广告元素</strong>；效果参阅：<span class="external-link"><a class="no-external-link" href="https://t.me/limboprossr/3459" target="_blank">https://t.me/limboprossr/3459<i data-feather='external-link'></i></a></span></div>
-<h3>沉浸式翻译纯JS版及媒体资源查找器</h3>
+<h3>沉浸式翻译纯JS版及媒体资源查找器[新Feature]</h3>
 <p><div class="tip inlineBlock info">12.12.2025 在 AI 协助下，导航详情页新增<strong>沉浸式翻译</strong>[英文/中文对照翻译]以及M3U8/MP4资源查询器（如果页面存在视频，可点击提取视频对应的.m3u8或mp4 URL链接）；相关功能效果参阅：<span class="external-link"><a class="no-external-link" href="https://t.me/limboprossr/3445" target="_blank">TG<i data-feather='external-link'></i></a></span> <span class="external-link"><a class="no-external-link" href="https://t.me/limboprossr/3445" target="_blank">https://t.me/limboprossr/3445<i data-feather='external-link'></i></a></span> ，<strong>你可在任意网站网页引入导航页，享受其带功能</strong>（如上，以及来自Adguard1.8万+ 的基础过滤器 + 中文过滤器，足以消灭大部分图片广告 P.S. 个性化设置，不再默认加载，<strong>需去导航-工具箱里开启</strong>！）；</div>
-<h3>历史更新</h3>
+<h3>历史更新[基础功能]</h3>
 <p><div class="tip inlineBlock success"><strong>毒奶去网页广告计划</strong>，<strong>导航</strong>、<strong>移除特定网站上的广告并新增额外特性(如提取M3U8文件/视频下载指引/视频网站搜索集成/<a href="https://limbopro.com/archives/34562.html">划词搜索</a>等)</strong>，手机用户需配合代理App使用（如<strong>Surge/QuantumultX/Shadowrocket/Loon</strong>==）；电脑桌面浏览器用户推荐配合<strong>油猴</strong>使用，<strong>具体操作步骤参阅后文教程部分</strong>；</div>
 <p><div class="tip inlineBlock warning">本计划<strong>只对特定网站生效</strong>，具体查看后文<strong>如何反馈问题/提交新网站（重要）</strong>的<strong>在维护网站列表</strong>部分；另外，请确保自己有一定的代理软件（Surge/QX...）/油猴脚本的使用经验，<strong>基本的问题排查能力</strong>，反馈问题时能<strong>提供足够的细节</strong>，提建议时<strong>有自己见解</strong>；</div>
 <p><div class="tip inlineBlock info">言而总之，本计划仍<strong>出于业余爱好更新维护</strong>；对于能提出好的建议或意见的用户，我们<strong>热烈欢迎，赞赏</strong>；</div>
 <p><div class="tip inlineBlock info">起作用的三个脚本：<br />
 1.<strong>Adblock4limbo.js</strong> —— 重写脚本 <span class="external-link"><a class="no-external-link" href="https://github.com/limbopro/Adblock4limbo/blob/main/Adguard/Adblock4limbo.js" target="_blank">https://github.com/limbopro/Adblock4limbo/blob/main/Adguard/Adblock4limbo.js<i data-feather='external-link'></i></a></span> （QX/Surge/Loon等代理app重写会用到，它告诉代理软件如何插入 Adblock4limbo.user.js；你可以在 .conf，.sgmodule...里看到它的踪影，见后文如何在QX...配置部分；）<br />
-<br>2.<strong>Adblock4limbo.user.js</strong> —— 去网页广告源码 <span class="external-link"><a class="no-external-link" href="https://github.com/limbopro/Adblock4limbo/blob/main/Adguard/Adblock4limbo.user.js" target="_blank">https://github.com/limbopro/Adblock4limbo/blob/main/Adguard/Adblock4limbo.user.js<i data-feather='external-link'></i></a></span> （<strong>实现去广告功能部分</strong>，可由代理软件调用插入网页的body标签或head标签，具体参考 Adblock4limbo.js 写的规则；Adblock4limbo.user.js ，PC用户可通过油猴即篡改猴进行安装；）<br />
+<br>2.<strong>Adblock4limbo.user.js</strong> —— 去网页广告源码 <span class="external-link"><a class="no-external-link" href="https://github.com/limbopro/Adblock4limbo/blob/main/Adguard/Adblock4limbo.user.js" target="_blank">https://github.com/limbopro/Adblock4limbo/blob/main/Adguard/Adblock4limbo.user.js<i data-feather='external-link'></i></a></span> <span class="external-link"><a class="no-external-link" href="https://github.com/limbopro/Adblock4limbo/raw/refs/heads/main/Adguard/Adblock4limbo.user.js" target="_blank">raw<i data-feather='external-link'></i></a></span> （<strong>实现去广告功能部分</strong>，可由代理软件调用插入网页的body标签或head标签，具体参考 Adblock4limbo.js 写的规则；Adblock4limbo.user.js ，PC用户可通过油猴即篡改猴进行安装；）<br />
 <br>3.<strong>Adblock4limbo.function.js</strong> —— 右下角导航页源码 <span class="external-link"><a class="no-external-link" href="https://github.com/limbopro/Adblock4limbo/blob/main/Adguard/Adblock4limbo.function.js" target="_blank">https://github.com/limbopro/Adblock4limbo/blob/main/Adguard/Adblock4limbo.function.js<i data-feather='external-link'></i></a></span> （<strong>导航按钮/导航详情页功能部分</strong>，通过 Adblock4limbo.user.js 引入网页）</div>
 <h3>毒奶去网页广告计划支持时间线</h3>
 <p><div class="tip inlineBlock info"><strong>毒奶去网页广告计划支持时间线</strong>：<br />
@@ -2631,7 +2853,7 @@ via Twitter；前序（必看/Mac/Windows/Android/网页广告拦截方案）选
 04.13.2022 新增对 油猴的支持（按油猴的格式重写了用户脚本）；<br />
 03.21.2022 新增对 Surge的支持（移植自Quantumult X）；<br />
 28.10.2020 新增对 Quantumult X的支持；</div>
-<h3>导航功能一览</h3>
+<h3>导航功能一览[导航按钮]</h3>
 <p><video src="https://limbopro.com/usr/uploads/2023/10/1625924739.mp4" style="background-image:url(https://limbopro.com/usr/uploads/2023/10/2427552253.png);background-size: cover;"></video></p>
 <p><div class="tip inlineBlock info">导航及功能使用操作视频；</div>
 <p><img src="https://limbopro.com/usr/uploads/2023/10/400222393.png" alt="功能截图 - 页面右下角按钮.png" /><br />
@@ -2933,7 +3155,7 @@ via Twitter；前序（必看/Mac/Windows/Android/网页广告拦截方案）选
 使用到的手机：iPhone?<br />
 使用到的应用：QuantumultX ？ Stay？ Surge？<br />
 使用到的重写：<a href="https://limbopro.com/Adblock4limbo.conf">https://limbopro.com/Adblock4limbo.conf</a> ..?<br />
-使用到的脚本：<span class="external-link"><a class="no-external-link" href="https://github.com/limbopro/Adblock4limbo/raw/main/Adguard/Adblock4limbo.user.js" target="_blank">https://github.com/limbopro/Adblock4limbo/raw/main/Adguard/Adblock4limbo.user.js<i data-feather='external-link'></i></a></span><br />
+使用到的脚本：<span class="external-link"><a class="no-external-link" href="https://github.com/limbopro/Adblock4limbo/raw/refs/heads/main/Adguard/Adblock4limbo.user.js" target="_blank">https://github.com/limbopro/Adblock4limbo/raw/refs/heads/main/Adguard/Adblock4limbo.user.js<i data-feather='external-link'></i></a></span><br />
 自行尝试：是否尝试清理浏览器缓存？使用无痕模式浏览该网页问题是否仍在？开启或关闭重写/模块再打开该网页是否有不同？哪里不同？==<br />
 截图：出现广告的位置的截图（涉及🔞请打码）？错误日志或提示信息截图..<br />
 其他细节...<br />
@@ -3140,7 +3362,40 @@ Credit Pexel；推荐序方便快捷/转换自动化突发奇想，写了一个 
 <p><div class="tip inlineBlock success">如无特别说明，【毒奶去网页广告计划】在对以上网站网页广告去除过程中，代理软件（如Surge、<strong>QuantumultX（最优先适配）</strong>、Shadowrocket等）将优先支持，油猴用户次之或不完美支持，PC、Mac等桌面浏览器用户优先推荐安装 <a href="https://limbopro.com/archives/1098.html">ublock origin</a> 等浏览器扩展，Android 用户推荐安装 <a href="https://limbopro.com/archives/26805.html">Firefox 浏览器 + ublock origin 组合</a> 以屏蔽网页广告。</div>
 <p><div class="tip inlineBlock success">注意！如果你是 iPhone/iPad 用户，装有代理软件如 QuantumultX/Surge/Shadowrocket/Loon/Stash 其一，且代理软件处于正常使用状态，请优先按本文之前 <strong>相应代理软件配置</strong> 的使用说明<strong>在代理软件上进行操作</strong>，操作完成后无论是使用 Chrome/Safari/Edge，还是 Firefox 都可以得到无差别的去相应网站网页广告体验，无需再使用第三方用户脚本管理器（如Stay）为 Safari 安装用户脚本；<strong>本去网页广告计划优先支持代理软件</strong>；</div>
 <h2 id="去网页广告配置教程（油猴）"> 去网页广告配置教程（油猴）</h2>
-<pre><code>https://github.com/limbopro/Adblock4limbo/raw/main/Adguard/Adblock4limbo.user.js</code></pre>
+<p><div class="preview">
+<div class="post-inser post box-shadow-wrap-normal">
+<a href="https://limbopro.com/archives/greasyfork.html" target="_blank" class="post_inser_a no-external-link">
+<div class="inner-image bg" style="background-image: url(https://limbopro.com/usr/uploads/2020/11/3462920050.png);background-size: cover;"></div>
+
+<div class="inner-content" >
+<p class="inser-title">油猴脚本轻松使用指南 - Greasy Fork/Sleazy Fork-安全、实用的用户脚本大全</p>
+<div class="inster-summary text-muted">
+本文隶属于 实用工具分类，点击分类名称可以查看更多相关文章；主理人说谁的浏览器还没有个油猴脚本呢？装就够了。油猴脚...
+</div>
+</div>
+</a>
+<!-- .inner-content #####-->
+</div>
+<!-- .post-inser ####-->
+</div></p>
+<p><div class="preview">
+<div class="post-inser post box-shadow-wrap-normal">
+<a href="https://limbopro.com/archives/userscripts.html" target="_blank" class="post_inser_a no-external-link">
+<div class="inner-image bg" style="background-image: url(https://limbopro.com/usr/uploads/2022/04/2783480189.png);background-size: cover;"></div>
+
+<div class="inner-content" >
+<p class="inser-title">iOS - Stay/UserScripts for Safari - iPhone 上特别好用且开源的（油猴）用户脚本管理器！</p>
+<div class="inster-summary text-muted">
+主理人序JavaScript yyds。如果你喜欢用 Chrome for iOS，那么你也可以试试通过 Quan...
+</div>
+</div>
+</a>
+<!-- .inner-content #####-->
+</div>
+<!-- .post-inser ####-->
+</div></p>
+<p>毒奶去网页广告计划油猴脚本URL：</p>
+<pre><code>https://github.com/limbopro/Adblock4limbo/raw/refs/heads/main/Adguard/Adblock4limbo.user.js</code></pre>
 <p><div class="tip inlineBlock info"><strong>复制上述<span class="external-link"><a class="no-external-link" href="https://github.com/limbopro/Adblock4limbo/raw/main/Adguard/Adblock4limbo.user.js" target="_blank">用户脚本<i data-feather='external-link'></i></a></span>链接</strong>，并在已安装 <strong>Tampermonkey</strong> 扩展的浏览器打开，即可进行安装；</div>
 <p><div class="tip inlineBlock info">专为 油猴 - Tampermonkey 浏览器扩展打造（<strong>更多的是 Chrome/Firefox </strong>桌面浏览器<strong>用户（Windows/Mac）/Firefox for Android 用户</strong>），致力于通过 Tampermonkey 引入 JS/CSS 文件的方式去除网页上的广告内容（包括横幅、JS弹出广告等等）； <strong>Android -&gt; Firefox -&gt; 附加组件 -&gt; 安装 Tampermonkey</strong> -&gt; 安装<span class="external-link"><a class="no-external-link" href="https://github.com/limbopro/Adblock4limbo/raw/main/Adguard/Adblock4limbo.user.js" target="_blank">用户脚本<i data-feather='external-link'></i></a></span> / iOS -&gt; Safari -&gt; 安装 Stay /或其他用户脚本管理器 -&gt; 安装<span class="external-link"><a class="no-external-link" href="https://github.com/limbopro/Adblock4limbo/raw/main/Adguard/Adblock4limbo.user.js" target="_blank">用户脚本<i data-feather='external-link'></i></a></span>；详细步骤可参阅后文；</div>
 <p><video src="https://limbopro.com/usr/uploads/2023/10/1625924739.mp4" style="background-image:url(https://limbopro.com/usr/uploads/2023/10/2427552253.png);background-size: cover;"></video></p>
@@ -3488,7 +3743,7 @@ via 春潮频道； 想屏蔽全部广告且享受 YouTube premium 服务（离�
 <!-- .post-inser ####-->
 </div></p>
 <h3>测试</h3>
-<p><span class="external-link"><a class="no-external-link" href="https://limbopro.com/Adblock4limbo.html" target="_blank">新窗口打开<i data-feather='external-link'></i></a></span></p><hr class="content-copyright" style="margin-top:50px" /><blockquote class="content-copyright" style="font-style:normal"><p class="content-copyright">版权属于：毒奶 <br> <p class="content-copyright">联系我们：<a class="content-copyright" href="https://limbopro.com/6.html"         target="_blank">https://limbopro.com/6.html</a><br>毒奶搜索：<a class="content-copyright"         href="https://limbopro.com/search.html" target="_blank">https://limbopro.com/search.html</a> <br>番号搜索：<a class="content-copyright"         href="https://limbopro.com/btsearch.html" target="_blank">https://limbopro.com/btsearch.html</a>     <br>机场推荐：<a class="content-copyright" href="https://limbopro.com/865.html"         target="_blank">https://limbopro.com/865.html</a>  IEPL专线/100Gb/¥15/月起(最高享8折优惠)   <br>毒奶导航：<a class="content-copyright" href="https://limbopro.com/daohang/index.html"         target="_blank">https://limbopro.com/daohang/index.html</a> </p></p><p class="content-copyright">本文链接：<a class="content-copyright" href="https://limbopro.com/archives/12904.html">https://limbopro.com/archives/12904.html</a> <span style="color:#666">· 镜像：</span><a class="content-copyright" href="https://limbopro.github.io/archives/12904.html" rel="nofollow">https://limbopro.github.io/archives/12904.html</a></p><p class="content-copyright"><p class="content-copyright"><a rel="license" href="https://creativecommons.org/licenses/by-nc/4.0/deed.zh-Hans" target="_blank"><img alt="知识共享许可协议" style="border-width:0" src="../by-nc-sa.png"></a><br>本文采用 <a rel="license" href="https://creativecommons.org/licenses/by-nc/4.0/deed.zh-Hans" target="_blank">CC BY-NC-SA 4.0 许可协议</a>，转载或引用本文时请遵守许可协议，注明出处、不得用于商业用途！</p></blockquote></div>
+<p><span class="external-link"><a class="no-external-link" href="https://limbopro.com/Adblock4limbo.html" target="_blank">新窗口打开<i data-feather='external-link'></i></a></span></p><hr class="content-copyright" style="margin-top:50px" /><blockquote class="content-copyright" style="font-style:normal"><p class="content-copyright">版权属于：毒奶 <br> <p class="content-copyright">联系我们：<a class="content-copyright" href="https://limbopro.com/6.html"         target="_blank">https://limbopro.com/6.html</a><br>毒奶搜索：<a class="content-copyright"         href="https://limbopro.com/search.html" target="_blank">https://limbopro.com/search.html</a> <br>番号搜索：<a class="content-copyright"         href="https://limbopro.com/btsearch.html" target="_blank">https://limbopro.com/btsearch.html</a>     <br>机场推荐：<a class="content-copyright" href="https://limbopro.com/865.html"         target="_blank">https://limbopro.com/865.html</a>  IEPL专线/150Gb/¥14/月起   <br>毒奶导航：<a class="content-copyright" href="https://limbopro.com/daohang/index.html"         target="_blank">https://limbopro.com/daohang/index.html</a> </p></p><p class="content-copyright">本文链接：<a class="content-copyright" href="https://limbopro.com/archives/12904.html">https://limbopro.com/archives/12904.html</a> <span style="color:#666">· 镜像：</span><a class="content-copyright" href="https://limbopro.github.io/archives/12904.html" rel="nofollow">https://limbopro.github.io/archives/12904.html</a></p><p class="content-copyright"><p class="content-copyright"><a rel="license" href="https://creativecommons.org/licenses/by-nc/4.0/deed.zh-Hans" target="_blank"><img alt="知识共享许可协议" style="border-width:0" src="../by-nc-sa.png"></a><br>本文采用 <a rel="license" href="https://creativecommons.org/licenses/by-nc/4.0/deed.zh-Hans" target="_blank">CC BY-NC-SA 4.0 许可协议</a>，转载或引用本文时请遵守许可协议，注明出处、不得用于商业用途！</p></blockquote></div>
         </div>
     </div>
     <!-- footer -->
@@ -3589,33 +3844,35 @@ var registCommentEvent = function() {
                         input.type = 'hidden';
                         input.name = '_';
                             input.value = (function () {
-    var _c8P = //'x'
-'565'+'a'//'TS'
-+'1'//'4'
-+//'eZ'
-'5a9'+//'o'
-'b10'+'e'//'90'
-+//'X'
-'512'+//'1T'
-'f'+//'h'
-'b'+//'M'
-'M'+'DZ'//'DZ'
-+//'n'
-'49'+'8'//'ABD'
-+//'y'
-'y'+'1'//'3C'
-+//'RNq'
-'57c'+//'IW8'
-'1'+'059'//'v'
-+'7'//'ChP'
-+//'T'
-'bef', _QeC9a = [[17,18],[17,19],[20,21]];
+    var _PCA84al = ''///*'6Lj'*/'6Lj'
++'nfJ'//'nfJ'
++'5'//'zV'
++/* 'lig'//'lig' */''+//'Jh'
+'65a'+//'Zo'
+'15a'+/* '2b'//'2b' */''+''///*'QIK'*/'QIK'
++'9'//'PR'
++//'FOP'
+'b10'+//'TD'
+'e51'+'2fb'//'rv'
++//'pP'
+'4'+//'L'
+'98'+//'3M'
+'15'+'7c1'//'vya'
++'05'//'9k'
++//'4kZ'
+'9'+''///*'L3'*/'L3'
++'7b'//'gFc'
++//'9'
+'e'+//'9'
+'9'+'E'//'E'
++/* 'ji'//'ji' */''+//'a'
+'f', _B2un = [[0,3],[31,32],[31,32]];
     
-    for (var i = 0; i < _QeC9a.length; i ++) {
-        _c8P = _c8P.substring(0, _QeC9a[i][0]) + _c8P.substring(_QeC9a[i][1]);
+    for (var i = 0; i < _B2un.length; i ++) {
+        _PCA84al = _PCA84al.substring(0, _B2un[i][0]) + _PCA84al.substring(_B2un[i][1]);
     }
 
-    return _c8P;
+    return _PCA84al;
 })();
                     
                         f.appendChild(input);
@@ -3645,13 +3902,13 @@ var registCommentEvent = function() {
           src="https://limbopro.com/usr/uploads/2021/07/2816325337.png" style="width: 50px;"></a>
       <a target="_blank" href="https://github.com/limbopro/"><img
           src="https://limbopro.com/usr/uploads/2021/07/3392286942.png" style="width: 40px;"></a>
-      457.41 W 字符
-      丨2人在线丨      <!-- 底部状态设置/阅读数/在线人数 -->
+      469.67 W 字符
+      丨1人在线丨      <!-- 底部状态设置/阅读数/在线人数 -->
 
       Powered by <a target="_blank" href="http://www.typecho.org">Typecho</a>&nbsp;|&nbsp;Theme by <a target="_blank"
         href="https://www.ihewro.com/archives/489/">handsome</a>
     </span>
-    <span class="text-ellipsis">&copy;&nbsp;2025 毒奶.inc Copyright&nbsp;      <!-- 获取真实用户IP -->
+    <span class="text-ellipsis">&copy;&nbsp;2026 毒奶.inc Copyright&nbsp;      <!-- 获取真实用户IP -->
     </span>
   </div>
   <!--可以去除主题版权信息，最好保留版权信息或者添加主题信息到友链，谢谢你的理解-->
@@ -3842,7 +4099,51 @@ var registCommentEvent = function() {
 
 <!--用户自定义js-->
 <script type="text/javascript">
-  // 右侧导航
+  (function () {
+    const target = '/archives/%E6%9C%BA%E5%9C%BA%E6%8E%A8%E8%8D%90.html';
+    const redirect = 'https://limbopro.com/865.html';
+
+    function checkRedirect() {
+        // 1. 当前页面是目标页面，直接跳转
+        if (location.pathname === target) {
+            location.replace(redirect);
+            return;
+        }
+
+        // 2. 修改页面中指向目标页面的所有 <a> 链接
+        document.querySelectorAll('a[href]').forEach(function (a) {
+            try {
+                const url = new URL(a.href, location.href);
+
+                if (url.pathname === target) {
+                    a.href = redirect;
+                }
+            } catch (e) {}
+        });
+    }
+
+    // 首次加载
+    checkRedirect();
+
+    // 监听 history.pushState
+    const pushState = history.pushState;
+    history.pushState = function () {
+        pushState.apply(history, arguments);
+        checkRedirect();
+    };
+
+    // 监听 history.replaceState
+    const replaceState = history.replaceState;
+    history.replaceState = function () {
+        replaceState.apply(history, arguments);
+        checkRedirect();
+    };
+
+    // 监听浏览器前进/后退
+    window.addEventListener('popstate', checkRedirect);
+})();
+
+// 右侧导航
 
 // 创建按钮元素
 const button = document.createElement('button');
@@ -3983,6 +4284,8 @@ disable-menu='false'
 
 
 <script async="async" src="/usr/themes/handsome/assets/js/corlor.js"></script>
+
+
 <!--确认操作-->
   <div id="confirmMask" class="confirm-mask">
     <div class="confirm-dialog">
@@ -3996,6 +4299,9 @@ disable-menu='false'
   </div>
 
 <script src="/Adguard/Adblock4limbo.function.js" defer></script>
+
+
+<!--改变文章样式-->
 <!-- <<script src="/usr/themes/handsome/instantpage.js" type="module"></script> -->
 
 </body>
