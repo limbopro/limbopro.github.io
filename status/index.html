@@ -122,9 +122,9 @@
         </div>
 
         <div class="info">
-            <div>去网页广告计划-[<b>去广告部分</b>]> <a href="https://limbopro.com/Adguard/Adblock4limbo.user.js"
+            <div>去网页广告计划-[<b>去广告部分源文件</b>]> <a href="https://limbopro.com/Adguard/Adblock4limbo.user.js"
                     target='_blank'>Adblock4limbo.user.js</a> 状态：<span id="iads">未知...，去网页广告功能或暂不可用！</span> </div>
-            <div>去网页广告计划-[<b>导航部分</b>]> <a href="https://limbopro.com/Adguard/Adblock4limbo.function.user.js"
+            <div>去网页广告计划-[<b>导航部分源文件</b>]> <a href="https://limbopro.com/Adguard/Adblock4limbo.function.user.js"
                     target='_blank'>function.user.js</a> 状态：<span id="idaohang">未知...</span> </div>
             <div>了解更多<a href="https://limbopro.com/archives/12904.html" target='_blank'>去网页广告</a>相关讯息</div>
         </div>
@@ -137,7 +137,7 @@
             <a href="https://www.cloudflarestatus.com/" target="_blank" rel="noopener noreferrer"
                 style="text-decoration:none;">
                 <img src="https://dka575ofm4ao0.cloudfront.net/pages-favicon_logos/original/7809/J2LlHqT3qJl0bG9Alpgc"
-                    width="18" height="18" alt="Cloudflare" style="vertical-align:middle;"> Cloudflare 官方
+                    width="18" height="18" alt="Cloudflare" style="vertical-align:middle;"> Cloudflare System Status
             </a>
             &nbsp;&nbsp;｜&nbsp;&nbsp;
             <a href="https://www.githubstatus.com/" target="_blank" rel="noopener noreferrer"
@@ -157,8 +157,8 @@
 
         <div class="note">
             <strong>状态说明：</strong><br>
-            <span style="color:#f38020;">● Cloudflare</span> → <strong>一切正常</strong>（主站加速最佳）<br>
-            <span style="color:#ffb302;">● GitHub Pages</span> → 正在使用 GitHub Pages 镜像站<br>
+            <span style="color:#f38020;">● Cloudflare</span> → <strong>表示一切正常</strong>（主站加速最佳）<br>
+            <span style="color:#ffb302;">● GitHub Pages</span> → 表示正在使用 GitHub Pages 镜像站<br>
             　　　此时 <strong>无法使用需要 POST 的功能</strong>，如：<br>
             　　　→ <a href="https://limbopro.com/feedback/" target="_blank" style="color:#d4380d;">留言板提交</a>、登录、评论等<br>
             <span style="color:#dc3545;">● 回源/其他</span> → 可能被干扰或访问异常
@@ -243,7 +243,7 @@
 
         function showCloudflare(ray) {
             document.getElementById('icon').textContent = '🟠';
-            document.getElementById('mainText').textContent = '一切正常（Cloudflare 加速）';
+            document.getElementById('mainText').textContent = '一切正常（Cloudflare 加速中...）';
             document.getElementById('mainText').style.color = '#f38020';
             document.getElementById('provider').textContent = 'Cloudflare';
             document.getElementById('provider').style.color = '#f38020';

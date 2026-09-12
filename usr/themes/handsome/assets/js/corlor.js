@@ -190,7 +190,7 @@ if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
 }
 
     console.log('状态按钮 #iSatus 创建成功！点击将弹出确认框 → 确认后执行 webStatus()');
-}Ï
+}
 
 };
 
