@@ -58,8 +58,13 @@ window.fixPage = fixPage;
 
 function fixPage() {
     var url_Now = window.location.protocol + "//" + window.location.host + window.location.pathname;
+    
     if (window.location.href !== url_Now) {
+        // 场景 1：带有参数或锚点，去除参数并剥离跳转
         window.location.replace(url_Now);
+    } else {
+        // 场景 2：本身就是干净的主域名/无参数页面，强制刷新当前页面
+        window.location.reload();
     }
 }
 
