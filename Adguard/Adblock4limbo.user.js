@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Adblock4limbo.[github]
 // @namespace    https://github.com/limbopro/Adblock4limbo/raw/main/Adguard/Adblock4limbo.user.js
-// @version      0.2026.09.11
+// @version      0.2026.09.13
 // @license      CC BY-NC-SA 4.0
 // @description  毒奶去网页广告计划用户脚本 For Quantumult X & Surge & Shadowrocket & Loon & Stash & 油猴 ；1.新增页面右下角导航；2.通过 JavaScript 移除特定网站网页广告 —— 搜索引擎（Bing/Google）广告及内容农场结果清除/低端影视/欧乐影院/iyf爱壹帆/哔滴影视/Pornhub/Javbus/Supjav/Jable(支持抓取M3U8链接)/MissAv/Njav/91porn(支持视频下载)/hitomi/紳士漫畫/禁漫天堂/等视频&ACG&小说&漫画网站上的弹窗广告&视频广告&Gif图片广告等，保持网页清爽干净无打扰！ P.S. 欢迎提交issue
 // @author       limbopro
@@ -284,12 +284,12 @@ console.log('是否（默认）开启成人🔞网站保护模式：' + getCooki
 
 
 // 获取当前页面是否被嵌入在 iframe 中
-const isIframe = window.self !== window.top;
+// const isIframe = window.self !== window.top;
 
 // 只要当前页面不是在 iframe 中运行，就执行函数
-if (!isIframe) {
-    daohang_build();
-}
+//if (!isIframe) {
+daohang_build();
+//}
 
 
 
@@ -400,7 +400,7 @@ var adsMax = {
         manhuapicaheight: "/*li[class*=lindex],*/.row.alert,.my-insert-flag,[role=alert],img[src*=gif] {height:0px !important} ", // 嗶咔picacg免費網頁版
         dmm: "",
         /* @media (min-width:640px){.sm\\:hidden{margin:6px 0 0;padding:0;display:flex !important}} */
-        missav: ".under_player,ul.list-none,div[class*='slide'],a[href^='https://theporndude.com'],a[href*='mycomic'],a[href*=myavlive],[href*='bit.ly'],[href*='bit.ly'][target=_blank],a[href*='/vip'],img[src*='.gif'],iframe,#a[href*='//bit.ly/'],div[style*='z-index: 1001'],ul.space-y-2.mb-4.ml-4.list-disc.text-nord14,div.space-y-5.mb-5,div.under_player,div[style=\"width: 300px; height: 250px;\"]{display:none !important;pointer-events:none !important}body{overflow-x:hidden}", //  MissAV
+        missav: ".lg\:hidden,div[style=\"width: 300px; height: 100px;\"],a[href*=\"//bit.ly/\"],.under_player,ul.list-none,div[class*='slide'],a[href^='https://theporndude.com'],a[href*='mycomic'],a[href*=myavlive],[href*='bit.ly'],[href*='bit.ly'][target=_blank],a[href*='/vip'],img[src*='.gif'],iframe,#a[href*='//bit.ly/'],div[style*='z-index: 1001'],ul.space-y-2.mb-4.ml-4.list-disc.text-nord14,div.space-y-5.mb-5,div.under_player,div[style=\"width: 300px; height: 250px;\"]{display:none !important;pointer-events:none !important}body{overflow-x:hidden}", //  MissAV
         javtiful: "button[data-front-share-toggle],front-home-premium-alert,a[href*='rdx.jav.si'],a[href*='r.trwl1.com'],.front-watch-text-feature,.front-feature-placement-close {display:none !important; pointer-events: none !important;}",
         bigirl: 'div#container + div, h4.adblock_title,div.adblock_subtitle,[class^=\'adblock\'],div[class^=\'ad_\'], .toppage_av {display:none !important; pointer-events: none !important;}', // https://bi-girl.net/
         marketcap: '.ad-tr {display:none !important; pointer-events: none !important;}', // https://8marketcap.com/
@@ -2400,6 +2400,8 @@ function adsDomain_switch(x) { // 匹配参数值 执行相应函数
         case 'njavtv.com':
         case 'missav':
 
+            document.body.style.setProperty('background-color', '#000000', 'important');
+
             window.addEventListener('load', function () {
 
                 // 你要追加的 CSS 内容
@@ -2439,7 +2441,7 @@ function adsDomain_switch(x) { // 匹配参数值 执行相应函数
 
                 }()
 
-                css_adsRemove(adsMax.css.missav, 100, 'missavx');
+                css_adsRemove(adsMax.css.missav, 500, 'missavx');
                 window_open_defuser(); // 打断 window.open 施法
                 var ua_missav = navigator.userAgent.toLowerCase();
                 var mobile_missav = "mobile";
@@ -2553,8 +2555,11 @@ function adsDomain_switch(x) { // 匹配参数值 执行相应函数
                         ele_dynamicAppend("div.mt-4", "onclick", "进入全屏", cssText, "fullscreen()", "missavFullScreen", 2, "button");
                         ele_dynamicAppend("div.mt-4", "onclick", "暂停", cssText, "video_pause()", "missavPause", 1, "button");
                         ele_dynamicAppend("div.mt-4", "href", "如何下载本视频？", cssText, "https://limbopro.com/archives/M3U8-Downloader.html", "how", 4, "a");
-                        document.querySelector('div.mt-4').insertBefore(button_download, document.querySelector('div.mt-4').children[3])
-                        // 添加监听器
+
+                        if (document.querySelector('div.mt-4') !== null) {
+                            document.querySelector('div.mt-4').insertBefore(button_download, document.querySelector('div.mt-4').children[3])
+                            // 添加监听器
+                        }
 
                         if (document.getElementById("how") !== null) {
                             document.getElementById("how").target = "_blank";
