@@ -16,7 +16,7 @@
         const FLAG = "APP_CLEANUP_DONE";
 
         // 如果保险丝已经断开（标记存在），则不执行
-        if (localStorage.getItem(FLAG)) return;
+        if (localStorage.getItem(FLAG)) return;ouseout="this.style.color='
 
         localStorage.clear();
 
@@ -2063,17 +2063,7 @@ window.makeModalDraggable = function makeModalDraggable(elementId) {
         // --- 1. UI 渲染 ---
         resultWin.innerHTML = `
 
-        <!--div id="sel-close-main" style="
-        position: absolute;
-        top: 8px;
-        right: 12px;
-        cursor: pointer;
-        font-size: 20px;
-        color: #999;
-        font-weight: bold;
-        line-height: 1;
-        z-index: 10;
-    " onmouseover="this.style.color='#ff4d4f'" onmouseout="this.style.color='#999'">&times;</div--!>
+        
 
     <span class="sel-title">元素CSS选择器获取与调试 (测试中...)</span>
   <div class="warm-tips" style="box-shadow: inset 1px 1px 4px 4px rgba(0, 0, 0, 0.2);background: #f0f5ff !important;border: 1px solid #adc6ff;padding: 10px 12px;border-radius: 4px;margin: 5px 0 10px 0;font-size: 11px;color: #1d39c4;line-height: 1.6;">
