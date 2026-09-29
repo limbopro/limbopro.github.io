@@ -1011,8 +1011,40 @@ function adsDomain_switch(x) { // 匹配参数值 执行相应函数
         case 'jable': // 2333
             console.log("IT'S JABLE");
 
+            // 父节点
+
+            function removeAllIframesAndParents() {
+                const iframes = document.querySelectorAll('iframe');
+                iframes.forEach(iframe => {
+                    // 防止误删 document.body 或 document.documentElement
+                    const parent = iframe.parentElement;
+                    if (parent && parent !== document.body && parent !== document.documentElement) {
+                        parent.remove();
+                    } else {
+                        iframe.remove();
+                    }
+                });
+            }
+
+            // 1. 立即执行一次清空现有 iframe
+            removeAllIframesAndParents();
+
+            // 2. 创建观察者，持续监听后续动态插入的 iframe
+            const observer = new MutationObserver((mutations) => {
+                removeAllIframesAndParents();
+            });
+
+            // 开始监听整个页面 DOM 树的变化
+            observer.observe(document.documentElement, {
+                childList: true,
+                subtree: true
+            });
+
             autoRemoveElements('iframe,footer#footer1,div#btimgid1,div[style*="position: fixed"][style*="bottom: 0px"]') // 给镜像站用
 
+            window_open_defuser(); // 打断 window.open 施法
+
+            /*
             window.onload = function () {
 
                 // 移除广告
@@ -1061,7 +1093,51 @@ function adsDomain_switch(x) { // 匹配参数值 执行相应函数
                     }, 3000)
                 }
 
-            }()
+            }() */
+
+            window.onload = function () {
+                // 1. 移除广告
+                const targetLink = document.querySelector('a[href*="9432b3b0-661c-4d05-9552-29757dafc4cb"]');
+                if (targetLink) {
+                    const container = targetLink.closest('.col-6.col-sm-4.col-lg-12');
+                    if (container) {
+                        container.remove();
+                        console.log('广告元素已移除');
+                    }
+                }
+
+                // 2. 新增快进快退
+                if (typeof fastForward === 'function') {
+                    fastForward('#player', 'section.pb-3.pb-e-lg-30');
+                }
+
+                // 3. 搜索页处理
+                if (document.location.href.search('search') !== -1) {
+                    let regex = /.*\/search\//;
+                    let code = window.location.pathname.replace(regex, '').replace('/', '').toLowerCase();
+                    setTimeout(() => {
+                        if (typeof tmd === 'function') {
+                            tmd('#list_videos_videos_list_search_result > nav', code, '试试其他搜索：');
+                        }
+                    }, 2000);
+                    console.log("生成搜索链接🔗");
+                }
+
+                // 4. 视频播放页处理
+                if (document.querySelector('.plyr__poster') !== null) {
+                    let regex = /.*\/videos\//;
+                    let code = window.location.pathname.replace(regex, '').replace('/', '').toLowerCase();
+                    setTimeout(() => {
+                        if (document.querySelector('#p1') === null) {
+                            console.log('开始生成在线预览链接...');
+                            if (typeof tmd === 'function') {
+                                tmd('h4', code, '在其他站点播放：');
+                            }
+                        }
+                        console.log("生成在其他站点播放链接🔗");
+                    }, 3000);
+                }
+            };
 
             // 子域名跳转至主域名 jable.tv
             if (/\b(.*\.)(jable\.tv.*)\b/i.test(window.location.href.toLowerCase())) {
