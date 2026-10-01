@@ -1606,7 +1606,7 @@ function sortMenusByPopularity() {
     const container = document.querySelector('.echo');
     if (!container) return;
 
-    const excludedCategories = ['Toolset', 'feedback', 'followMe', 'magicbox'];
+    const excludedCategories = ['feedback', 'followMe', 'magicbox', 'Toolset'];
 
     container.querySelectorAll('.div_global').forEach(div => {
         if (div.dataset && excludedCategories.includes(div.dataset.category)) {
@@ -4764,7 +4764,7 @@ function showNavigationStats() {
     const customOrder = customOrderJson ? JSON.parse(customOrderJson) : null;
 
     // 黑名单配置（请保持与 sortMenusByPopularity 一致）
-    const excludedCategories = ['Toolset', 'feedback', 'followMe', 'magicbox'];
+    const excludedCategories = ['feedback', 'followMe', 'magicbox', 'Toolset'];
 
     // 3. 收集并格式化 DOM 中的分类数据
     const categoryRows = Array.from(document.querySelectorAll('.echo .div_global'))
