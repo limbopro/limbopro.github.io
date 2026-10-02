@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         智能广告与覆盖层检测器 (Silent Backend + Floating UI)
 // @namespace    https://tampermonkey.net/
-// @version      12.4
-// @description  默认静默后台防护，支持捕捉全屏透明/半透明遮罩 (Overlay/Backdrop) 与拦截内联/动态绑定事件劫持 (Click Hijacking)，支持面板拖拽、按元素大小/默认规则排序、未处理/已屏蔽筛选，独立预览管理，支持撤回/重做历史操作，支持记忆面板开启状态，支持一键重置。
+// @version      12.0
+// @description  默认静默后台防护，支持捕捉全屏透明/半透明遮罩 (Overlay/Backdrop) 与拦截内联/动态绑定事件劫持 (Click Hijacking)，支持面板拖拽、按元素大小/默认规则排序、未处理/已已读/已屏蔽筛选，独立预览与已读标记管理。
 // @author       Assistant
 // @match        *://*/*
 // @grant        GM_addStyle
@@ -28,24 +28,18 @@
       this.scanTimer = null;
       this.observer = null;
 
-      // 撤回 (Undo) 与 重做 (Redo) 堆栈
-      this.undoStack = [];
-      this.redoStack = [];
-
       // 排序与筛选模式
       this.sortType = 'default'; // 'default' | 'size-desc' | 'size-asc'
-      this.filterType = 'all'; // 'all' | 'unread' | 'blocked'
+      this.filterType = 'all'; // 'all' | 'unread' | 'read' | 'blocked'
 
       // 面板显示状态标识
+      this.isUIVisible = false;
       this.host = null;
       this.shadow = null;
 
       // 域隔离持久化规则库
       this.storageKey = `ad_detector_blocked_${window.location.hostname}`;
       this.blockedRules = this.loadBlockedRules();
-
-      // ★ 读取上次页面留下的面板开启状态
-      this.isUIVisible = this.loadUIVisibleState();
 
       // ★ 拦截内联与动态事件劫持防护机制
       this.initClickHijackProtection();
@@ -57,201 +51,6 @@
 
       // 立即强制触发 1 次同步全盘清理
       this.forceCleanSavedRulesImmediately();
-
-      // ★ 如果记忆状态为开启，页面加载时自动显示面板
-      if (this.isUIVisible) {
-        if (document.readyState === 'loading') {
-          document.addEventListener('DOMContentLoaded', () => this.showUI());
-        } else {
-          this.showUI();
-        }
-      }
-    }
-
-    // ==========================================
-    // ★ 撤回 (Undo) / 重做 (Redo) 核心逻辑
-    // ==========================================
-    pushHistoryState(action) {
-      // action 结构: { type: 'SINGLE_BLOCK'|'SINGLE_RESTORE'|'BATCH_BLOCK', items: [adId...] }
-      this.undoStack.push(action);
-      this.redoStack = []; // 产生新操作时清空重做栈
-      this.updateUI();
-    }
-
-    undo() {
-      if (this.undoStack.length === 0) return;
-      const action = this.undoStack.pop();
-
-      if (action.type === 'SINGLE_BLOCK' || action.type === 'BATCH_BLOCK') {
-        // 撤回屏蔽 -> 执行恢复
-        action.items.forEach(adId => this.restoreSingleInternal(adId));
-        this.showToast(`↩️️ 已撤回屏蔽操作 (${action.items.length} 个元素)`);
-      } else if (action.type === 'SINGLE_RESTORE') {
-        // 撤回恢复 -> 执行屏蔽
-        action.items.forEach(adId => this.neutralizeSingleInternal(adId));
-        this.showToast(`↩ 已撤回恢复操作 (${action.items.length} 个元素)`);
-      }
-
-      this.redoStack.push(action);
-      this.updateUI();
-    }
-
-    redo() {
-      if (this.redoStack.length === 0) return;
-      const action = this.redoStack.pop();
-
-      if (action.type === 'SINGLE_BLOCK' || action.type === 'BATCH_BLOCK') {
-        // 重做屏蔽 -> 再次执行屏蔽
-        action.items.forEach(adId => this.neutralizeSingleInternal(adId));
-        this.showToast(`↪️ 已重做屏蔽操作 (${action.items.length} 个元素)`);
-      } else if (action.type === 'SINGLE_RESTORE') {
-        // 重做恢复 -> 再次执行恢复
-        action.items.forEach(adId => this.restoreSingleInternal(adId));
-        this.showToast(`↪️ 已重做恢复操作 (${action.items.length} 个元素)`);
-      }
-
-      this.undoStack.push(action);
-      this.updateUI();
-    }
-
-    // 内部屏蔽逻辑（不直接入历史栈）
-    neutralizeSingleInternal(adId) {
-      const meta = this.detectedAds.get(adId);
-      if (meta && meta.element) {
-        meta.isBlocked = true;
-        meta.element.dataset.overlayBlocked = 'true';
-
-        this.applyHighlight(meta.element, false);
-        meta.element.style.setProperty('display', 'none', 'important');
-
-        const rule = {
-          classAndId: meta.classAndId,
-          tagName: meta.tagName,
-          size: meta.size,
-          fingerprint: meta.fingerprint
-        };
-
-        if (!this.blockedRules.some((r) => r.fingerprint === rule.fingerprint)) {
-          this.blockedRules.push(rule);
-          this.saveBlockedRules();
-          this.applyCssRulesFromStorage();
-        }
-      }
-    }
-
-    // 内部恢复逻辑（不直接入历史栈）
-    restoreSingleInternal(adId) {
-      const meta = this.detectedAds.get(adId);
-      if (meta && meta.element) {
-        meta.isBlocked = false;
-        delete meta.element.dataset.overlayBlocked;
-
-        meta.element.style.removeProperty('display');
-
-        if (this.isHighlighted) {
-          this.applyHighlight(meta.element, true, meta.size);
-        }
-
-        this.blockedRules = this.blockedRules.filter(
-          (r) => !(r.fingerprint === meta.fingerprint || (r.classAndId && r.classAndId === meta.classAndId))
-        );
-        this.saveBlockedRules();
-      }
-    }
-
-    // 外部对外调用：包含历史纪录入栈
-    neutralizeSingle(adId) {
-      const meta = this.detectedAds.get(adId);
-      if (meta && !meta.isBlocked) {
-        this.neutralizeSingleInternal(adId);
-        this.pushHistoryState({ type: 'SINGLE_BLOCK', items: [adId] });
-        this.showToast('🛡 该元素已屏蔽（已更新全局 CSS 规则）');
-      }
-    }
-
-    restoreSingle(adId) {
-      const meta = this.detectedAds.get(adId);
-      if (meta && meta.isBlocked) {
-        this.restoreSingleInternal(adId);
-        this.pushHistoryState({ type: 'SINGLE_RESTORE', items: [adId] });
-        this.showToast('↩️ 已撤销屏蔽，已同步更新本地存储');
-      }
-    }
-
-    cleanAll() {
-      const blockedIds = [];
-      this.detectedAds.forEach((meta) => {
-        if (meta.element && !meta.isBlocked) {
-          this.neutralizeSingleInternal(meta.id);
-          blockedIds.push(meta.id);
-        }
-      });
-
-      if (blockedIds.length > 0) {
-        this.pushHistoryState({ type: 'BATCH_BLOCK', items: blockedIds });
-      }
-      return blockedIds.length;
-    }
-
-    // ==========================================
-    // ★ 一键重置核心逻辑
-    // ==========================================
-    resetAll() {
-      // 1. 清空当前域名的持久化屏蔽规则
-      this.blockedRules = [];
-      this.saveBlockedRules();
-
-      // 2. 还原已被屏蔽的 DOM 元素
-      let count = 0;
-      this.detectedAds.forEach((meta) => {
-        if (meta.isBlocked) {
-          meta.isBlocked = false;
-          count++;
-          if (meta.element) {
-            delete meta.element.dataset.overlayBlocked;
-            meta.element.style.removeProperty('display');
-            if (this.isHighlighted) {
-              this.applyHighlight(meta.element, true, meta.size);
-            }
-          }
-        }
-      });
-
-      // 3. 清空历史撤回/重做栈
-      this.undoStack = [];
-      this.redoStack = [];
-
-      // 4. 重新刷新界面
-      this.updateUI();
-      return count;
-    }
-
-    // ==========================================
-    // ★ 状态记忆存储与读取
-    // ==========================================
-    loadUIVisibleState() {
-      try {
-        if (typeof GM_getValue !== 'undefined') {
-          return GM_getValue('ad_detector_ui_open', false);
-        } else if (window.localStorage) {
-          return localStorage.getItem('ad_detector_ui_open') === 'true';
-        }
-      } catch (e) {
-        console.warn('[AdDetector] 读取面板状态失败:', e);
-      }
-      return false;
-    }
-
-    saveUIVisibleState(isOpen) {
-      try {
-        if (typeof GM_setValue !== 'undefined') {
-          GM_setValue('ad_detector_ui_open', isOpen);
-        } else if (window.localStorage) {
-          localStorage.setItem('ad_detector_ui_open', isOpen ? 'true' : 'false');
-        }
-      } catch (e) {
-        console.warn('[AdDetector] 保存面板状态失败:', e);
-      }
     }
 
     // ==========================================
@@ -342,6 +141,7 @@
       const cssSelectors = [];
       this.blockedRules.forEach((rule) => {
         if (rule.classAndId && rule.classAndId !== '无 Class/ID') {
+          // 建议修复写法
           const formattedSelector = rule.classAndId
             .split(' ')
             .filter(Boolean)
@@ -389,11 +189,14 @@
               meta.element.dataset.overlayBlocked = 'true';
               meta.element.style.setProperty('display', 'none', 'important');
 
+              // ★ 防止网站脚本重新显示该广告
               if (!meta.element._adLockObserver) {
                 meta.element._adLockObserver = new MutationObserver((mutations) => {
                   if (meta.isBlocked && meta.element.style.display !== 'none') {
+                    // 暂时断开监听，防止引发自身 Mutation 回调
                     meta.element._adLockObserver.disconnect();
                     meta.element.style.setProperty('display', 'none', 'important');
+                    // 重新恢复监听
                     meta.element._adLockObserver.observe(meta.element, {
                       attributes: true,
                       attributeFilter: ['style', 'class']
@@ -460,6 +263,7 @@
       });
     }
 
+    // 排除逻辑
     isExcludedElement(el) {
       if (!el) return true;
 
@@ -563,7 +367,7 @@
       const style = window.getComputedStyle(el);
       if (style.pointerEvents === 'none' || style.display === 'none' || style.visibility === 'hidden') {
         if (el.dataset.overlayBlocked === 'true') {
-          return { score: 100, reasons: ['已被用户屏蔽（含持久化记忆｜⚠️无明确原因，或存在误伤）'] };
+          return { score: 100, reasons: ['已被用户屏蔽（含持久化记忆）'] };
         }
         return { score: 0, reasons: [] };
       }
@@ -600,8 +404,7 @@
         return { score: 0, reasons: ['容器内包含多个站内正常链接，判定为合法内容板块'] };
       }
 
-      const adWordRegex = /(^|[-_ \/])(ad|ads|advert|advertising|advertisement|banner|popup|pop|backdrop|overlay|mask|modal|dialog|sponsor|sponsored|promoted|promo|guanggao|gg|float|floatad|float-ad|couplet|duilian|billboard|paster|sticky-ad|recommend-ad|right-ad|top-ad|bottom-ad|side-ad)([-_ \/]|s?$)/i;
-
+      const adWordRegex = /(^|[-_ \/])(ad|ads|advert|banner|popup|backdrop|overlay|mask|sponsor|sponsored|promoted|guanggao|gg|float|floatad|couplet)([-_ \/]|s?$)/i;
       const classAndId = `${el.id || ''} ${el.className || ''}`;
       if (adWordRegex.test(classAndId)) {
         score += 35;
@@ -619,14 +422,22 @@
       const isFullScreenCover = rect.width >= vw * 0.95 && rect.height >= vh * 0.95;
       if (isPositioned && isFullScreenCover && zIndex >= 5) {
         if (isVisuallyInvisible) {
-          // opacity close to zero
+          score += 85;
+          reasons.push('捕捉到全屏近乎完全透明的隐蔽劫持遮罩 (Full Screen Invisible Backdrop)');
         } else {
           const rgbaMatch = bgColor.match(/rgba\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*,\s*([\d\.]+)\s*\)/i);
           const bgAlpha = rgbaMatch ? parseFloat(rgbaMatch[1]) : (isBgTransparent ? 0 : 1);
           if (bgAlpha > 0 && bgAlpha < 0.85 && opacity > 0.1) {
-            // overlay
+            score += 70;
+            reasons.push('捕捉到全屏半透明拦截/弹窗遮罩 (Full Screen Semi-transparent Overlay)');
           }
         }
+      } else if (isPositioned && zIndex >= 10 && isVisuallyInvisible && rect.width > 100 && rect.height > 100) {
+        score += 60;
+        reasons.push('透明/高层级悬浮点击劫持层');
+      } else if (areaRatio > 0.35 && isPositioned && (zIndex > 99 || style.willChange === 'transform') && isVisuallyInvisible) {
+        score += 55;
+        reasons.push('透明大面积点击劫持/隐蔽覆盖层');
       }
 
       const iabSizes = [[728, 90], [300, 250], [336, 280], [160, 600], [300, 600], [970, 90], [320, 50]];
@@ -643,23 +454,28 @@
         }
       }
 
+
+
       const imgEl = el.tagName === 'IMG' ? el : el.querySelector('img');
       if (imgEl) {
         const imgSrc = imgEl.currentSrc || imgEl.src || '';
-        const imgAlt = imgEl.getAttribute('alt') || '';
+        const imgAlt = imgEl.getAttribute('alt') || ''; // ★ 新增：提取 alt 属性
         const isBase64Gif = imgSrc.startsWith('data:image/gif;base64,') || imgSrc.startsWith('data:image/base64,');
         const isNetGif = /\.gif($|\?)/i.test(imgSrc) || imgSrc.includes('format=gif');
 
+        // ★ 1. 检查 alt 属性中的广告/推广关键词
         if (/(广告|横幅|推广|赞助|sponsor|promoted|banner|ad)/i.test(imgAlt)) {
           score += 40;
           reasons.push(`图片 Alt 属性命中广告描述 ("${imgAlt}")`);
         }
 
+        // ★ 2. 检查图片 URL 路径（捕获如 /promo/ad_xxx.webp、/promo/pending/ 等模式）
         if (/\/promo\/|\/ad[s_]?\d*|\/advert/i.test(imgSrc)) {
           score += 35;
           reasons.push('图片链接路径包含广告/推广目录 (/promo/或/ad_)');
         }
 
+        // --- 以下为原有的 GIF 处理逻辑（保持不变）---
         if (isBase64Gif || isNetGif) {
           if (isBase64Gif) {
             score += 25;
@@ -688,6 +504,7 @@
         }
       }
 
+      // ★ 3. 补充检查：容器内部是否含有右上角/角落的 "AD" 或 "广告" 独立角标
       const badgeEl = el.querySelector('span, div, em, i');
       if (badgeEl) {
         const badgeText = (badgeEl.textContent || '').trim();
@@ -713,12 +530,14 @@
       if (anchor) {
         const rawHref = anchor.getAttribute('href') || '';
 
+        // ★ 新增：深度匹配 /go/ /link/ /jump/ /out/ 等常见站内转跳路径
         const suspiciousRedirectRegex = /(\/|\?)(go|goto|redirect|out|click|jump|target|url|link|visit)(\/|\?|=|_)/i;
         if (suspiciousRedirectRegex.test(rawHref)) {
           score += 35;
           reasons.push(`命中站内重定向/广告跳转路径 ("${rawHref.slice(0, 30)}...")`);
         }
 
+        // ★ 新增：检测 href 中长串疑似加密 Base64 的参数（很多广告链接特征）
         if (/\/go\/[A-Za-z0-9%_\-~]{20,}/i.test(rawHref)) {
           score += 25;
           reasons.push('检测到长串 Base64 加密型广告跳转链接');
@@ -843,7 +662,9 @@
           } catch (e) { }
           const fingerprint = `${el.tagName.toLowerCase()}_${formattedSize}_${hrefHost}`;
 
+          // 优先保留更高的置信度分值，允许后续异步扫描补充更新分数
           const finalScore = existingMeta ? Math.max(existingMeta.score, score) : score;
+          // 如果新计算的分数更高或相等，使用最新的原因列表；否则保留旧的原因列表
           const finalReasons = (existingMeta && existingMeta.score > score) ? existingMeta.reasons : reasons;
 
           const meta = {
@@ -855,8 +676,11 @@
             size: formattedSize,
             classAndId: `${el.id ? '#' + el.id : ''}${el.className ? '.' + el.className : ''}`.trim(),
             fingerprint: fingerprint,
-            isBlocked: existingMeta ? existingMeta.isBlocked : false
+            isBlocked: existingMeta ? existingMeta.isBlocked : false,
+            // ★ 保留原有的已读状态维护
+            isRead: existingMeta ? existingMeta.isRead : false
           };
+
 
           if (!meta.isBlocked && this.isMatchesBlockedRule(meta)) {
             meta.isBlocked = true;
@@ -881,6 +705,7 @@
 
     initObserver() {
       this.observer = new MutationObserver((mutations) => {
+        // 过滤掉脚本自己产生的修改（防止死循环）
         const isSelfMutation = mutations.every(m =>
           m.target.id === 'ad-detector-host' ||
           (m.target.classList && m.target.classList.contains('ad-detector-size-badge'))
@@ -889,12 +714,13 @@
 
         if (this.scanTimer) clearTimeout(this.scanTimer);
         this.scanTimer = setTimeout(() => {
+          // 优先在浏览器空闲时（不卡顿主线程时）进行扫描
           if ('requestIdleCallback' in window) {
             requestIdleCallback(() => this.scan(), { timeout: 1000 });
           } else {
             this.scan();
           }
-        }, 350);
+        }, 350); // 防抖等待时间设为 350ms
       });
 
       if (document.body) {
@@ -918,7 +744,7 @@
     }
 
     showUI() {
-      if (this.isUIVisible && this.host && this.host.style.display !== 'none') return;
+      if (this.isUIVisible) return;
       this.isUIVisible = true;
 
       if (!this.host) {
@@ -927,9 +753,6 @@
         this.host.style.display = 'block';
       }
       this.scan();
-
-      // ★ 保存面板显示状态
-      this.saveUIVisibleState(true);
     }
 
     hideUI() {
@@ -938,9 +761,6 @@
       if (this.host) {
         this.host.style.display = 'none';
       }
-
-      // ★ 保存面板关闭状态
-      this.saveUIVisibleState(false);
     }
 
     initUI() {
@@ -969,7 +789,7 @@
           .panel {
             padding: 2vw;
             position: fixed; ${initStyle} z-index: 2147483647;
-            width: min(460px, 92vw); max-height: 80vh; background: rgba(28, 28, 30, 0.95);
+            width: min(440px, 92vw); max-height: 80vh; background: rgba(28, 28, 30, 0.95);
             backdrop-filter: blur(20px); color: #f2f2f7;
             border-radius: 14px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6); display: flex; flex-direction: column;
@@ -1022,12 +842,14 @@
             transition: all 0.2s ease;
           }
           .item:hover { background: rgba(110, 25, 25, 0.64); }
+          .item.is-read { opacity: 0.65; background: rgba(255, 255, 255, 0.02); border-color: transparent; }
           .item.is-blocked { opacity: 0.45; background: rgba(0, 0, 0, 0.25); border-color: rgba(255, 255, 255, 0.02); }
           .item.is-blocked .item-title { text-decoration: line-through; color: #8e8e93; }
 
           .item-top { display: flex; justify-content: space-between; align-items: center; }
           .score { color: #ff9500; font-weight: bold; }
           .status-tag { font-size: 10px; padding: 2px 6px; border-radius: 4px; background: rgba(255, 69, 58, 0.25); color: #ff453a; font-weight: 600; }
+          .read-tag { font-size: 10px; padding: 2px 6px; border-radius: 4px; background: rgba(142, 142, 147, 0.25); color: #8e8e93; font-weight: 500; }
           .reasons { font-size: 11px; color: #aeaeb2; margin-top: 4px; line-height: 1.4; }
           .actions { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
 
@@ -1039,12 +861,14 @@
           .btn-action:hover { background: rgba(255, 255, 255, 0.25); }
           .btn-preview { background: rgba(10, 132, 255, 0.2); color: #64d2ff; }
           .btn-preview:hover { background: rgba(10, 132, 255, 0.4); }
+          .btn-mark-read { background: rgba(255, 159, 10, 0.2); color: #ffb340; }
+          .btn-mark-read:hover { background: rgba(255, 159, 10, 0.4); }
           .btn-hide-single { background: rgba(255, 69, 58, 0.2); color: #ff453a; }
           .btn-hide-single:hover { background: rgba(255, 69, 58, 0.4); }
           .btn-restore-single { background: rgba(48, 209, 88, 0.2); color: #30d158; }
           .btn-restore-single:hover { background: rgba(48, 209, 88, 0.4); }
 
-          .footer { padding: 12px; border-top: 1px solid rgba(255, 255, 255, 0.1); display: flex; gap: 6px; flex-wrap: wrap; }
+          .footer { padding: 12px; border-top: 1px solid rgba(255, 255, 255, 0.1); display: flex; gap: 6px; }
 
           button.footer-btn {
             flex: 1; padding: 8px 4px; border: none; border-radius: 8px;
@@ -1055,15 +879,14 @@
           }
           button.footer-btn:hover:not(:disabled) { filter: brightness(1.15); transform: translateY(-1px); }
           button.footer-btn:active:not(:disabled) { transform: scale(0.95) translateY(0); filter: brightness(0.9); }
-          button.footer-btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none !important; filter: none !important; }
+          button.footer-btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none !important; }
 
           .btn-scan { background: #0a84ff; color: #ffffff; box-shadow: 0 2px 8px rgba(10, 132, 255, 0.3); }
           .btn-hl { background: #3a3a3c; color: #f2f2f7; border: 1px solid rgba(255, 255, 255, 0.1); }
           .btn-hl.active { background: #5e5ce6; color: #ffffff; box-shadow: 0 2px 8px rgba(94, 92, 230, 0.4); }
+          .btn-mark-all-read { background: #ff9500; color: #ffffff; box-shadow: 0 2px 8px rgba(255, 149, 0, 0.3); }
           .btn-clean { background: #ff453a; color: #ffffff; box-shadow: 0 2px 8px rgba(255, 69, 58, 0.3); }
-          .btn-reset { background: #ff9500; color: #ffffff; box-shadow: 0 2px 8px rgba(255, 149, 0, 0.3); }
-          .btn-undo { background: #3a3a3c; color: #f2f2f7; border: 1px solid rgba(255, 255, 255, 0.1); }
-          .btn-redo { background: #3a3a3c; color: #f2f2f7; border: 1px solid rgba(255, 255, 255, 0.1); }
+          .btn-restore-all { background: #30d158; color: #ffffff; box-shadow: 0 2px 8px rgba(48, 209, 88, 0.3); }
 
           .toast {
             position: absolute; top: -38px; left: 50%; transform: translateX(-50%) translateY(10px);
@@ -1075,6 +898,7 @@
           }
           .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+          /* ★ 独立预览悬浮弹窗样式 */
           .preview-modal {
             position: fixed;
             top: 50%;
@@ -1177,6 +1001,7 @@
           }
           .btn-copy-code:hover { background: rgba(255, 255, 255, 0.3); }
 
+          /* ★ 预览弹窗底栏操作区 */
           .preview-actions {
             padding: 10px 16px;
             background: rgba(255, 255, 255, 0.05);
@@ -1195,11 +1020,13 @@
 
           <div class="toast" id="toast">提示信息</div>
           <div class="header" id="panel-header">
-            <span>🛡️ v12.4</span>
+            <span>🛡️ v12.0</span>
             <div style="display:flex;align-items:center;gap:4px;">
+              <!-- ★ 扩充筛选器 -->
               <select id="select-filter" class="select-control" title="过滤显示状态">
                 <option value="all">显示全部</option>
-                <option value="unread">仅未处理</option>
+                <option value="unread">仅未处理/未读</option>
+                <option value="read">仅已读</option>
                 <option value="blocked">仅已屏蔽</option>
               </select>
               <select id="select-sort" class="select-control" title="选择排序方式">
@@ -1217,13 +1044,13 @@
           <div class="footer">
             <button class="footer-btn btn-scan" id="btn-scan">重新扫描</button>
             <button class="footer-btn btn-hl" id="btn-hl">高亮标注</button>
+            <button class="footer-btn btn-mark-all-read" id="btn-mark-all-read">一键已读</button>
             <button class="footer-btn btn-clean" id="btn-clean">一键屏蔽</button>
-            <button class="footer-btn btn-reset" id="btn-reset" title="恢复所有屏蔽并清除规则">一键重置</button>
-            <button class="footer-btn btn-undo" id="btn-undo" title="撤回上一步操作">↩️ 撤回</button>
-            <button class="footer-btn btn-redo" id="btn-redo" title="重做上一步撤回">↪️ 重做</button>
+            <button class="footer-btn btn-restore-all" id="btn-restore-all">一键撤销</button>
           </div>
         </div>
 
+        <!-- ★ 元素预览悬浮窗口 HTML 结构（已增加底栏单独屏蔽区） -->
         <div class="preview-modal" id="preview-modal">
           <div class="preview-header">
             <span id="preview-title" style="word-break:break-all;padding-right:10px;">🔍 元素预览</span>
@@ -1234,12 +1061,12 @@
             <div class="preview-container" id="preview-container"></div>
           </div>
           <div class="preview-actions" id="preview-actions">
+            <!-- 动态注入【单独屏蔽】与【撤销屏蔽】按钮 -->
           </div>
         </div>
       `;
 
-      const targetParent = document.body || document.documentElement;
-      targetParent.appendChild(this.host);
+      document.body.appendChild(this.host);
       this.bindInteractiveEvents();
       this.makeDraggable();
     }
@@ -1366,9 +1193,15 @@
       });
     }
 
+    // 核心预览窗口方法（已加上【单独屏蔽】与【撤销屏蔽】功能）
     showPreviewWindow(adId) {
       const meta = this.detectedAds.get(adId);
       if (!meta || !meta.element) return;
+
+      // 打开预览时，自动将该元素标记为已读
+      if (!meta.isRead) {
+        meta.isRead = true;
+      }
 
       const modal = this.shadow.querySelector('#preview-modal');
       const container = this.shadow.querySelector('#preview-container');
@@ -1489,6 +1322,7 @@
         });
       };
 
+      // ★ 渲染预览底栏的【单独屏蔽】与【撤销屏蔽】操作按钮
       const renderPreviewActions = () => {
         if (!meta.isBlocked) {
           actionsContainer.innerHTML = `
@@ -1523,7 +1357,7 @@
       closeBtn.onclick = () => {
         modal.style.display = 'none';
         container.innerHTML = '';
-        this.updateUI();
+        this.updateUI(); // 重新刷新界面，以更新已读状态表示
       };
     }
 
@@ -1558,6 +1392,112 @@
       }
     }
 
+    // ★ 切换单条已读状态
+    toggleReadSingle(adId) {
+      const meta = this.detectedAds.get(adId);
+      if (meta) {
+        meta.isRead = !meta.isRead;
+        this.updateUI();
+        this.showToast(meta.isRead ? '👁️ 已标记为已读' : '✉️ 已重置为未读');
+      }
+    }
+
+    // ★ 一键全部标记为已读
+    markAllAsRead() {
+      let count = 0;
+      this.detectedAds.forEach((meta) => {
+        if (!meta.isBlocked && !meta.isRead) {
+          meta.isRead = true;
+          count++;
+        }
+      });
+      this.updateUI();
+      return count;
+    }
+
+    neutralizeSingle(adId) {
+      const meta = this.detectedAds.get(adId);
+      if (meta && meta.element) {
+        meta.isBlocked = true;
+        meta.element.dataset.overlayBlocked = 'true';
+
+        this.applyHighlight(meta.element, false);
+        meta.element.style.setProperty('display', 'none', 'important');
+
+        const rule = {
+          classAndId: meta.classAndId,
+          tagName: meta.tagName,
+          size: meta.size,
+          fingerprint: meta.fingerprint
+        };
+
+        if (!this.blockedRules.some((r) => r.fingerprint === rule.fingerprint)) {
+          this.blockedRules.push(rule);
+          this.saveBlockedRules();
+          // ★ 新增：实时更新 CSS 样式表，实现全局同类广告即刻隐藏
+          this.applyCssRulesFromStorage();
+        }
+
+        this.updateUI();
+        this.showToast('🛡 该元素已屏蔽（已更新全局 CSS 规则）');
+      }
+    }
+
+    restoreSingle(adId) {
+      const meta = this.detectedAds.get(adId);
+      if (meta && meta.element) {
+        meta.isBlocked = false;
+        delete meta.element.dataset.overlayBlocked;
+
+        meta.element.style.removeProperty('display');
+
+        if (this.isHighlighted) {
+          this.applyHighlight(meta.element, true, meta.size);
+        }
+
+        this.blockedRules = this.blockedRules.filter(
+          (r) => !(r.fingerprint === meta.fingerprint || (r.classAndId && r.classAndId === meta.classAndId))
+        );
+        this.saveBlockedRules();
+
+        this.updateUI();
+        this.showToast('↩️ 已撤销屏蔽，已同步更新本地存储');
+      }
+    }
+
+    cleanAll() {
+      let count = 0;
+      this.detectedAds.forEach((meta) => {
+        if (meta.element && !meta.isBlocked) {
+          this.neutralizeSingle(meta.id);
+          count++;
+        }
+      });
+      return count;
+    }
+
+    restoreAll() {
+      let count = 0;
+      this.detectedAds.forEach((meta) => {
+        if (meta.element && meta.isBlocked) {
+          meta.isBlocked = false;
+          delete meta.element.dataset.overlayBlocked;
+          meta.element.style.removeProperty('display');
+
+          if (this.isHighlighted) {
+            this.applyHighlight(meta.element, true, meta.size);
+          }
+          count++;
+        }
+      });
+
+      this.blockedRules = [];
+      this.saveBlockedRules();
+      this.updateUI();
+
+      return count;
+    }
+
     showToast(message) {
       if (!this.shadow) return;
       const toast = this.shadow.querySelector('#toast');
@@ -1571,10 +1511,9 @@
     bindInteractiveEvents() {
       const btnScan = this.shadow.querySelector('#btn-scan');
       const btnHl = this.shadow.querySelector('#btn-hl');
+      const btnMarkAllRead = this.shadow.querySelector('#btn-mark-all-read');
       const btnClean = this.shadow.querySelector('#btn-clean');
-      const btnReset = this.shadow.querySelector('#btn-reset');
-      const btnUndo = this.shadow.querySelector('#btn-undo');
-      const btnRedo = this.shadow.querySelector('#btn-redo');
+      const btnRestoreAll = this.shadow.querySelector('#btn-restore-all');
       const btnClose = this.shadow.querySelector('#btn-close-panel');
       const selectSort = this.shadow.querySelector('#select-sort');
       const selectFilter = this.shadow.querySelector('#select-filter');
@@ -1621,6 +1560,14 @@
         }
       };
 
+      // ★ 一键已读事件绑定
+      if (btnMarkAllRead) {
+        btnMarkAllRead.onclick = () => {
+          const count = this.markAllAsRead();
+          this.showToast(`👁️️ 已将 ${count} 个未处理项标记为已读`);
+        };
+      }
+
       btnClean.onclick = () => {
         btnClean.disabled = true;
         btnClean.textContent = '屏蔽中...';
@@ -1634,52 +1581,46 @@
         });
       };
 
-      btnReset.onclick = () => {
-        btnReset.disabled = true;
-        btnReset.textContent = '重置中...';
+      btnRestoreAll.onclick = () => {
+        btnRestoreAll.disabled = true;
+        btnRestoreAll.textContent = '撤销中...';
         requestAnimationFrame(() => {
           setTimeout(() => {
-            const count = this.resetAll();
-            btnReset.disabled = false;
-            btnReset.textContent = '一键重置';
-            this.showToast(`🔄 已重置规则并还原 ${count} 个元素`);
+            const count = this.restoreAll();
+            btnRestoreAll.disabled = false;
+            btnRestoreAll.textContent = '一键撤销';
+            this.showToast(`↩️️ 已恢复 ${count} 个被屏蔽元素`);
           }, 50);
         });
       };
-
-      btnUndo.onclick = () => this.undo();
-      btnRedo.onclick = () => this.redo();
     }
 
     updateUI() {
       if (!this.shadow) return;
       const listEl = this.shadow.querySelector('#list');
       const badge = this.shadow.querySelector('#count-badge');
-      const btnUndo = this.shadow.querySelector('#btn-undo');
-      const btnRedo = this.shadow.querySelector('#btn-redo');
-
-      // 实时切换 撤回/重做 按钮可操作状态
-      if (btnUndo) btnUndo.disabled = this.undoStack.length === 0;
-      if (btnRedo) btnRedo.disabled = this.redoStack.length === 0;
 
       let allDetected = Array.from(this.detectedAds.values());
-      const activeUnreadThreats = allDetected.filter((meta) => !meta.isBlocked);
+      const activeUnreadThreats = allDetected.filter((meta) => !meta.isBlocked && !meta.isRead);
 
-      badge.textContent = `${activeUnreadThreats.length} 未处理 / 共 ${allDetected.length} 个`;
+      badge.textContent = `${activeUnreadThreats.length} 未读 / 共 ${allDetected.length} 个`;
 
       if (allDetected.length === 0) {
         listEl.innerHTML = '<div style="text-align:center;color:#30d158;padding:20px;">未发现高风险劫持或广告元素</div>';
         return;
       }
 
+      // ★ 多状态条件过滤
       if (this.filterType === 'unread') {
-        allDetected = allDetected.filter((meta) => !meta.isBlocked);
+        allDetected = allDetected.filter((meta) => !meta.isBlocked && !meta.isRead);
+      } else if (this.filterType === 'read') {
+        allDetected = allDetected.filter((meta) => !meta.isBlocked && meta.isRead);
       } else if (this.filterType === 'blocked') {
         allDetected = allDetected.filter((meta) => meta.isBlocked);
       }
 
       if (allDetected.length === 0) {
-        const filterTextMap = { unread: '未处理', blocked: '已屏蔽' };
+        const filterTextMap = { unread: '未处理/未读', read: '已读', blocked: '已屏蔽' };
         listEl.innerHTML = `<div style="text-align:center;color:#8e8e93;padding:20px;">没有符合 [${filterTextMap[this.filterType] || '当前'}] 筛选条件的项</div>`;
         return;
       }
@@ -1705,21 +1646,23 @@
       let html = '';
       allDetected.forEach((meta) => {
         const isBlocked = meta.isBlocked;
+        const isRead = meta.isRead;
 
         html += `
-          <div class="item ${isBlocked ? 'is-blocked' : ''}" data-ad-id="${meta.id}">
+          <div class="item ${isBlocked ? 'is-blocked' : (isRead ? 'is-read' : '')}" data-ad-id="${meta.id}">
             <div class="item-top">
               <div class="item-title">
                 <strong>${meta.tagName}</strong>
                 <span style="color:#8e8e93;">(${meta.size})</span>
               </div>
-              ${isBlocked ? '<span class="status-tag">已屏蔽</span>' : `<span class="score">${meta.score}分</span>`}
+              ${isBlocked ? '<span class="status-tag">已屏蔽</span>' : (isRead ? '<span class="read-tag">已读</span>' : `<span class="score">${meta.score}分</span>`)}
             </div>
             <div style="font-size:11px;color:#0a84ff;word-break:break-all;margin-top:2px;">${meta.classAndId || '无 Class/ID'}</div>
             <div class="reasons">原因: ${meta.reasons.join(' | ')}</div>
             <div class="actions">
               ${!isBlocked
             ? `<button class="btn-action btn-preview" data-action="preview" data-id="${meta.id}">🔍 预览元素</button>
+                   <button class="btn-action btn-mark-read" data-action="toggle-read" data-id="${meta.id}">${isRead ? '✉️ 撤销已读' : '👁️ 标记已读'}</button>
                    <button class="btn-action btn-hide-single" data-action="hide" data-id="${meta.id}">🚫 单独屏蔽</button>`
             : `<button class="btn-action btn-restore-single" data-action="restore" data-id="${meta.id}">↩️ 撤销屏蔽</button>`
           }
@@ -1751,6 +1694,8 @@
 
           if (action === 'preview') {
             this.showPreviewWindow(id);
+          } else if (action === 'toggle-read') {
+            this.toggleReadSingle(id);
           } else if (action === 'hide') {
             this.neutralizeSingle(id);
           } else if (action === 'restore') {
@@ -1792,606 +1737,748 @@
   globalWin.cleanAdsSilently = function () {
     return getDetector().cleanAll();
   };
+})();
 
-  /**
-   * AdDetector v3.5 - 全通路恶意拦截、网络 API 代理劫持、Location 原型重定向与规则引擎
-   */
-  const AdDetector = (function () {
-    'use strict';
 
-    const STORAGE_KEY = 'ad_detector_blocklist';
-    const WHITE_KEY = 'ad_detector_whitelist';
 
-    const blockList = new Set(JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'));
-    const whiteList = new Set(JSON.parse(localStorage.getItem(WHITE_KEY) || '[]'));
 
-    let lastUserInteractionTime = 0;
-    window.addEventListener('pointerdown', () => { lastUserInteractionTime = Date.now(); }, true);
-    window.addEventListener('keydown', () => { lastUserInteractionTime = Date.now(); }, true);
 
-    function isUserGestureRecent() {
-      return (Date.now() - lastUserInteractionTime) < 1200;
+
+/**
+ * AdDetector v3.5 - 全通路恶意拦截、网络 API 代理劫持、Location 原型重定向与规则引擎
+ */
+const AdDetector = (function () {
+  'use strict';
+
+  // 1. 本地规则存储与初始化
+  const STORAGE_KEY = 'ad_detector_blocklist';
+  const WHITE_KEY = 'ad_detector_whitelist';
+
+  const blockList = new Set(JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'));
+  const whiteList = new Set(JSON.parse(localStorage.getItem(WHITE_KEY) || '[]'));
+
+  // 记录用户真实交互时间
+  let lastUserInteractionTime = 0;
+  window.addEventListener('pointerdown', () => { lastUserInteractionTime = Date.now(); }, true);
+  window.addEventListener('keydown', () => { lastUserInteractionTime = Date.now(); }, true);
+
+  function isUserGestureRecent() {
+    return (Date.now() - lastUserInteractionTime) < 1200; // 1.2秒内是否有用户真实交互
+  }
+
+  // 判断是否属于跨域目标
+  function isCrossDomain(targetUrl) {
+    try {
+      const targetOrigin = new URL(targetUrl, location.href).origin;
+      return targetOrigin !== location.origin;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // 检查 URL 是否匹配黑名单/广告特征
+  function checkIsAd(urlStr) {
+    if (!urlStr) return false;
+    let domain = '';
+    try {
+      domain = new URL(urlStr, location.href).hostname;
+    } catch (e) {
+      domain = urlStr;
     }
 
-    function isCrossDomain(targetUrl) {
-      try {
-        const targetOrigin = new URL(targetUrl, location.href).origin;
-        return targetOrigin !== location.origin;
-      } catch (e) {
-        return false;
+    if (whiteList.has(domain) || whiteList.has(urlStr)) return false;
+    if (blockList.has(domain) || blockList.has(urlStr)) return true;
+
+    // 常见恶意广告、Popunder、重定向追踪域名正则模式
+    const adPattern = /(letterrecoveryunplanted|wpadmngr|altkamamhab|popunder|onclickads|adsterra|doubleclick|pagead|redirect)/i;
+    return adPattern.test(urlStr);
+  }
+
+  // 2. Shadow DOM 弹窗预览视图
+  function triggerPreviewUI(data) {
+    console.warn('[AdDetector] 捕获并拦截恶意行为:', data);
+
+    if (blockList.has(data.domain) || blockList.has(data.url)) {
+      console.log('[AdDetector] 匹配黑名单规则，已自动静默拦截:', data.url);
+      return;
+    }
+
+    showPreviewModal(data);
+  }
+
+  function showPreviewModal(data) {
+    if (document.getElementById('ad-detector-host')) return;
+
+    const host = document.createElement('div');
+    host.id = 'ad-detector-host';
+    host.style.cssText = 'position: absolute; top: 0; left: 0; width: 0; height: 0; z-index: 2147483647;';
+
+    const shadowRoot = host.attachShadow({ mode: 'closed' });
+
+    const style = document.createElement('style');
+    style.textContent = `
+      * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+      
+      .ad-modal-overlay {
+        position: fixed;
+        bottom: 16px;
+        right: 16px;
+        left: 16px;
+        max-width: 440px;
+        margin: 0 auto;
+        background: #ffffff;
+        border: 1px solid rgba(255, 77, 79, 0.3);
+        border-radius: 14px;
+        padding: 14px;
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        max-height: calc(85vh - env(safe-area-inset-bottom, 0px));
+        z-index: 2147483647;
+        animation: adSlideUp 0.22s cubic-bezier(0.215, 0.61, 0.355, 1);
       }
-    }
-
-    function checkIsAd(urlStr) {
-      if (!urlStr) return false;
-      let domain = '';
-      try {
-        domain = new URL(urlStr, location.href).hostname;
-      } catch (e) {
-        domain = urlStr;
+      
+      @keyframes adSlideUp {
+        from { transform: translateY(20px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
       }
-
-      if (whiteList.has(domain) || whiteList.has(urlStr)) return false;
-      if (blockList.has(domain) || blockList.has(urlStr)) return true;
-
-      const adPattern = /(letterrecoveryunplanted|wpadmngr|altkamamhab|popunder|onclickads|adsterra|doubleclick|pagead|redirect)/i;
-      return adPattern.test(urlStr);
-    }
-
-    function triggerPreviewUI(data) {
-      console.warn('[AdDetector] 捕获并拦截恶意行为:', data);
-
-      if (blockList.has(data.domain) || blockList.has(data.url)) {
-        console.log('[AdDetector] 匹配黑名单规则，已自动静默拦截:', data.url);
-        return;
-      }
-
-      showPreviewModal(data);
-    }
-
-    function showPreviewModal(data) {
-      if (document.getElementById('ad-detector-intercept-host')) return;
-
-      const host = document.createElement('div');
-      host.id = 'ad-detector-intercept-host';
-      host.style.cssText = 'position: absolute; top: 0; left: 0; width: 0; height: 0; z-index: 2147483647;';
-
-      const shadowRoot = host.attachShadow({ mode: 'closed' });
-
-      const style = document.createElement('style');
-      style.textContent = `
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        
-        .ad-modal-overlay {
-          position: fixed;
-          bottom: 16px;
-          right: 16px;
-          left: 16px;
-          max-width: 440px;
-          margin: 0 auto;
-          background: #ffffff;
-          border: 1px solid rgba(255, 77, 79, 0.3);
-          border-radius: 14px;
-          padding: 14px;
-          box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-          max-height: calc(85vh - env(safe-area-inset-bottom, 0px));
-          z-index: 2147483647;
-          animation: adSlideUp 0.22s cubic-bezier(0.215, 0.61, 0.355, 1);
-        }
-        
-        @keyframes adSlideUp {
-          from { transform: translateY(20px); opacity: 0; }
-          to { transform: translateY(0); opacity: 1; }
-        }
-        
-        @media (min-width: 480px) {
-          .ad-modal-overlay { left: auto; width: 410px; }
-        }
-
-        .ad-header {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-        }
-        .ad-title {
-          font-weight: 700;
-          color: #ff4d4f;
-          font-size: 14px;
-          display: flex;
-          align-items: center;
-          gap: 6px;
-        }
-        .ad-close-btn {
-          cursor: pointer;
-          font-size: 16px;
-          color: #bfbfbf;
-          padding: 2px 6px;
-          line-height: 1;
-          border-radius: 4px;
-        }
-        .ad-close-btn:active { background: #f5f5f5; color: #595959; }
-
-        .ad-grid-meta {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 8px;
-        }
-        .ad-card-item {
-          background: #fafafa;
-          border: 1px solid #f0f0f0;
-          border-radius: 8px;
-          padding: 6px 10px;
-          display: flex;
-          flex-direction: column;
-        }
-        .ad-label {
-          font-size: 10px;
-          color: #8c8c8c;
-          font-weight: 600;
-          text-transform: uppercase;
-          margin-bottom: 2px;
-        }
-        .ad-value {
-          font-size: 12px;
-          color: #262626;
-          font-weight: 500;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        .ad-value.highlight-red { color: #ff4d4f; }
-        .ad-value.highlight-blue { color: #096dd9; font-family: monospace; }
-
-        .ad-url-box {
-          background: #fafafa;
-          border: 1px solid #f0f0f0;
-          border-radius: 8px;
-          padding: 8px 10px;
-        }
-        .ad-url-content {
-          font-size: 11px;
-          color: #595959;
-          font-family: SFMono-Regular, Consolas, monospace;
-          line-height: 1.4;
-          max-height: 52px;
-          overflow-y: auto;
-          white-space: pre-wrap;
-          word-break: break-all;
-          overflow-wrap: anywhere;
-          -webkit-overflow-scrolling: touch;
-        }
-
-        .ad-actions {
-          display: flex;
-          gap: 8px;
-          justify-content: flex-end;
-        }
-        .ad-btn {
-          flex: 1;
-          padding: 8px 0;
-          border-radius: 8px;
-          font-size: 12px;
-          font-weight: 600;
-          cursor: pointer;
-          border: none;
-          outline: none;
-          touch-action: manipulation;
-          min-height: 36px;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-        }
-        .ad-btn-ignore { border: 1px solid #d9d9d9; background: #ffffff; color: #595959; }
-        .ad-btn-white { border: 1px solid #91caff; background: #e6f4ff; color: #096dd9; }
-        .ad-btn-block { background: #ff4d4f; color: #ffffff; }
-        .ad-btn:active { opacity: 0.85; }
-      `;
-
-      const container = document.createElement('div');
-      container.className = 'ad-modal-overlay';
-      container.innerHTML = `
-        <div class="ad-header">
-          <div class="ad-title">
-            <span>🛡️ AdDetector 已成功拦截</span>
-          </div>
-          <span class="ad-close-btn" id="close-btn">✕</span>
-        </div>
-
-        <div class="ad-grid-meta">
-          <div class="ad-card-item">
-            <span class="ad-label">触发场景</span>
-            <span class="ad-value highlight-red" title="${data.type || '未知'}">${data.type || '未知'}</span>
-          </div>
-          <div class="ad-card-item">
-            <span class="ad-label">目标域名</span>
-            <span class="ad-value highlight-blue" title="${data.domain || '本地/未知'}">${data.domain || '本地/未知'}</span>
-          </div>
-        </div>
-
-        <div class="ad-url-box">
-          <div class="ad-label">目标 URL / 表达式</div>
-          <div class="ad-url-content">${data.url || '未提供（动态内联脚本或未知地址）'}</div>
-        </div>
-
-        <div class="ad-actions">
-          <button class="ad-btn ad-btn-ignore" id="ignore-btn">本次忽略</button>
-          <button class="ad-btn ad-btn-white" id="white-btn">信任域名</button>
-          <button class="ad-btn ad-btn-block" id="block-btn">永久屏蔽</button>
-        </div>
-      `;
-
-      shadowRoot.appendChild(style);
-      shadowRoot.appendChild(container);
-      (document.body || document.documentElement).appendChild(host);
-
-      const removeModal = () => host.remove();
-
-      shadowRoot.getElementById('close-btn').onclick = removeModal;
-      shadowRoot.getElementById('ignore-btn').onclick = removeModal;
-
-      shadowRoot.getElementById('white-btn').onclick = () => {
-        const target = data.domain || data.url;
-        if (target) {
-          whiteList.add(target);
-          localStorage.setItem(WHITE_KEY, JSON.stringify(Array.from(whiteList)));
-          if (instance) instance.showToast(`已将 [${target}] 加入信任名单`);
-        }
-        removeModal();
-      };
-
-      shadowRoot.getElementById('block-btn').onclick = () => {
-        const target = data.domain || data.url;
-        if (target) {
-          blockList.add(target);
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(blockList)));
-          if (instance) instance.showToast(`已将 [${target}] 加入黑名单`);
-        }
-        removeModal();
-      };
-    }
-
-    function initInterceptors() {
-
-      try {
-        const locationDescriptor = Object.getOwnPropertyDescriptor(Location.prototype, 'href');
-        if (locationDescriptor && locationDescriptor.set) {
-          const originalHrefSetter = locationDescriptor.set;
-
-          Object.defineProperty(Location.prototype, 'href', {
-            set: function (val) {
-              const targetUrl = String(val);
-              let domain = '';
-              try { domain = new URL(targetUrl, location.href).hostname; } catch (e) { }
-
-              const isAd = checkIsAd(targetUrl);
-              const isGesture = isUserGestureRecent();
-              const crossDomain = isCrossDomain(targetUrl);
-
-              if (isAd || (!isGesture && crossDomain)) {
-                triggerPreviewUI({
-                  type: 'location.href',
-                  url: targetUrl,
-                  domain: domain,
-                  reason: isGesture ? '匹配黑名单/广告重定向' : '无手势意图的跨域重定向'
-                });
-                throw new Error(`[AdDetector] Blocked location redirect to: ${targetUrl}`);
-              }
-
-              return originalHrefSetter.call(this, val);
-            },
-            get: locationDescriptor.get,
-            configurable: true,
-            enumerable: true
-          });
-        }
-      } catch (e) {
-        console.warn('[AdDetector] Location 原型链劫持受限:', e);
+      
+      @media (min-width: 480px) {
+        .ad-modal-overlay { left: auto; width: 410px; }
       }
 
-      const originalAssign = Location.prototype.assign;
-      Location.prototype.assign = function (url) {
-        const targetUrl = String(url);
-        let domain = '';
-        try { domain = new URL(targetUrl, location.href).hostname; } catch (e) { }
+      /* 头部栏 */
+      .ad-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .ad-title {
+        font-weight: 700;
+        color: #ff4d4f;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .ad-close-btn {
+        cursor: pointer;
+        font-size: 16px;
+        color: #bfbfbf;
+        padding: 2px 6px;
+        line-height: 1;
+        border-radius: 4px;
+      }
+      .ad-close-btn:active { background: #f5f5f5; color: #595959; }
 
-        if (checkIsAd(targetUrl) || (!isUserGestureRecent() && isCrossDomain(targetUrl))) {
-          triggerPreviewUI({
-            type: 'location.assign',
-            url: targetUrl,
-            domain: domain,
-            reason: '拦截到 location.assign 跳转请求'
-          });
-          return;
-        }
-        return originalAssign.call(this, url);
-      };
+      /* 双栏网格布局：精简纵向空间 */
+      .ad-grid-meta {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+      .ad-card-item {
+        background: #fafafa;
+        border: 1px solid #f0f0f0;
+        border-radius: 8px;
+        padding: 6px 10px;
+        display: flex;
+        flex-direction: column;
+      }
+      .ad-label {
+        font-size: 10px;
+        color: #8c8c8c;
+        font-weight: 600;
+        text-transform: uppercase;
+        margin-bottom: 2px;
+      }
+      .ad-value {
+        font-size: 12px;
+        color: #262626;
+        font-weight: 500;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .ad-value.highlight-red { color: #ff4d4f; }
+      .ad-value.highlight-blue { color: #096dd9; font-family: monospace; }
 
-      const originalReplace = Location.prototype.replace;
-      Location.prototype.replace = function (url) {
-        const targetUrl = String(url);
-        let domain = '';
-        try { domain = new URL(targetUrl, location.href).hostname; } catch (e) { }
+      /* 独占一行的长 URL 区块 */
+      .ad-url-box {
+        background: #fafafa;
+        border: 1px solid #f0f0f0;
+        border-radius: 8px;
+        padding: 8px 10px;
+      }
+      .ad-url-content {
+        font-size: 11px;
+        color: #595959;
+        font-family: SFMono-Regular, Consolas, monospace;
+        line-height: 1.4;
+        max-height: 52px;
+        overflow-y: auto;
+        white-space: pre-wrap;
+        word-break: break-all;
+        overflow-wrap: anywhere;
+        -webkit-overflow-scrolling: touch;
+      }
 
-        if (checkIsAd(targetUrl) || (!isUserGestureRecent() && isCrossDomain(targetUrl))) {
-          triggerPreviewUI({
-            type: 'location.replace',
-            url: targetUrl,
-            domain: domain,
-            reason: '拦截到 location.replace 跳转请求'
-          });
-          return;
-        }
-        return originalReplace.call(this, url);
-      };
+      /* 底部操作按钮 */
+      .ad-actions {
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+      }
+      .ad-btn {
+        flex: 1;
+        padding: 8px 0;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        border: none;
+        outline: none;
+        touch-action: manipulation;
+        min-height: 36px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .ad-btn-ignore { border: 1px solid #d9d9d9; background: #ffffff; color: #595959; }
+      .ad-btn-white { border: 1px solid #91caff; background: #e6f4ff; color: #096dd9; }
+      .ad-btn-block { background: #ff4d4f; color: #ffffff; }
+      .ad-btn:active { opacity: 0.85; }
+    `;
 
-      const originalOpen = window.open;
-      window.open = function (url, name, features) {
-        const targetUrl = url || '';
-        let domain = '';
-        try { domain = targetUrl ? new URL(targetUrl, location.href).hostname : ''; } catch (e) { }
+    const container = document.createElement('div');
+    container.className = 'ad-modal-overlay';
+    container.innerHTML = `
+      <div class="ad-header">
+        <div class="ad-title">
+          <span>🛡️ AdDetector 已成功拦截</span>
+        </div>
+        <span class="ad-close-btn" id="close-btn">✕</span>
+      </div>
 
-        const isAd = checkIsAd(targetUrl);
-        const isGesture = isUserGestureRecent();
+      <!-- 分栏网格：触发场景 & 目标域名 -->
+      <div class="ad-grid-meta">
+        <div class="ad-card-item">
+          <span class="ad-label">触发场景</span>
+          <span class="ad-value highlight-red" title="${data.type || '未知'}">${data.type || '未知'}</span>
+        </div>
+        <div class="ad-card-item">
+          <span class="ad-label">目标域名</span>
+          <span class="ad-value highlight-blue" title="${data.domain || '本地/未知'}">${data.domain || '本地/未知'}</span>
+        </div>
+      </div>
 
-        if (isAd || (!isGesture && targetUrl)) {
-          triggerPreviewUI({
-            type: 'window.open',
-            url: targetUrl,
-            domain: domain,
-            reason: isGesture ? '匹配黑名单/广告库' : '检测到无用户意图的自动弹窗'
-          });
-          return null;
-        }
-        return originalOpen.apply(this, arguments);
-      };
+      <!-- 独占区：目标 URL 预览（限制高度 + 可横纵向滚动） -->
+      <div class="ad-url-box">
+        <div class="ad-label">目标 URL / 表达式</div>
+        <div class="ad-url-content">${data.url || '未提供（动态内联脚本或未知地址）'}</div>
+      </div>
 
-      const originalCreateElement = document.createElement;
-      document.createElement = function (tagName) {
-        const element = originalCreateElement.apply(this, arguments);
-        if (tagName && tagName.toLowerCase() === 'a') {
-          const originalClick = element.click;
-          element.click = function () {
-            const href = element.href || '';
+      <!-- 操作按钮（平分宽度，便于移动端大拇指点击） -->
+      <div class="ad-actions">
+        <button class="ad-btn ad-btn-ignore" id="ignore-btn">本次忽略</button>
+        <button class="ad-btn ad-btn-white" id="white-btn">信任域名</button>
+        <button class="ad-btn ad-btn-block" id="block-btn">永久屏蔽</button>
+      </div>
+    `;
+
+    shadowRoot.appendChild(style);
+    shadowRoot.appendChild(container);
+    document.body.appendChild(host);
+
+    const removeModal = () => host.remove();
+
+    shadowRoot.getElementById('close-btn').onclick = removeModal;
+    shadowRoot.getElementById('ignore-btn').onclick = removeModal;
+
+    shadowRoot.getElementById('white-btn').onclick = () => {
+      const target = data.domain || data.url;
+      if (target) {
+        whiteList.add(target);
+        localStorage.setItem(WHITE_KEY, JSON.stringify(Array.from(whiteList)));
+        alert(`已将 [${target}] 加入信任名单！`);
+      }
+      removeModal();
+    };
+
+    shadowRoot.getElementById('block-btn').onclick = () => {
+      const target = data.domain || data.url;
+      if (target) {
+        blockList.add(target);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(blockList)));
+        alert(`已将 [${target}] 加入黑名单！`);
+      }
+      removeModal();
+    };
+  }
+
+  // 3. 全通路 API、网络请求与 Location 原型重定向劫持
+  function initInterceptors() {
+
+    // ------------------- A. Location 原型链重定向劫持 -------------------
+    try {
+      const locationDescriptor = Object.getOwnPropertyDescriptor(Location.prototype, 'href');
+      if (locationDescriptor && locationDescriptor.set) {
+        const originalHrefSetter = locationDescriptor.set;
+
+        Object.defineProperty(Location.prototype, 'href', {
+          set: function (val) {
+            const targetUrl = String(val);
             let domain = '';
-            try { domain = href ? new URL(href, location.href).hostname : ''; } catch (e) { }
+            try { domain = new URL(targetUrl, location.href).hostname; } catch (e) { }
 
-            if (checkIsAd(href) || !isUserGestureRecent()) {
+            const isAd = checkIsAd(targetUrl);
+            const isGesture = isUserGestureRecent();
+            const crossDomain = isCrossDomain(targetUrl);
+
+            // 如果匹配黑名单，或者在无用户交互的情况下尝试跨域跳转
+            if (isAd || (!isGesture && crossDomain)) {
               triggerPreviewUI({
-                type: 'a.click()',
-                url: href,
+                type: 'location.href',
+                url: targetUrl,
                 domain: domain,
-                reason: '动态 <a> 标签自动触发点击'
+                reason: isGesture ? '匹配黑名单/广告重定向' : '无手势意图的跨域重定向'
               });
-              return;
+              // 抛出 Error 中断后续 JavaScript 的执行，彻底截断重定向
+              throw new Error(`[AdDetector] Blocked location redirect to: ${targetUrl}`);
             }
-            return originalClick.apply(this, arguments);
-          };
-        }
-        return element;
-      };
 
-      if (window.fetch) {
-        const originalFetch = window.fetch;
-        window.fetch = function (input, init) {
-          let requestUrl = '';
-          if (typeof input === 'string') {
-            requestUrl = input;
-          } else if (input instanceof Request) {
-            requestUrl = input.url;
-          } else if (input && input.href) {
-            requestUrl = input.href;
+            return originalHrefSetter.call(this, val);
+          },
+          get: locationDescriptor.get,
+          configurable: true,
+          enumerable: true
+        });
+      }
+    } catch (e) {
+      console.warn('[AdDetector] Location 原型链劫持受限:', e);
+    }
+
+    // 拦截 Location.prototype.assign
+    const originalAssign = Location.prototype.assign;
+    Location.prototype.assign = function (url) {
+      const targetUrl = String(url);
+      let domain = '';
+      try { domain = new URL(targetUrl, location.href).hostname; } catch (e) { }
+
+      if (checkIsAd(targetUrl) || (!isUserGestureRecent() && isCrossDomain(targetUrl))) {
+        triggerPreviewUI({
+          type: 'location.assign',
+          url: targetUrl,
+          domain: domain,
+          reason: '拦截到 location.assign 跳转请求'
+        });
+        return; // 直接返回，阻止调用原生 assign
+      }
+      return originalAssign.call(this, url);
+    };
+
+    // 拦截 Location.prototype.replace
+    const originalReplace = Location.prototype.replace;
+    Location.prototype.replace = function (url) {
+      const targetUrl = String(url);
+      let domain = '';
+      try { domain = new URL(targetUrl, location.href).hostname; } catch (e) { }
+
+      if (checkIsAd(targetUrl) || (!isUserGestureRecent() && isCrossDomain(targetUrl))) {
+        triggerPreviewUI({
+          type: 'location.replace',
+          url: targetUrl,
+          domain: domain,
+          reason: '拦截到 location.replace 跳转请求'
+        });
+        return; // 直接返回，阻止调用原生 replace
+      }
+      return originalReplace.call(this, url);
+    };
+
+    // ------------------- B. DOM 与窗口弹窗拦截 -------------------
+    const originalOpen = window.open;
+    window.open = function (url, name, features) {
+      const targetUrl = url || '';
+      let domain = '';
+      try { domain = targetUrl ? new URL(targetUrl, location.href).hostname : ''; } catch (e) { }
+
+      const isAd = checkIsAd(targetUrl);
+      const isGesture = isUserGestureRecent();
+
+      if (isAd || (!isGesture && targetUrl)) {
+        triggerPreviewUI({
+          type: 'window.open',
+          url: targetUrl,
+          domain: domain,
+          reason: isGesture ? '匹配黑名单/广告库' : '检测到无用户意图的自动弹窗'
+        });
+        return null;
+      }
+      return originalOpen.apply(this, arguments);
+    };
+
+    const originalCreateElement = document.createElement;
+    document.createElement = function (tagName) {
+      const element = originalCreateElement.apply(this, arguments);
+      if (tagName && tagName.toLowerCase() === 'a') {
+        const originalClick = element.click;
+        element.click = function () {
+          const href = element.href || '';
+          let domain = '';
+          try { domain = href ? new URL(href, location.href).hostname : ''; } catch (e) { }
+
+          if (checkIsAd(href) || !isUserGestureRecent()) {
+            triggerPreviewUI({
+              type: 'a.click()',
+              url: href,
+              domain: domain,
+              reason: '动态 <a> 标签自动触发点击'
+            });
+            return;
           }
+          return originalClick.apply(this, arguments);
+        };
+      }
+      return element;
+    };
 
+    // ------------------- C. window.fetch 代理劫持 -------------------
+    if (window.fetch) {
+      const originalFetch = window.fetch;
+      window.fetch = function (input, init) {
+        let requestUrl = '';
+        if (typeof input === 'string') {
+          requestUrl = input;
+        } else if (input instanceof Request) {
+          requestUrl = input.url;
+        } else if (input && input.href) {
+          requestUrl = input.href;
+        }
+
+        let domain = '';
+        try { domain = requestUrl ? new URL(requestUrl, location.href).hostname : ''; } catch (e) { }
+
+        if (checkIsAd(requestUrl)) {
+          triggerPreviewUI({
+            type: 'fetch()',
+            url: requestUrl,
+            domain: domain,
+            reason: '拦截到发往广告/恶意域名的 fetch 请求'
+          });
+          // 返回一个被拒绝的 Promise，中断网络连接
+          return Promise.reject(new TypeError(`[AdDetector] fetch request blocked: ${requestUrl}`));
+        }
+
+        return originalFetch.apply(this, arguments);
+      };
+    }
+
+    // ------------------- D. XMLHttpRequest 代理劫持 -------------------
+    if (window.XMLHttpRequest) {
+      const originalXHR = window.XMLHttpRequest;
+
+      function CustomXHR() {
+        const xhr = new originalXHR();
+        const originalOpen = xhr.open;
+
+        xhr.open = function (method, url, async, user, password) {
+          let requestUrl = url || '';
           let domain = '';
           try { domain = requestUrl ? new URL(requestUrl, location.href).hostname : ''; } catch (e) { }
 
+          this._adDetectorInfo = { url: requestUrl, domain: domain };
+
           if (checkIsAd(requestUrl)) {
             triggerPreviewUI({
-              type: 'fetch()',
+              type: 'XMLHttpRequest',
               url: requestUrl,
               domain: domain,
-              reason: '拦截到发往广告/恶意域名的 fetch 请求'
+              reason: '拦截到发往广告/恶意域名的 XHR 请求'
             });
-            return Promise.reject(new TypeError(`[AdDetector] fetch request blocked: ${requestUrl}`));
+            this._isAdDetectorBlocked = true;
           }
 
-          return originalFetch.apply(this, arguments);
+          return originalOpen.apply(this, arguments);
         };
+
+        const originalSend = xhr.send;
+        xhr.send = function (data) {
+          if (this._isAdDetectorBlocked) {
+            console.warn('[AdDetector] 已静默中断 XHR send 流程');
+            if (typeof this.onerror === 'function') {
+              this.onerror(new ProgressEvent('error'));
+            }
+            this.abort();
+            return;
+          }
+          return originalSend.apply(this, arguments);
+        };
+
+        return xhr;
       }
 
-      if (window.XMLHttpRequest) {
-        const originalXHR = window.XMLHttpRequest;
+      CustomXHR.prototype = originalXHR.prototype;
+      Object.assign(CustomXHR, originalXHR);
+      window.XMLHttpRequest = CustomXHR;
+    }
 
-        function CustomXHR() {
-          const xhr = new originalXHR();
-          const originalOpen = xhr.open;
 
-          xhr.open = function (method, url, async, user, password) {
-            let requestUrl = url || '';
-            let domain = '';
-            try { domain = requestUrl ? new URL(requestUrl, location.href).hostname : ''; } catch (e) { }
-
-            this._adDetectorInfo = { url: requestUrl, domain: domain };
-
-            if (checkIsAd(requestUrl)) {
-              triggerPreviewUI({
-                type: 'XMLHttpRequest',
-                url: requestUrl,
-                domain: domain,
-                reason: '拦截到发往广告/恶意域名的 XHR 请求'
-              });
-              this._isAdDetectorBlocked = true;
-            }
-
-            return originalOpen.apply(this, arguments);
-          };
-
-          const originalSend = xhr.send;
-          xhr.send = function (data) {
-            if (this._isAdDetectorBlocked) {
-              console.warn('[AdDetector] 已静默中断 XHR send 流程');
-              if (typeof this.onerror === 'function') {
-                this.onerror(new ProgressEvent('error'));
-              }
-              this.abort();
-              return;
-            }
-            return originalSend.apply(this, arguments);
-          };
-
-          return xhr;
-        }
-
-        CustomXHR.prototype = originalXHR.prototype;
-        Object.assign(CustomXHR, originalXHR);
-        window.XMLHttpRequest = CustomXHR;
+    // ------------------- E. 动态场景下 location 重定向拦截兜底 -------------------
+    window.addEventListener('beforeunload', (event) => {
+      // 检查最近 1.2 秒内是否有真实的用户手势点击
+      if (!isUserGestureRecent()) {
+        // 阻止浏览器默认跳转行为
+        event.preventDefault();
+        // 触发浏览器原生的“是否离开此网站”弹窗警告
+        const noticeMessage = 'AdDetector 检测到当前页面在无操作情况下尝试自动重定向！';
+        event.returnValue = noticeMessage;
+        return noticeMessage;
       }
+    }, true);
 
+    // ------------------- F. DOM 动态脚本注入监听 -------------------
+    const observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        mutation.addedNodes.forEach((node) => {
+          if (node.tagName === 'SCRIPT') {
+            const src = node.src || '';
+            const content = node.textContent || '';
+
+            // 匹配黑名单域名或包含敏感重定向逻辑的内联代码
+            if (checkIsAd(src) || /location\.(href|replace|assign)/i.test(content)) {
+              console.warn('[AdDetector] 动态拦截并移除恶意 Script 标签:', node);
+              node.remove(); // 强制从 DOM 中清空
+            }
+          }
+        });
+      }
+    });
+
+    observer.observe(document.documentElement || document.body, {
+      childList: true,
+      subtree: true
+    });
+
+    // ------------------- G. 晚加载特效：历史堆栈抢占与特定恶意域名强行阻断 -------------------
+    (function initHardRedirectProtection() {
+      // 1. 强行重写/抢占 Location 描述符（针对 enrtx.com 等恶意特征）
+      const targetCheckPattern = /(enrtx\.com|letterrecoveryunplanted|wpadmngr)/i;
+
+      // 2. 离场卡死机制：只要尝试跳往 enrtx.com，立刻锁死线程
       window.addEventListener('beforeunload', (event) => {
         if (!isUserGestureRecent()) {
           event.preventDefault();
-          const noticeMessage = 'AdDetector 检测到当前页面在无操作情况下尝试自动重定向！';
-          event.returnValue = noticeMessage;
-          return noticeMessage;
+          // 兼容主流浏览器的防离开提示
+          event.returnValue = 'AdDetector 拦截到跨域恶意重定向 (enrtx.com)！';
+          return event.returnValue;
         }
       }, true);
 
-      const observer = new MutationObserver((mutations) => {
-        for (const mutation of mutations) {
-          mutation.addedNodes.forEach((node) => {
-            if (node.tagName === 'SCRIPT') {
-              const src = node.src || '';
-              const content = node.textContent || '';
+      // 3. 历史堆栈抢占：如果当前 URL 已经被写入了 enrtx 的参数，强制覆盖回原页面
+      if (targetCheckPattern.test(window.location.href)) {
+        console.warn('[AdDetector] 检测到页面已被强行重定向至恶意域名，正在强行还原历史堆栈...');
+        try {
+          // 强行把历史记录改回安全页面，阻止后续加载
+          window.history.pushState(null, '', window.location.origin);
+          window.stop(); // 立即停止页面资源加载
+        } catch (e) { }
+      }
 
-              if (checkIsAd(src) || /location\.(href|replace|assign)/i.test(content)) {
-                console.warn('[AdDetector] 动态拦截并移除恶意 Script 标签:', node);
-                node.remove();
-              }
-            }
+      // 4. 定时器巡检抢占：针对用 setTimeout/setInterval 延迟跳转的恶意代码
+      const originalSetTimeout = window.setTimeout;
+      window.setTimeout = function (fn, delay, ...args) {
+        if (typeof fn === 'string' && targetCheckPattern.test(fn)) {
+          console.warn('[AdDetector] 拦截到定时器内的恶意重定向字符串:', fn);
+          return null;
+        }
+        return originalSetTimeout.call(this, fn, delay, ...args);
+      };
+    })();
+
+
+    // ------------------- Navigation API 专项拦截（解决 enrtx.com 重定向） -------------------
+    if (window.navigation) {
+      // 1. 全局 navigate 事件监听拦截
+      window.navigation.addEventListener('navigate', (e) => {
+        const targetUrl = e.destination ? e.destination.url : '';
+        let domain = '';
+        try { domain = targetUrl ? new URL(targetUrl, location.href).hostname : ''; } catch (err) { }
+
+        const isAd = checkIsAd(targetUrl);
+        const isGesture = isUserGestureRecent();
+        const crossDomain = isCrossDomain(targetUrl);
+
+        // 如果匹配广告特征，或者是在无用户手势触发下的跨域跳转
+        if (isAd || (!isGesture && crossDomain)) {
+          console.warn('[AdDetector] 捕获并阻止 Navigation API 重定向:', targetUrl);
+
+          // 阻止浏览器进行导航跳转
+          if (e.cancelable) {
+            e.preventDefault();
+          }
+
+          // 触发你的 AdDetector 卡片弹窗
+          triggerPreviewUI({
+            type: 'navigation.navigate()',
+            url: targetUrl,
+            domain: domain,
+            reason: '检测到恶意脚本通过 Navigation API 强制跨域跳转'
           });
         }
       });
 
-      observer.observe(document.documentElement || document.body, {
-        childList: true,
-        subtree: true
-      });
+      // 2. 原型方法重写（双重保险：防止事件被解绑）
+      try {
+        if (window.Navigation && window.Navigation.prototype && window.Navigation.prototype.navigate) {
+          const originalNavigate = window.Navigation.prototype.navigate;
+          window.Navigation.prototype.navigate = function (url, options) {
+            const targetUrl = String(url);
+            let domain = '';
+            try { domain = new URL(targetUrl, location.href).hostname; } catch (err) { }
 
-      (function initHardRedirectProtection() {
-        const targetCheckPattern = /(enrtx\.com|letterrecoveryunplanted|wpadmngr)/i;
-
-        window.addEventListener('beforeunload', (event) => {
-          if (!isUserGestureRecent()) {
-            event.preventDefault();
-            event.returnValue = 'AdDetector 拦截到跨域恶意重定向 (enrtx.com)！';
-            return event.returnValue;
-          }
-        }, true);
-
-        if (targetCheckPattern.test(window.location.href)) {
-          console.warn('[AdDetector] 检测到页面已被强行重定向至恶意域名，正在强行还原历史堆栈...');
-          try {
-            window.history.pushState(null, '', window.location.origin);
-            window.stop();
-          } catch (e) { }
-        }
-
-        const originalSetTimeout = window.setTimeout;
-        window.setTimeout = function (fn, delay, ...args) {
-          if (typeof fn === 'string' && targetCheckPattern.test(fn)) {
-            console.warn('[AdDetector] 拦截到定时器内的恶意重定向字符串:', fn);
-            return null;
-          }
-          return originalSetTimeout.call(this, fn, delay, ...args);
-        };
-      })();
-
-      if (window.navigation) {
-        window.navigation.addEventListener('navigate', (e) => {
-          const targetUrl = e.destination ? e.destination.url : '';
-          let domain = '';
-          try { domain = targetUrl ? new URL(targetUrl, location.href).hostname : ''; } catch (err) { }
-
-          const isAd = checkIsAd(targetUrl);
-          const isGesture = isUserGestureRecent();
-          const crossDomain = isCrossDomain(targetUrl);
-
-          if (isAd || (!isGesture && crossDomain)) {
-            console.warn('[AdDetector] 捕获并阻止 Navigation API 重定向:', targetUrl);
-
-            if (e.cancelable) {
-              e.preventDefault();
+            if (checkIsAd(targetUrl) || (!isUserGestureRecent() && isCrossDomain(targetUrl))) {
+              triggerPreviewUI({
+                type: 'navigation.navigate() [Hook]',
+                url: targetUrl,
+                domain: domain,
+                reason: '切面代理直接拦截 Navigation.navigate API 调用'
+              });
+              // 返回一个被拒绝的 Promise，匹配 Navigation API 的返回值格式
+              return { committed: Promise.reject(new Error('[AdDetector] Navigation blocked')), finished: Promise.reject(new Error('[AdDetector] Navigation blocked')) };
             }
-
-            triggerPreviewUI({
-              type: 'navigation.navigate()',
-              url: targetUrl,
-              domain: domain,
-              reason: '检测到恶意脚本通过 Navigation API 强制跨域跳转'
-            });
-          }
-        });
-
-        try {
-          if (window.Navigation && window.Navigation.prototype && window.Navigation.prototype.navigate) {
-            const originalNavigate = window.Navigation.prototype.navigate;
-            window.Navigation.prototype.navigate = function (url, options) {
-              const targetUrl = String(url);
-              let domain = '';
-              try { domain = new URL(targetUrl, location.href).hostname; } catch (err) { }
-
-              if (checkIsAd(targetUrl) || (!isUserGestureRecent() && isCrossDomain(targetUrl))) {
-                triggerPreviewUI({
-                  type: 'navigation.navigate() [Hook]',
-                  url: targetUrl,
-                  domain: domain,
-                  reason: '切面代理直接拦截 Navigation.navigate API 调用'
-                });
-                return { committed: Promise.reject(new Error('[AdDetector] Navigation blocked')), finished: Promise.reject(new Error('[AdDetector] Navigation blocked')) };
-              }
-              return originalNavigate.apply(this, arguments);
-            };
-          }
-        } catch (err) {
-          console.warn('[AdDetector] Navigation 原型劫持异常:', err);
+            return originalNavigate.apply(this, arguments);
+          };
         }
+      } catch (err) {
+        console.warn('[AdDetector] Navigation 原型劫持异常:', err);
       }
-
     }
 
-    return {
-      init: function () {
-        initInterceptors();
-        console.log('[AdDetector v3.5] Location 重定向、DOM 与 Fetch/XHR 网络全通路拦截引擎已启动。');
-      },
-      exportRules: function () {
-        return JSON.stringify({
-          blockList: Array.from(blockList),
-          whiteList: Array.from(whiteList)
-        }, null, 2);
-      },
-      importRules: function (jsonStr) {
-        try {
-          const data = JSON.parse(jsonStr);
-          if (data.blockList) data.blockList.forEach(item => blockList.add(item));
-          if (data.whiteList) data.whiteList.forEach(item => whiteList.add(item));
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(blockList)));
-          localStorage.setItem(WHITE_KEY, JSON.stringify(Array.from(whiteList)));
-          if (instance) instance.showToast('规则导入成功！');
-        } catch (e) {
-          alert('解析失败，请检查规则文件格式。');
-        }
-      },
-      clearBlockList: function () {
-        blockList.clear();
-        localStorage.removeItem(STORAGE_KEY);
-        console.log('[AdDetector] 已清空黑名单规则');
-      }
-    };
-  })();
+  }
 
-  AdDetector.init();
+  return {
+    init: function () {
+      initInterceptors();
+      console.log('[AdDetector v3.5] Location 重定向、DOM 与 Fetch/XHR 网络全通路拦截引擎已启动。');
+    },
+    exportRules: function () {
+      return JSON.stringify({
+        blockList: Array.from(blockList),
+        whiteList: Array.from(whiteList)
+      }, null, 2);
+    },
+    importRules: function (jsonStr) {
+      try {
+        const data = JSON.parse(jsonStr);
+        if (data.blockList) data.blockList.forEach(item => blockList.add(item));
+        if (data.whiteList) data.whiteList.forEach(item => whiteList.add(item));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(blockList)));
+        localStorage.setItem(WHITE_KEY, JSON.stringify(Array.from(whiteList)));
+        alert('规则导入成功！');
+      } catch (e) {
+        alert('解析失败，请检查规则文件格式。');
+      }
+    },
+    clearBlockList: function () {
+      blockList.clear();
+      localStorage.removeItem(STORAGE_KEY);
+      console.log('[AdDetector] 已清空黑名单规则');
+    }
+  };
 })();
+
+// 在 document-start 时即刻初始化
+AdDetector.init();
+
+
+// 测试
+
+/**
+ * AdDiagnostic.js - 恶意跳转/重定向行为全 API 监控与溯源诊断模块
+ * 作用：打印触发跳转的具体 API 及调用堆栈 (Stack Trace)
+ */
+
+/*
+(function () {
+  'use strict';
+
+  console.log('🔍 [AdDiagnostic] 诊断模块已启动，正在对所有跳转 API 进行监控...');
+
+  const TARGET_PATTERN = /enrtx/i;
+
+  // 辅助函数：打印违规堆栈
+  function logViolation(apiName, detail, stack) {
+    console.group(`🚨 [AdDiagnostic 捕获到跳转行为] -> ${apiName}`);
+    console.error(`目标 URL / 详细信息:`, detail);
+    console.trace(`调用堆栈追踪 (用于定位是哪段 JS 触发的):`);
+    console.groupEnd();
+  }
+
+  // ------------------- 1. 监控 Meta 标签重定向 (DOM 层面) -------------------
+  const observer = new MutationObserver((mutations) => {
+    for (const mutation of mutations) {
+      mutation.addedNodes.forEach((node) => {
+        // A. 监控 <meta http-equiv="refresh">
+        if (node.tagName === 'META') {
+          const httpEquiv = node.getAttribute('http-equiv') || '';
+          const content = node.getAttribute('content') || '';
+          if (httpEquiv.toLowerCase() === 'refresh') {
+            logViolation('<meta http-equiv="refresh">', content, new Error().stack);
+            node.remove(); // 强制清除 meta 标签
+          }
+        }
+        // B. 监控动态插入的 <form> 表单
+        if (node.tagName === 'FORM') {
+          const action = node.action || '';
+          if (TARGET_PATTERN.test(action)) {
+            logViolation('动态 <form> 节点插入', action, new Error().stack);
+          }
+        }
+      });
+    }
+  });
+  observer.observe(document.documentElement || document.body, { childList: true, subtree: true });
+
+  // ------------------- 2. 监控 Form.prototype.submit -------------------
+  const originalSubmit = HTMLFormElement.prototype.submit;
+  HTMLFormElement.prototype.submit = function () {
+    const action = this.action || '';
+    logViolation('HTMLFormElement.prototype.submit()', action, new Error().stack);
+    if (TARGET_PATTERN.test(action)) {
+      console.warn('⛔ 已拦截表单提交至 enrtx');
+      return; // 阻止提交
+    }
+    return originalSubmit.apply(this, arguments);
+  };
+
+  // ------------------- 3. 监控 MouseEvent / PointerEvent 事件模拟点击 -------------------
+  const originalDispatch = EventTarget.prototype.dispatchEvent;
+  EventTarget.prototype.dispatchEvent = function (event) {
+    if (event && (event.type === 'click' || event.type === 'mouseup')) {
+      const target = this;
+      const href = target.href || target.action || '';
+      logViolation(`dispatchEvent(${event.type})`, { target, href }, new Error().stack);
+    }
+    return originalDispatch.apply(this, arguments);
+  };
+
+  // ------------------- 4. 监控 Navigation API (现代浏览器) -------------------
+  if (window.navigation) {
+    window.navigation.addEventListener('navigate', (e) => {
+      logViolation('Navigation API (window.navigation)', e.destination.url, new Error().stack);
+      if (TARGET_PATTERN.test(e.destination.url)) {
+        console.warn('⛔ 已通过 Navigation API 拦截重定向！');
+        e.preventDefault();
+      }
+    });
+  }
+
+  // ------------------- 5. 全局 BeforeUnload 监控 -------------------
+  window.addEventListener('beforeunload', (e) => {
+    console.warn('⚠️ [AdDiagnostic] 页面正在尝试卸载/离开 (unload)，当前时间点:', new Date().toISOString());
+  }, true);
+
+})();
+*/

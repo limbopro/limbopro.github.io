@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         智能广告与覆盖层检测器 (Silent Backend + Floating UI)
 // @namespace    https://tampermonkey.net/
-// @version      12.4
-// @description  默认静默后台防护，支持捕捉全屏透明/半透明遮罩 (Overlay/Backdrop) 与拦截内联/动态绑定事件劫持 (Click Hijacking)，支持面板拖拽、按元素大小/默认规则排序、未处理/已屏蔽筛选，独立预览管理，支持撤回/重做历史操作，支持记忆面板开启状态，支持一键重置。
+// @version      12.2
+// @description  默认静默后台防护，支持捕捉全屏透明/半透明遮罩 (Overlay/Backdrop) 与拦截内联/动态绑定事件劫持 (Click Hijacking)，支持面板拖拽、按元素大小/默认规则排序、未处理/已已读/已屏蔽筛选，独立预览与已读标记管理，支持记忆面板开启状态。
 // @author       Assistant
 // @match        *://*/*
 // @grant        GM_addStyle
@@ -28,13 +28,9 @@
       this.scanTimer = null;
       this.observer = null;
 
-      // 撤回 (Undo) 与 重做 (Redo) 堆栈
-      this.undoStack = [];
-      this.redoStack = [];
-
       // 排序与筛选模式
       this.sortType = 'default'; // 'default' | 'size-desc' | 'size-asc'
-      this.filterType = 'all'; // 'all' | 'unread' | 'blocked'
+      this.filterType = 'all'; // 'all' | 'unread' | 'read' | 'blocked'
 
       // 面板显示状态标识
       this.host = null;
@@ -66,164 +62,6 @@
           this.showUI();
         }
       }
-    }
-
-    // ==========================================
-    // ★ 撤回 (Undo) / 重做 (Redo) 核心逻辑
-    // ==========================================
-    pushHistoryState(action) {
-      // action 结构: { type: 'SINGLE_BLOCK'|'SINGLE_RESTORE'|'BATCH_BLOCK', items: [adId...] }
-      this.undoStack.push(action);
-      this.redoStack = []; // 产生新操作时清空重做栈
-      this.updateUI();
-    }
-
-    undo() {
-      if (this.undoStack.length === 0) return;
-      const action = this.undoStack.pop();
-
-      if (action.type === 'SINGLE_BLOCK' || action.type === 'BATCH_BLOCK') {
-        // 撤回屏蔽 -> 执行恢复
-        action.items.forEach(adId => this.restoreSingleInternal(adId));
-        this.showToast(`↩️️ 已撤回屏蔽操作 (${action.items.length} 个元素)`);
-      } else if (action.type === 'SINGLE_RESTORE') {
-        // 撤回恢复 -> 执行屏蔽
-        action.items.forEach(adId => this.neutralizeSingleInternal(adId));
-        this.showToast(`↩ 已撤回恢复操作 (${action.items.length} 个元素)`);
-      }
-
-      this.redoStack.push(action);
-      this.updateUI();
-    }
-
-    redo() {
-      if (this.redoStack.length === 0) return;
-      const action = this.redoStack.pop();
-
-      if (action.type === 'SINGLE_BLOCK' || action.type === 'BATCH_BLOCK') {
-        // 重做屏蔽 -> 再次执行屏蔽
-        action.items.forEach(adId => this.neutralizeSingleInternal(adId));
-        this.showToast(`↪️ 已重做屏蔽操作 (${action.items.length} 个元素)`);
-      } else if (action.type === 'SINGLE_RESTORE') {
-        // 重做恢复 -> 再次执行恢复
-        action.items.forEach(adId => this.restoreSingleInternal(adId));
-        this.showToast(`↪️ 已重做恢复操作 (${action.items.length} 个元素)`);
-      }
-
-      this.undoStack.push(action);
-      this.updateUI();
-    }
-
-    // 内部屏蔽逻辑（不直接入历史栈）
-    neutralizeSingleInternal(adId) {
-      const meta = this.detectedAds.get(adId);
-      if (meta && meta.element) {
-        meta.isBlocked = true;
-        meta.element.dataset.overlayBlocked = 'true';
-
-        this.applyHighlight(meta.element, false);
-        meta.element.style.setProperty('display', 'none', 'important');
-
-        const rule = {
-          classAndId: meta.classAndId,
-          tagName: meta.tagName,
-          size: meta.size,
-          fingerprint: meta.fingerprint
-        };
-
-        if (!this.blockedRules.some((r) => r.fingerprint === rule.fingerprint)) {
-          this.blockedRules.push(rule);
-          this.saveBlockedRules();
-          this.applyCssRulesFromStorage();
-        }
-      }
-    }
-
-    // 内部恢复逻辑（不直接入历史栈）
-    restoreSingleInternal(adId) {
-      const meta = this.detectedAds.get(adId);
-      if (meta && meta.element) {
-        meta.isBlocked = false;
-        delete meta.element.dataset.overlayBlocked;
-
-        meta.element.style.removeProperty('display');
-
-        if (this.isHighlighted) {
-          this.applyHighlight(meta.element, true, meta.size);
-        }
-
-        this.blockedRules = this.blockedRules.filter(
-          (r) => !(r.fingerprint === meta.fingerprint || (r.classAndId && r.classAndId === meta.classAndId))
-        );
-        this.saveBlockedRules();
-      }
-    }
-
-    // 外部对外调用：包含历史纪录入栈
-    neutralizeSingle(adId) {
-      const meta = this.detectedAds.get(adId);
-      if (meta && !meta.isBlocked) {
-        this.neutralizeSingleInternal(adId);
-        this.pushHistoryState({ type: 'SINGLE_BLOCK', items: [adId] });
-        this.showToast('🛡 该元素已屏蔽（已更新全局 CSS 规则）');
-      }
-    }
-
-    restoreSingle(adId) {
-      const meta = this.detectedAds.get(adId);
-      if (meta && meta.isBlocked) {
-        this.restoreSingleInternal(adId);
-        this.pushHistoryState({ type: 'SINGLE_RESTORE', items: [adId] });
-        this.showToast('↩️ 已撤销屏蔽，已同步更新本地存储');
-      }
-    }
-
-    cleanAll() {
-      const blockedIds = [];
-      this.detectedAds.forEach((meta) => {
-        if (meta.element && !meta.isBlocked) {
-          this.neutralizeSingleInternal(meta.id);
-          blockedIds.push(meta.id);
-        }
-      });
-
-      if (blockedIds.length > 0) {
-        this.pushHistoryState({ type: 'BATCH_BLOCK', items: blockedIds });
-      }
-      return blockedIds.length;
-    }
-
-    // ==========================================
-    // ★ 一键重置核心逻辑
-    // ==========================================
-    resetAll() {
-      // 1. 清空当前域名的持久化屏蔽规则
-      this.blockedRules = [];
-      this.saveBlockedRules();
-
-      // 2. 还原已被屏蔽的 DOM 元素
-      let count = 0;
-      this.detectedAds.forEach((meta) => {
-        if (meta.isBlocked) {
-          meta.isBlocked = false;
-          count++;
-          if (meta.element) {
-            delete meta.element.dataset.overlayBlocked;
-            meta.element.style.removeProperty('display');
-            if (this.isHighlighted) {
-              this.applyHighlight(meta.element, true, meta.size);
-            }
-          }
-        }
-      });
-
-      // 3. 清空历史撤回/重做栈
-      this.undoStack = [];
-      this.redoStack = [];
-
-      // 4. 重新刷新界面
-      this.updateUI();
-      return count;
     }
 
     // ==========================================
@@ -600,6 +438,7 @@
         return { score: 0, reasons: ['容器内包含多个站内正常链接，判定为合法内容板块'] };
       }
 
+      // 扩充后的广告、弹窗、遮罩及高亮干扰元素匹配正则
       const adWordRegex = /(^|[-_ \/])(ad|ads|advert|advertising|advertisement|banner|popup|pop|backdrop|overlay|mask|modal|dialog|sponsor|sponsored|promoted|promo|guanggao|gg|float|floatad|float-ad|couplet|duilian|billboard|paster|sticky-ad|recommend-ad|right-ad|top-ad|bottom-ad|side-ad)([-_ \/]|s?$)/i;
 
       const classAndId = `${el.id || ''} ${el.className || ''}`;
@@ -619,14 +458,22 @@
       const isFullScreenCover = rect.width >= vw * 0.95 && rect.height >= vh * 0.95;
       if (isPositioned && isFullScreenCover && zIndex >= 5) {
         if (isVisuallyInvisible) {
-          // opacity close to zero
+          //score += 85;
+          //reasons.push('捕捉到全屏近乎完全透明的隐蔽劫持遮罩 (Full Screen Invisible Backdrop)');
         } else {
           const rgbaMatch = bgColor.match(/rgba\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*,\s*([\d\.]+)\s*\)/i);
           const bgAlpha = rgbaMatch ? parseFloat(rgbaMatch[1]) : (isBgTransparent ? 0 : 1);
           if (bgAlpha > 0 && bgAlpha < 0.85 && opacity > 0.1) {
-            // overlay
+            //score += 70;
+            //reasons.push('捕捉到全屏半透明拦截/弹窗遮罩 (Full Screen Semi-transparent Overlay)');
           }
         }
+      } else if (isPositioned && zIndex >= 10 && isVisuallyInvisible && rect.width > 100 && rect.height > 100) {
+        //score += 60;
+        //reasons.push('透明/高层级悬浮点击劫持层');
+      } else if (areaRatio > 0.35 && isPositioned && (zIndex > 99 || style.willChange === 'transform') && isVisuallyInvisible) {
+        //score += 55;
+        //reasons.push('透明大面积点击劫持/隐蔽覆盖层');
       }
 
       const iabSizes = [[728, 90], [300, 250], [336, 280], [160, 600], [300, 600], [970, 90], [320, 50]];
@@ -855,7 +702,8 @@
             size: formattedSize,
             classAndId: `${el.id ? '#' + el.id : ''}${el.className ? '.' + el.className : ''}`.trim(),
             fingerprint: fingerprint,
-            isBlocked: existingMeta ? existingMeta.isBlocked : false
+            isBlocked: existingMeta ? existingMeta.isBlocked : false,
+            isRead: existingMeta ? existingMeta.isRead : false
           };
 
           if (!meta.isBlocked && this.isMatchesBlockedRule(meta)) {
@@ -969,7 +817,7 @@
           .panel {
             padding: 2vw;
             position: fixed; ${initStyle} z-index: 2147483647;
-            width: min(460px, 92vw); max-height: 80vh; background: rgba(28, 28, 30, 0.95);
+            width: min(440px, 92vw); max-height: 80vh; background: rgba(28, 28, 30, 0.95);
             backdrop-filter: blur(20px); color: #f2f2f7;
             border-radius: 14px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6); display: flex; flex-direction: column;
@@ -1022,12 +870,14 @@
             transition: all 0.2s ease;
           }
           .item:hover { background: rgba(110, 25, 25, 0.64); }
+          .item.is-read { opacity: 0.65; background: rgba(255, 255, 255, 0.02); border-color: transparent; }
           .item.is-blocked { opacity: 0.45; background: rgba(0, 0, 0, 0.25); border-color: rgba(255, 255, 255, 0.02); }
           .item.is-blocked .item-title { text-decoration: line-through; color: #8e8e93; }
 
           .item-top { display: flex; justify-content: space-between; align-items: center; }
           .score { color: #ff9500; font-weight: bold; }
           .status-tag { font-size: 10px; padding: 2px 6px; border-radius: 4px; background: rgba(255, 69, 58, 0.25); color: #ff453a; font-weight: 600; }
+          .read-tag { font-size: 10px; padding: 2px 6px; border-radius: 4px; background: rgba(142, 142, 147, 0.25); color: #8e8e93; font-weight: 500; }
           .reasons { font-size: 11px; color: #aeaeb2; margin-top: 4px; line-height: 1.4; }
           .actions { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
 
@@ -1039,12 +889,14 @@
           .btn-action:hover { background: rgba(255, 255, 255, 0.25); }
           .btn-preview { background: rgba(10, 132, 255, 0.2); color: #64d2ff; }
           .btn-preview:hover { background: rgba(10, 132, 255, 0.4); }
+          .btn-mark-read { background: rgba(255, 159, 10, 0.2); color: #ffb340; }
+          .btn-mark-read:hover { background: rgba(255, 159, 10, 0.4); }
           .btn-hide-single { background: rgba(255, 69, 58, 0.2); color: #ff453a; }
           .btn-hide-single:hover { background: rgba(255, 69, 58, 0.4); }
           .btn-restore-single { background: rgba(48, 209, 88, 0.2); color: #30d158; }
           .btn-restore-single:hover { background: rgba(48, 209, 88, 0.4); }
 
-          .footer { padding: 12px; border-top: 1px solid rgba(255, 255, 255, 0.1); display: flex; gap: 6px; flex-wrap: wrap; }
+          .footer { padding: 12px; border-top: 1px solid rgba(255, 255, 255, 0.1); display: flex; gap: 6px; }
 
           button.footer-btn {
             flex: 1; padding: 8px 4px; border: none; border-radius: 8px;
@@ -1055,15 +907,14 @@
           }
           button.footer-btn:hover:not(:disabled) { filter: brightness(1.15); transform: translateY(-1px); }
           button.footer-btn:active:not(:disabled) { transform: scale(0.95) translateY(0); filter: brightness(0.9); }
-          button.footer-btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none !important; filter: none !important; }
+          button.footer-btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none !important; }
 
           .btn-scan { background: #0a84ff; color: #ffffff; box-shadow: 0 2px 8px rgba(10, 132, 255, 0.3); }
           .btn-hl { background: #3a3a3c; color: #f2f2f7; border: 1px solid rgba(255, 255, 255, 0.1); }
           .btn-hl.active { background: #5e5ce6; color: #ffffff; box-shadow: 0 2px 8px rgba(94, 92, 230, 0.4); }
+          .btn-mark-all-read { background: #ff9500; color: #ffffff; box-shadow: 0 2px 8px rgba(255, 149, 0, 0.3); }
           .btn-clean { background: #ff453a; color: #ffffff; box-shadow: 0 2px 8px rgba(255, 69, 58, 0.3); }
-          .btn-reset { background: #ff9500; color: #ffffff; box-shadow: 0 2px 8px rgba(255, 149, 0, 0.3); }
-          .btn-undo { background: #3a3a3c; color: #f2f2f7; border: 1px solid rgba(255, 255, 255, 0.1); }
-          .btn-redo { background: #3a3a3c; color: #f2f2f7; border: 1px solid rgba(255, 255, 255, 0.1); }
+          .btn-restore-all { background: #30d158; color: #ffffff; box-shadow: 0 2px 8px rgba(48, 209, 88, 0.3); }
 
           .toast {
             position: absolute; top: -38px; left: 50%; transform: translateX(-50%) translateY(10px);
@@ -1195,11 +1046,12 @@
 
           <div class="toast" id="toast">提示信息</div>
           <div class="header" id="panel-header">
-            <span>🛡️ v12.4</span>
+            <span>🛡️ v12.2</span>
             <div style="display:flex;align-items:center;gap:4px;">
               <select id="select-filter" class="select-control" title="过滤显示状态">
                 <option value="all">显示全部</option>
-                <option value="unread">仅未处理</option>
+                <option value="unread">仅未处理/未读</option>
+                <option value="read">仅已读</option>
                 <option value="blocked">仅已屏蔽</option>
               </select>
               <select id="select-sort" class="select-control" title="选择排序方式">
@@ -1217,10 +1069,9 @@
           <div class="footer">
             <button class="footer-btn btn-scan" id="btn-scan">重新扫描</button>
             <button class="footer-btn btn-hl" id="btn-hl">高亮标注</button>
+            <button class="footer-btn btn-mark-all-read" id="btn-mark-all-read">一键已读</button>
             <button class="footer-btn btn-clean" id="btn-clean">一键屏蔽</button>
-            <button class="footer-btn btn-reset" id="btn-reset" title="恢复所有屏蔽并清除规则">一键重置</button>
-            <button class="footer-btn btn-undo" id="btn-undo" title="撤回上一步操作">↩️ 撤回</button>
-            <button class="footer-btn btn-redo" id="btn-redo" title="重做上一步撤回">↪️ 重做</button>
+            <button class="footer-btn btn-restore-all" id="btn-restore-all">一键撤销</button>
           </div>
         </div>
 
@@ -1369,6 +1220,10 @@
     showPreviewWindow(adId) {
       const meta = this.detectedAds.get(adId);
       if (!meta || !meta.element) return;
+
+      if (!meta.isRead) {
+        meta.isRead = true;
+      }
 
       const modal = this.shadow.querySelector('#preview-modal');
       const container = this.shadow.querySelector('#preview-container');
@@ -1558,6 +1413,109 @@
       }
     }
 
+    toggleReadSingle(adId) {
+      const meta = this.detectedAds.get(adId);
+      if (meta) {
+        meta.isRead = !meta.isRead;
+        this.updateUI();
+        this.showToast(meta.isRead ? '👁️ 已标记为已读' : '✉️ 已重置为未读');
+      }
+    }
+
+    markAllAsRead() {
+      let count = 0;
+      this.detectedAds.forEach((meta) => {
+        if (!meta.isBlocked && !meta.isRead) {
+          meta.isRead = true;
+          count++;
+        }
+      });
+      this.updateUI();
+      return count;
+    }
+
+    neutralizeSingle(adId) {
+      const meta = this.detectedAds.get(adId);
+      if (meta && meta.element) {
+        meta.isBlocked = true;
+        meta.element.dataset.overlayBlocked = 'true';
+
+        this.applyHighlight(meta.element, false);
+        meta.element.style.setProperty('display', 'none', 'important');
+
+        const rule = {
+          classAndId: meta.classAndId,
+          tagName: meta.tagName,
+          size: meta.size,
+          fingerprint: meta.fingerprint
+        };
+
+        if (!this.blockedRules.some((r) => r.fingerprint === rule.fingerprint)) {
+          this.blockedRules.push(rule);
+          this.saveBlockedRules();
+          this.applyCssRulesFromStorage();
+        }
+
+        this.updateUI();
+        this.showToast('🛡 该元素已屏蔽（已更新全局 CSS 规则）');
+      }
+    }
+
+    restoreSingle(adId) {
+      const meta = this.detectedAds.get(adId);
+      if (meta && meta.element) {
+        meta.isBlocked = false;
+        delete meta.element.dataset.overlayBlocked;
+
+        meta.element.style.removeProperty('display');
+
+        if (this.isHighlighted) {
+          this.applyHighlight(meta.element, true, meta.size);
+        }
+
+        this.blockedRules = this.blockedRules.filter(
+          (r) => !(r.fingerprint === meta.fingerprint || (r.classAndId && r.classAndId === meta.classAndId))
+        );
+        this.saveBlockedRules();
+
+        this.updateUI();
+        this.showToast('↩️ 已撤销屏蔽，已同步更新本地存储');
+      }
+    }
+
+    cleanAll() {
+      let count = 0;
+      this.detectedAds.forEach((meta) => {
+        if (meta.element && !meta.isBlocked) {
+          this.neutralizeSingle(meta.id);
+          count++;
+        }
+      });
+      return count;
+    }
+
+    restoreAll() {
+      let count = 0;
+      this.detectedAds.forEach((meta) => {
+        if (meta.element && meta.isBlocked) {
+          meta.isBlocked = false;
+          delete meta.element.dataset.overlayBlocked;
+          meta.element.style.removeProperty('display');
+
+          if (this.isHighlighted) {
+            this.applyHighlight(meta.element, true, meta.size);
+          }
+          count++;
+        }
+      });
+
+      this.blockedRules = [];
+      this.saveBlockedRules();
+      this.updateUI();
+
+      return count;
+    }
+
     showToast(message) {
       if (!this.shadow) return;
       const toast = this.shadow.querySelector('#toast');
@@ -1571,10 +1529,9 @@
     bindInteractiveEvents() {
       const btnScan = this.shadow.querySelector('#btn-scan');
       const btnHl = this.shadow.querySelector('#btn-hl');
+      const btnMarkAllRead = this.shadow.querySelector('#btn-mark-all-read');
       const btnClean = this.shadow.querySelector('#btn-clean');
-      const btnReset = this.shadow.querySelector('#btn-reset');
-      const btnUndo = this.shadow.querySelector('#btn-undo');
-      const btnRedo = this.shadow.querySelector('#btn-redo');
+      const btnRestoreAll = this.shadow.querySelector('#btn-restore-all');
       const btnClose = this.shadow.querySelector('#btn-close-panel');
       const selectSort = this.shadow.querySelector('#select-sort');
       const selectFilter = this.shadow.querySelector('#select-filter');
@@ -1621,6 +1578,13 @@
         }
       };
 
+      if (btnMarkAllRead) {
+        btnMarkAllRead.onclick = () => {
+          const count = this.markAllAsRead();
+          this.showToast(`👁 已将 ${count} 个未处理项标记为已读`);
+        };
+      }
+
       btnClean.onclick = () => {
         btnClean.disabled = true;
         btnClean.textContent = '屏蔽中...';
@@ -1634,38 +1598,29 @@
         });
       };
 
-      btnReset.onclick = () => {
-        btnReset.disabled = true;
-        btnReset.textContent = '重置中...';
+      btnRestoreAll.onclick = () => {
+        btnRestoreAll.disabled = true;
+        btnRestoreAll.textContent = '撤销中...';
         requestAnimationFrame(() => {
           setTimeout(() => {
-            const count = this.resetAll();
-            btnReset.disabled = false;
-            btnReset.textContent = '一键重置';
-            this.showToast(`🔄 已重置规则并还原 ${count} 个元素`);
+            const count = this.restoreAll();
+            btnRestoreAll.disabled = false;
+            btnRestoreAll.textContent = '一键撤销';
+            this.showToast(`↩ 已恢复 ${count} 个被屏蔽元素`);
           }, 50);
         });
       };
-
-      btnUndo.onclick = () => this.undo();
-      btnRedo.onclick = () => this.redo();
     }
 
     updateUI() {
       if (!this.shadow) return;
       const listEl = this.shadow.querySelector('#list');
       const badge = this.shadow.querySelector('#count-badge');
-      const btnUndo = this.shadow.querySelector('#btn-undo');
-      const btnRedo = this.shadow.querySelector('#btn-redo');
-
-      // 实时切换 撤回/重做 按钮可操作状态
-      if (btnUndo) btnUndo.disabled = this.undoStack.length === 0;
-      if (btnRedo) btnRedo.disabled = this.redoStack.length === 0;
 
       let allDetected = Array.from(this.detectedAds.values());
-      const activeUnreadThreats = allDetected.filter((meta) => !meta.isBlocked);
+      const activeUnreadThreats = allDetected.filter((meta) => !meta.isBlocked && !meta.isRead);
 
-      badge.textContent = `${activeUnreadThreats.length} 未处理 / 共 ${allDetected.length} 个`;
+      badge.textContent = `${activeUnreadThreats.length} 未读 / 共 ${allDetected.length} 个`;
 
       if (allDetected.length === 0) {
         listEl.innerHTML = '<div style="text-align:center;color:#30d158;padding:20px;">未发现高风险劫持或广告元素</div>';
@@ -1673,13 +1628,15 @@
       }
 
       if (this.filterType === 'unread') {
-        allDetected = allDetected.filter((meta) => !meta.isBlocked);
+        allDetected = allDetected.filter((meta) => !meta.isBlocked && !meta.isRead);
+      } else if (this.filterType === 'read') {
+        allDetected = allDetected.filter((meta) => !meta.isBlocked && meta.isRead);
       } else if (this.filterType === 'blocked') {
         allDetected = allDetected.filter((meta) => meta.isBlocked);
       }
 
       if (allDetected.length === 0) {
-        const filterTextMap = { unread: '未处理', blocked: '已屏蔽' };
+        const filterTextMap = { unread: '未处理/未读', read: '已读', blocked: '已屏蔽' };
         listEl.innerHTML = `<div style="text-align:center;color:#8e8e93;padding:20px;">没有符合 [${filterTextMap[this.filterType] || '当前'}] 筛选条件的项</div>`;
         return;
       }
@@ -1705,21 +1662,23 @@
       let html = '';
       allDetected.forEach((meta) => {
         const isBlocked = meta.isBlocked;
+        const isRead = meta.isRead;
 
         html += `
-          <div class="item ${isBlocked ? 'is-blocked' : ''}" data-ad-id="${meta.id}">
+          <div class="item ${isBlocked ? 'is-blocked' : (isRead ? 'is-read' : '')}" data-ad-id="${meta.id}">
             <div class="item-top">
               <div class="item-title">
                 <strong>${meta.tagName}</strong>
                 <span style="color:#8e8e93;">(${meta.size})</span>
               </div>
-              ${isBlocked ? '<span class="status-tag">已屏蔽</span>' : `<span class="score">${meta.score}分</span>`}
+              ${isBlocked ? '<span class="status-tag">已屏蔽</span>' : (isRead ? '<span class="read-tag">已读</span>' : `<span class="score">${meta.score}分</span>`)}
             </div>
             <div style="font-size:11px;color:#0a84ff;word-break:break-all;margin-top:2px;">${meta.classAndId || '无 Class/ID'}</div>
             <div class="reasons">原因: ${meta.reasons.join(' | ')}</div>
             <div class="actions">
               ${!isBlocked
             ? `<button class="btn-action btn-preview" data-action="preview" data-id="${meta.id}">🔍 预览元素</button>
+                   <button class="btn-action btn-mark-read" data-action="toggle-read" data-id="${meta.id}">${isRead ? '✉️ 撤销已读' : '👁️ 标记已读'}</button>
                    <button class="btn-action btn-hide-single" data-action="hide" data-id="${meta.id}">🚫 单独屏蔽</button>`
             : `<button class="btn-action btn-restore-single" data-action="restore" data-id="${meta.id}">↩️ 撤销屏蔽</button>`
           }
@@ -1751,6 +1710,8 @@
 
           if (action === 'preview') {
             this.showPreviewWindow(id);
+          } else if (action === 'toggle-read') {
+            this.toggleReadSingle(id);
           } else if (action === 'hide') {
             this.neutralizeSingle(id);
           } else if (action === 'restore') {
