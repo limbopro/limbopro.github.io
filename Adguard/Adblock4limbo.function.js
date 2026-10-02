@@ -758,8 +758,8 @@ function getNavigationHTML() {
         <li class="li_global"><button class="a_global special yellow" onclick="window.geminiElementBlockerOpenPanel()"
                 id="gemini-element-blocker" style="border-radius:4px;background:#c53f3f">⚡️元素调试与屏蔽</button></li>
         
-        <li class="li_global"><button class="a_global special yellow" onclick="window.showAdDetectorUI;body_build('false');"
-                id="gemini-AdDetector" style="border-radius:4px;background:#c53f3f">🧑‍⚕️广告元素自动检测</button></li>
+        <li class="li_global"><button class="a_global special yellow" onclick="window.showAdDetectorUI();body_build('false');"
+                id="gemini-AdDetector" style="border-radius:4px;background:#c53f3f">🧑‍⚕️可疑广告元素扫描</button></li>
         <li class="li_global">
             <button class="a_global special yellow" id="carolPanel" style="border-radius:4px;background:#c53f3f"
                 onclick="window.initWebDebugger()"> ⚙️ Web 存储调试器

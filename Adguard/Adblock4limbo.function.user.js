@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Adblock4limbo——导航及各类功能函数合集.[github]
 // @namespace    https://limbopro.com/Adguard/Adblock4limbo.function.js
-// @version      0.2026.10.01
+// @version      0.2026.10.02
 // @license      CC BY-NC-SA 4.0
 // @description  实用网站导航 —— 沉浸式翻译纯JS版本；M3U8/MP4资源链接提取；广告元素屏蔽器；费在线影视/前端学习/开发者社区/新闻/建站/下载工具/格式转换工具/电子书/新闻/写作/免费漫画等；
 // @author       limbopro
@@ -756,7 +756,10 @@ function getNavigationHTML() {
         <li class="li_global"><button class="a_global special yellow" id="mtzyczq"
                 style="border-radius:4px;background:#c53f3f" onclick="mtzyczq()">🎦媒体资源查找器</button></li>
         <li class="li_global"><button class="a_global special yellow" onclick="window.geminiElementBlockerOpenPanel()"
-                id="gemini-element-blocker" style="border-radius:4px;background:#c53f3f">🔍 元素屏蔽/追踪器</button></li>
+                id="gemini-element-blocker" style="border-radius:4px;background:#c53f3f">⚡️元素调试与屏蔽</button></li>
+        
+        <li class="li_global"><button class="a_global special yellow" onclick="window.showAdDetectorUI();body_build('false');"
+                id="gemini-AdDetector" style="border-radius:4px;background:#c53f3f">🧑‍⚕️可疑广告元素扫描</button></li>
         <li class="li_global">
             <button class="a_global special yellow" id="carolPanel" style="border-radius:4px;background:#c53f3f"
                 onclick="window.initWebDebugger()"> ⚙️ Web 存储调试器
@@ -2592,6 +2595,10 @@ loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/little
 // 测试小脚本 END
 
 
+// 广告元素检测小脚本 Start
+loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/AdDetector.js', 'head', 'littleCode')
+// 广告元素检测小脚本 END
+
 /**
  * WebDebugger.js 开始 START
  * * 独立函数：Web 存储调试器 (Cookies/Local/Session/Config)
@@ -2653,7 +2660,6 @@ loadExternalResourceFireAndForget('script', 'https://limbopro.com/Adguard/crazyM
 // 狂野模式 END
 
 //});
-
 
 
 
@@ -4874,3 +4880,5 @@ function showNavigationStats() {
     });
 
 }
+
+
