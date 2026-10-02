@@ -756,10 +756,10 @@ function getNavigationHTML() {
         <li class="li_global"><button class="a_global special yellow" id="mtzyczq"
                 style="border-radius:4px;background:#c53f3f" onclick="mtzyczq()">🎦媒体资源查找器</button></li>
         <li class="li_global"><button class="a_global special yellow" onclick="window.geminiElementBlockerOpenPanel()"
-                id="gemini-element-blocker" style="border-radius:4px;background:#c53f3f">🔍⚡️元素选择屏蔽器</button></li>
+                id="gemini-element-blocker" style="border-radius:4px;background:#c53f3f">⚡️元素选择屏蔽器</button></li>
         
         <li class="li_global"><button class="a_global special yellow" onclick="window.toggleAdDetectorUI();body_build('false');"
-                id="gemini-AdDetector" style="border-radius:4px;background:#c53f3f">🪧🧑‍⚕️广告元素检测器</button></li>
+                id="gemini-AdDetector" style="border-radius:4px;background:#c53f3f">🧑‍⚕️广告元素检测器</button></li>
         <li class="li_global">
             <button class="a_global special yellow" id="carolPanel" style="border-radius:4px;background:#c53f3f"
                 onclick="window.initWebDebugger()"> ⚙️ Web 存储调试器

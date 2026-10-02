@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         智能广告与覆盖层检测器 (Silent Backend + Floating UI)
 // @namespace    https://tampermonkey.net/
-// @version      10.1
-// @description  默认静默后台防护，支持全局函数/快捷键唤醒控制面板，支持面板拖拽、按元素大小/默认规则排序、未处理/已屏蔽筛选，以及包含 HTML 源码与渲染的独立元素预览功能。
+// @version      10.0
+// @description  默认静默后台防护，支持全局函数/快捷键唤醒控制面板，支持面板拖拽、按元素大小/默认规则排序、未处理/已屏蔽筛选，以及独立的元素独立悬浮窗预览功能。
 // @author       Assistant
 // @match        *://*/*
 // @grant        GM_addStyle
@@ -165,6 +165,7 @@
 .ad-detector-hover-active {
   outline: 8px dashed #f21414 !important;
   outline-offset: -2px !important;
+  /*animation: ad-detector-pulse 1.2s infinite alternate ease-in-out !important;*/
   z-index: 999999 !important;
   pointer-events: auto !important;
 }
@@ -216,8 +217,10 @@
       if (el.id === 'dh_pageContainer' || el.closest('#dh_pageContainer')) return true;
       if (el.id === 'ad-detector-host' || el.closest('#ad-detector-host')) return true;
 
+      // 使用 closest 与正则结合检查：当前元素或任意父级 class/id 是否包含 limbo
       const limboRegex = /\blimbo\b|limbo-/i;
 
+      // 向上检查当前节点及所有祖先节点
       let curr = el;
       while (curr && curr !== document.documentElement) {
         const classAndId = `${curr.id || ''} ${curr.className || ''}`;
@@ -306,6 +309,7 @@
     calculateAdScore(el) {
       if (this.isLegitimateElement(el)) return { score: 0, reasons: [] };
 
+      // 1. 样式与几何属性一次性读取（避免多次重排与重绘）
       const style = window.getComputedStyle(el);
       if (style.pointerEvents === 'none' || style.display === 'none' || style.visibility === 'hidden') {
         if (el.dataset.overlayBlocked === 'true') {
@@ -324,6 +328,7 @@
       const vh = window.innerHeight || document.documentElement.clientHeight;
       const viewportArea = vw * vh;
 
+      // 2. 容器内合法内容与链接分类统计（一次性遍历提取）
       const originHost = window.location.hostname;
       const currentMainDomain = this.getMainDomain(originHost);
 
@@ -342,10 +347,12 @@
         } catch (e) { }
       });
 
+      // 多站内正常链接稀释判断：如果是大块页面内容/卡片组件，直接豁免
       if (sameDomainLinkCount >= 2) {
         return { score: 0, reasons: ['容器内包含多个站内正常链接，判定为合法内容板块'] };
       }
 
+      // 3. Class / ID 属性特征检测
       const adWordRegex = /(^|[-_ \/])(ad|ads|advert|banner|popup|sponsor|sponsored|promoted|guanggao|gg|float|floatad|couplet)([-_ \/]|s?$)/i;
       const classAndId = `${el.id || ''} ${el.className || ''}`;
       if (adWordRegex.test(classAndId)) {
@@ -353,6 +360,7 @@
         reasons.push('Class/ID 命中广告关键词');
       }
 
+      // 4. 物理几何与高层级劫持判断
       const areaRatio = (rect.width * rect.height) / (viewportArea || 1);
       const isPositioned = style.position === 'fixed' || style.position === 'absolute';
       const zIndex = parseInt(style.zIndex, 10) || 0;
@@ -369,6 +377,7 @@
         reasons.push('透明大面积点击劫持/隐蔽覆盖层');
       }
 
+      // IAB 标准广告尺寸匹配
       const iabSizes = [[728, 90], [300, 250], [336, 280], [160, 600], [300, 600], [970, 90], [320, 50]];
       const isIABSize = iabSizes.some(([w, h]) => Math.abs(rect.width - w) <= 6 && Math.abs(rect.height - h) <= 6);
       if (isIABSize) {
@@ -376,6 +385,7 @@
         reasons.push('符合 IAB 标准广告尺寸');
       }
 
+      // 悬浮贴片弹窗特征
       if ((style.position === 'fixed' || style.position === 'sticky') && zIndex > 50) {
         if (rect.height < 260 && (rect.top <= 10 || rect.bottom >= vh - 10)) {
           score += 30;
@@ -383,6 +393,7 @@
         }
       }
 
+      // 5. 图像与媒体特征分析
       const imgEl = el.tagName === 'IMG' ? el : el.querySelector('img');
       if (imgEl) {
         const imgSrc = imgEl.currentSrc || imgEl.src || '';
@@ -417,6 +428,7 @@
         }
       }
 
+      // 6. IFRAME 嵌套特征分析
       if (el.tagName === 'IFRAME') {
         const src = el.src || '';
         if (src && !src.startsWith(window.location.origin) && !src.startsWith('about:')) {
@@ -429,6 +441,7 @@
         }
       }
 
+      // 7. 链接路由与诱导敏感词判定
       const anchor = el.tagName === 'A' ? el : (allAnchors[0] || null);
       if (anchor) {
         const rawHref = anchor.getAttribute('href') || '';
@@ -468,6 +481,7 @@
               }
             }
 
+            // 针对父节点打折降权逻辑
             if (el.tagName !== 'A') {
               if (sameDomainLinkCount > 0) {
                 linkScore = Math.floor(linkScore * 0.2);
@@ -483,6 +497,7 @@
           }
         } catch (e) { }
 
+        // 诱导敏感词分级判定（高风险 vs 中风险）
         const textContent = (anchor.textContent || '').trim();
         if (textContent) {
           const highRiskRegex = /(裸聊|菠菜|博彩|荷官|约炮|黄播|六合|反波胆|爆率|必中|挂机|刷单|🈲|🔞)/i;
@@ -509,6 +524,7 @@
         }
       }
 
+      // 8. 站内正常链接与跨域链接混合扣分
       if (sameDomainLinkCount > 0 && crossDomainLinkCount > 0) {
         const totalLinks = sameDomainLinkCount + crossDomainLinkCount;
         const normalRatio = sameDomainLinkCount / totalLinks;
@@ -671,6 +687,7 @@
             touch-action: none !important;
           }
 
+          /* ★ 四周隐形拖拽热区 (向外/向内扩展盲操触控面积) */
           .edge-drag {
             position: absolute;
             z-index: 10;
@@ -772,8 +789,8 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: min(560px, 90vw);
-            max-height: 80vh;
+            width: min(480px, 85vw);
+            max-height: 70vh;
             background: rgba(28, 28, 30, 0.98);
             backdrop-filter: blur(25px);
             border: 1px solid rgba(255, 255, 255, 0.2);
@@ -803,72 +820,29 @@
           }
 
           .preview-body {
-            padding: 12px 16px;
-            overflow-y: auto;
+            padding: 16px;
+            overflow: auto;
             display: flex;
-            flex-direction: column;
-            gap: 12px;
-            background: rgba(0, 0, 0, 0.3);
-            max-height: 70vh;
-          }
-
-          .preview-section-title {
-            font-size: 11px;
-            font-weight: 600;
-            color: #8e8e93;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            display: flex;
-            justify-content: space-between;
+            justify-content: center;
             align-items: center;
-            margin-bottom: 4px;
+            background: rgba(0, 0, 0, 0.3);
+            min-height: 140px;
+            max-height: 55vh;
           }
 
           .preview-container {
-            width: 100%;
-            min-height: 120px;
-            max-height: 300px;
+            max-width: 100%;
+            max-height: 100%;
             overflow: hidden;
             display: flex;
             justify-content: center;
             align-items: center;
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 8px;
-            border: 1px dashed rgba(255, 255, 255, 0.15);
           }
 
-          /* 源代码查看器样式 */
-          .code-container {
-            position: relative;
-            background: #121214;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-            padding: 10px;
-            max-height: 180px;
-            overflow: auto;
+          .preview-container * {
+            max-width: 100% !important;
+            box-sizing: border-box !important;
           }
-
-          .code-block {
-            margin: 0;
-            font-family: "SF Mono", Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-            font-size: 11px;
-            color: #64d2ff;
-            white-space: pre-wrap;
-            word-break: break-all;
-            line-height: 1.4;
-          }
-
-          .btn-copy-code {
-            padding: 2px 8px;
-            font-size: 10px;
-            border-radius: 4px;
-            border: none;
-            background: rgba(255, 255, 255, 0.15);
-            color: #f2f2f7;
-            cursor: pointer;
-            transition: all 0.15s ease;
-          }
-          .btn-copy-code:hover { background: rgba(255, 255, 255, 0.3); }
         </style>
 
         <div class="panel" id="main-panel">
@@ -879,7 +853,7 @@
 
           <div class="toast" id="toast">提示信息</div>
           <div class="header" id="panel-header">
-            <span>🛡️ v10.1</span>
+            <span>🛡️ v10.0</span>
             <div style="display:flex;align-items:center;gap:4px;">
               <select id="select-filter" class="select-control" title="过滤显示状态">
                 <option value="all">显示全部</option>
@@ -913,7 +887,6 @@
             <span class="close-btn" id="btn-close-preview" title="关闭预览">✕</span>
           </div>
           <div class="preview-body">
-            <div class="preview-section-title">🖼️ 渲染效果</div>
             <div class="preview-container" id="preview-container"></div>
           </div>
         </div>
@@ -933,11 +906,13 @@
       let startX = 0;
       let startY = 0;
 
+      // 记录面板当前累积的 transform 位移量
       let currentTranslateX = 0;
       let currentTranslateY = 0;
       let startTranslateX = 0;
       let startTranslateY = 0;
 
+      // 尝试读取上次保存的位置偏移
       try {
         let savedPos = null;
         if (typeof GM_getValue !== 'undefined') {
@@ -953,7 +928,10 @@
       } catch (e) { }
 
       const startDrag = (e) => {
+        // 过滤内部交互控件（如关闭按钮、下拉框），避免误触发拖拽
         if (e.target.closest('#btn-close-panel') || e.target.closest('.select-control')) return;
+
+        // 仅响应鼠标左键或触控
         if (e.button !== undefined && e.button !== 0) return;
 
         isDragging = true;
@@ -963,7 +941,10 @@
         startTranslateX = currentTranslateX;
         startTranslateY = currentTranslateY;
 
+        // 防止拖拽过程中选中文本
         document.body.style.userSelect = 'none';
+
+        // 阻止默认拖拽行为（如图片/文本拖拽）
         e.preventDefault();
       };
 
@@ -976,6 +957,7 @@
         currentTranslateX = startTranslateX + deltaX;
         currentTranslateY = startTranslateY + deltaY;
 
+        // 使用 translate3d 渲染位移，零重排，绝对流畅
         panel.style.transform = `translate3d(${currentTranslateX}px, ${currentTranslateY}px, 0)`;
       };
 
@@ -983,8 +965,10 @@
         if (!isDragging) return;
         isDragging = false;
 
+        // 恢复文本选中状态
         document.body.style.userSelect = '';
 
+        // 保存位移数据
         const posData = { x: currentTranslateX, y: currentTranslateY };
         try {
           if (typeof GM_setValue !== 'undefined') {
@@ -997,12 +981,14 @@
         }
       };
 
+      // 绑定拖拽触发源
       const dragTargets = [header, ...edges];
       dragTargets.forEach((el) => {
         if (!el) return;
         el.addEventListener('pointerdown', startDrag);
       });
 
+      // 全局捕获移动与抬起
       window.addEventListener('pointermove', moveDrag);
       window.addEventListener('pointerup', stopDrag);
       window.addEventListener('pointercancel', stopDrag);
@@ -1046,7 +1032,8 @@
       });
     }
 
-    // ★ 核心方法优化：支持独立的 DOM 渲染 + HTML 源码预览
+    // ★ 核心方法优化：构建并弹出独立的元素预览悬浮窗（集成原网页 CSS 样式）
+    // ★ 核心方法优化：使用 iframe 物理隔离原网页 CSS，防止主面板尺寸被撑宽
     showPreviewWindow(adId) {
       const meta = this.detectedAds.get(adId);
       if (!meta || !meta.element) return;
@@ -1058,24 +1045,16 @@
       title.textContent = `🔍 预览: <${meta.tagName}> (${meta.size})`;
       container.innerHTML = '';
 
-      // 清理插件标记，提取纯净的原代码
-      const cloneForCode = meta.element.cloneNode(true);
-      cloneForCode.removeAttribute('data-ad-detector-id');
-      const badgeInClone = cloneForCode.querySelector('.ad-detector-size-badge');
-      if (badgeInClone) badgeInClone.remove();
-
-      const rawHtml = cloneForCode.outerHTML;
-
       // 1. 创建独立的隔离 iframe
       const iframe = document.createElement('iframe');
       iframe.style.setProperty('width', '100%', 'important');
-      iframe.style.setProperty('height', '200px', 'important');
+      iframe.style.setProperty('height', '300px', 'important');
       iframe.style.setProperty('border', 'none', 'important');
       iframe.style.setProperty('background', 'transparent', 'important');
 
       container.appendChild(iframe);
 
-      // 2. 注入原网页样式
+      // 2. 获取 iframe 的 document 对象
       const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
       iframeDoc.open();
       iframeDoc.write(`
@@ -1104,7 +1083,9 @@
       `);
       iframeDoc.close();
 
+      // 3. 将原网页的所有 <style> 与 <link> 注入到 iframe 的 <head> 中
       const iframeHead = iframeDoc.head;
+
       document.querySelectorAll('style').forEach((styleTag) => {
         if (styleTag.id !== 'ad-detector-global-styles' && styleTag.id !== 'ad-detector-dynamic-css-rules') {
           iframeHead.appendChild(styleTag.cloneNode(true));
@@ -1113,69 +1094,45 @@
 
       document.querySelectorAll('link[rel="stylesheet"]').forEach((linkTag) => {
         const clonedLink = linkTag.cloneNode(true);
-        if (clonedLink.href) clonedLink.href = clonedLink.href;
+        if (clonedLink.href) clonedLink.href = clonedLink.href; // 转换绝对路径
         iframeHead.appendChild(clonedLink);
       });
 
-      // 3. 克隆节点并挂载至渲染区域
+      // 4. 克隆目标节点并注入到 iframeBody 内部
       const origRect = meta.element.getBoundingClientRect();
       const origStyle = window.getComputedStyle(meta.element);
-      const cloneForRender = cloneForCode.cloneNode(true);
+      const clone = meta.element.cloneNode(true);
 
+      // 清理插件标记
+      clone.removeAttribute('data-ad-detector-id');
+      const badgeInClone = clone.querySelector('.ad-detector-size-badge');
+      if (badgeInClone) badgeInClone.remove();
+
+      // 基础尺寸修复
       const finalWidth = origRect.width > 0 ? origRect.width : (parseInt(meta.size.split('x')[0]) || 300);
       const finalHeight = origRect.height > 0 ? origRect.height : (parseInt(meta.size.split('x')[1]) || 250);
 
-      cloneForRender.style.setProperty('display', 'block', 'important');
-      cloneForRender.style.setProperty('position', 'relative', 'important');
-      cloneForRender.style.setProperty('visibility', 'visible', 'important');
-      cloneForRender.style.setProperty('opacity', '1', 'important');
-      cloneForRender.style.setProperty('transform', 'none', 'important');
-      cloneForRender.style.setProperty('transition', 'none', 'important');
-      cloneForRender.style.setProperty('margin', '0 auto', 'important');
-      cloneForRender.style.setProperty('width', `${finalWidth}px`, 'important');
-      cloneForRender.style.setProperty('height', `${finalHeight}px`, 'important');
+      clone.style.setProperty('display', 'block', 'important');
+      clone.style.setProperty('position', 'relative', 'important');
+      clone.style.setProperty('visibility', 'visible', 'important');
+      clone.style.setProperty('opacity', '1', 'important');
+      clone.style.setProperty('transform', 'none', 'important');
+      clone.style.setProperty('transition', 'none', 'important');
+      clone.style.setProperty('margin', '0 auto', 'important');
+      clone.style.setProperty('width', `${finalWidth}px`, 'important');
+      clone.style.setProperty('height', `${finalHeight}px`, 'important');
 
       if (origStyle.backgroundColor && origStyle.backgroundColor !== 'rgba(0, 0, 0, 0)' && origStyle.backgroundColor !== 'transparent') {
-        cloneForRender.style.setProperty('background-color', origStyle.backgroundColor, 'important');
+        clone.style.setProperty('background-color', origStyle.backgroundColor, 'important');
       }
 
       const root = iframeDoc.getElementById('iframe-preview-root');
-      root.appendChild(cloneForRender);
+      root.appendChild(clone);
 
-      // 4. 动态构建 HTML 代码展示区
-      let codeContainer = this.shadow.querySelector('#preview-code-container');
-      if (!codeContainer) {
-        const previewBody = this.shadow.querySelector('.preview-body');
-        const codeSection = document.createElement('div');
-        codeSection.id = 'preview-code-section';
-        codeSection.innerHTML = `
-          <div class="preview-section-title">
-            <span>📄 元素原代码 (HTML)</span>
-            <button class="btn-copy-code" id="btn-copy-code">复制源码</button>
-          </div>
-          <div class="code-container">
-            <pre class="code-block" id="preview-code-block"></pre>
-          </div>
-        `;
-        previewBody.appendChild(codeSection);
-      }
-
-      const codeBlock = this.shadow.querySelector('#preview-code-block');
-      const copyBtn = this.shadow.querySelector('#btn-copy-code');
-      
-      codeBlock.textContent = rawHtml;
-
-      copyBtn.onclick = () => {
-        navigator.clipboard.writeText(rawHtml).then(() => {
-          copyBtn.textContent = '已复制！';
-          setTimeout(() => { copyBtn.textContent = '复制源码'; }, 1500);
-        }).catch(err => {
-          console.error('复制代码失败:', err);
-        });
-      };
-
+      // 显示模态框
       modal.style.display = 'flex';
 
+      // 关闭逻辑
       const closeBtn = this.shadow.querySelector('#btn-close-preview');
       closeBtn.onclick = () => {
         modal.style.display = 'none';
@@ -1187,6 +1144,7 @@
       const meta = this.detectedAds.get(adId);
       if (!meta || !meta.element || meta.isBlocked) return;
 
+      // ★ 1. 临时切断 Observer，防止悬浮样式修改导致 updateUI 全局销毁重绘 DOM
       if (this.observer) {
         this.observer.disconnect();
       }
@@ -1204,6 +1162,7 @@
         }
       }
 
+      // ★ 2. 样式修改完毕后，立即恢复 Observer 监听
       if (this.observer && document.body) {
         this.observer.observe(document.body, {
           childList: true,
@@ -1457,6 +1416,7 @@
       listEl.querySelectorAll('.item').forEach((item) => {
         const adId = item.getAttribute('data-ad-id');
 
+        // 使用 pointerenter / pointerleave 替代 onmouseenter，配合 stopPropagation 止血
         item.addEventListener('pointerenter', (e) => {
           e.stopPropagation();
           this.previewHoverElement(adId, true);
