@@ -1079,29 +1079,29 @@
       const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
       iframeDoc.open();
       iframeDoc.write(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="utf-8">
-          <style>
-            body {
-              margin: 0;
-              padding: 16px;
-              display: flex;
-              justify-content: center;
-              align-items: center;
-              min-height: 100vh;
-              box-sizing: border-box;
-              background: transparent;
-              overflow: auto;
-            }
-          </style>
-        </head>
-        <body>
-          <div id="iframe-preview-root"></div>
-        </body>
-        </html>
-      `);
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <style>
+        body {
+          margin: 0;
+          padding: 16px;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          min-height: 100vh;
+          box-sizing: border-box;
+          background: transparent;
+          overflow: auto;
+        }
+      </style>
+    </head>
+    <body>
+      <div id="iframe-preview-root"></div>
+    </body>
+    </html>
+  `);
       iframeDoc.close();
 
       const iframeHead = iframeDoc.head;
@@ -1142,31 +1142,34 @@
       const root = iframeDoc.getElementById('iframe-preview-root');
       root.appendChild(cloneForRender);
 
-      // 4. 动态构建 HTML 代码展示区
-      let codeContainer = this.shadow.querySelector('#preview-code-container');
-      if (!codeContainer) {
+      // 4. 动态构建/获取 HTML 代码展示区 (修复 DOM 查找 ID 不匹配问题)
+      let codeSection = this.shadow.querySelector('#preview-code-section');
+      if (!codeSection) {
         const previewBody = this.shadow.querySelector('.preview-body');
-        const codeSection = document.createElement('div');
-        codeSection.id = 'preview-code-section';
+        codeSection = document.createElement('div');
+        codeSection.id = 'preview-code-section'; // 保证此处 ID 与查询选择器一致
         codeSection.innerHTML = `
-          <div class="preview-section-title">
-            <span>📄 元素原代码 (HTML)</span>
-            <button class="btn-copy-code" id="btn-copy-code">复制源码</button>
-          </div>
-          <div class="code-container">
-            <pre class="code-block" id="preview-code-block"></pre>
-          </div>
-        `;
+      <div class="preview-section-title">
+        <span>📄 元素原代码 (HTML)</span>
+        <button class="btn-copy-code" id="btn-copy-code">复制源码</button>
+      </div>
+      <div class="code-container" id="preview-code-container">
+        <pre class="code-block" id="preview-code-block"></pre>
+      </div>
+    `;
         previewBody.appendChild(codeSection);
       }
 
+      // 5. 更新源码面板的内容
       const codeBlock = this.shadow.querySelector('#preview-code-block');
       const copyBtn = this.shadow.querySelector('#btn-copy-code');
-      
+
       codeBlock.textContent = rawHtml;
 
+      // 6. 安全绑定/更新事件 handlers
       copyBtn.onclick = () => {
-        navigator.clipboard.writeText(rawHtml).then(() => {
+        // 动态从 codeBlock 获取当前最新的内容进行复制
+        navigator.clipboard.writeText(codeBlock.textContent).then(() => {
           copyBtn.textContent = '已复制！';
           setTimeout(() => { copyBtn.textContent = '复制源码'; }, 1500);
         }).catch(err => {
