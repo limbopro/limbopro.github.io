@@ -1,0 +1,1398 @@
+// ==UserScript==
+// @name         智能广告与覆盖层检测器 (Silent Backend + Floating UI)
+// @namespace    https://tampermonkey.net/
+// @version      10.0
+// @description  默认静默后台防护，支持全局函数/快捷键唤醒控制面板，支持面板拖拽、按元素大小/默认规则排序、未处理/已屏蔽筛选，以及独立的元素独立悬浮窗预览功能。
+// @author       Assistant
+// @match        *://*/*
+// @grant        GM_addStyle
+// @grant        GM_setValue
+// @grant        GM_getValue
+// @grant        unsafeWindow
+// @run-at       document-end
+// ==/UserScript==
+
+(function () {
+  'use strict';
+
+  // 跨沙盒全局 window 挂载对象
+  const globalWin = typeof unsafeWindow !== 'undefined' ? unsafeWindow : window;
+
+  class UniversalAdDetector {
+    constructor() {
+      this.detectedAds = new Map();
+      this.animatedGifCache = new Map();
+      this.counter = 0;
+      this.isHighlighted = false;
+      this.isScanning = false;
+      this.scanTimer = null;
+      this.observer = null;
+
+      // 排序与筛选模式
+      this.sortType = 'default'; // 'default' | 'size-desc' | 'size-asc'
+      this.filterType = 'all'; // 'all' | 'unhandled' | 'blocked'
+
+      // 面板显示状态标识
+      this.isUIVisible = false;
+      this.host = null;
+      this.shadow = null;
+
+      // 域隔离持久化规则库
+      this.storageKey = `ad_detector_blocked_${window.location.hostname}`;
+      this.blockedRules = this.loadBlockedRules();
+
+      this.injectGlobalStyles();
+      this.applyCssRulesFromStorage(); // 持久化规则转译为 CSS 防闪烁
+      this.initObserver();
+      this.bindGlobalHotkeys();
+
+      // 立即强制触发 1 次同步全盘清理
+      this.forceCleanSavedRulesImmediately();
+    }
+
+    // 适配纯网页环境的存储读取
+    loadBlockedRules() {
+      try {
+        let raw = null;
+        if (typeof GM_getValue !== 'undefined') {
+          raw = GM_getValue(this.storageKey, '[]');
+        } else if (window.localStorage) {
+          raw = localStorage.getItem(this.storageKey) || '[]';
+        }
+        const rules = JSON.parse(raw || '[]');
+        console.log(`[AdDetector] 已加载 ${rules.length} 条本地持久化规则`);
+        return rules;
+      } catch (e) {
+        console.warn('[AdDetector] 读取本地存储规则失败，回退为空:', e);
+        return [];
+      }
+    }
+
+    // 适配纯网页环境的存储写入
+    saveBlockedRules() {
+      try {
+        const data = JSON.stringify(this.blockedRules);
+        if (typeof GM_setValue !== 'undefined') {
+          GM_setValue(this.storageKey, data);
+        } else if (window.localStorage) {
+          localStorage.setItem(this.storageKey, data);
+        }
+        // 同步更新原生 CSS 屏蔽规则
+        this.applyCssRulesFromStorage();
+      } catch (e) {
+        console.error('[AdDetector] 保存持久化规则失败:', e);
+      }
+    }
+
+    // 生成 CSS 注入样式，隐形广告
+    applyCssRulesFromStorage() {
+      let styleEl = document.getElementById('ad-detector-dynamic-css-rules');
+      if (!styleEl) {
+        styleEl = document.createElement('style');
+        styleEl.id = 'ad-detector-dynamic-css-rules';
+        (document.head || document.documentElement).appendChild(styleEl);
+      }
+
+      const cssSelectors = [];
+      this.blockedRules.forEach((rule) => {
+        if (rule.classAndId && rule.classAndId !== '无 Class/ID') {
+          const formattedSelector = rule.classAndId
+            .split(' ')
+            .filter(Boolean)
+            .join('');
+          if (formattedSelector) {
+            cssSelectors.push(`${formattedSelector}`);
+          }
+        }
+      });
+
+      if (cssSelectors.length > 0) {
+        styleEl.textContent = `${cssSelectors.join(', ')} { display: none !important; visibility: hidden !important; opacity: 0 !important; pointer-events: none !important; }`;
+      } else {
+        styleEl.textContent = '';
+      }
+    }
+
+    // 智能指纹判定逻辑
+    isMatchesBlockedRule(meta) {
+      return this.blockedRules.some((rule) => {
+        if (rule.classAndId && meta.classAndId && rule.classAndId === meta.classAndId && meta.classAndId !== '无 Class/ID') {
+          return true;
+        }
+        if (rule.fingerprint && meta.fingerprint && rule.fingerprint === meta.fingerprint) {
+          return true;
+        }
+        if (rule.tagName === meta.tagName && rule.size === meta.size && rule.size !== '0x0px') {
+          const ruleHost = (rule.fingerprint || '').split('_')[2] || '';
+          const metaHost = (meta.fingerprint || '').split('_')[2] || '';
+          if (ruleHost && metaHost && ruleHost === metaHost) {
+            return true;
+          }
+        }
+        return false;
+      });
+    }
+
+    // 立即强制扫描并执行屏蔽
+    forceCleanSavedRulesImmediately() {
+      const doScan = () => {
+        this.scan();
+        this.detectedAds.forEach((meta) => {
+          if (this.isMatchesBlockedRule(meta)) {
+            meta.isBlocked = true;
+            if (meta.element) {
+              meta.element.dataset.overlayBlocked = 'true';
+              meta.element.style.setProperty('display', 'none', 'important');
+            }
+          }
+        });
+      };
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', doScan);
+      } else {
+        doScan();
+      }
+    }
+
+    injectGlobalStyles() {
+      if (document.getElementById('ad-detector-global-styles')) return;
+      const style = document.createElement('style');
+      style.id = 'ad-detector-global-styles';
+      style.textContent = `
+
+      /* 高亮动效类 */
+.ad-detector-hover-active {
+  outline: 8px dashed #f21414 !important;
+  outline-offset: -2px !important;
+  /*animation: ad-detector-pulse 1.2s infinite alternate ease-in-out !important;*/
+  z-index: 999999 !important;
+  pointer-events: auto !important;
+}
+
+/* 呼吸灯发光与微震动帧动画 */
+@keyframes ad-detector-pulse {
+  0% {
+    box-shadow: 0 0 10px rgba(242, 20, 20, 0.8), 0 0 20px rgba(10, 132, 255, 0.6) !important;
+    transform: scale(1.005);
+  }
+  100% {
+    box-shadow: 0 0 25px rgba(242, 20, 20, 1), 0 0 45px rgba(10, 132, 255, 0.9) !important;
+    transform: scale(1.015);
+  }
+}
+
+        .ad-detector-size-badge {
+          position: absolute !important;
+          top: 0 !important;
+          left: 0 !important;
+          background: #ff3b30 !important;
+          color: #ffffff !important;
+          font-size: 11px !important;
+          font-weight: 700 !important;
+          padding: 2px 6px !important;
+          border-bottom-right-radius: 6px !important;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.3) !important;
+          z-index: 2147483645 !important;
+          pointer-events: none !important;
+          white-space: nowrap !important;
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+          line-height: 1.2 !important;
+        }
+      `;
+      (document.head || document.documentElement).appendChild(style);
+    }
+
+    bindGlobalHotkeys() {
+      window.addEventListener('keydown', (e) => {
+        if (e.altKey && (e.code === 'KeyA' || e.key === 'a' || e.key === 'A')) {
+          e.preventDefault();
+          this.toggleUI();
+        }
+      });
+    }
+
+    isExcludedElement(el) {
+      if (!el) return true;
+      if (el.id === 'dh_pageContainer' || el.closest('#dh_pageContainer')) return true;
+      if (el.id === 'ad-detector-host' || el.closest('#ad-detector-host')) return true;
+      return false;
+    }
+
+    isLegitimateElement(el) {
+      if (!el || el === document.body || el === document.documentElement) return true;
+      if (this.isExcludedElement(el)) return true;
+      if (el.querySelector('input, textarea, select, button, [role="dialog"], [aria-modal="true"]')) return true;
+      const role = el.getAttribute('role');
+      if (['main', 'navigation', 'search', 'dialog'].includes(role)) return true;
+      return false;
+    }
+
+    getMainDomain(hostname) {
+      if (!hostname) return '';
+      const parts = hostname.split('.').filter(Boolean);
+      if (parts.length <= 2) return hostname;
+      return parts.slice(-2).join('.');
+    }
+
+    async isAnimatedGif(url) {
+      if (!url) return false;
+      if (this.animatedGifCache.has(url)) {
+        return this.animatedGifCache.get(url);
+      }
+
+      if (url.startsWith('data:image/gif;base64,') || url.startsWith('data:image/base64,')) {
+        try {
+          const base64Data = url.split(',')[1];
+          const binaryString = atob(base64Data.slice(0, 2000));
+          let frameCount = 0;
+          for (let i = 0; i < binaryString.length - 2; i++) {
+            if (binaryString.charCodeAt(i) === 0x21 && binaryString.charCodeAt(i + 1) === 0xf9) {
+              frameCount++;
+              if (frameCount > 1) {
+                this.animatedGifCache.set(url, true);
+                return true;
+              }
+            }
+          }
+          this.animatedGifCache.set(url, false);
+          return false;
+        } catch (e) {
+          this.animatedGifCache.set(url, false);
+          return false;
+        }
+      }
+
+      try {
+        const response = await fetch(url, { headers: { Range: 'bytes=0-2048' } });
+        const buffer = await response.arrayBuffer();
+        const bytes = new Uint8Array(buffer);
+
+        const header = String.fromCharCode(...bytes.subarray(0, 6));
+        if (!header.startsWith('GIF')) {
+          this.animatedGifCache.set(url, false);
+          return false;
+        }
+
+        let frameCount = 0;
+        for (let i = 0; i < bytes.length - 2; i++) {
+          if (bytes[i] === 0x21 && bytes[i + 1] === 0xf9) {
+            frameCount++;
+            if (frameCount > 1) {
+              this.animatedGifCache.set(url, true);
+              return true;
+            }
+          }
+        }
+        this.animatedGifCache.set(url, false);
+        return false;
+      } catch (e) {
+        this.animatedGifCache.set(url, false);
+        return false;
+      }
+    }
+
+    calculateAdScore(el) {
+      if (this.isLegitimateElement(el)) return { score: 0, reasons: [] };
+
+      let score = 0;
+      const reasons = [];
+
+      const style = window.getComputedStyle(el);
+      const rect = el.getBoundingClientRect();
+      const vw = window.innerWidth || document.documentElement.clientWidth;
+      const vh = window.innerHeight || document.documentElement.clientHeight;
+      const viewportArea = vw * vh;
+
+      if (style.pointerEvents === 'none' || style.display === 'none' || style.visibility === 'hidden') {
+        if (el.dataset.overlayBlocked === 'true') {
+          return { score: 100, reasons: ['已被用户屏蔽（含持久化记忆）'] };
+        }
+        return { score: 0, reasons: [] };
+      }
+
+      const adWordRegex = /(^|[-_ \/])(ad|ads|advert|banner|popup|sponsor|sponsored|promoted|guanggao|gg|float|floatad|couplet)([-_ \/]|s?$)/i;
+      const classAndId = `${el.id} ${el.className}`;
+      if (adWordRegex.test(classAndId)) {
+        score += 35;
+        reasons.push('Class/ID 命中广告关键词');
+      }
+
+      const areaRatio = (rect.width * rect.height) / viewportArea;
+      const isPositioned = style.position === 'fixed' || style.position === 'absolute';
+      const zIndex = parseInt(style.zIndex, 10) || 0;
+      const opacity = parseFloat(style.opacity);
+      const bgColor = style.backgroundColor;
+      const isBgTransparent = bgColor === 'transparent' || bgColor.endsWith(', 0)') || bgColor === 'rgba(0, 0, 0, 0)';
+      const isVisuallyInvisible = opacity < 0.15 || isBgTransparent;
+
+      if (isPositioned && zIndex >= 10 && isVisuallyInvisible && rect.width > 100 && rect.height > 100) {
+        score += 60;
+        reasons.push('透明/高层级悬浮点击劫持层');
+      } else if (areaRatio > 0.35 && isPositioned && (zIndex > 99 || style.willChange === 'transform') && isVisuallyInvisible) {
+        score += 55;
+        reasons.push('透明大面积点击劫持/隐蔽覆盖层');
+      }
+
+      const iabSizes = [[728, 90], [300, 250], [336, 280], [160, 600], [300, 600], [970, 90], [320, 50]];
+      const isIABSize = iabSizes.some(([w, h]) => Math.abs(rect.width - w) <= 6 && Math.abs(rect.height - h) <= 6);
+      if (isIABSize) {
+        score += 30;
+        reasons.push('符合 IAB 标准广告尺寸');
+      }
+
+      if ((style.position === 'fixed' || style.position === 'sticky') && zIndex > 50) {
+        if (rect.height < 260 && (rect.top <= 10 || rect.bottom >= vh - 10)) {
+          score += 30;
+          reasons.push('顶/底悬浮贴片弹窗');
+        }
+      }
+
+      const imgEl = el.tagName === 'IMG' ? el : el.querySelector('img');
+      if (imgEl) {
+        const imgSrc = imgEl.currentSrc || imgEl.src || '';
+        const isBase64Gif = imgSrc.startsWith('data:image/gif;base64,') || imgSrc.startsWith('data:image/base64,');
+        const isNetGif = /\.gif($|\?)/i.test(imgSrc) || imgSrc.includes('format=gif');
+
+        if (isBase64Gif || isNetGif) {
+          if (isBase64Gif) {
+            score += 25;
+            reasons.push('使用 Base64 Data-URI 格式内嵌 GIF');
+            if (imgSrc.includes('R0lGODlh')) {
+              score += 15;
+              reasons.push('匹配标准 GIF Base64 编码头部');
+            }
+          }
+
+          if (isNetGif && /ad|banner|union|pop|sp|delivery|gg|float/i.test(imgSrc)) {
+            score += 30;
+            reasons.push('GIF 路径包含广告/网盟关键字');
+          }
+
+          if (this.animatedGifCache.get(imgSrc) === true) {
+            score += 25;
+            reasons.push('检测到多帧动态 GIF (High Attention)');
+          } else {
+            this.isAnimatedGif(imgSrc).then((isAnim) => {
+              if (isAnim && !this.isScanning) {
+                this.scan();
+              }
+            });
+          }
+        }
+      }
+
+      if (el.tagName === 'IFRAME') {
+        const src = el.src || '';
+        if (src && !src.startsWith(window.location.origin) && !src.startsWith('about:')) {
+          score += 25;
+          reasons.push('跨域 iframe 嵌套');
+        }
+        if (/pos|slot|pagead|doubleclick|union|ssp|popunder|m3u8|embed/i.test(src)) {
+          score += 35;
+          reasons.push('匹配网盟或可疑外链 iframe');
+        }
+      }
+
+      const anchor = el.tagName === 'A' ? el : el.querySelector('a[href]');
+      if (anchor) {
+        const rawHref = anchor.getAttribute('href') || '';
+        if (rawHref === '#' || rawHref.startsWith('javascript:')) {
+          if (isPositioned && areaRatio > 0.05) {
+            score += 50;
+            reasons.push('透明/伪装点击劫持 (JS/空链接)');
+          }
+        }
+
+        const redirectPattern = /(\/|\?)(goto|redirect|out|click|jump|target=|\?url=|\&url=)/i;
+        if (redirectPattern.test(rawHref)) {
+          score += 30;
+          reasons.push('站内隐蔽重定向跳转链接');
+        }
+
+        try {
+          const targetUrl = new URL(anchor.href, window.location.href);
+          const currentHost = window.location.hostname;
+          const currentMainDomain = this.getMainDomain(currentHost);
+          const targetMainDomain = this.getMainDomain(targetUrl.hostname);
+
+          if (targetMainDomain && targetMainDomain !== currentMainDomain && !targetUrl.protocol.startsWith('javascript')) {
+            let linkScore = 35;
+            let linkReason = `跨域外链 (${targetUrl.hostname})`;
+            if (anchor.target === '_blank') {
+              linkScore += 15;
+              linkReason += ' + _blank';
+            }
+            const img = anchor.querySelector('img');
+            if (img) {
+              linkScore += 10;
+              const imgSrc = img.getAttribute('src') || '';
+              if (imgSrc.startsWith('data:image/') || /\.gif($|\?)/i.test(imgSrc)) {
+                linkReason += ' + GIF/Base64 动图跳转';
+              } else {
+                linkReason += ' + 图片占位';
+              }
+            }
+            score += linkScore;
+            reasons.push(linkReason);
+          }
+        } catch (e) { }
+
+        const textContent = (anchor.textContent || '').trim();
+        const sensitiveWordsRegex = /(裸聊|直播|免費看|激情|性感|菠菜|博彩|荷官|棋牌|投注|充值|特惠|点击看|🔞|加微信|私聊|App下载|点击播放)/i;
+        if (sensitiveWordsRegex.test(textContent)) {
+          score += 25;
+          reasons.push(`命中诱导敏感词 ("${textContent.slice(0, 10)}...")`);
+        }
+      }
+
+      return { score, reasons };
+    }
+
+    scan() {
+      if (this.isScanning) return;
+      this.isScanning = true;
+
+      const elements = document.querySelectorAll('div, iframe, a, img, section, article, ins, [class*="ad"], [id*="ad"]');
+
+      elements.forEach((el) => {
+        if (this.isExcludedElement(el)) return;
+
+        let adId = el.getAttribute('data-ad-detector-id');
+        const existingMeta = adId ? this.detectedAds.get(adId) : null;
+
+        const { score, reasons } = this.calculateAdScore(el);
+
+        if (score >= 40 || (existingMeta && existingMeta.isBlocked)) {
+          if (!adId) {
+            this.counter++;
+            adId = `ad-detected-${this.counter}`;
+            el.setAttribute('data-ad-detector-id', adId);
+          }
+
+          const rect = el.getBoundingClientRect();
+          const formattedSize = existingMeta ? existingMeta.size : `${Math.round(rect.width)}x${Math.round(rect.height)}px`;
+
+          const anchor = el.tagName === 'A' ? el : el.querySelector('a[href]');
+          let hrefHost = '';
+          try {
+            if (anchor && anchor.href) hrefHost = new URL(anchor.href, window.location.href).hostname;
+          } catch (e) { }
+          const fingerprint = `${el.tagName.toLowerCase()}_${formattedSize}_${hrefHost}`;
+
+          const meta = {
+            id: adId,
+            element: el,
+            score: existingMeta ? existingMeta.score : score,
+            reasons: existingMeta ? existingMeta.reasons : reasons,
+            tagName: el.tagName.toLowerCase(),
+            size: formattedSize,
+            classAndId: `${el.id ? '#' + el.id : ''} ${el.className ? '.' + el.className : ''}`.trim(),
+            fingerprint: fingerprint,
+            isBlocked: existingMeta ? existingMeta.isBlocked : false
+          };
+
+          if (!meta.isBlocked && this.isMatchesBlockedRule(meta)) {
+            meta.isBlocked = true;
+            el.dataset.overlayBlocked = 'true';
+            el.style.setProperty('display', 'none', 'important');
+          }
+
+          this.detectedAds.set(adId, meta);
+
+          if (this.isHighlighted && !meta.isBlocked) {
+            this.applyHighlight(el, true, formattedSize);
+          }
+        }
+      });
+
+      this.isScanning = false;
+      if (this.isUIVisible) {
+        this.updateUI();
+      }
+      return this.detectedAds;
+    }
+
+    initObserver() {
+      this.observer = new MutationObserver(() => {
+        if (this.scanTimer) clearTimeout(this.scanTimer);
+        this.scanTimer = setTimeout(() => {
+          if ('requestIdleCallback' in window) {
+            requestIdleCallback(() => this.scan());
+          } else {
+            this.scan();
+          }
+        }, 300);
+      });
+
+      if (document.body) {
+        this.observer.observe(document.body, {
+          childList: true,
+          subtree: true,
+          attributes: true,
+          attributeFilter: ['style', 'class', 'src']
+        });
+      }
+
+      this.scan();
+    }
+
+    toggleUI() {
+      if (this.isUIVisible) {
+        this.hideUI();
+      } else {
+        this.showUI();
+      }
+    }
+
+    showUI() {
+      if (this.isUIVisible) return;
+      this.isUIVisible = true;
+
+      if (!this.host) {
+        this.initUI();
+      } else {
+        this.host.style.display = 'block';
+      }
+      this.scan();
+    }
+
+    hideUI() {
+      if (!this.isUIVisible) return;
+      this.isUIVisible = false;
+      if (this.host) {
+        this.host.style.display = 'none';
+      }
+    }
+
+    initUI() {
+      this.host = document.createElement('div');
+      this.host.id = 'ad-detector-host';
+      this.shadow = this.host.attachShadow({ mode: 'open' });
+
+      let savedPos = null;
+      try {
+        if (typeof GM_getValue !== 'undefined') {
+          savedPos = GM_getValue('ad_detector_panel_pos', null);
+        } else if (window.localStorage) {
+          savedPos = JSON.parse(localStorage.getItem('ad_detector_panel_pos') || 'null');
+        }
+      } catch (e) {
+        savedPos = null;
+      }
+
+      let initStyle = 'bottom: 20px; right: 20px;';
+      if (savedPos && savedPos.left !== undefined && savedPos.top !== undefined) {
+        initStyle = `left: ${savedPos.left}px; top: ${savedPos.top}px;`;
+      }
+
+      this.shadow.innerHTML = `
+        <style>
+          .panel {
+            padding: 2vw;
+            position: fixed; ${initStyle} z-index: 2147483647;
+            width: min(420px, 90vw); max-height: 80vh; background: rgba(28, 28, 30, 0.95);
+            backdrop-filter: blur(20px); color: #f2f2f7;
+            border-radius: 14px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6); display: flex; flex-direction: column;
+            border: 1px solid rgba(255, 255, 255, 0.12); font-size: 13px;
+            user-select: none;
+            touch-action: none !important;
+          }
+
+          /* ★ 四周隐形拖拽热区 (向外/向内扩展盲操触控面积) */
+          .edge-drag {
+            position: absolute;
+            z-index: 10;
+            touch-action: none !important;
+            cursor: move;
+          }
+          .edge-top { top: -10px; left: 0; width: 100%; height: 20px; }
+          .edge-bottom { bottom: -10px; left: 0; width: 100%; height: 20px; }
+          .edge-left { top: 0; left: -10px; width: 20px; height: 100%; }
+          .edge-right { top: 0; right: -10px; width: 20px; height: 100%; }
+
+          @media (max-width: 768px), (orientation: portrait) {
+            .panel { max-height: 55vh !important; }
+          }
+
+          .header {
+            padding: 10px 14px; font-weight: 600; border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex; justify-content: space-between; align-items: center;
+            cursor: move; touch-action: none !important;
+          }
+          .select-control {
+            background: rgba(255, 255, 255, 0.12);
+            color: #f2f2f7;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            padding: 2px 4px;
+            font-size: 11px;
+            outline: none;
+            cursor: pointer;
+          }
+          .select-control option { background: #1c1c1e; color: #f2f2f7; }
+          .close-btn {
+            cursor: pointer; font-size: 16px; color: #8e8e93; transition: color 0.15s;
+            padding: 2px 6px; border-radius: 4px;
+          }
+          .close-btn:hover { color: #ffffff; background: rgba(255, 255, 255, 0.1); }
+
+          .body { padding: 12px; overflow-y: auto; flex: 1; touch-action: pan-y !important; }
+          .item {
+            background: rgba(255, 255, 255, 0.06); padding: 10px; border-radius: 8px;
+            margin-bottom: 8px; border: 1px solid rgba(255, 255, 255, 0.04);
+            transition: all 0.2s ease;
+          }
+          .item:hover { background: rgba(0, 0, 0, 0); }
+          .item.is-blocked { opacity: 0.55; background: rgba(0, 0, 0, 0.25); border-color: rgba(255, 255, 255, 0.02); }
+          .item.is-blocked .item-title { text-decoration: line-through; color: #8e8e93; }
+
+          .item-top { display: flex; justify-content: space-between; align-items: center; }
+          .score { color: #ff9500; font-weight: bold; }
+          .status-tag { font-size: 10px; padding: 2px 6px; border-radius: 4px; background: rgba(255, 69, 58, 0.25); color: #ff453a; font-weight: 600; }
+          .reasons { font-size: 11px; color: #aeaeb2; margin-top: 4px; line-height: 1.4; }
+          .actions { display: flex; gap: 6px; margin-top: 8px; }
+
+          .btn-action {
+            padding: 4px 8px; font-size: 11px; border-radius: 4px; border: none;
+            cursor: pointer; font-weight: 600; transition: all 0.15s ease;
+            background: rgba(255, 255, 255, 0.12); color: #f2f2f7;
+          }
+          .btn-action:hover { background: rgba(255, 255, 255, 0.25); }
+          .btn-preview { background: rgba(10, 132, 255, 0.2); color: #64d2ff; }
+          .btn-preview:hover { background: rgba(10, 132, 255, 0.4); }
+          .btn-hide-single { background: rgba(255, 69, 58, 0.2); color: #ff453a; }
+          .btn-hide-single:hover { background: rgba(255, 69, 58, 0.4); }
+          .btn-restore-single { background: rgba(48, 209, 88, 0.2); color: #30d158; }
+          .btn-restore-single:hover { background: rgba(48, 209, 88, 0.4); }
+
+          .footer { padding: 12px; border-top: 1px solid rgba(255, 255, 255, 0.1); display: flex; gap: 6px; }
+
+          button.footer-btn {
+            flex: 1; padding: 8px 4px; border: none; border-radius: 8px;
+            font-weight: 600; font-size: 11px; cursor: pointer;
+            transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-flex; align-items: center; justify-content: center;
+            outline: none; white-space: nowrap;
+          }
+          button.footer-btn:hover:not(:disabled) { filter: brightness(1.15); transform: translateY(-1px); }
+          button.footer-btn:active:not(:disabled) { transform: scale(0.95) translateY(0); filter: brightness(0.9); }
+          button.footer-btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none !important; }
+
+          .btn-scan { background: #0a84ff; color: #ffffff; box-shadow: 0 2px 8px rgba(10, 132, 255, 0.3); }
+          .btn-hl { background: #3a3a3c; color: #f2f2f7; border: 1px solid rgba(255, 255, 255, 0.1); }
+          .btn-hl.active { background: #5e5ce6; color: #ffffff; box-shadow: 0 2px 8px rgba(94, 92, 230, 0.4); }
+          .btn-clean { background: #ff453a; color: #ffffff; box-shadow: 0 2px 8px rgba(255, 69, 58, 0.3); }
+          .btn-restore-all { background: #30d158; color: #ffffff; box-shadow: 0 2px 8px rgba(48, 209, 88, 0.3); }
+
+          .toast {
+            position: absolute; top: -38px; left: 50%; transform: translateX(-50%) translateY(10px);
+            background: rgba(44, 44, 46, 0.95); color: #ffffff; padding: 6px 14px;
+            border-radius: 20px; font-size: 12px; font-weight: 500;
+            border: 1px solid rgba(255, 255, 255, 0.15); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            opacity: 0; pointer-events: none; transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            white-space: nowrap; max-width: 90%; overflow: hidden; text-overflow: ellipsis;
+          }
+          .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+          /* ★ 独立预览悬浮弹窗样式 */
+          .preview-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: min(480px, 85vw);
+            max-height: 70vh;
+            background: rgba(28, 28, 30, 0.98);
+            backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+            border-radius: 14px;
+            z-index: 2147483648;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            animation: previewPopIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+          }
+
+          @keyframes previewPopIn {
+            from { opacity: 0; transform: translate(-50%, -45%) scale(0.95); }
+            to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+          }
+
+          .preview-header {
+            padding: 10px 14px;
+            background: rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            color: #f2f2f7;
+          }
+
+          .preview-body {
+            padding: 16px;
+            overflow: auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.3);
+            min-height: 140px;
+            max-height: 55vh;
+          }
+
+          .preview-container {
+            max-width: 100%;
+            max-height: 100%;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+          }
+
+          .preview-container * {
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+          }
+        </style>
+
+        <div class="panel" id="main-panel">
+          <div class="edge-drag edge-top"></div>
+          <div class="edge-drag edge-bottom"></div>
+          <div class="edge-drag edge-left"></div>
+          <div class="edge-drag edge-right"></div>
+
+          <div class="toast" id="toast">提示信息</div>
+          <div class="header" id="panel-header">
+            <span>🛡️ v10.0</span>
+            <div style="display:flex;align-items:center;gap:4px;">
+              <select id="select-filter" class="select-control" title="过滤显示状态">
+                <option value="all">显示全部</option>
+                <option value="unhandled">仅未处理</option>
+                <option value="blocked">仅已屏蔽</option>
+              </select>
+              <select id="select-sort" class="select-control" title="选择排序方式">
+                <option value="default">默认排序</option>
+                <option value="size-desc">元素大小 (大 → 小)</option>
+                <option value="size-asc">元素大小 (小 → 大)</option>
+              </select>
+              <span id="count-badge" style="background:rgba(255,255,255,0.1);padding:2px 6px;border-radius:10px;font-size:11px;">0 个</span>
+              <span class="close-btn" id="btn-close-panel" title="关闭面板 (Alt+A)">✕</span>
+            </div>
+          </div>
+          <div class="body" id="list">
+            <div style="text-align:center;color:#8e8e93;padding:20px;">正在加载检测分析...</div>
+          </div>
+          <div class="footer">
+            <button class="footer-btn btn-scan" id="btn-scan">重新扫描</button>
+            <button class="footer-btn btn-hl" id="btn-hl">高亮标注</button>
+            <button class="footer-btn btn-clean" id="btn-clean">一键屏蔽</button>
+            <button class="footer-btn btn-restore-all" id="btn-restore-all">一键撤销</button>
+          </div>
+        </div>
+
+        <!-- ★ 元素预览悬浮窗口 HTML 结构 -->
+        <div class="preview-modal" id="preview-modal">
+          <div class="preview-header">
+            <span id="preview-title" style="word-break:break-all;padding-right:10px;">🔍 元素预览</span>
+            <span class="close-btn" id="btn-close-preview" title="关闭预览">✕</span>
+          </div>
+          <div class="preview-body">
+            <div class="preview-container" id="preview-container"></div>
+          </div>
+        </div>
+      `;
+
+      document.body.appendChild(this.host);
+      this.bindInteractiveEvents();
+      this.makeDraggable();
+    }
+
+    makeDraggable() {
+      const panel = this.shadow.querySelector('#main-panel');
+      const header = this.shadow.querySelector('#panel-header');
+      const edges = this.shadow.querySelectorAll('.edge-drag');
+
+      let isDragging = false;
+      let startX = 0;
+      let startY = 0;
+      let initialLeft = 0;
+      let initialTop = 0;
+
+      const getClientPos = (e) => {
+        if (e.touches && e.touches.length > 0) {
+          return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        }
+        return { x: e.clientX, y: e.clientY };
+      };
+
+      const startDrag = (e) => {
+        if (e.target.closest('#btn-close-panel') || e.target.closest('.select-control')) return;
+        if (e.cancelable) e.preventDefault();
+
+        isDragging = true;
+        const pos = getClientPos(e);
+        startX = pos.x;
+        startY = pos.y;
+
+        const rect = panel.getBoundingClientRect();
+        initialLeft = rect.left;
+        initialTop = rect.top;
+
+        panel.style.bottom = 'auto';
+        panel.style.right = 'auto';
+        panel.style.left = `${initialLeft}px`;
+        panel.style.top = `${initialTop}px`;
+
+        try {
+          if (e.pointerId !== undefined) {
+            e.target.setPointerCapture(e.pointerId);
+          }
+        } catch (err) { }
+      };
+
+      const moveDrag = (e) => {
+        if (!isDragging) return;
+
+        const pos = getClientPos(e);
+        const deltaX = pos.x - startX;
+        const deltaY = pos.y - startY;
+
+        let newLeft = initialLeft + deltaX;
+        let newTop = initialTop + deltaY;
+
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+        const panelWidth = panel.offsetWidth;
+
+        newLeft = Math.max(-panelWidth + 40, Math.min(newLeft, vw - 40));
+        newTop = Math.max(0, Math.min(newTop, vh - 40));
+
+        panel.style.left = `${newLeft}px`;
+        panel.style.top = `${newTop}px`;
+      };
+
+      const stopDrag = (e) => {
+        if (!isDragging) return;
+        isDragging = false;
+        try {
+          if (e.pointerId !== undefined) {
+            e.target.releasePointerCapture(e.pointerId);
+          }
+        } catch (err) { }
+
+        const rect = panel.getBoundingClientRect();
+        const posData = { left: rect.left, top: rect.top };
+        try {
+          if (typeof GM_setValue !== 'undefined') {
+            GM_setValue('ad_detector_panel_pos', posData);
+          } else if (window.localStorage) {
+            localStorage.setItem('ad_detector_panel_pos', JSON.stringify(posData));
+          }
+        } catch (err) {
+          console.warn('[AdDetector] 无法保存面板位置', err);
+        }
+      };
+
+      const dragTargets = [header, ...edges];
+      dragTargets.forEach((el) => {
+        if (!el) return;
+        el.addEventListener('pointerdown', startDrag);
+        el.addEventListener('touchstart', startDrag, { passive: false });
+      });
+
+      window.addEventListener('pointermove', moveDrag, { passive: false });
+      window.addEventListener('pointerup', stopDrag);
+      window.addEventListener('pointercancel', stopDrag);
+
+      window.addEventListener('touchmove', moveDrag, { passive: false });
+      window.addEventListener('touchend', stopDrag);
+      window.addEventListener('touchcancel', stopDrag);
+    }
+
+    applyHighlight(el, enable, sizeText = '') {
+      const oldBadge = el.querySelector('.ad-detector-size-badge');
+      if (oldBadge) oldBadge.remove();
+
+      if (enable && el.dataset.overlayBlocked !== 'true') {
+        el.style.setProperty('outline', '3px solid #ff3b30', 'important');
+        el.style.setProperty('background-color', 'rgba(255, 59, 48, 0.2)', 'important');
+
+        if (!sizeText) {
+          const adId = el.getAttribute('data-ad-detector-id');
+          const meta = this.detectedAds.get(adId);
+          sizeText = meta ? meta.size : '0x0px';
+        }
+
+        const currentPos = window.getComputedStyle(el).position;
+        if (currentPos === 'static') {
+          el.style.setProperty('position', 'relative', 'important');
+        }
+
+        const badge = document.createElement('div');
+        badge.className = 'ad-detector-size-badge';
+        badge.textContent = sizeText;
+        el.appendChild(badge);
+      } else {
+        el.style.removeProperty('outline');
+        el.style.removeProperty('background-color');
+      }
+    }
+
+    toggleHighlight() {
+      this.isHighlighted = !this.isHighlighted;
+      this.detectedAds.forEach((meta) => {
+        if (!meta.isBlocked) {
+          this.applyHighlight(meta.element, this.isHighlighted, meta.size);
+        }
+      });
+    }
+
+    // ★ 核心方法优化：构建并弹出独立的元素预览悬浮窗（集成原网页 CSS 样式）
+    // ★ 核心方法优化：使用 iframe 物理隔离原网页 CSS，防止主面板尺寸被撑宽
+    showPreviewWindow(adId) {
+      const meta = this.detectedAds.get(adId);
+      if (!meta || !meta.element) return;
+
+      const modal = this.shadow.querySelector('#preview-modal');
+      const container = this.shadow.querySelector('#preview-container');
+      const title = this.shadow.querySelector('#preview-title');
+
+      title.textContent = `🔍 预览: <${meta.tagName}> (${meta.size})`;
+      container.innerHTML = '';
+
+      // 1. 创建独立的隔离 iframe
+      const iframe = document.createElement('iframe');
+      iframe.style.setProperty('width', '100%', 'important');
+      iframe.style.setProperty('height', '300px', 'important');
+      iframe.style.setProperty('border', 'none', 'important');
+      iframe.style.setProperty('background', 'transparent', 'important');
+
+      container.appendChild(iframe);
+
+      // 2. 获取 iframe 的 document 对象
+      const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+      iframeDoc.open();
+      iframeDoc.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <style>
+            body {
+              margin: 0;
+              padding: 16px;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              min-height: 100vh;
+              box-sizing: border-box;
+              background: transparent;
+              overflow: auto;
+            }
+          </style>
+        </head>
+        <body>
+          <div id="iframe-preview-root"></div>
+        </body>
+        </html>
+      `);
+      iframeDoc.close();
+
+      // 3. 将原网页的所有 <style> 与 <link> 注入到 iframe 的 <head> 中
+      const iframeHead = iframeDoc.head;
+
+      document.querySelectorAll('style').forEach((styleTag) => {
+        if (styleTag.id !== 'ad-detector-global-styles' && styleTag.id !== 'ad-detector-dynamic-css-rules') {
+          iframeHead.appendChild(styleTag.cloneNode(true));
+        }
+      });
+
+      document.querySelectorAll('link[rel="stylesheet"]').forEach((linkTag) => {
+        const clonedLink = linkTag.cloneNode(true);
+        if (clonedLink.href) clonedLink.href = clonedLink.href; // 转换绝对路径
+        iframeHead.appendChild(clonedLink);
+      });
+
+      // 4. 克隆目标节点并注入到 iframeBody 内部
+      const origRect = meta.element.getBoundingClientRect();
+      const origStyle = window.getComputedStyle(meta.element);
+      const clone = meta.element.cloneNode(true);
+
+      // 清理插件标记
+      clone.removeAttribute('data-ad-detector-id');
+      const badgeInClone = clone.querySelector('.ad-detector-size-badge');
+      if (badgeInClone) badgeInClone.remove();
+
+      // 基础尺寸修复
+      const finalWidth = origRect.width > 0 ? origRect.width : (parseInt(meta.size.split('x')[0]) || 300);
+      const finalHeight = origRect.height > 0 ? origRect.height : (parseInt(meta.size.split('x')[1]) || 250);
+
+      clone.style.setProperty('display', 'block', 'important');
+      clone.style.setProperty('position', 'relative', 'important');
+      clone.style.setProperty('visibility', 'visible', 'important');
+      clone.style.setProperty('opacity', '1', 'important');
+      clone.style.setProperty('transform', 'none', 'important');
+      clone.style.setProperty('transition', 'none', 'important');
+      clone.style.setProperty('margin', '0 auto', 'important');
+      clone.style.setProperty('width', `${finalWidth}px`, 'important');
+      clone.style.setProperty('height', `${finalHeight}px`, 'important');
+
+      if (origStyle.backgroundColor && origStyle.backgroundColor !== 'rgba(0, 0, 0, 0)' && origStyle.backgroundColor !== 'transparent') {
+        clone.style.setProperty('background-color', origStyle.backgroundColor, 'important');
+      }
+
+      const root = iframeDoc.getElementById('iframe-preview-root');
+      root.appendChild(clone);
+
+      // 显示模态框
+      modal.style.display = 'flex';
+
+      // 关闭逻辑
+      const closeBtn = this.shadow.querySelector('#btn-close-preview');
+      closeBtn.onclick = () => {
+        modal.style.display = 'none';
+        container.innerHTML = '';
+      };
+    }
+
+    previewHoverElement(adId, isHovering) {
+      const meta = this.detectedAds.get(adId);
+      if (!meta || !meta.element || meta.isBlocked) return;
+
+      // ★ 1. 临时切断 Observer，防止悬浮样式修改导致 updateUI 全局销毁重绘 DOM
+      if (this.observer) {
+        this.observer.disconnect();
+      }
+
+      if (isHovering) {
+        meta.element.classList.add('ad-detector-hover-active');
+      } else {
+        meta.element.classList.remove('ad-detector-hover-active');
+
+        if (!this.isHighlighted) {
+          meta.element.style.removeProperty('outline');
+          meta.element.style.removeProperty('box-shadow');
+        } else {
+          this.applyHighlight(meta.element, true, meta.size);
+        }
+      }
+
+      // ★ 2. 样式修改完毕后，立即恢复 Observer 监听
+      if (this.observer && document.body) {
+        this.observer.observe(document.body, {
+          childList: true,
+          subtree: true,
+          attributes: true,
+          attributeFilter: ['style', 'class', 'src']
+        });
+      }
+    }
+
+    neutralizeSingle(adId) {
+      const meta = this.detectedAds.get(adId);
+      if (meta && meta.element) {
+        meta.isBlocked = true;
+        meta.element.dataset.overlayBlocked = 'true';
+
+        this.applyHighlight(meta.element, false);
+        meta.element.style.setProperty('display', 'none', 'important');
+
+        const rule = {
+          classAndId: meta.classAndId,
+          tagName: meta.tagName,
+          size: meta.size,
+          fingerprint: meta.fingerprint
+        };
+
+        if (!this.blockedRules.some((r) => r.fingerprint === rule.fingerprint)) {
+          this.blockedRules.push(rule);
+          this.saveBlockedRules();
+        }
+
+        this.updateUI();
+        this.showToast('🛡️ 该元素已屏蔽（已存入本地存储）');
+      }
+    }
+
+    restoreSingle(adId) {
+      const meta = this.detectedAds.get(adId);
+      if (meta && meta.element) {
+        meta.isBlocked = false;
+        delete meta.element.dataset.overlayBlocked;
+
+        meta.element.style.removeProperty('display');
+
+        if (this.isHighlighted) {
+          this.applyHighlight(meta.element, true, meta.size);
+        }
+
+        this.blockedRules = this.blockedRules.filter(
+          (r) => !(r.fingerprint === meta.fingerprint || (r.classAndId && r.classAndId === meta.classAndId))
+        );
+        this.saveBlockedRules();
+
+        this.updateUI();
+        this.showToast('↩️ 已撤销屏蔽，已同步更新本地存储');
+      }
+    }
+
+    cleanAll() {
+      let count = 0;
+      this.detectedAds.forEach((meta) => {
+        if (meta.element && !meta.isBlocked) {
+          this.neutralizeSingle(meta.id);
+          count++;
+        }
+      });
+      return count;
+    }
+
+    restoreAll() {
+      let count = 0;
+      this.detectedAds.forEach((meta) => {
+        if (meta.element && meta.isBlocked) {
+          meta.isBlocked = false;
+          delete meta.element.dataset.overlayBlocked;
+          meta.element.style.removeProperty('display');
+
+          if (this.isHighlighted) {
+            this.applyHighlight(meta.element, true, meta.size);
+          }
+          count++;
+        }
+      });
+
+      this.blockedRules = [];
+      this.saveBlockedRules();
+      this.updateUI();
+
+      return count;
+    }
+
+    showToast(message) {
+      if (!this.shadow) return;
+      const toast = this.shadow.querySelector('#toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 2200);
+    }
+
+    bindInteractiveEvents() {
+      const btnScan = this.shadow.querySelector('#btn-scan');
+      const btnHl = this.shadow.querySelector('#btn-hl');
+      const btnClean = this.shadow.querySelector('#btn-clean');
+      const btnRestoreAll = this.shadow.querySelector('#btn-restore-all');
+      const btnClose = this.shadow.querySelector('#btn-close-panel');
+      const selectSort = this.shadow.querySelector('#select-sort');
+      const selectFilter = this.shadow.querySelector('#select-filter');
+
+      btnClose.onclick = () => this.hideUI();
+
+      if (selectSort) {
+        selectSort.value = this.sortType;
+        selectSort.onchange = (e) => {
+          this.sortType = e.target.value;
+          this.updateUI();
+        };
+      }
+
+      if (selectFilter) {
+        selectFilter.value = this.filterType;
+        selectFilter.onchange = (e) => {
+          this.filterType = e.target.value;
+          this.updateUI();
+        };
+      }
+
+      btnScan.onclick = () => {
+        btnScan.disabled = true;
+        btnScan.textContent = '扫描中...';
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            this.scan();
+            btnScan.disabled = false;
+            btnScan.textContent = '重新扫描';
+            this.showToast('✅ 页面诊断完成');
+          }, 50);
+        });
+      };
+
+      btnHl.onclick = () => {
+        this.toggleHighlight();
+        if (this.isHighlighted) {
+          btnHl.classList.add('active');
+          this.showToast('🔴 已高亮标注高风险元素');
+        } else {
+          btnHl.classList.remove('active');
+          this.showToast('⚪ 已还原元素标注');
+        }
+      };
+
+      btnClean.onclick = () => {
+        btnClean.disabled = true;
+        btnClean.textContent = '屏蔽中...';
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            const count = this.cleanAll();
+            btnClean.disabled = false;
+            btnClean.textContent = '一键屏蔽';
+            this.showToast(`🛡 已成功屏蔽 ${count} 个威胁`);
+          }, 50);
+        });
+      };
+
+      btnRestoreAll.onclick = () => {
+        btnRestoreAll.disabled = true;
+        btnRestoreAll.textContent = '撤销中...';
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            const count = this.restoreAll();
+            btnRestoreAll.disabled = false;
+            btnRestoreAll.textContent = '一键撤销';
+            this.showToast(`↩️ 已恢复 ${count} 个被屏蔽元素`);
+          }, 50);
+        });
+      };
+    }
+
+    updateUI() {
+      if (!this.shadow) return;
+      const listEl = this.shadow.querySelector('#list');
+      const badge = this.shadow.querySelector('#count-badge');
+
+      let allDetected = Array.from(this.detectedAds.values());
+      const activeThreats = allDetected.filter((meta) => !meta.isBlocked);
+
+      badge.textContent = `${activeThreats.length} 未处理 / 共 ${allDetected.length} 个`;
+
+      if (allDetected.length === 0) {
+        listEl.innerHTML = '<div style="text-align:center;color:#30d158;padding:20px;">未发现高风险劫持或广告元素</div>';
+        return;
+      }
+
+      if (this.filterType === 'unhandled') {
+        allDetected = allDetected.filter((meta) => !meta.isBlocked);
+      } else if (this.filterType === 'blocked') {
+        allDetected = allDetected.filter((meta) => meta.isBlocked);
+      }
+
+      if (allDetected.length === 0) {
+        listEl.innerHTML = `<div style="text-align:center;color:#8e8e93;padding:20px;">没有符合 [${this.filterType === 'unhandled' ? '未处理' : '已屏蔽'}] 筛选条件的项</div>`;
+        return;
+      }
+
+      const getArea = (sizeStr) => {
+        if (!sizeStr) return 0;
+        const match = sizeStr.match(/(\d+)x(\d+)/);
+        if (match) {
+          return parseInt(match[1], 10) * parseInt(match[2], 10);
+        }
+        return 0;
+      };
+
+      allDetected.sort((a, b) => {
+        if (this.sortType === 'size-desc') {
+          return getArea(b.size) - getArea(a.size);
+        } else if (this.sortType === 'size-asc') {
+          return getArea(a.size) - getArea(b.size);
+        }
+        return b.score - a.score;
+      });
+
+      let html = '';
+      allDetected.forEach((meta) => {
+        const isBlocked = meta.isBlocked;
+
+        html += `
+          <div class="item ${isBlocked ? 'is-blocked' : ''}" data-ad-id="${meta.id}">
+            <div class="item-top">
+              <div class="item-title">
+                <strong>${meta.tagName}</strong>
+                <span style="color:#8e8e93;">(${meta.size})</span>
+              </div>
+              ${isBlocked ? '<span class="status-tag">已屏蔽</span>' : `<span class="score">${meta.score}分</span>`}
+            </div>
+            <div style="font-size:11px;color:#0a84ff;word-break:break-all;margin-top:2px;">${meta.classAndId || '无 Class/ID'}</div>
+            <div class="reasons">原因: ${meta.reasons.join(' | ')}</div>
+            <div class="actions">
+              ${!isBlocked
+            ? `<button class="btn-action btn-preview" data-action="preview" data-id="${meta.id}">🔍 预览元素</button>
+                     <button class="btn-action btn-hide-single" data-action="hide" data-id="${meta.id}">🚫 单独屏蔽</button>`
+            : `<button class="btn-action btn-restore-single" data-action="restore" data-id="${meta.id}">↩️ 撤销屏蔽</button>`
+          }
+            </div>
+          </div>
+        `;
+      });
+      listEl.innerHTML = html;
+
+      listEl.querySelectorAll('.item').forEach((item) => {
+        const adId = item.getAttribute('data-ad-id');
+
+        // 使用 pointerenter / pointerleave 替代 onmouseenter，配合 stopPropagation 止血
+        item.addEventListener('pointerenter', (e) => {
+          e.stopPropagation();
+          this.previewHoverElement(adId, true);
+        });
+
+        item.addEventListener('pointerleave', (e) => {
+          e.stopPropagation();
+          this.previewHoverElement(adId, false);
+        });
+
+        item.addEventListener('click', (e) => {
+          const btn = e.target.closest('.btn-action');
+          if (!btn) return;
+
+          const action = btn.getAttribute('data-action');
+          const id = btn.getAttribute('data-id');
+
+          if (action === 'preview') {
+            this.showPreviewWindow(id);
+          } else if (action === 'hide') {
+            this.neutralizeSingle(id);
+          } else if (action === 'restore') {
+            this.restoreSingle(id);
+          }
+        });
+      });
+    }
+  }
+
+  // 单例挂载
+  let instance = null;
+  function getDetector() {
+    if (!instance) {
+      instance = new UniversalAdDetector();
+    }
+    return instance;
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => getDetector());
+  } else {
+    getDetector();
+  }
+
+  // 绑定至全局 window 对象
+  globalWin.toggleAdDetectorUI = function () {
+    getDetector().toggleUI();
+  };
+
+  globalWin.showAdDetectorUI = function () {
+    getDetector().showUI();
+  };
+
+  globalWin.hideAdDetectorUI = function () {
+    getDetector().hideUI();
+  };
+
+  globalWin.cleanAdsSilently = function () {
+    return getDetector().cleanAll();
+  };
+})();
