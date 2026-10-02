@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Adblock4limbo——导航及各类功能函数合集.[github]
 // @namespace    https://limbopro.com/Adguard/Adblock4limbo.function.js
-// @version      0.2026.10.01
+// @version      0.2026.10.02
 // @license      CC BY-NC-SA 4.0
 // @description  实用网站导航 —— 沉浸式翻译纯JS版本；M3U8/MP4资源链接提取；广告元素屏蔽器；费在线影视/前端学习/开发者社区/新闻/建站/下载工具/格式转换工具/电子书/新闻/写作/免费漫画等；
 // @author       limbopro
@@ -757,6 +757,9 @@ function getNavigationHTML() {
                 style="border-radius:4px;background:#c53f3f" onclick="mtzyczq()">🎦媒体资源查找器</button></li>
         <li class="li_global"><button class="a_global special yellow" onclick="window.geminiElementBlockerOpenPanel()"
                 id="gemini-element-blocker" style="border-radius:4px;background:#c53f3f">🔍 元素屏蔽/追踪器</button></li>
+        
+        <li class="li_global"><button class="a_global special yellow" onclick="window.toggleAdDetectorUI();body_build('false');"
+                id="gemini-AdDetector" style="border-radius:4px;background:#c53f3f">🪧 广告检测器</button></li>
         <li class="li_global">
             <button class="a_global special yellow" id="carolPanel" style="border-radius:4px;background:#c53f3f"
                 onclick="window.initWebDebugger()"> ⚙️ Web 存储调试器
@@ -4874,3 +4877,959 @@ function showNavigationStats() {
     });
 
 }
+
+// ==UserScript==
+// @name         智能广告与覆盖层检测器 (Silent Backend + Floating UI)
+// @namespace    https://tampermonkey.net/
+// @version      9.1
+// @description  默认静默后台防护，支持全局函数/快捷键唤醒控制面板。
+// @author       Assistant
+// @match        *://*/*
+// @grant        GM_addStyle
+// @grant        GM_setValue
+// @grant        GM_getValue
+// @grant        unsafeWindow
+// @run-at       document-end
+// ==/UserScript==
+
+(function () {
+  'use strict';
+
+  // 跨沙盒全局 window 挂载对象
+  const globalWin = typeof unsafeWindow !== 'undefined' ? unsafeWindow : window;
+
+  class UniversalAdDetector {
+    constructor() {
+      this.detectedAds = new Map();
+      this.animatedGifCache = new Map();
+      this.counter = 0;
+      this.isHighlighted = false;
+      this.isScanning = false;
+      this.scanTimer = null;
+      this.observer = null;
+
+      // 面板显示状态标识
+      this.isUIVisible = false;
+      this.host = null;
+      this.shadow = null;
+
+      // 域隔离持久化规则库
+      this.storageKey = `ad_detector_blocked_${window.location.hostname}`;
+      this.blockedRules = this.loadBlockedRules();
+
+      this.injectGlobalStyles();
+      this.initObserver();
+      this.bindGlobalHotkeys();
+    }
+
+    loadBlockedRules() {
+      try {
+        const raw = GM_getValue(this.storageKey, '[]');
+        return JSON.parse(raw);
+      } catch (e) {
+        return [];
+      }
+    }
+
+    saveBlockedRules() {
+      try {
+        GM_setValue(this.storageKey, JSON.stringify(this.blockedRules));
+      } catch (e) {
+        console.error('保存持久化规则失败', e);
+      }
+    }
+
+    isMatchesBlockedRule(meta) {
+      return this.blockedRules.some((rule) => {
+        if (rule.classAndId && meta.classAndId && rule.classAndId === meta.classAndId) return true;
+        if (
+          rule.tagName === meta.tagName &&
+          rule.size === meta.size &&
+          rule.fingerprint && meta.fingerprint &&
+          rule.fingerprint === meta.fingerprint
+        ) {
+          return true;
+        }
+        return false;
+      });
+    }
+
+    injectGlobalStyles() {
+      if (document.getElementById('ad-detector-global-styles')) return;
+      const style = document.createElement('style');
+      style.id = 'ad-detector-global-styles';
+      style.textContent = `
+        @keyframes adDetectorTargetPulse {
+          0% {
+            outline: 4px solid #0a84ff !important;
+            box-shadow: 0 0 0 6px rgba(10, 132, 255, 0.4), 0 0 30px rgba(10, 132, 255, 0.9) !important;
+          }
+          50% {
+            outline: 4px solid #bf5af2 !important;
+            box-shadow: 0 0 0 10px rgba(191, 90, 242, 0.5), 0 0 45px rgba(191, 90, 242, 1) !important;
+          }
+          100% {
+            outline: 4px solid #0a84ff !important;
+            box-shadow: 0 0 0 6px rgba(10, 132, 255, 0.4), 0 0 30px rgba(10, 132, 255, 0.9) !important;
+          }
+        }
+
+        .ad-detector-focus-target {
+          animation: adDetectorTargetPulse 0.6s infinite ease-in-out !important;
+          z-index: 2147483646 !important;
+          position: relative !important;
+          transition: all 0.3s ease !important;
+        }
+
+        .ad-detector-size-badge {
+          position: absolute !important;
+          top: 0 !important;
+          left: 0 !important;
+          background: #ff3b30 !important;
+          color: #ffffff !important;
+          font-size: 11px !important;
+          font-weight: 700 !important;
+          padding: 2px 6px !important;
+          border-bottom-right-radius: 6px !important;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.3) !important;
+          z-index: 2147483645 !important;
+          pointer-events: none !important;
+          white-space: nowrap !important;
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+          line-height: 1.2 !important;
+        }
+
+        .ad-detector-focus-marker {
+          position: absolute !important;
+          left: 0 !important;
+          background: #0a84ff !important;
+          color: #ffffff !important;
+          font-size: 12px !important;
+          font-weight: bold !important;
+          padding: 4px 10px !important;
+          border-radius: 6px !important;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.4) !important;
+          z-index: 2147483647 !important;
+          pointer-events: none !important;
+          white-space: nowrap !important;
+          font-family: -apple-system, BlinkMacSystemFont, sans-serif !important;
+          animation: adDetectorMarkerBounce 0.6s infinite alternate ease-in-out !important;
+        }
+
+        .ad-detector-focus-marker.marker-top { top: -32px !important; }
+        .ad-detector-focus-marker.marker-bottom { bottom: -32px !important; }
+
+        @keyframes adDetectorMarkerBounce {
+          from { transform: translateY(0); }
+          to { transform: translateY(-5px); }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+
+    bindGlobalHotkeys() {
+      // 绑定键盘快捷键 Alt + A 自动切换面板显隐
+      window.addEventListener('keydown', (e) => {
+        if (e.altKey && (e.code === 'KeyA' || e.key === 'a' || e.key === 'A')) {
+          e.preventDefault();
+          this.toggleUI();
+        }
+      });
+    }
+
+    isExcludedElement(el) {
+      if (!el) return true;
+      if (el.id === 'dh_pageContainer' || el.closest('#dh_pageContainer')) return true;
+      if (el.id === 'ad-detector-host' || el.closest('#ad-detector-host')) return true;
+      return false;
+    }
+
+    isLegitimateElement(el) {
+      if (!el || el === document.body || el === document.documentElement) return true;
+      if (this.isExcludedElement(el)) return true;
+      if (el.querySelector('input, textarea, select, button, [role="dialog"], [aria-modal="true"]')) return true;
+      const role = el.getAttribute('role');
+      if (['main', 'navigation', 'search', 'dialog'].includes(role)) return true;
+      return false;
+    }
+
+    getMainDomain(hostname) {
+      if (!hostname) return '';
+      const parts = hostname.split('.').filter(Boolean);
+      if (parts.length <= 2) return hostname;
+      return parts.slice(-2).join('.');
+    }
+
+    async isAnimatedGif(url) {
+      if (!url) return false;
+      if (this.animatedGifCache.has(url)) {
+        return this.animatedGifCache.get(url);
+      }
+
+      if (url.startsWith('data:image/gif;base64,') || url.startsWith('data:image/base64,')) {
+        try {
+          const base64Data = url.split(',')[1];
+          const binaryString = atob(base64Data.slice(0, 2000));
+          let frameCount = 0;
+          for (let i = 0; i < binaryString.length - 2; i++) {
+            if (binaryString.charCodeAt(i) === 0x21 && binaryString.charCodeAt(i + 1) === 0xf9) {
+              frameCount++;
+              if (frameCount > 1) {
+                this.animatedGifCache.set(url, true);
+                return true;
+              }
+            }
+          }
+          this.animatedGifCache.set(url, false);
+          return false;
+        } catch (e) {
+          this.animatedGifCache.set(url, false);
+          return false;
+        }
+      }
+
+      try {
+        const response = await fetch(url, { headers: { Range: 'bytes=0-2048' } });
+        const buffer = await response.arrayBuffer();
+        const bytes = new Uint8Array(buffer);
+
+        const header = String.fromCharCode(...bytes.subarray(0, 6));
+        if (!header.startsWith('GIF')) {
+          this.animatedGifCache.set(url, false);
+          return false;
+        }
+
+        let frameCount = 0;
+        for (let i = 0; i < bytes.length - 2; i++) {
+          if (bytes[i] === 0x21 && bytes[i + 1] === 0xf9) {
+            frameCount++;
+            if (frameCount > 1) {
+              this.animatedGifCache.set(url, true);
+              return true;
+            }
+          }
+        }
+        this.animatedGifCache.set(url, false);
+        return false;
+      } catch (e) {
+        this.animatedGifCache.set(url, false);
+        return false;
+      }
+    }
+
+    calculateAdScore(el) {
+      if (this.isLegitimateElement(el)) return { score: 0, reasons: [] };
+
+      let score = 0;
+      const reasons = [];
+
+      const style = window.getComputedStyle(el);
+      const rect = el.getBoundingClientRect();
+      const vw = window.innerWidth || document.documentElement.clientWidth;
+      const vh = window.innerHeight || document.documentElement.clientHeight;
+      const viewportArea = vw * vh;
+
+      if (style.pointerEvents === 'none' || style.display === 'none' || style.visibility === 'hidden') {
+        if (el.dataset.overlayBlocked === 'true') {
+          return { score: 100, reasons: ['已被用户屏蔽（含持久化记忆）'] };
+        }
+        return { score: 0, reasons: [] };
+      }
+
+      const adWordRegex = /(^|[-_ \/])(ad|ads|advert|banner|popup|sponsor|sponsored|promoted|guanggao|gg|float|floatad|couplet)([-_ \/]|s?$)/i;
+      const classAndId = `${el.id} ${el.className}`;
+      if (adWordRegex.test(classAndId)) {
+        score += 35;
+        reasons.push('Class/ID 命中广告关键词');
+      }
+
+      const areaRatio = (rect.width * rect.height) / viewportArea;
+      const isPositioned = style.position === 'fixed' || style.position === 'absolute';
+      const zIndex = parseInt(style.zIndex, 10) || 0;
+      const opacity = parseFloat(style.opacity);
+      const bgColor = style.backgroundColor;
+      const isBgTransparent = bgColor === 'transparent' || bgColor.endsWith(', 0)') || bgColor === 'rgba(0, 0, 0, 0)';
+      const isVisuallyInvisible = opacity < 0.15 || isBgTransparent;
+
+      if (isPositioned && zIndex >= 10 && isVisuallyInvisible && rect.width > 100 && rect.height > 100) {
+        score += 60;
+        reasons.push('透明/高层级悬浮点击劫持层');
+      } else if (areaRatio > 0.35 && isPositioned && (zIndex > 99 || style.willChange === 'transform') && isVisuallyInvisible) {
+        score += 55;
+        reasons.push('透明大面积点击劫持/隐蔽覆盖层');
+      }
+
+      const iabSizes = [[728, 90], [300, 250], [336, 280], [160, 600], [300, 600], [970, 90], [320, 50]];
+      const isIABSize = iabSizes.some(([w, h]) => Math.abs(rect.width - w) <= 6 && Math.abs(rect.height - h) <= 6);
+      if (isIABSize) {
+        score += 30;
+        reasons.push('符合 IAB 标准广告尺寸');
+      }
+
+      if ((style.position === 'fixed' || style.position === 'sticky') && zIndex > 50) {
+        if (rect.height < 260 && (rect.top <= 10 || rect.bottom >= vh - 10)) {
+          score += 30;
+          reasons.push('顶/底悬浮贴片弹窗');
+        }
+      }
+
+      const imgEl = el.tagName === 'IMG' ? el : el.querySelector('img');
+      if (imgEl) {
+        const imgSrc = imgEl.currentSrc || imgEl.src || '';
+        const isBase64Gif = imgSrc.startsWith('data:image/gif;base64,') || imgSrc.startsWith('data:image/base64,');
+        const isNetGif = /\.gif($|\?)/i.test(imgSrc) || imgSrc.includes('format=gif');
+
+        if (isBase64Gif || isNetGif) {
+          if (isBase64Gif) {
+            score += 25;
+            reasons.push('使用 Base64 Data-URI 格式内嵌 GIF');
+            if (imgSrc.includes('R0lGODlh')) {
+              score += 15;
+              reasons.push('匹配标准 GIF Base64 编码头部');
+            }
+          }
+
+          if (isNetGif && /ad|banner|union|pop|sp|delivery|gg|float/i.test(imgSrc)) {
+            score += 30;
+            reasons.push('GIF 路径包含广告/网盟关键字');
+          }
+
+          if (this.animatedGifCache.get(imgSrc) === true) {
+            score += 25;
+            reasons.push('检测到多帧动态 GIF (High Attention)');
+          } else {
+            this.isAnimatedGif(imgSrc).then((isAnim) => {
+              if (isAnim && !this.isScanning) {
+                this.scan();
+              }
+            });
+          }
+        }
+      }
+
+      if (el.tagName === 'IFRAME') {
+        const src = el.src || '';
+        if (src && !src.startsWith(window.location.origin) && !src.startsWith('about:')) {
+          score += 25;
+          reasons.push('跨域 iframe 嵌套');
+        }
+        if (/pos|slot|pagead|doubleclick|union|ssp|popunder|m3u8|embed/i.test(src)) {
+          score += 35;
+          reasons.push('匹配网盟或可疑外链 iframe');
+        }
+      }
+
+      const anchor = el.tagName === 'A' ? el : el.querySelector('a[href]');
+      if (anchor) {
+        const rawHref = anchor.getAttribute('href') || '';
+        if (rawHref === '#' || rawHref.startsWith('javascript:')) {
+          if (isPositioned && areaRatio > 0.05) {
+            score += 50;
+            reasons.push('透明/伪装点击劫持 (JS/空链接)');
+          }
+        }
+
+        const redirectPattern = /(\/|\?)(goto|redirect|out|click|jump|target=|\?url=|\&url=)/i;
+        if (redirectPattern.test(rawHref)) {
+          score += 30;
+          reasons.push('站内隐蔽重定向跳转链接');
+        }
+
+        try {
+          const targetUrl = new URL(anchor.href, window.location.href);
+          const currentHost = window.location.hostname;
+          const currentMainDomain = this.getMainDomain(currentHost);
+          const targetMainDomain = this.getMainDomain(targetUrl.hostname);
+
+          if (targetMainDomain && targetMainDomain !== currentMainDomain && !targetUrl.protocol.startsWith('javascript')) {
+            let linkScore = 35;
+            let linkReason = `跨域外链 (${targetUrl.hostname})`;
+            if (anchor.target === '_blank') {
+              linkScore += 15;
+              linkReason += ' + _blank';
+            }
+            const img = anchor.querySelector('img');
+            if (img) {
+              linkScore += 10;
+              const imgSrc = img.getAttribute('src') || '';
+              if (imgSrc.startsWith('data:image/') || /\.gif($|\?)/i.test(imgSrc)) {
+                linkReason += ' + GIF/Base64 动图跳转';
+              } else {
+                linkReason += ' + 图片占位';
+              }
+            }
+            score += linkScore;
+            reasons.push(linkReason);
+          }
+        } catch (e) {}
+
+        const textContent = (anchor.textContent || '').trim();
+        const sensitiveWordsRegex = /(裸聊|直播|免費看|激情|性感|菠菜|博彩|荷官|棋牌|投注|充值|特惠|点击看|🔞|加微信|私聊|App下载|点击播放)/i;
+        if (sensitiveWordsRegex.test(textContent)) {
+          score += 25;
+          reasons.push(`命中诱导敏感词 ("${textContent.slice(0, 10)}...")`);
+        }
+      }
+
+      return { score, reasons };
+    }
+
+    scan() {
+      if (this.isScanning) return;
+      this.isScanning = true;
+
+      const elements = document.querySelectorAll('div, iframe, a, img, section, article, ins, [class*="ad"], [id*="ad"]');
+
+      elements.forEach((el) => {
+        if (this.isExcludedElement(el)) return;
+
+        let adId = el.getAttribute('data-ad-detector-id');
+        const existingMeta = adId ? this.detectedAds.get(adId) : null;
+
+        const { score, reasons } = this.calculateAdScore(el);
+
+        if (score >= 40 || (existingMeta && existingMeta.isBlocked)) {
+          if (!adId) {
+            this.counter++;
+            adId = `ad-detected-${this.counter}`;
+            el.setAttribute('data-ad-detector-id', adId);
+          }
+
+          const rect = el.getBoundingClientRect();
+          const formattedSize = existingMeta ? existingMeta.size : `${Math.round(rect.width)}x${Math.round(rect.height)}px`;
+
+          const anchor = el.tagName === 'A' ? el : el.querySelector('a[href]');
+          let hrefHost = '';
+          try {
+            if (anchor && anchor.href) hrefHost = new URL(anchor.href, window.location.href).hostname;
+          } catch (e) {}
+          const fingerprint = `${el.tagName.toLowerCase()}_${formattedSize}_${hrefHost}`;
+
+          const meta = {
+            id: adId,
+            element: el,
+            score: existingMeta ? existingMeta.score : score,
+            reasons: existingMeta ? existingMeta.reasons : reasons,
+            tagName: el.tagName.toLowerCase(),
+            size: formattedSize,
+            classAndId: `${el.id ? '#' + el.id : ''} ${el.className ? '.' + el.className : ''}`.trim(),
+            fingerprint: fingerprint,
+            isBlocked: existingMeta ? existingMeta.isBlocked : false
+          };
+
+          if (!meta.isBlocked && this.isMatchesBlockedRule(meta)) {
+            meta.isBlocked = true;
+            el.dataset.overlayBlocked = 'true';
+            el.style.setProperty('display', 'none', 'important');
+          }
+
+          this.detectedAds.set(adId, meta);
+
+          if (this.isHighlighted && !meta.isBlocked) {
+            this.applyHighlight(el, true, formattedSize);
+          }
+        }
+      });
+
+      this.isScanning = false;
+      if (this.isUIVisible) {
+        this.updateUI();
+      }
+      return this.detectedAds;
+    }
+
+    initObserver() {
+      this.observer = new MutationObserver(() => {
+        if (this.scanTimer) clearTimeout(this.scanTimer);
+        this.scanTimer = setTimeout(() => {
+          if ('requestIdleCallback' in window) {
+            requestIdleCallback(() => this.scan());
+          } else {
+            this.scan();
+          }
+        }, 300);
+      });
+
+      this.observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['style', 'class', 'src']
+      });
+
+      this.scan();
+    }
+
+    toggleUI() {
+      if (this.isUIVisible) {
+        this.hideUI();
+      } else {
+        this.showUI();
+      }
+    }
+
+    showUI() {
+      if (this.isUIVisible) return;
+      this.isUIVisible = true;
+
+      if (!this.host) {
+        this.initUI();
+      } else {
+        this.host.style.display = 'block';
+      }
+      this.scan();
+    }
+
+    hideUI() {
+      if (!this.isUIVisible) return;
+      this.isUIVisible = false;
+      if (this.host) {
+        this.host.style.display = 'none';
+      }
+    }
+
+    initUI() {
+      this.host = document.createElement('div');
+      this.host.id = 'ad-detector-host';
+      this.shadow = this.host.attachShadow({ mode: 'open' });
+
+      this.shadow.innerHTML = `
+        <style>
+          .panel {
+            position: fixed; bottom: 20px; right: 20px; z-index: 2147483647;
+            width: 360px; max-height: 500px; background: rgba(28, 28, 30, 0.95);
+            backdrop-filter: blur(20px); color: #f2f2f7;
+            border-radius: 14px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6); display: flex; flex-direction: column;
+            border: 1px solid rgba(255, 255, 255, 0.12); font-size: 13px;
+            user-select: none;
+          }
+          .header {
+            padding: 12px 16px; font-weight: 600; border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex; justify-content: space-between; align-items: center;
+          }
+          .close-btn {
+            cursor: pointer; font-size: 16px; color: #8e8e93; transition: color 0.15s;
+            padding: 2px 6px; border-radius: 4px;
+          }
+          .close-btn:hover { color: #ffffff; background: rgba(255, 255, 255, 0.1); }
+
+          .body { padding: 12px; overflow-y: auto; flex: 1; }
+          .item {
+            background: rgba(255, 255, 255, 0.06); padding: 10px; border-radius: 8px;
+            margin-bottom: 8px; border: 1px solid rgba(255, 255, 255, 0.04);
+            transition: all 0.2s ease;
+          }
+          .item:hover { background: rgba(255, 255, 255, 0.1); }
+          .item.is-blocked { opacity: 0.55; background: rgba(0, 0, 0, 0.25); border-color: rgba(255, 255, 255, 0.02); }
+          .item.is-blocked .item-title { text-decoration: line-through; color: #8e8e93; }
+
+          .item-top { display: flex; justify-content: space-between; align-items: center; }
+          .score { color: #ff9500; font-weight: bold; }
+          .status-tag { font-size: 10px; padding: 2px 6px; border-radius: 4px; background: rgba(255, 69, 58, 0.25); color: #ff453a; font-weight: 600; }
+          .reasons { font-size: 11px; color: #aeaeb2; margin-top: 4px; line-height: 1.4; }
+          .actions { display: flex; gap: 6px; margin-top: 8px; }
+
+          .btn-action {
+            padding: 4px 8px; font-size: 11px; border-radius: 4px; border: none;
+            cursor: pointer; font-weight: 600; transition: all 0.15s ease;
+            background: rgba(255, 255, 255, 0.12); color: #f2f2f7;
+          }
+          .btn-action:hover { background: rgba(255, 255, 255, 0.25); }
+          .btn-locate { background: rgba(10, 132, 255, 0.2); color: #64d2ff; }
+          .btn-locate:hover { background: rgba(10, 132, 255, 0.4); }
+          .btn-hide-single { background: rgba(255, 69, 58, 0.2); color: #ff453a; }
+          .btn-hide-single:hover { background: rgba(255, 69, 58, 0.4); }
+          .btn-restore-single { background: rgba(48, 209, 88, 0.2); color: #30d158; }
+          .btn-restore-single:hover { background: rgba(48, 209, 88, 0.4); }
+
+          .footer { padding: 12px; border-top: 1px solid rgba(255, 255, 255, 0.1); display: flex; gap: 8px; }
+
+          button.footer-btn {
+            flex: 1; padding: 9px 6px; border: none; border-radius: 8px;
+            font-weight: 600; font-size: 12px; cursor: pointer;
+            transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-flex; align-items: center; justify-content: center;
+            outline: none;
+          }
+          button.footer-btn:hover:not(:disabled) { filter: brightness(1.15); transform: translateY(-1px); }
+          button.footer-btn:active:not(:disabled) { transform: scale(0.95) translateY(0); filter: brightness(0.9); }
+          button.footer-btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none !important; }
+
+          .btn-scan { background: #0a84ff; color: #ffffff; box-shadow: 0 2px 8px rgba(10, 132, 255, 0.3); }
+          .btn-hl { background: #3a3a3c; color: #f2f2f7; border: 1px solid rgba(255, 255, 255, 0.1); }
+          .btn-hl.active { background: #5e5ce6; color: #ffffff; box-shadow: 0 2px 8px rgba(94, 92, 230, 0.4); }
+          .btn-clean { background: #ff453a; color: #ffffff; box-shadow: 0 2px 8px rgba(255, 69, 58, 0.3); }
+
+          .toast {
+            position: absolute; top: -38px; left: 50%; transform: translateX(-50%) translateY(10px);
+            background: rgba(44, 44, 46, 0.95); color: #ffffff; padding: 6px 14px;
+            border-radius: 20px; font-size: 12px; font-weight: 500;
+            border: 1px solid rgba(255, 255, 255, 0.15); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            opacity: 0; pointer-events: none; transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            white-space: nowrap; max-width: 90%; overflow: hidden; text-overflow: ellipsis;
+          }
+          .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        </style>
+
+        <div class="panel">
+          <div class="toast" id="toast">提示信息</div>
+          <div class="header">
+            <span>🛡️ 视讯增强广告检测器 v9.1</span>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span id="count-badge" style="background:rgba(255,255,255,0.1);padding:2px 8px;border-radius:10px;font-size:12px;">0 个</span>
+              <span class="close-btn" id="btn-close-panel" title="关闭面板 (按 Alt+A 可再次唤醒)">✕</span>
+            </div>
+          </div>
+          <div class="body" id="list">
+            <div style="text-align:center;color:#8e8e93;padding:20px;">正在加载检测分析...</div>
+          </div>
+          <div class="footer">
+            <button class="footer-btn btn-scan" id="btn-scan">重新扫描</button>
+            <button class="footer-btn btn-hl" id="btn-hl">高亮标注</button>
+            <button class="footer-btn btn-clean" id="btn-clean">一键屏蔽</button>
+          </div>
+        </div>
+      `;
+
+      document.body.appendChild(this.host);
+      this.bindInteractiveEvents();
+    }
+
+    applyHighlight(el, enable, sizeText = '') {
+      const oldBadge = el.querySelector('.ad-detector-size-badge');
+      if (oldBadge) oldBadge.remove();
+
+      if (enable && el.dataset.overlayBlocked !== 'true') {
+        el.style.setProperty('outline', '3px solid #ff3b30', 'important');
+        el.style.setProperty('background-color', 'rgba(255, 59, 48, 0.2)', 'important');
+
+        if (!sizeText) {
+          const adId = el.getAttribute('data-ad-detector-id');
+          const meta = this.detectedAds.get(adId);
+          sizeText = meta ? meta.size : '0x0px';
+        }
+
+        const currentPos = window.getComputedStyle(el).position;
+        if (currentPos === 'static') {
+          el.style.setProperty('position', 'relative', 'important');
+        }
+
+        const badge = document.createElement('div');
+        badge.className = 'ad-detector-size-badge';
+        badge.textContent = sizeText;
+        el.appendChild(badge);
+      } else {
+        el.style.removeProperty('outline');
+        el.style.removeProperty('background-color');
+      }
+    }
+
+    toggleHighlight() {
+      this.isHighlighted = !this.isHighlighted;
+      this.detectedAds.forEach((meta) => {
+        if (!meta.isBlocked) {
+          this.applyHighlight(meta.element, this.isHighlighted, meta.size);
+        }
+      });
+    }
+
+    locateElement(adId) {
+      const meta = this.detectedAds.get(adId);
+      if (!meta || !meta.element) return;
+
+      if (meta.isBlocked) {
+        this.showToast('⚠️ 该元素已被屏蔽，请先撤销屏蔽');
+        return;
+      }
+
+      const el = meta.element;
+      const rect = el.getBoundingClientRect();
+      const elementTopDoc = rect.top + window.scrollY;
+      const elementBottomDoc = rect.bottom + window.scrollY;
+      const docHeight = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight);
+
+      let verticalAlignment = 'center';
+      if (elementTopDoc < 200) {
+        verticalAlignment = 'start';
+      } else if (docHeight - elementBottomDoc < 200) {
+        verticalAlignment = 'end';
+      }
+
+      el.scrollIntoView({ behavior: 'smooth', block: verticalAlignment, inline: 'nearest' });
+
+      const oldMarker = el.querySelector('.ad-detector-focus-marker');
+      if (oldMarker) oldMarker.remove();
+
+      const marker = document.createElement('div');
+      marker.className = 'ad-detector-focus-marker';
+      marker.innerHTML = `🎯 正在定位的目标 (${meta.score}分 | ${meta.size})`;
+
+      if (rect.top < 40) {
+        marker.classList.add('marker-bottom');
+      } else {
+        marker.classList.add('marker-top');
+      }
+
+      el.appendChild(marker);
+      el.classList.add('ad-detector-focus-target');
+
+      setTimeout(() => {
+        el.classList.remove('ad-detector-focus-target');
+        marker.remove();
+
+        if (this.isHighlighted && !meta.isBlocked) {
+          this.applyHighlight(el, true, meta.size);
+        }
+      }, 3200);
+
+      this.showToast(`🎯 已定位目标: ${meta.tagName}${meta.classAndId ? ' (' + meta.classAndId + ')' : ''}`);
+    }
+
+    previewHoverElement(adId, isHovering) {
+      const meta = this.detectedAds.get(adId);
+      if (!meta || !meta.element || meta.isBlocked) return;
+
+      if (isHovering) {
+        meta.element.style.setProperty('outline', '3px dashed #0a84ff', 'important');
+        meta.element.style.setProperty('box-shadow', '0 0 15px rgba(10, 132, 255, 0.8)', 'important');
+      } else {
+        if (!this.isHighlighted) {
+          meta.element.style.removeProperty('outline');
+        } else {
+          this.applyHighlight(meta.element, true, meta.size);
+        }
+        meta.element.style.removeProperty('box-shadow');
+      }
+    }
+
+    neutralizeSingle(adId) {
+      const meta = this.detectedAds.get(adId);
+      if (meta && meta.element) {
+        meta.isBlocked = true;
+        meta.element.dataset.overlayBlocked = 'true';
+
+        this.applyHighlight(meta.element, false);
+        meta.element.style.setProperty('display', 'none', 'important');
+
+        const rule = {
+          classAndId: meta.classAndId,
+          tagName: meta.tagName,
+          size: meta.size,
+          fingerprint: meta.fingerprint
+        };
+
+        if (!this.blockedRules.some((r) => r.fingerprint === rule.fingerprint)) {
+          this.blockedRules.push(rule);
+          this.saveBlockedRules();
+        }
+
+        this.updateUI();
+        this.showToast('🛡️ 该元素已屏蔽（已录入规则）');
+      }
+    }
+
+    restoreSingle(adId) {
+      const meta = this.detectedAds.get(adId);
+      if (meta && meta.element) {
+        meta.isBlocked = false;
+        delete meta.element.dataset.overlayBlocked;
+
+        meta.element.style.removeProperty('display');
+
+        if (this.isHighlighted) {
+          this.applyHighlight(meta.element, true, meta.size);
+        }
+
+        this.blockedRules = this.blockedRules.filter(
+          (r) => !(r.fingerprint === meta.fingerprint || (r.classAndId && r.classAndId === meta.classAndId))
+        );
+        this.saveBlockedRules();
+
+        this.updateUI();
+        this.showToast('↩️ 已撤销屏蔽，已同步更新规则库');
+      }
+    }
+
+    cleanAll() {
+      let count = 0;
+      this.detectedAds.forEach((meta) => {
+        if (meta.element && !meta.isBlocked) {
+          this.neutralizeSingle(meta.id);
+          count++;
+        }
+      });
+      return count;
+    }
+
+    showToast(message) {
+      if (!this.shadow) return;
+      const toast = this.shadow.querySelector('#toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 2200);
+    }
+
+    bindInteractiveEvents() {
+      const btnScan = this.shadow.querySelector('#btn-scan');
+      const btnHl = this.shadow.querySelector('#btn-hl');
+      const btnClean = this.shadow.querySelector('#btn-clean');
+      const btnClose = this.shadow.querySelector('#btn-close-panel');
+
+      btnClose.onclick = () => this.hideUI();
+
+      btnScan.onclick = () => {
+        btnScan.disabled = true;
+        btnScan.textContent = '扫描中...';
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            this.scan();
+            btnScan.disabled = false;
+            btnScan.textContent = '重新扫描';
+            this.showToast('✅ 页面诊断完成');
+          }, 50);
+        });
+      };
+
+      btnHl.onclick = () => {
+        this.toggleHighlight();
+        if (this.isHighlighted) {
+          btnHl.classList.add('active');
+          this.showToast('🔴 已高亮标注高风险元素');
+        } else {
+          btnHl.classList.remove('active');
+          this.showToast('⚪ 已还原元素标注');
+        }
+      };
+
+      btnClean.onclick = () => {
+        btnClean.disabled = true;
+        btnClean.textContent = '屏蔽中...';
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            const count = this.cleanAll();
+            btnClean.disabled = false;
+            btnClean.textContent = '一键屏蔽';
+            this.showToast(`🛡 已成功屏蔽 ${count} 个威胁`);
+          }, 50);
+        });
+      };
+    }
+
+    updateUI() {
+      if (!this.shadow) return;
+      const listEl = this.shadow.querySelector('#list');
+      const badge = this.shadow.querySelector('#count-badge');
+
+      const allDetected = Array.from(this.detectedAds.values());
+      const activeThreats = allDetected.filter((meta) => !meta.isBlocked);
+
+      badge.textContent = `${activeThreats.length} 未处理 / 共 ${allDetected.length} 个`;
+
+      if (allDetected.length === 0) {
+        listEl.innerHTML = '<div style="text-align:center;color:#30d158;padding:20px;">未发现高风险劫持或广告元素</div>';
+        return;
+      }
+
+      let html = '';
+      allDetected.forEach((meta) => {
+        const isBlocked = meta.isBlocked;
+
+        html += `
+          <div class="item ${isBlocked ? 'is-blocked' : ''}" data-ad-id="${meta.id}">
+            <div class="item-top">
+              <div class="item-title">
+                <strong>${meta.tagName}</strong>
+                <span style="color:#8e8e93;">(${meta.size})</span>
+              </div>
+              ${isBlocked ? '<span class="status-tag">已屏蔽</span>' : `<span class="score">${meta.score}分</span>`}
+            </div>
+            <div style="font-size:11px;color:#0a84ff;word-break:break-all;margin-top:2px;">${meta.classAndId || '无 Class/ID'}</div>
+            <div class="reasons">原因: ${meta.reasons.join(' | ')}</div>
+            <div class="actions">
+              ${
+                !isBlocked
+                  ? `<button class="btn-action btn-locate" data-action="locate" data-id="${meta.id}">🎯 定位元素</button>
+                     <button class="btn-action btn-hide-single" data-action="hide" data-id="${meta.id}">🚫 单独屏蔽</button>`
+                  : `<button class="btn-action btn-restore-single" data-action="restore" data-id="${meta.id}">↩️ 撤销屏蔽</button>`
+              }
+            </div>
+          </div>
+        `;
+      });
+      listEl.innerHTML = html;
+
+      listEl.querySelectorAll('.item').forEach((item) => {
+        const adId = item.getAttribute('data-ad-id');
+
+        item.onmouseenter = () => this.previewHoverElement(adId, true);
+        item.onmouseleave = () => this.previewHoverElement(adId, false);
+
+        item.addEventListener('click', (e) => {
+          const btn = e.target.closest('.btn-action');
+          if (!btn) return;
+
+          const action = btn.getAttribute('data-action');
+          const id = btn.getAttribute('data-id');
+
+          if (action === 'locate') {
+            this.locateElement(id);
+          } else if (action === 'hide') {
+            this.neutralizeSingle(id);
+          } else if (action === 'restore') {
+            this.restoreSingle(id);
+          }
+        });
+      });
+    }
+  }
+
+  // 单例挂载
+  let instance = null;
+  function getDetector() {
+    if (!instance) {
+      instance = new UniversalAdDetector();
+    }
+    return instance;
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => getDetector());
+  } else {
+    getDetector();
+  }
+
+  // ================= 穿透油猴沙盒，绑定至 unsafeWindow =================
+
+  globalWin.toggleAdDetectorUI = function () {
+    getDetector().toggleUI();
+  };
+
+  globalWin.showAdDetectorUI = function () {
+    getDetector().showUI();
+  };
+
+  globalWin.hideAdDetectorUI = function () {
+    getDetector().hideUI();
+  };
+
+  globalWin.bindAdDetectorButton = function (buttonSelector) {
+    const btn = document.querySelector(buttonSelector);
+    if (btn) {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        getDetector().toggleUI();
+      });
+    } else {
+      console.warn(`[AdDetector] 未找到选择器为 "${buttonSelector}" 的按钮`);
+    }
+  };
+
+  globalWin.cleanAdsSilently = function () {
+    return getDetector().cleanAll();
+  };
+})();
+
+
