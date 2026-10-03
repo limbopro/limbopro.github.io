@@ -963,90 +963,15 @@
 
       if (el.tagName === 'IFRAME') {
         const src = el.src || '';
-        let matchedSpecificRule = false;
-
-        // 1. 检测跨域 iframe
         if (src && !src.startsWith(window.location.origin) && !src.startsWith('about:')) {
           score += 25;
           reasons.push('跨域 iframe 嵌套');
-          matchedSpecificRule = true;
         }
-
-        // 2. 检测匹配网盟或可疑外链
         if (/pos|slot|pagead|doubleclick|union|ssp|popunder|m3u8|embed/i.test(src)) {
           score += 35;
           reasons.push('匹配网盟或可疑外链 iframe');
-          matchedSpecificRule = true;
-        }
-
-        // 3. 都不符合条件时的默认保底分
-        if (!matchedSpecificRule) {
-          score += 40;
-          reasons.push('默认 iframe 基础风险分');
         }
       }
-
-
-
-
-      // 1. 缓存正则表达式，避免重复创建正则对象提升性能
-      // 扩展常见合法前缀（包含 Lit, Shoelace, Material, Prime, Nuxt, Next 等）
-      const LEGITIMATE_PREFIX_REGEX = /^(el|ant|ion|mat|ng|van|sl|mwc|p|pwa|next|nuxt|sw)-/i;
-
-      // 检测 Shadow DOM / 自定义节点
-      if (el.shadowRoot || (el.tagName && el.tagName.includes('-'))) {
-        const tagName = el.tagName.toLowerCase();
-        const role = el.getAttribute('role');
-
-        // 快捷判断：常规 UI 库前缀或正规语义角色直接过
-        const isLegitimate = LEGITIMATE_PREFIX_REGEX.test(tagName) ||
-          ['navigation', 'main', 'button', 'search', 'dialog', 'banner'].includes(role);
-
-        if (!isLegitimate) {
-          score += 40;
-          reasons.push(`检测到可疑 Shadow DOM / 自定义隔离节点 (<${tagName}>)`);
-        }
-      }
-
-      // 2. 检测 fixed/sticky 高层级悬浮容器
-      if (el instanceof HTMLElement) {
-        // 性能优化：非普通块级/容器元素（如 span, a, b, i）不耗费 getComputedStyle 计算
-        const isContainer = /^(DIV|SECTION|ARTICLE|ASIDE|HEADER|FOOTER|MAIN|NAV|FORM|TABLE|IFRAME)$/i.test(el.tagName) || el.shadowRoot;
-
-        if (isContainer) {
-          const style = window.getComputedStyle(el);
-          const position = style.position;
-
-          if (position === 'fixed' || position === 'sticky') {
-            const parsedZIndex = parseInt(style.zIndex, 10);
-            // 处理 z-index 为 'auto' 或 NaN 的情况（sticky 经常为 auto，但依靠层叠上下文置顶）
-            const zIndex = isNaN(parsedZIndex) ? 0 : parsedZIndex;
-
-            // 判定条件：z-index >= 99，或者 fixed 定位下 z-index 即使为 auto 也会脱离文档流
-            if (zIndex >= 99 || (position === 'fixed' && style.zIndex === 'auto')) {
-
-              // 防误杀优化 1：语义与标签检查
-              const role = el.getAttribute('role');
-              const isNavigation = ['navigation', 'main', 'search', 'banner', 'dialog'].includes(role) ||
-                ['NAV', 'HEADER', 'FOOTER', 'SEARCH'].includes(el.tagName);
-
-              // 防误杀优化 2：内部交互元素检查（表单/按钮/链接）
-              const hasInteractiveElements = el.querySelector('input, textarea, select, button, a[href]');
-
-              // 防误杀优化 3：尺寸过滤（排除全屏布局根容器，如 Vue/React 的 #app / #root 绑定的 fixed 壳）
-              const rect = el.getBoundingClientRect();
-              const isFullViewportShell = rect.width >= window.innerWidth && rect.height >= window.innerHeight && !style.backgroundColor;
-
-              if (!isNavigation && !hasInteractiveElements && !isFullViewportShell) {
-                score += 40;
-                reasons.push(`高风险悬浮/黏性容器 (${position}, z-index: ${style.zIndex})`);
-              }
-            }
-          }
-        }
-      }
-
-
 
       const anchor = el.tagName === 'A' ? el : (allAnchors[0] || null);
       if (anchor) {
