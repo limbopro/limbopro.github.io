@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         智能广告与覆盖层检测器 (Silent Backend + Floating UI)
 // @namespace    https://tampermonkey.net/
-// @version      12.6
+// @version      12.5
 // @description  默认静默后台防护，支持捕捉全屏透明/半透明遮罩与拦截内联/动态绑定事件劫持，包含特异性选择器生成、数量交叉校验降级防护与持久化规则恢复。
 // @author       Assistant
 // @match        *://*/*
@@ -299,7 +299,7 @@
     neutralizeSingle(adId) {
       const meta = this.detectedAds.get(adId);
       if (meta && !meta.isBlocked) {
-        // 1. 先记录历史状态
+        // 1. 先记录历史状态（必须在状态变更前/中记录，防止内部逻辑改变状态后捕获不准）
         this.pushHistoryState({ type: 'SINGLE_BLOCK', items: [adId] });
 
         // 2. 标记已被屏蔽 & 更新状态
@@ -325,7 +325,7 @@
           this.applyHighlight(el, false);
         }
 
-        // 5. 执行底层规则生成与 CSS 写入
+        // 5. 执行底层规则生成与 CSS 写入（如保存 CSS 规则到 storage）
         this.neutralizeSingleInternal(adId);
 
         // 6. 反馈提示
@@ -584,38 +584,52 @@
       }
     }
 
+    // 1. 全局样式注入：统一用 CSS 定义高亮及角标样式
     injectGlobalStyles() {
       if (document.getElementById('ad-detector-global-styles')) return;
       const style = document.createElement('style');
       style.id = 'ad-detector-global-styles';
       style.textContent = `
+    /* 容器高亮控制类 */
     .ad-detector-highlight-active {
       outline: 3px solid #ff3b30 !important;
       background-color: rgba(255, 59, 48, 0.2) !important;
     }
 
+    /* 针对 static 定位元素的基准修复 */
     .ad-detector-pos-relative {
       position: relative !important;
     }
 
+    /* hover 态预热 */
     .ad-detector-hover-active {
-      z-index: 2147483648 !important;
-      pointer-events: auto !important;
-      position: relative !important;
-      outline: 4px solid #ff3b30 !important;
-      outline-offset: -4px !important;
-      box-shadow: 0 0 20px rgba(255, 59, 48, 0.8), 0 0 0 9999px rgba(0, 0, 0, 0.35) !important;
-      box-shadow: 0 0 0 5000px rgba(0, 0, 0, 0.6) !important;
-      isolation: isolate !important;
-      transition: outline 0.15s ease, box-shadow 0.15s ease !important;
-    }
+/* 1. 强制赋予最高级的 z-index，超越面板的 2147483647 */
+z-index: 2147483648 !important;
+pointer-events: auto !important;
+/* 2. 只有定位元素（relative/absolute/fixed/sticky）才能让 z-index 生效 */
+position: relative !important;
 
-    @media (max-width: 768px) {
-      .ad-detector-hover-active {
-        box-shadow: 0 0 15px rgba(255, 59, 48, 0.9) !important;
-      }
-    }
+/* 3. 高亮轮廓与视觉提示 */
+outline: 4px solid #ff3b30 !important;
+outline-offset: -4px !important;
+box-shadow: 0 0 20px rgba(255, 59, 48, 0.8), 0 0 0 9999px rgba(0, 0, 0, 0.35) !important;
 
+/* 移动端兼容性更好的压暗实现 */
+box-shadow: 0 0 0 5000px rgba(0, 0, 0, 0.6) !important;
+
+/* 4. 确保混合模式与平滑过渡 */
+isolation: isolate !important; /* 创建独立的层叠上下文，防止父级 transform 压制 */
+transition: outline 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+@media (max-width: 768px) {
+  .ad-detector-hover-active {
+    /* 移动端减小全屏遮罩尺寸，提升滑动流畅度 */
+    box-shadow: 0 0 15px rgba(255, 59, 48, 0.9) !important;
+  }
+}
+
+    /* 优化后的 Size Badge：基于 CSS content 属性动态渲染尺寸文本 */
     .ad-detector-size-badge {
       position: absolute !important;
       top: 0 !important;
@@ -635,6 +649,7 @@
       display: none !important;
     }
 
+    /* 仅当父级带有高亮激活类且未被屏蔽时，显示角标 */
     .ad-detector-highlight-active > .ad-detector-size-badge {
       display: block !important;
     }
@@ -1001,46 +1016,13 @@
       return { score: Math.max(0, score), reasons };
     }
 
-    // ==========================================
-    // ★ 核心重构模块：高效率全盘与增量 DOM 扫描
-    // ==========================================
     scan() {
-      if (this.isScanning) return this.detectedAds;
+      if (this.isScanning) return;
       this.isScanning = true;
 
-      // 1. 节点存活度与有效性自检（清理已从 DOM 卸载的无效记录）
-      for (const [adId, meta] of this.detectedAds.entries()) {
-        if (!meta.element || !document.contains(meta.element)) {
-          this.detectedAds.delete(adId);
-        }
-      }
+      const elements = document.querySelectorAll('div, iframe, a, img, section, article, ins, [class*="ad"], [id*="ad"], [class*="overlay"], [class*="backdrop"], [id*="overlay"], [id*="backdrop"]');
 
-      // 2. 多源收集候选节点（支持遍历主 DOM 与 open 状态的 Shadow DOM）
-      const candidateNodes = new Set();
-      const collectCandidatesFromRoot = (root) => {
-        if (!root) return;
-        // 扩展通配扫描范围：包含关键标签、特征属性节点及自定义组件
-        const selector = [
-          'div', 'iframe', 'a', 'img', 'section', 'article', 'ins', 'aside', 'header', 'footer', 'canvas', 'video', 'embed', 'object',
-          '[class*="ad"]', '[id*="ad"]', '[class*="overlay"]', '[class*="backdrop"]', '[id*="overlay"]', '[id*="backdrop"]',
-          '[class*="popup"]', '[id*="popup"]', '[class*="modal"]', '[id*="modal"]', '[class*="sponsor"]', '[id*="sponsor"]'
-        ].join(', ');
-
-        const elements = root.querySelectorAll(selector);
-        for (let i = 0; i < elements.length; i++) {
-          const el = elements[i];
-          candidateNodes.add(el);
-          // 深度穿透开放的 Shadow DOM 节点
-          if (el.shadowRoot) {
-            collectCandidatesFromRoot(el.shadowRoot);
-          }
-        }
-      };
-
-      collectCandidatesFromRoot(document);
-
-      // 3. 遍历候选节点执行算法判别与打分
-      candidateNodes.forEach((el) => {
+      elements.forEach((el) => {
         if (this.isExcludedElement(el)) return;
 
         let adId = el.getAttribute('data-ad-detector-id');
@@ -1075,7 +1057,7 @@
             reasons: finalReasons,
             tagName: el.tagName.toLowerCase(),
             size: formattedSize,
-            classAndId: `${el.id ? '#' + el.id : ''}${el.className && typeof el.className === 'string' ? '.' + el.className : ''}`.trim(),
+            classAndId: `${el.id ? '#' + el.id : ''}${el.className ? '.' + el.className : ''}`.trim(),
             fingerprint: fingerprint,
             isBlocked: existingMeta ? existingMeta.isBlocked : false
           };
@@ -1105,7 +1087,7 @@
       this.observer = new MutationObserver((mutations) => {
         const isSelfMutation = mutations.every(m =>
           m.target.id === 'ad-detector-host' ||
-          (m.target.classList && typeof m.target.classList.contains === 'function' && m.target.classList.contains('ad-detector-size-badge'))
+          (m.target.classList && m.target.classList.contains('ad-detector-size-badge'))
         );
         if (isSelfMutation) return;
 
@@ -1415,7 +1397,7 @@
 
           <div class="toast" id="toast">提示信息</div>
           <div class="header" id="panel-header">
-            <span>🛡️ v12.6</span>
+            <span>🛡️ v12.5</span>
             <div style="display:flex;align-items:center;gap:4px;">
               <select id="select-filter" class="select-control" title="过滤显示状态">
                 <option value="all">显示全部</option>
@@ -1548,6 +1530,7 @@
       window.addEventListener('pointercancel', stopDrag);
     }
 
+    // 2. 节点高亮状态挂载（极轻量，单节点批量 class 变更）
     applyHighlight(el, enable, sizeText = '') {
       if (!el || el.dataset.overlayBlocked === 'true') {
         el.classList.remove('ad-detector-highlight-active', 'ad-detector-pos-relative');
@@ -1555,10 +1538,12 @@
       }
 
       if (enable) {
+        // 处理相对定位，避免为 static 节点插入子级时定位偏离
         if (window.getComputedStyle(el).position === 'static') {
           el.classList.add('ad-detector-pos-relative');
         }
 
+        // 更新或注入 Badge（只用 dataset 传参，避免每次创建/销毁 DOM 节点）
         let badge = el.querySelector(':scope > .ad-detector-size-badge');
         if (!badge) {
           badge = document.createElement('div');
@@ -1572,6 +1557,7 @@
           sizeText = meta ? meta.size : '0x0px';
         }
 
+        // 仅在尺寸变更时更新 Dataset，通过 CSS 伪元素 ::before 自行渲染 textContent
         if (badge.dataset.size !== sizeText) {
           badge.dataset.size = sizeText;
         }
@@ -1582,6 +1568,7 @@
       }
     }
 
+    // 3. 一键切换高亮状态：借助 Map 极速遍历，无 DOM 树深度遍历
     toggleHighlight() {
       this.isHighlighted = !this.isHighlighted;
       for (const meta of this.detectedAds.values()) {
@@ -1761,13 +1748,17 @@
       }
 
       if (isHovering) {
+        // 悬停：只加 Class
         meta.element.classList.add('ad-detector-hover-active');
       } else {
+        // 离开：只撤 Class
         meta.element.classList.remove('ad-detector-hover-active');
 
+        // 关键补充：防止嵌套的 img 或 inner div 遗留状态
         const activeChildren = meta.element.querySelectorAll('.ad-detector-hover-active');
         activeChildren.forEach(child => child.classList.remove('ad-detector-hover-active'));
 
+        // 只有在开启了全局高亮时，才去重新铺设高亮（比如红底/角标）
         if (this.isHighlighted) {
           this.applyHighlight(meta.element, true, meta.size);
         }
@@ -1790,6 +1781,7 @@
       toast.classList.add('show');
       setTimeout(() => {
         toast.classList.remove('show');
+        //}, 2200);
       }, 3500);
     }
 
@@ -1958,6 +1950,7 @@
         const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
         if (!isTouchDevice) {
+          // PC 端：保留鼠标悬停显示/离开隐藏
           item.addEventListener('pointerenter', (e) => {
             e.stopPropagation();
             this.previewHoverElement(adId, true);
@@ -1968,7 +1961,9 @@
             this.previewHoverElement(adId, false);
           });
         } else {
+          // 移动端：点击列表项切换高亮状态（Toggle）
           item.addEventListener('click', (e) => {
+            // 如果点击的是操作按钮，不触发整体高亮切换
             if (e.target.closest('.btn-action')) return;
 
             e.stopPropagation();
@@ -1976,9 +1971,11 @@
             const currentActiveId = this.activeTouchAdId;
 
             if (currentActiveId === adId) {
+              // 如果再次点击当前项，取消高亮
               this.previewHoverElement(adId, false);
               this.activeTouchAdId = null;
             } else {
+              // 如果点击新项，清除上一个高亮，开启当前高亮
               if (currentActiveId) {
                 this.previewHoverElement(currentActiveId, false);
               }
@@ -1988,6 +1985,7 @@
           });
         }
 
+        // 按钮操作逻辑保持不变
         item.addEventListener('click', (e) => {
           const btn = e.target.closest('.btn-action');
           if (!btn) return;
@@ -2005,6 +2003,7 @@
         });
       });
 
+      // 全局点击空白处，自动清除移动端的高亮（建议加在初始化逻辑中）
       if (!this.hasTouchGlobalListener) {
         document.addEventListener('click', (e) => {
           if (!e.target.closest('.ad-detector-container') && this.activeTouchAdId) {
