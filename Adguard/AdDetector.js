@@ -610,9 +610,9 @@ pointer-events: auto !important;
 position: relative !important;
 
 /* 3. 高亮轮廓与视觉提示 */
-outline: 3px solid #ff3b30 !important;
-outline-offset: -3px !important;
-box-shadow: 0 0 20px rgba(255, 59, 48, 0.8), 0 0 0 9999px rgba(0, 0, 0, 0.4) !important;
+outline: 4px solid #ff3b30 !important;
+outline-offset: -4px !important;
+box-shadow: 0 0 20px rgba(255, 59, 48, 0.8), 0 0 0 9999px rgba(0, 0, 0, 0.35) !important;
 
 /* 4. 确保混合模式与平滑过渡 */
 isolation: isolate !important; /* 创建独立的层叠上下文，防止父级 transform 压制 */
