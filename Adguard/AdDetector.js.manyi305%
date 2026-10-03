@@ -345,10 +345,6 @@
 
         // 6. 反馈提示
         this.showToast('🛡 已通过安全交叉校验执行屏蔽');
-
-        // 7. 显式确保 UI 更新
-        this.updateUI();
-
       }
     }
 
@@ -358,9 +354,6 @@
         this.restoreSingleInternal(adId);
         this.pushHistoryState({ type: 'SINGLE_RESTORE', items: [adId] });
         this.showToast('↩️ 已撤销屏蔽，已更新本地规则库');
-
-        // 补充：确保撤销屏蔽后面板列表同步还原状态
-        this.updateUI();
       }
     }
 
@@ -567,9 +560,6 @@
       });
     }
 
-    // ==========================================
-    // 修正：防爆栈的属性锁定 Observer
-    // ==========================================
     forceCleanSavedRulesImmediately() {
       const doScan = () => {
         this.scan();
@@ -580,24 +570,23 @@
               meta.element.dataset.overlayBlocked = 'true';
               meta.element.style.setProperty('display', 'none', 'important');
 
-              // 使用锁标记位，避免递归触发 MutationObserver 造成浏览器卡死
               if (!meta.element._adLockObserver) {
-                let isMutating = false;
-                meta.element._adLockObserver = new MutationObserver(() => {
-                  if (isMutating) return; // 阻止自循环触发
+                meta.element._adLockObserver = new MutationObserver((mutations) => {
                   if (meta.isBlocked && meta.element.style.display !== 'none') {
-                    isMutating = true;
+                    meta.element._adLockObserver.disconnect();
                     meta.element.style.setProperty('display', 'none', 'important');
-                    // 延迟释放锁
-                    Promise.resolve().then(() => { isMutating = false; });
+                    meta.element._adLockObserver.observe(meta.element, {
+                      attributes: true,
+                      attributeFilter: ['style', 'class']
+                    });
                   }
                 });
-
                 meta.element._adLockObserver.observe(meta.element, {
                   attributes: true,
                   attributeFilter: ['style', 'class']
                 });
               }
+
             }
           }
         });
@@ -1226,61 +1215,22 @@
       return this.detectedAds;
     }
 
-
-    // ==========================================
-    // 优化后的 MutationObserver 及锁机制
-    // ==========================================
-
     initObserver() {
-      let scanScheduled = false;
-
       this.observer = new MutationObserver((mutations) => {
-        let hasExternalMutation = false;
-        const targetsToScan = new Set();
+        const isSelfMutation = mutations.every(m =>
+          m.target.id === 'ad-detector-host' ||
+          (m.target.classList && typeof m.target.classList.contains === 'function' && m.target.classList.contains('ad-detector-size-badge'))
+        );
+        if (isSelfMutation) return;
 
-        for (let i = 0; i < mutations.length; i++) {
-          const m = mutations[i];
-          const target = m.target;
-
-          // 1. 过滤内部节点修改，防止死循环
-          if (
-            target.id === 'ad-detector-host' ||
-            target.id === 'ad-detector-dynamic-css-rules' ||
-            (target.classList && typeof target.classList.contains === 'function' && target.classList.contains('ad-detector-size-badge')) ||
-            (target.dataset && target.dataset.overlayBlocked === 'true') // 过滤已被屏蔽节点的样式变更
-          ) {
-            continue;
+        if (this.scanTimer) clearTimeout(this.scanTimer);
+        this.scanTimer = setTimeout(() => {
+          if ('requestIdleCallback' in window) {
+            requestIdleCallback(() => this.scan(), { timeout: 1000 });
+          } else {
+            this.scan();
           }
-
-          hasExternalMutation = true;
-
-          // 2. 收集增量添加的节点，优先采用增量检查
-          if (m.type === 'childList' && m.addedNodes.length > 0) {
-            m.addedNodes.forEach(node => {
-              if (node.nodeType === Node.ELEMENT_NODE) {
-                targetsToScan.add(node);
-              }
-            });
-          }
-        }
-
-        if (!hasExternalMutation) return;
-
-        // 3. 节流与防抖合并，避免频繁拉起全局扫描
-        if (!scanScheduled) {
-          scanScheduled = true;
-          const scheduleTask = window.requestIdleCallback || ((cb) => setTimeout(cb, 200));
-
-          scheduleTask(() => {
-            // 如果新增节点较少，仅对新增节点增量排查；若过多则降级为全局扫描
-            if (targetsToScan.size > 0 && targetsToScan.size < 20) {
-              this.scanIncremental(targetsToScan);
-            } else {
-              this.scan();
-            }
-            scanScheduled = false;
-          }, { timeout: 1000 });
-        }
+        }, 350);
       });
 
       if (document.body) {
@@ -1288,84 +1238,12 @@
           childList: true,
           subtree: true,
           attributes: true,
-          attributeFilter: ['src'] // 移除 style 和 class 的全盘深度监听，大幅降低触发频率
+          attributeFilter: ['style', 'class', 'src']
         });
       }
 
       this.scan();
     }
-
-
-
-    // ==========================================
-    // 新增：高效增量节点扫描机制
-    // ==========================================
-    scanIncremental(nodes) {
-      if (this.isScanning) return;
-
-      nodes.forEach(node => {
-        if (this.isExcludedElement(node)) return;
-
-        // 如果节点本身是候选者
-        const candidateSelector = 'div, iframe, a, img, section, ins, [class*="ad"], [id*="ad"]';
-        if (node.matches && node.matches(candidateSelector)) {
-          this.evaluateAndRegisterElement(node);
-        }
-
-        // 处理子节点
-        if (node.querySelectorAll) {
-          const children = node.querySelectorAll(candidateSelector);
-          children.forEach(child => this.evaluateAndRegisterElement(child));
-        }
-      });
-
-      if (this.isUIVisible) {
-        this.updateUI();
-      }
-    }
-
-    // 把单节点评估与注册提炼为独立轻量函数
-    evaluateAndRegisterElement(el) {
-      if (this.isExcludedElement(el)) return;
-
-      let adId = el.getAttribute('data-ad-detector-id');
-      const existingMeta = adId ? this.detectedAds.get(adId) : null;
-
-      // 打分前优先进行快速不合规排查（避开计算重排属性）
-      const { score, reasons } = this.calculateAdScore(el);
-
-      if (score >= 40 || (existingMeta && existingMeta.isBlocked)) {
-        if (!adId) {
-          this.counter++;
-          adId = `ad-detected-${this.counter}`;
-          el.setAttribute('data-ad-detector-id', adId);
-        }
-
-        const formattedSize = existingMeta ? existingMeta.size : `${el.offsetWidth || 0}x${el.offsetHeight || 0}px`;
-        const fingerprint = `${el.tagName.toLowerCase()}_${formattedSize}_`;
-
-        const meta = {
-          id: adId,
-          element: el,
-          score: existingMeta ? Math.max(existingMeta.score, score) : score,
-          reasons: existingMeta && existingMeta.score > score ? existingMeta.reasons : reasons,
-          tagName: el.tagName.toLowerCase(),
-          size: formattedSize,
-          classAndId: `${el.id ? '#' + el.id : ''}${el.className && typeof el.className === 'string' ? '.' + el.className : ''}`.trim(),
-          fingerprint: fingerprint,
-          isBlocked: existingMeta ? existingMeta.isBlocked : false
-        };
-
-        if (!meta.isBlocked && this.isMatchesBlockedRule(meta)) {
-          meta.isBlocked = true;
-          el.dataset.overlayBlocked = 'true';
-          el.style.setProperty('display', 'none', 'important');
-        }
-
-        this.detectedAds.set(adId, meta);
-      }
-    }
-
 
     toggleUI() {
       if (this.isUIVisible) {
@@ -2174,9 +2052,9 @@
         let statusHtml = `<span class="score">${meta.score}分</span>`;
         if (isBlocked) {
           if (isDowngraded) {
-            statusHtml = `<div><span class="status-tag" style="background:rgba(255,149,0,0.25);color:#ff9500;">⚠️ 降级防误伤</span> <span class="score">${meta.score}分</span></div>`;
+            statusHtml = '<span class="status-tag" style="background:rgba(255,149,0,0.25);color:#ff9500;">⚠️ 降级防误伤</span>';
           } else {
-            statusHtml = `<div><span class="status-tag">已屏蔽</span> <span class="score">${meta.score}分</span></div>`;
+            statusHtml = '<span class="status-tag">已屏蔽</span>';
           }
         }
 
@@ -2203,8 +2081,7 @@
           ${!isBlocked
             ? `<button class="btn-action btn-preview" data-action="preview" data-id="${meta.id}">🔍 预览元素</button>
                <button class="btn-action btn-hide-single" data-action="hide" data-id="${meta.id}">🚫 单独屏蔽</button>`
-            : `<button class="btn-action btn-preview" data-action="preview" data-id="${meta.id}">🔍 预览元素</button>
-            <button class="btn-action btn-restore-single" data-action="restore" data-id="${meta.id}">↩️ 撤销屏蔽</button>`
+            : `<button class="btn-action btn-restore-single" data-action="restore" data-id="${meta.id}">↩️ 撤销屏蔽</button>`
           }
         </div>
       </div>

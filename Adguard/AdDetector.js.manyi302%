@@ -261,9 +261,6 @@
         // 【分支 B：实际匹配超标，存在误伤风险】 -> 降级为单节点内联隐藏 + 精准 XPath 规则
         console.warn(`[AdDetector] 误伤预警: "${candidateSelector}" 实际匹配 ${N_actual} 个, 预期 ${N_expected} 个。执行单节点 XPath 降级。`);
 
-        meta.isDowngraded = true; // 👈 新增：标记为降级/有误伤风险
-        meta.downgradeReason = `选择器匹配了 ${N_actual} 个节点，远超预期 ${N_expected} 个`; // 👈 新增原因说明
-
         targetEl.style.setProperty('display', 'none', 'important');
         const exactXPath = this.getElementXPath(targetEl);
 
@@ -345,10 +342,6 @@
 
         // 6. 反馈提示
         this.showToast('🛡 已通过安全交叉校验执行屏蔽');
-
-        // 7. 显式确保 UI 更新
-        this.updateUI();
-
       }
     }
 
@@ -358,9 +351,6 @@
         this.restoreSingleInternal(adId);
         this.pushHistoryState({ type: 'SINGLE_RESTORE', items: [adId] });
         this.showToast('↩️ 已撤销屏蔽，已更新本地规则库');
-
-        // 补充：确保撤销屏蔽后面板列表同步还原状态
-        this.updateUI();
       }
     }
 
@@ -567,9 +557,6 @@
       });
     }
 
-    // ==========================================
-    // 修正：防爆栈的属性锁定 Observer
-    // ==========================================
     forceCleanSavedRulesImmediately() {
       const doScan = () => {
         this.scan();
@@ -580,24 +567,23 @@
               meta.element.dataset.overlayBlocked = 'true';
               meta.element.style.setProperty('display', 'none', 'important');
 
-              // 使用锁标记位，避免递归触发 MutationObserver 造成浏览器卡死
               if (!meta.element._adLockObserver) {
-                let isMutating = false;
-                meta.element._adLockObserver = new MutationObserver(() => {
-                  if (isMutating) return; // 阻止自循环触发
+                meta.element._adLockObserver = new MutationObserver((mutations) => {
                   if (meta.isBlocked && meta.element.style.display !== 'none') {
-                    isMutating = true;
+                    meta.element._adLockObserver.disconnect();
                     meta.element.style.setProperty('display', 'none', 'important');
-                    // 延迟释放锁
-                    Promise.resolve().then(() => { isMutating = false; });
+                    meta.element._adLockObserver.observe(meta.element, {
+                      attributes: true,
+                      attributeFilter: ['style', 'class']
+                    });
                   }
                 });
-
                 meta.element._adLockObserver.observe(meta.element, {
                   attributes: true,
                   attributeFilter: ['style', 'class']
                 });
               }
+
             }
           }
         });
@@ -1079,17 +1065,9 @@
     // ==========================================
     // ★ 核心重构模块：高效率全盘与增量 DOM 扫描
     // ==========================================
-    // ==========================================
-    // ★ 高性能重构模块：全量选择器 + 绝对读写隔离 + 极速剪枝
-    // ==========================================
     scan() {
       if (this.isScanning) return this.detectedAds;
       this.isScanning = true;
-
-      // 初始化节点评估缓存（若类构造函数中未定义，可单例创建）
-      if (!this.evaluatedNodes) {
-        this.evaluatedNodes = new WeakSet();
-      }
 
       // 1. 节点存活度与有效性自检（清理已从 DOM 卸载的无效记录）
       for (const [adId, meta] of this.detectedAds.entries()) {
@@ -1098,12 +1076,11 @@
         }
       }
 
-      // 2. 多源收集候选节点（原封不动保留你的全量 Selector 与 Shadow DOM 递归）
+      // 2. 多源收集候选节点（支持遍历主 DOM 与 open 状态的 Shadow DOM）
       const candidateNodes = new Set();
       const collectCandidatesFromRoot = (root) => {
         if (!root) return;
-
-        // 彻底保留你原有的完整全量选择器
+        // 扩展通配扫描范围：包含关键标签、特征属性节点及自定义组件
         const selector = [
           'div', 'iframe', 'a', 'img', 'section', 'article', 'ins', 'aside', 'header', 'footer', 'canvas', 'video', 'embed', 'object',
           '[class*="ad"]', '[id*="ad"]', '[class*="overlay"]', '[class*="backdrop"]', '[id*="overlay"]', '[id*="backdrop"]',
@@ -1123,37 +1100,22 @@
 
       collectCandidatesFromRoot(document);
 
-      // 用于读写分离的临时队列
-      const updatesToApply = [];
-
-      // 3. 【第一阶段：纯读取与极速过滤 (READ PHASE)】
-      // 绝对禁止在此循环内修改任何 DOM（不设置 attribute，不改 style）
+      // 3. 遍历候选节点执行算法判别与打分
       candidateNodes.forEach((el) => {
         if (this.isExcludedElement(el)) return;
 
         let adId = el.getAttribute('data-ad-detector-id');
         const existingMeta = adId ? this.detectedAds.get(adId) : null;
 
-        // 【剪枝 1】：非广告且已评估过的节点，直接跳过
-        if (!existingMeta && this.evaluatedNodes.has(el)) return;
-
-        // 【剪枝 2】：快速几何过滤，未渲染或隐藏节点直接跳过，避免执行昂贵的 calculateAdScore
-        if (el.offsetWidth === 0 && el.offsetHeight === 0) return;
-
-        // 【剪枝 3】：对大量无特征的普通文本/容器节点实施毫秒级快速放行
-        // 如果是普通 div/section，没有 id/class，也没有子链接，极大概率不是广告
-        if (!existingMeta && (el.tagName === 'DIV' || el.tagName === 'SECTION' || el.tagName === 'ARTICLE')) {
-          if (!el.id && !el.className && !el.querySelector('a[href]')) {
-            this.evaluatedNodes.add(el);
-            return;
-          }
-        }
-
-        // 执行算法判别与打分
         const { score, reasons } = this.calculateAdScore(el);
 
         if (score >= 40 || (existingMeta && existingMeta.isBlocked)) {
-          // 读取节点布局与链接属性（仅 Read，不 Write）
+          if (!adId) {
+            this.counter++;
+            adId = `ad-detected-${this.counter}`;
+            el.setAttribute('data-ad-detector-id', adId);
+          }
+
           const rect = el.getBoundingClientRect();
           const formattedSize = existingMeta ? existingMeta.size : `${Math.round(rect.width)}x${Math.round(rect.height)}px`;
 
@@ -1162,42 +1124,16 @@
           try {
             if (anchor && anchor.href) hrefHost = new URL(anchor.href, window.location.href).hostname;
           } catch (e) { }
-
           const fingerprint = `${el.tagName.toLowerCase()}_${formattedSize}_${hrefHost}`;
+
           const finalScore = existingMeta ? Math.max(existingMeta.score, score) : score;
           const finalReasons = (existingMeta && existingMeta.score > score) ? existingMeta.reasons : reasons;
-
-          // 暂存计算好的数据，推迟到 Write 阶段统一处理
-          updatesToApply.push({
-            el,
-            adId,
-            existingMeta,
-            score: finalScore,
-            reasons: finalReasons,
-            formattedSize,
-            fingerprint
-          });
-        } else {
-          // 记录为普通节点，下一次扫描无需重复打分
-          this.evaluatedNodes.add(el);
-        }
-      });
-
-      // 4. 【第二阶段：批量统一写入 DOM (WRITE PHASE)】
-      // 将所有对 DOM 的写操作集中在一起处理，强制浏览器仅触发 1 次重排
-      if (updatesToApply.length > 0) {
-        updatesToApply.forEach(({ el, adId, existingMeta, score, reasons, formattedSize, fingerprint }) => {
-          if (!adId) {
-            this.counter++;
-            adId = `ad-detected-${this.counter}`;
-            el.setAttribute('data-ad-detector-id', adId);
-          }
 
           const meta = {
             id: adId,
             element: el,
-            score: score,
-            reasons: reasons,
+            score: finalScore,
+            reasons: finalReasons,
             tagName: el.tagName.toLowerCase(),
             size: formattedSize,
             classAndId: `${el.id ? '#' + el.id : ''}${el.className && typeof el.className === 'string' ? '.' + el.className : ''}`.trim(),
@@ -1216,8 +1152,8 @@
           if (this.isHighlighted && !meta.isBlocked) {
             this.applyHighlight(el, true, formattedSize);
           }
-        });
-      }
+        }
+      });
 
       this.isScanning = false;
       if (this.isUIVisible) {
@@ -1226,61 +1162,22 @@
       return this.detectedAds;
     }
 
-
-    // ==========================================
-    // 优化后的 MutationObserver 及锁机制
-    // ==========================================
-
     initObserver() {
-      let scanScheduled = false;
-
       this.observer = new MutationObserver((mutations) => {
-        let hasExternalMutation = false;
-        const targetsToScan = new Set();
+        const isSelfMutation = mutations.every(m =>
+          m.target.id === 'ad-detector-host' ||
+          (m.target.classList && typeof m.target.classList.contains === 'function' && m.target.classList.contains('ad-detector-size-badge'))
+        );
+        if (isSelfMutation) return;
 
-        for (let i = 0; i < mutations.length; i++) {
-          const m = mutations[i];
-          const target = m.target;
-
-          // 1. 过滤内部节点修改，防止死循环
-          if (
-            target.id === 'ad-detector-host' ||
-            target.id === 'ad-detector-dynamic-css-rules' ||
-            (target.classList && typeof target.classList.contains === 'function' && target.classList.contains('ad-detector-size-badge')) ||
-            (target.dataset && target.dataset.overlayBlocked === 'true') // 过滤已被屏蔽节点的样式变更
-          ) {
-            continue;
+        if (this.scanTimer) clearTimeout(this.scanTimer);
+        this.scanTimer = setTimeout(() => {
+          if ('requestIdleCallback' in window) {
+            requestIdleCallback(() => this.scan(), { timeout: 1000 });
+          } else {
+            this.scan();
           }
-
-          hasExternalMutation = true;
-
-          // 2. 收集增量添加的节点，优先采用增量检查
-          if (m.type === 'childList' && m.addedNodes.length > 0) {
-            m.addedNodes.forEach(node => {
-              if (node.nodeType === Node.ELEMENT_NODE) {
-                targetsToScan.add(node);
-              }
-            });
-          }
-        }
-
-        if (!hasExternalMutation) return;
-
-        // 3. 节流与防抖合并，避免频繁拉起全局扫描
-        if (!scanScheduled) {
-          scanScheduled = true;
-          const scheduleTask = window.requestIdleCallback || ((cb) => setTimeout(cb, 200));
-
-          scheduleTask(() => {
-            // 如果新增节点较少，仅对新增节点增量排查；若过多则降级为全局扫描
-            if (targetsToScan.size > 0 && targetsToScan.size < 20) {
-              this.scanIncremental(targetsToScan);
-            } else {
-              this.scan();
-            }
-            scanScheduled = false;
-          }, { timeout: 1000 });
-        }
+        }, 350);
       });
 
       if (document.body) {
@@ -1288,84 +1185,12 @@
           childList: true,
           subtree: true,
           attributes: true,
-          attributeFilter: ['src'] // 移除 style 和 class 的全盘深度监听，大幅降低触发频率
+          attributeFilter: ['style', 'class', 'src']
         });
       }
 
       this.scan();
     }
-
-
-
-    // ==========================================
-    // 新增：高效增量节点扫描机制
-    // ==========================================
-    scanIncremental(nodes) {
-      if (this.isScanning) return;
-
-      nodes.forEach(node => {
-        if (this.isExcludedElement(node)) return;
-
-        // 如果节点本身是候选者
-        const candidateSelector = 'div, iframe, a, img, section, ins, [class*="ad"], [id*="ad"]';
-        if (node.matches && node.matches(candidateSelector)) {
-          this.evaluateAndRegisterElement(node);
-        }
-
-        // 处理子节点
-        if (node.querySelectorAll) {
-          const children = node.querySelectorAll(candidateSelector);
-          children.forEach(child => this.evaluateAndRegisterElement(child));
-        }
-      });
-
-      if (this.isUIVisible) {
-        this.updateUI();
-      }
-    }
-
-    // 把单节点评估与注册提炼为独立轻量函数
-    evaluateAndRegisterElement(el) {
-      if (this.isExcludedElement(el)) return;
-
-      let adId = el.getAttribute('data-ad-detector-id');
-      const existingMeta = adId ? this.detectedAds.get(adId) : null;
-
-      // 打分前优先进行快速不合规排查（避开计算重排属性）
-      const { score, reasons } = this.calculateAdScore(el);
-
-      if (score >= 40 || (existingMeta && existingMeta.isBlocked)) {
-        if (!adId) {
-          this.counter++;
-          adId = `ad-detected-${this.counter}`;
-          el.setAttribute('data-ad-detector-id', adId);
-        }
-
-        const formattedSize = existingMeta ? existingMeta.size : `${el.offsetWidth || 0}x${el.offsetHeight || 0}px`;
-        const fingerprint = `${el.tagName.toLowerCase()}_${formattedSize}_`;
-
-        const meta = {
-          id: adId,
-          element: el,
-          score: existingMeta ? Math.max(existingMeta.score, score) : score,
-          reasons: existingMeta && existingMeta.score > score ? existingMeta.reasons : reasons,
-          tagName: el.tagName.toLowerCase(),
-          size: formattedSize,
-          classAndId: `${el.id ? '#' + el.id : ''}${el.className && typeof el.className === 'string' ? '.' + el.className : ''}`.trim(),
-          fingerprint: fingerprint,
-          isBlocked: existingMeta ? existingMeta.isBlocked : false
-        };
-
-        if (!meta.isBlocked && this.isMatchesBlockedRule(meta)) {
-          meta.isBlocked = true;
-          el.dataset.overlayBlocked = 'true';
-          el.style.setProperty('display', 'none', 'important');
-        }
-
-        this.detectedAds.set(adId, meta);
-      }
-    }
-
 
     toggleUI() {
       if (this.isUIVisible) {
@@ -1661,8 +1486,8 @@
                 <option value="blocked">仅已屏蔽</option>
               </select>
               <select id="select-sort" class="select-control" title="选择排序方式">
-                <option value="default">默认排序(风险系数)</option>
-                <option value="height">按元素高度排序(Height)</option> <!-- 新增选项 -->
+                <option value="default">默认排序</option>
+                <option value="height">按元素高度(Height)排序</option> <!-- 新增选项 -->
               </select>
               <span id="count-badge" style="background:rgba(255,255,255,0.1);padding:2px 6px;border-radius:10px;font-size:11px;">0 个</span>
               <span class="close-btn" id="btn-close-panel" title="关闭面板 (Alt+A)">✕</span>
@@ -2168,47 +1993,27 @@
       let html = '';
       allDetected.forEach((meta) => {
         const isBlocked = meta.isBlocked;
-        const isDowngraded = meta.isDowngraded || false;
-
-        // 状态标签生成逻辑（区分常规屏蔽与降级防误伤屏蔽）
-        let statusHtml = `<span class="score">${meta.score}分</span>`;
-        if (isBlocked) {
-          if (isDowngraded) {
-            statusHtml = `<div><span class="status-tag" style="background:rgba(255,149,0,0.25);color:#ff9500;">⚠️ 降级防误伤</span> <span class="score">${meta.score}分</span></div>`;
-          } else {
-            statusHtml = `<div><span class="status-tag">已屏蔽</span> <span class="score">${meta.score}分</span></div>`;
-          }
-        }
-
-        // 预警说明信息
-        const downgradeWarnHtml = isBlocked && isDowngraded && meta.downgradeReason
-          ? `<div style="font-size:11px;color:#ff9500;margin-top:4px;line-height:1.3;background:rgba(255,149,0,0.1);padding:4px 6px;border-radius:4px;">
-           ⚠️ <strong>误伤预警：</strong>${meta.downgradeReason}
-         </div>`
-          : '';
 
         html += `
-      <div class="item ${isBlocked ? 'is-blocked' : ''}" data-ad-id="${meta.id}">
-        <div class="item-top">
-          <div class="item-title">
-            <strong>${meta.tagName}</strong>
-            <span style="color:#8e8e93;">(宽高:${meta.size})</span>
-          </div>
-          ${statusHtml}
-        </div>
-        <div style="font-size:11px;color:#0a84ff;word-break:break-all;margin-top:2px;">${meta.classAndId || '无 Class/ID'}</div>
-        <div class="reasons">原因: ${meta.reasons.join(' | ')}</div>
-        ${downgradeWarnHtml}
-        <div class="actions">
-          ${!isBlocked
+          <div class="item ${isBlocked ? 'is-blocked' : ''}" data-ad-id="${meta.id}">
+            <div class="item-top">
+              <div class="item-title">
+                <strong>${meta.tagName}</strong>
+                <span style="color:#8e8e93;">(宽高:${meta.size})</span>
+              </div>
+              ${isBlocked ? '<span class="status-tag">已屏蔽</span>' : `<span class="score">${meta.score}分</span>`}
+            </div>
+            <div style="font-size:11px;color:#0a84ff;word-break:break-all;margin-top:2px;">${meta.classAndId || '无 Class/ID'}</div>
+            <div class="reasons">原因: ${meta.reasons.join(' | ')}</div>
+            <div class="actions">
+              ${!isBlocked
             ? `<button class="btn-action btn-preview" data-action="preview" data-id="${meta.id}">🔍 预览元素</button>
-               <button class="btn-action btn-hide-single" data-action="hide" data-id="${meta.id}">🚫 单独屏蔽</button>`
-            : `<button class="btn-action btn-preview" data-action="preview" data-id="${meta.id}">🔍 预览元素</button>
-            <button class="btn-action btn-restore-single" data-action="restore" data-id="${meta.id}">↩️ 撤销屏蔽</button>`
+                   <button class="btn-action btn-hide-single" data-action="hide" data-id="${meta.id}">🚫 单独屏蔽</button>`
+            : `<button class="btn-action btn-restore-single" data-action="restore" data-id="${meta.id}">↩️ 撤销屏蔽</button>`
           }
-        </div>
-      </div>
-    `;
+            </div>
+          </div>
+        `;
       });
       listEl.innerHTML = html;
 
@@ -2273,8 +2078,8 @@
         });
         this.hasTouchGlobalListener = true;
       }
-    }
 
+    }
   }
 
   // 单例挂载
