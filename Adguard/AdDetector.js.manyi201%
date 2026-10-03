@@ -299,36 +299,8 @@
     neutralizeSingle(adId) {
       const meta = this.detectedAds.get(adId);
       if (meta && !meta.isBlocked) {
-        // 1. 先记录历史状态（必须在状态变更前/中记录，防止内部逻辑改变状态后捕获不准）
-        this.pushHistoryState({ type: 'SINGLE_BLOCK', items: [adId] });
-
-        // 2. 标记已被屏蔽 & 更新状态
-        meta.isBlocked = true;
-        const el = meta.element;
-
-        if (el && el.nodeType === Node.ELEMENT_NODE) {
-          el.dataset.overlayBlocked = 'true';
-
-          // 3. 清理自身及子元素的高亮与 Hover 类
-          el.classList.remove('ad-detector-hover-active', 'ad-detector-highlight-active');
-          el.style.removeProperty('outline');
-          el.style.removeProperty('outline-offset');
-
-          const activeChildren = el.querySelectorAll('.ad-detector-hover-active, .ad-detector-highlight-active');
-          activeChildren.forEach(child => {
-            child.classList.remove('ad-detector-hover-active', 'ad-detector-highlight-active');
-            child.style.removeProperty('outline');
-            child.style.removeProperty('outline-offset');
-          });
-
-          // 4. 清除角标 (Badge) 与高亮图层
-          this.applyHighlight(el, false);
-        }
-
-        // 5. 执行底层规则生成与 CSS 写入（如保存 CSS 规则到 storage）
         this.neutralizeSingleInternal(adId);
-
-        // 6. 反馈提示
+        this.pushHistoryState({ type: 'SINGLE_BLOCK', items: [adId] });
         this.showToast('🛡 已通过安全交叉校验执行屏蔽');
       }
     }
@@ -603,21 +575,11 @@
 
     /* hover 态预热 */
     .ad-detector-hover-active {
-/* 1. 强制赋予最高级的 z-index，超越面板的 2147483647 */
-z-index: 2147483648 !important;
-pointer-events: auto !important;
-/* 2. 只有定位元素（relative/absolute/fixed/sticky）才能让 z-index 生效 */
-position: relative !important;
-
-/* 3. 高亮轮廓与视觉提示 */
-outline: 3px solid #ff3b30 !important;
-outline-offset: -3px !important;
-box-shadow: 0 0 20px rgba(255, 59, 48, 0.8), 0 0 0 9999px rgba(0, 0, 0, 0.4) !important;
-
-/* 4. 确保混合模式与平滑过渡 */
-isolation: isolate !important; /* 创建独立的层叠上下文，防止父级 transform 压制 */
-transition: outline 0.15s ease, box-shadow 0.15s ease !important;
-}
+      outline: 8px dashed #f21414 !important;
+      outline-offset: -2px !important;
+      z-index: 999999 !important;
+      pointer-events: auto !important;
+    }
 
     /* 优化后的 Size Badge：基于 CSS content 属性动态渲染尺寸文本 */
     .ad-detector-size-badge {
@@ -1738,18 +1700,14 @@ transition: outline 0.15s ease, box-shadow 0.15s ease !important;
       }
 
       if (isHovering) {
-        // 悬停：只加 Class
         meta.element.classList.add('ad-detector-hover-active');
       } else {
-        // 离开：只撤 Class
         meta.element.classList.remove('ad-detector-hover-active');
 
-        // 关键补充：防止嵌套的 img 或 inner div 遗留状态
-        const activeChildren = meta.element.querySelectorAll('.ad-detector-hover-active');
-        activeChildren.forEach(child => child.classList.remove('ad-detector-hover-active'));
-
-        // 只有在开启了全局高亮时，才去重新铺设高亮（比如红底/角标）
-        if (this.isHighlighted) {
+        if (!this.isHighlighted) {
+          meta.element.style.removeProperty('outline');
+          meta.element.style.removeProperty('box-shadow');
+        } else {
           this.applyHighlight(meta.element, true, meta.size);
         }
       }

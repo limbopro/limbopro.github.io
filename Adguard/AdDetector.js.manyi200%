@@ -248,7 +248,7 @@
       } else {
         // 【分支 B：实际匹配超标，存在误伤风险】 -> 降级为单节点内联隐藏 + 精准 XPath 规则
         console.warn(`[AdDetector] 误伤预警: "${candidateSelector}" 实际匹配 ${N_actual} 个, 预期 ${N_expected} 个。执行单节点 XPath 降级。`);
-
+        
         targetEl.style.setProperty('display', 'none', 'important');
         const exactXPath = this.getElementXPath(targetEl);
 
@@ -299,36 +299,8 @@
     neutralizeSingle(adId) {
       const meta = this.detectedAds.get(adId);
       if (meta && !meta.isBlocked) {
-        // 1. 先记录历史状态（必须在状态变更前/中记录，防止内部逻辑改变状态后捕获不准）
-        this.pushHistoryState({ type: 'SINGLE_BLOCK', items: [adId] });
-
-        // 2. 标记已被屏蔽 & 更新状态
-        meta.isBlocked = true;
-        const el = meta.element;
-
-        if (el && el.nodeType === Node.ELEMENT_NODE) {
-          el.dataset.overlayBlocked = 'true';
-
-          // 3. 清理自身及子元素的高亮与 Hover 类
-          el.classList.remove('ad-detector-hover-active', 'ad-detector-highlight-active');
-          el.style.removeProperty('outline');
-          el.style.removeProperty('outline-offset');
-
-          const activeChildren = el.querySelectorAll('.ad-detector-hover-active, .ad-detector-highlight-active');
-          activeChildren.forEach(child => {
-            child.classList.remove('ad-detector-hover-active', 'ad-detector-highlight-active');
-            child.style.removeProperty('outline');
-            child.style.removeProperty('outline-offset');
-          });
-
-          // 4. 清除角标 (Badge) 与高亮图层
-          this.applyHighlight(el, false);
-        }
-
-        // 5. 执行底层规则生成与 CSS 写入（如保存 CSS 规则到 storage）
         this.neutralizeSingleInternal(adId);
-
-        // 6. 反馈提示
+        this.pushHistoryState({ type: 'SINGLE_BLOCK', items: [adId] });
         this.showToast('🛡 已通过安全交叉校验执行屏蔽');
       }
     }
@@ -584,70 +556,36 @@
       }
     }
 
-    // 1. 全局样式注入：统一用 CSS 定义高亮及角标样式
     injectGlobalStyles() {
       if (document.getElementById('ad-detector-global-styles')) return;
       const style = document.createElement('style');
       style.id = 'ad-detector-global-styles';
       style.textContent = `
-    /* 容器高亮控制类 */
-    .ad-detector-highlight-active {
-      outline: 3px solid #ff3b30 !important;
-      background-color: rgba(255, 59, 48, 0.2) !important;
-    }
+        .ad-detector-hover-active {
+          outline: 8px dashed #f21414 !important;
+          outline-offset: -2px !important;
+          z-index: 999999 !important;
+          pointer-events: auto !important;
+        }
 
-    /* 针对 static 定位元素的基准修复 */
-    .ad-detector-pos-relative {
-      position: relative !important;
-    }
-
-    /* hover 态预热 */
-    .ad-detector-hover-active {
-/* 1. 强制赋予最高级的 z-index，超越面板的 2147483647 */
-z-index: 2147483648 !important;
-pointer-events: auto !important;
-/* 2. 只有定位元素（relative/absolute/fixed/sticky）才能让 z-index 生效 */
-position: relative !important;
-
-/* 3. 高亮轮廓与视觉提示 */
-outline: 3px solid #ff3b30 !important;
-outline-offset: -3px !important;
-box-shadow: 0 0 20px rgba(255, 59, 48, 0.8), 0 0 0 9999px rgba(0, 0, 0, 0.4) !important;
-
-/* 4. 确保混合模式与平滑过渡 */
-isolation: isolate !important; /* 创建独立的层叠上下文，防止父级 transform 压制 */
-transition: outline 0.15s ease, box-shadow 0.15s ease !important;
-}
-
-    /* 优化后的 Size Badge：基于 CSS content 属性动态渲染尺寸文本 */
-    .ad-detector-size-badge {
-      position: absolute !important;
-      top: 0 !important;
-      left: 0 !important;
-      background: #ff3b30 !important;
-      color: #ffffff !important;
-      font-size: 11px !important;
-      font-weight: 700 !important;
-      padding: 2px 6px !important;
-      border-bottom-right-radius: 6px !important;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.3) !important;
-      z-index: 2147483645 !important;
-      pointer-events: none !important;
-      white-space: nowrap !important;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-      line-height: 1.2 !important;
-      display: none !important;
-    }
-
-    /* 仅当父级带有高亮激活类且未被屏蔽时，显示角标 */
-    .ad-detector-highlight-active > .ad-detector-size-badge {
-      display: block !important;
-    }
-
-    .ad-detector-size-badge::before {
-      content: attr(data-size);
-    }
-  `;
+        .ad-detector-size-badge {
+          position: absolute !important;
+          top: 0 !important;
+          left: 0 !important;
+          background: #ff3b30 !important;
+          color: #ffffff !important;
+          font-size: 11px !important;
+          font-weight: 700 !important;
+          padding: 2px 6px !important;
+          border-bottom-right-radius: 6px !important;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.3) !important;
+          z-index: 2147483645 !important;
+          pointer-events: none !important;
+          white-space: nowrap !important;
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+          line-height: 1.2 !important;
+        }
+      `;
       (document.head || document.documentElement).appendChild(style);
     }
 
@@ -1520,26 +1458,13 @@ transition: outline 0.15s ease, box-shadow 0.15s ease !important;
       window.addEventListener('pointercancel', stopDrag);
     }
 
-    // 2. 节点高亮状态挂载（极轻量，单节点批量 class 变更）
     applyHighlight(el, enable, sizeText = '') {
-      if (!el || el.dataset.overlayBlocked === 'true') {
-        el.classList.remove('ad-detector-highlight-active', 'ad-detector-pos-relative');
-        return;
-      }
+      const oldBadge = el.querySelector('.ad-detector-size-badge');
+      if (oldBadge) oldBadge.remove();
 
-      if (enable) {
-        // 处理相对定位，避免为 static 节点插入子级时定位偏离
-        if (window.getComputedStyle(el).position === 'static') {
-          el.classList.add('ad-detector-pos-relative');
-        }
-
-        // 更新或注入 Badge（只用 dataset 传参，避免每次创建/销毁 DOM 节点）
-        let badge = el.querySelector(':scope > .ad-detector-size-badge');
-        if (!badge) {
-          badge = document.createElement('div');
-          badge.className = 'ad-detector-size-badge';
-          el.appendChild(badge);
-        }
+      if (enable && el.dataset.overlayBlocked !== 'true') {
+        el.style.setProperty('outline', '3px solid #ff3b30', 'important');
+        el.style.setProperty('background-color', 'rgba(255, 59, 48, 0.2)', 'important');
 
         if (!sizeText) {
           const adId = el.getAttribute('data-ad-detector-id');
@@ -1547,25 +1472,28 @@ transition: outline 0.15s ease, box-shadow 0.15s ease !important;
           sizeText = meta ? meta.size : '0x0px';
         }
 
-        // 仅在尺寸变更时更新 Dataset，通过 CSS 伪元素 ::before 自行渲染 textContent
-        if (badge.dataset.size !== sizeText) {
-          badge.dataset.size = sizeText;
+        const currentPos = window.getComputedStyle(el).position;
+        if (currentPos === 'static') {
+          el.style.setProperty('position', 'relative', 'important');
         }
 
-        el.classList.add('ad-detector-highlight-active');
+        const badge = document.createElement('div');
+        badge.className = 'ad-detector-size-badge';
+        badge.textContent = sizeText;
+        el.appendChild(badge);
       } else {
-        el.classList.remove('ad-detector-highlight-active', 'ad-detector-pos-relative');
+        el.style.removeProperty('outline');
+        el.style.removeProperty('background-color');
       }
     }
 
-    // 3. 一键切换高亮状态：借助 Map 极速遍历，无 DOM 树深度遍历
     toggleHighlight() {
       this.isHighlighted = !this.isHighlighted;
-      for (const meta of this.detectedAds.values()) {
-        if (meta.element && !meta.isBlocked) {
+      this.detectedAds.forEach((meta) => {
+        if (!meta.isBlocked) {
           this.applyHighlight(meta.element, this.isHighlighted, meta.size);
         }
-      }
+      });
     }
 
     showPreviewWindow(adId) {
@@ -1738,18 +1666,14 @@ transition: outline 0.15s ease, box-shadow 0.15s ease !important;
       }
 
       if (isHovering) {
-        // 悬停：只加 Class
         meta.element.classList.add('ad-detector-hover-active');
       } else {
-        // 离开：只撤 Class
         meta.element.classList.remove('ad-detector-hover-active');
 
-        // 关键补充：防止嵌套的 img 或 inner div 遗留状态
-        const activeChildren = meta.element.querySelectorAll('.ad-detector-hover-active');
-        activeChildren.forEach(child => child.classList.remove('ad-detector-hover-active'));
-
-        // 只有在开启了全局高亮时，才去重新铺设高亮（比如红底/角标）
-        if (this.isHighlighted) {
+        if (!this.isHighlighted) {
+          meta.element.style.removeProperty('outline');
+          meta.element.style.removeProperty('box-shadow');
+        } else {
           this.applyHighlight(meta.element, true, meta.size);
         }
       }
@@ -1771,8 +1695,7 @@ transition: outline 0.15s ease, box-shadow 0.15s ease !important;
       toast.classList.add('show');
       setTimeout(() => {
         toast.classList.remove('show');
-        //}, 2200);
-      }, 3500);
+      }, 2200);
     }
 
     bindInteractiveEvents() {

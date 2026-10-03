@@ -603,21 +603,11 @@
 
     /* hover 态预热 */
     .ad-detector-hover-active {
-/* 1. 强制赋予最高级的 z-index，超越面板的 2147483647 */
-z-index: 2147483648 !important;
-pointer-events: auto !important;
-/* 2. 只有定位元素（relative/absolute/fixed/sticky）才能让 z-index 生效 */
-position: relative !important;
-
-/* 3. 高亮轮廓与视觉提示 */
-outline: 3px solid #ff3b30 !important;
-outline-offset: -3px !important;
-box-shadow: 0 0 20px rgba(255, 59, 48, 0.8), 0 0 0 9999px rgba(0, 0, 0, 0.4) !important;
-
-/* 4. 确保混合模式与平滑过渡 */
-isolation: isolate !important; /* 创建独立的层叠上下文，防止父级 transform 压制 */
-transition: outline 0.15s ease, box-shadow 0.15s ease !important;
-}
+      outline: 8px dashed #f21414 !important;
+      outline-offset: -2px !important;
+      z-index: 999999 !important;
+      pointer-events: auto !important;
+    }
 
     /* 优化后的 Size Badge：基于 CSS content 属性动态渲染尺寸文本 */
     .ad-detector-size-badge {

@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         智能广告与覆盖层检测器 (Silent Backend + Floating UI)
 // @namespace    https://tampermonkey.net/
-// @version      12.5
-// @description  默认静默后台防护，支持捕捉全屏透明/半透明遮罩与拦截内联/动态绑定事件劫持，包含特异性选择器生成、数量交叉校验降级防护与持久化规则恢复。
+// @version      12.4
+// @description  默认静默后台防护，支持捕捉全屏透明/半透明遮罩 (Overlay/Backdrop) 与拦截内联/动态绑定事件劫持 (Click Hijacking)，支持面板拖拽、按元素大小/默认规则排序、未处理/已屏蔽筛选，独立预览管理，支持撤回/重做历史操作，支持记忆面板开启状态，支持一键重置。
 // @author       Assistant
 // @match        *://*/*
 // @grant        GM_addStyle
@@ -44,21 +44,21 @@
       this.storageKey = `ad_detector_blocked_${window.location.hostname}`;
       this.blockedRules = this.loadBlockedRules();
 
-      // 读取上次页面留下的面板开启状态
+      // ★ 读取上次页面留下的面板开启状态
       this.isUIVisible = this.loadUIVisibleState();
 
-      // 拦截内联与动态事件劫持防护机制
+      // ★ 拦截内联与动态事件劫持防护机制
       this.initClickHijackProtection();
 
       this.injectGlobalStyles();
-      this.applyCssRulesFromStorage(); // 持久化 CSS 规则转译
+      this.applyCssRulesFromStorage(); // 持久化规则转译为 CSS 防闪烁
       this.initObserver();
       this.bindGlobalHotkeys();
 
-      // 立即强制触发 1 次同步全盘清理与持久化规则恢复
+      // 立即强制触发 1 次同步全盘清理
       this.forceCleanSavedRulesImmediately();
 
-      // 如果记忆状态为开启，页面加载时自动显示面板
+      // ★ 如果记忆状态为开启，页面加载时自动显示面板
       if (this.isUIVisible) {
         if (document.readyState === 'loading') {
           document.addEventListener('DOMContentLoaded', () => this.showUI());
@@ -69,90 +69,12 @@
     }
 
     // ==========================================
-    // ★ 模块一：精准特异性选择器生成器
-    // ==========================================
-    generateSpecificSelector(el) {
-      if (!el || el.nodeType !== Node.ELEMENT_NODE) return '';
-
-      // 1. 如果存在稳固的 ID（过滤纯数字/随机长字串 ID）
-      if (el.id && !/\d{5,}/.test(el.id)) {
-        return `#${CSS.escape(el.id)}`;
-      }
-
-      const path = [];
-      let current = el;
-
-      while (current && current.nodeType === Node.ELEMENT_NODE && current !== document.body && current !== document.documentElement) {
-        let selector = current.tagName.toLowerCase();
-
-        // 过滤掉动态/无意义 class，保留有辨识度的 class
-        const validClasses = Array.from(current.classList || []).filter(
-          c => !/^[0-9_-]+$/.test(c) && !/^(active|show|hide|visible|hover|focus|ad-detector-)/.test(c)
-        );
-
-        if (validClasses.length > 0) {
-          selector += `.${validClasses.map(c => CSS.escape(c)).join('.')}`;
-        }
-
-        // 拼接特征属性约束（如 data-ad-id, href 等）
-        if (current.hasAttribute('data-ad-id')) {
-          selector += `[data-ad-id="${CSS.escape(current.getAttribute('data-ad-id'))}"]`;
-        } else if (current.tagName === 'A' && current.hasAttribute('href')) {
-          const href = current.getAttribute('href');
-          if (href && href.length < 60) {
-            selector += `[href="${CSS.escape(href)}"]`;
-          }
-        }
-
-        // 追加同级节点 index 约束
-        let sibling = current;
-        let nth = 1;
-        while ((sibling = sibling.previousElementSibling)) {
-          if (sibling.tagName === current.tagName) nth++;
-        }
-        if (nth > 1) {
-          selector += `:nth-of-type(${nth})`;
-        }
-
-        path.unshift(selector);
-        current = current.parentElement;
-
-        // 路径向上溯源到 3 层时提前终止，防止选择器过长
-        if (path.length >= 3) break;
-      }
-
-      return path.join(' > ');
-    }
-
-    // ==========================================
-    // ★ 模块二：生成绝对精确的 XPath（降级备份用）
-    // ==========================================
-    getElementXPath(element) {
-      if (!element) return '';
-      if (element.id && !/\d{5,}/.test(element.id)) return `//*[@id="${element.id}"]`;
-      if (element === document.body) return '/html/body';
-
-      let ix = 0;
-      const siblings = element.parentNode ? element.parentNode.childNodes : [];
-
-      for (let i = 0; i < siblings.length; i++) {
-        const sibling = siblings[i];
-        if (sibling === element) {
-          return `${this.getElementXPath(element.parentNode)}/${element.tagName.toLowerCase()}[${ix + 1}]`;
-        }
-        if (sibling.nodeType === 1 && sibling.tagName === element.tagName) {
-          ix++;
-        }
-      }
-      return '';
-    }
-
-    // ==========================================
     // ★ 撤回 (Undo) / 重做 (Redo) 核心逻辑
     // ==========================================
     pushHistoryState(action) {
+      // action 结构: { type: 'SINGLE_BLOCK'|'SINGLE_RESTORE'|'BATCH_BLOCK', items: [adId...] }
       this.undoStack.push(action);
-      this.redoStack = [];
+      this.redoStack = []; // 产生新操作时清空重做栈
       this.updateUI();
     }
 
@@ -161,9 +83,11 @@
       const action = this.undoStack.pop();
 
       if (action.type === 'SINGLE_BLOCK' || action.type === 'BATCH_BLOCK') {
+        // 撤回屏蔽 -> 执行恢复
         action.items.forEach(adId => this.restoreSingleInternal(adId));
-        this.showToast(`↩ 已撤回屏蔽操作 (${action.items.length} 个元素)`);
+        this.showToast(`↩️️ 已撤回屏蔽操作 (${action.items.length} 个元素)`);
       } else if (action.type === 'SINGLE_RESTORE') {
+        // 撤回恢复 -> 执行屏蔽
         action.items.forEach(adId => this.neutralizeSingleInternal(adId));
         this.showToast(`↩ 已撤回恢复操作 (${action.items.length} 个元素)`);
       }
@@ -177,9 +101,11 @@
       const action = this.redoStack.pop();
 
       if (action.type === 'SINGLE_BLOCK' || action.type === 'BATCH_BLOCK') {
+        // 重做屏蔽 -> 再次执行屏蔽
         action.items.forEach(adId => this.neutralizeSingleInternal(adId));
         this.showToast(`↪️ 已重做屏蔽操作 (${action.items.length} 个元素)`);
       } else if (action.type === 'SINGLE_RESTORE') {
+        // 重做恢复 -> 再次执行恢复
         action.items.forEach(adId => this.restoreSingleInternal(adId));
         this.showToast(`↪️ 已重做恢复操作 (${action.items.length} 个元素)`);
       }
@@ -188,87 +114,32 @@
       this.updateUI();
     }
 
-    // ==========================================
-    // ★ 模块三 & 四：safeBlockElement 安全屏蔽 + 交叉校验 + 降级 + 规则持久化
-    // ==========================================
+    // 内部屏蔽逻辑（不直接入历史栈）
     neutralizeSingleInternal(adId) {
       const meta = this.detectedAds.get(adId);
-      if (!meta || !meta.element) return;
+      if (meta && meta.element) {
+        meta.isBlocked = true;
+        meta.element.dataset.overlayBlocked = 'true';
 
-      const targetEl = meta.element;
-      meta.isBlocked = true;
-      targetEl.dataset.overlayBlocked = 'true';
-
-      this.applyHighlight(targetEl, false);
-
-      // 1. 生成候选 CSS 选择器
-      const candidateSelector = this.generateSpecificSelector(targetEl);
-
-      // 2. 数量交叉校验
-      // 计算预期匹配数 (N_expected)
-      let N_expected = 0;
-      this.detectedAds.forEach(item => {
-        if (item.element === targetEl || (candidateSelector && this.generateSpecificSelector(item.element) === candidateSelector)) {
-          N_expected++;
-        }
-      });
-      N_expected = Math.max(1, N_expected);
-
-      // 计算实际 DOM 匹配数 (N_actual)
-      let matchedElements = [];
-      try {
-        if (candidateSelector) {
-          matchedElements = document.querySelectorAll(candidateSelector);
-        }
-      } catch (e) {
-        console.warn('[AdDetector] 选择器语法异常:', candidateSelector, e);
-      }
-
-      const N_actual = matchedElements.length;
-
-      // 3. 判定分流与降级策略执行
-      if (N_actual > 0 && N_actual <= N_expected) {
-        // 【分支 A：完全匹配/更精准】 -> 全局 CSS 注入 + 写入 CSS 规则
-        targetEl.style.setProperty('display', 'none', 'important');
-        matchedElements.forEach(el => el.style.setProperty('display', 'none', 'important'));
+        this.applyHighlight(meta.element, false);
+        meta.element.style.setProperty('display', 'none', 'important');
 
         const rule = {
-          type: 'css',
-          selector: candidateSelector,
           classAndId: meta.classAndId,
           tagName: meta.tagName,
           size: meta.size,
           fingerprint: meta.fingerprint
         };
 
-        if (!this.blockedRules.some(r => r.selector === candidateSelector || r.fingerprint === rule.fingerprint)) {
+        if (!this.blockedRules.some((r) => r.fingerprint === rule.fingerprint)) {
           this.blockedRules.push(rule);
           this.saveBlockedRules();
-        }
-      } else {
-        // 【分支 B：实际匹配超标，存在误伤风险】 -> 降级为单节点内联隐藏 + 精准 XPath 规则
-        console.warn(`[AdDetector] 误伤预警: "${candidateSelector}" 实际匹配 ${N_actual} 个, 预期 ${N_expected} 个。执行单节点 XPath 降级。`);
-
-        targetEl.style.setProperty('display', 'none', 'important');
-        const exactXPath = this.getElementXPath(targetEl);
-
-        const rule = {
-          type: 'xpath',
-          xpath: exactXPath,
-          classAndId: meta.classAndId,
-          tagName: meta.tagName,
-          size: meta.size,
-          fingerprint: meta.fingerprint
-        };
-
-        if (!this.blockedRules.some(r => r.xpath === exactXPath || r.fingerprint === rule.fingerprint)) {
-          this.blockedRules.push(rule);
-          this.saveBlockedRules();
+          this.applyCssRulesFromStorage();
         }
       }
     }
 
-    // 内部恢复逻辑
+    // 内部恢复逻辑（不直接入历史栈）
     restoreSingleInternal(adId) {
       const meta = this.detectedAds.get(adId);
       if (meta && meta.element) {
@@ -281,55 +152,20 @@
           this.applyHighlight(meta.element, true, meta.size);
         }
 
-        const currentSelector = this.generateSpecificSelector(meta.element);
-        const currentXPath = this.getElementXPath(meta.element);
-
         this.blockedRules = this.blockedRules.filter(
-          (r) => !(
-            (r.selector && r.selector === currentSelector) ||
-            (r.xpath && r.xpath === currentXPath) ||
-            (r.fingerprint && r.fingerprint === meta.fingerprint) ||
-            (r.classAndId && r.classAndId === meta.classAndId)
-          )
+          (r) => !(r.fingerprint === meta.fingerprint || (r.classAndId && r.classAndId === meta.classAndId))
         );
         this.saveBlockedRules();
       }
     }
 
+    // 外部对外调用：包含历史纪录入栈
     neutralizeSingle(adId) {
       const meta = this.detectedAds.get(adId);
       if (meta && !meta.isBlocked) {
-        // 1. 先记录历史状态（必须在状态变更前/中记录，防止内部逻辑改变状态后捕获不准）
-        this.pushHistoryState({ type: 'SINGLE_BLOCK', items: [adId] });
-
-        // 2. 标记已被屏蔽 & 更新状态
-        meta.isBlocked = true;
-        const el = meta.element;
-
-        if (el && el.nodeType === Node.ELEMENT_NODE) {
-          el.dataset.overlayBlocked = 'true';
-
-          // 3. 清理自身及子元素的高亮与 Hover 类
-          el.classList.remove('ad-detector-hover-active', 'ad-detector-highlight-active');
-          el.style.removeProperty('outline');
-          el.style.removeProperty('outline-offset');
-
-          const activeChildren = el.querySelectorAll('.ad-detector-hover-active, .ad-detector-highlight-active');
-          activeChildren.forEach(child => {
-            child.classList.remove('ad-detector-hover-active', 'ad-detector-highlight-active');
-            child.style.removeProperty('outline');
-            child.style.removeProperty('outline-offset');
-          });
-
-          // 4. 清除角标 (Badge) 与高亮图层
-          this.applyHighlight(el, false);
-        }
-
-        // 5. 执行底层规则生成与 CSS 写入（如保存 CSS 规则到 storage）
         this.neutralizeSingleInternal(adId);
-
-        // 6. 反馈提示
-        this.showToast('🛡 已通过安全交叉校验执行屏蔽');
+        this.pushHistoryState({ type: 'SINGLE_BLOCK', items: [adId] });
+        this.showToast('🛡 该元素已屏蔽（已更新全局 CSS 规则）');
       }
     }
 
@@ -338,7 +174,7 @@
       if (meta && meta.isBlocked) {
         this.restoreSingleInternal(adId);
         this.pushHistoryState({ type: 'SINGLE_RESTORE', items: [adId] });
-        this.showToast('↩️ 已撤销屏蔽，已更新本地规则库');
+        this.showToast('↩️ 已撤销屏蔽，已同步更新本地存储');
       }
     }
 
@@ -357,10 +193,15 @@
       return blockedIds.length;
     }
 
+    // ==========================================
+    // ★ 一键重置核心逻辑
+    // ==========================================
     resetAll() {
+      // 1. 清空当前域名的持久化屏蔽规则
       this.blockedRules = [];
       this.saveBlockedRules();
 
+      // 2. 还原已被屏蔽的 DOM 元素
       let count = 0;
       this.detectedAds.forEach((meta) => {
         if (meta.isBlocked) {
@@ -376,13 +217,18 @@
         }
       });
 
+      // 3. 清空历史撤回/重做栈
       this.undoStack = [];
       this.redoStack = [];
 
+      // 4. 重新刷新界面
       this.updateUI();
       return count;
     }
 
+    // ==========================================
+    // ★ 状态记忆存储与读取
+    // ==========================================
     loadUIVisibleState() {
       try {
         if (typeof GM_getValue !== 'undefined') {
@@ -408,6 +254,9 @@
       }
     }
 
+    // ==========================================
+    // ★ 拦截内联/动态绑定事件劫持 (Click Hijacking)
+    // ==========================================
     initClickHijackProtection() {
       window.addEventListener('click', (e) => {
         const path = e.composedPath ? e.composedPath() : [];
@@ -419,7 +268,7 @@
             e.preventDefault();
             e.stopPropagation();
             e.stopImmediatePropagation();
-            console.warn('[AdDetector] 已拦截针对被屏蔽元素的点击劫持行为:', el);
+            console.warn('[AdDetector] 已拦截针对被屏蔽元素的点击劫持拦截行为:', el);
             return false;
           }
 
@@ -482,9 +331,6 @@
       }
     }
 
-    // ==========================================
-    // ★ 应用 CSS 屏蔽规则 + 履约 XPath 降级规则
-    // ==========================================
     applyCssRulesFromStorage() {
       let styleEl = document.getElementById('ad-detector-dynamic-css-rules');
       if (!styleEl) {
@@ -495,9 +341,7 @@
 
       const cssSelectors = [];
       this.blockedRules.forEach((rule) => {
-        if (rule.type === 'css' && rule.selector) {
-          cssSelectors.push(rule.selector);
-        } else if (rule.classAndId && rule.classAndId !== '无 Class/ID') {
+        if (rule.classAndId && rule.classAndId !== '无 Class/ID') {
           const formattedSelector = rule.classAndId
             .split(' ')
             .filter(Boolean)
@@ -506,17 +350,6 @@
           if (formattedSelector) {
             cssSelectors.push(`${formattedSelector}`);
           }
-        }
-
-        // 履约 XPath 类型的规则
-        if (rule.type === 'xpath' && rule.xpath) {
-          try {
-            const result = document.evaluate(rule.xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
-            if (result.singleNodeValue) {
-              result.singleNodeValue.style.setProperty('display', 'none', 'important');
-              result.singleNodeValue.dataset.overlayBlocked = 'true';
-            }
-          } catch (e) { }
         }
       });
 
@@ -528,18 +361,19 @@
     }
 
     isMatchesBlockedRule(meta) {
-      const currentSelector = meta.element ? this.generateSpecificSelector(meta.element) : '';
-      const currentXPath = meta.element ? this.getElementXPath(meta.element) : '';
-
       return this.blockedRules.some((rule) => {
-        if (rule.selector && currentSelector && rule.selector === currentSelector) return true;
-        if (rule.xpath && currentXPath && rule.xpath === currentXPath) return true;
-        if (rule.classAndId && meta.classAndId && rule.classAndId === meta.classAndId && meta.classAndId !== '无 Class/ID') return true;
-        if (rule.fingerprint && meta.fingerprint && rule.fingerprint === meta.fingerprint) return true;
+        if (rule.classAndId && meta.classAndId && rule.classAndId === meta.classAndId && meta.classAndId !== '无 Class/ID') {
+          return true;
+        }
+        if (rule.fingerprint && meta.fingerprint && rule.fingerprint === meta.fingerprint) {
+          return true;
+        }
         if (rule.tagName === meta.tagName && rule.size === meta.size && rule.size !== '0x0px') {
           const ruleHost = (rule.fingerprint || '').split('_')[2] || '';
           const metaHost = (meta.fingerprint || '').split('_')[2] || '';
-          if (ruleHost && metaHost && ruleHost === metaHost) return true;
+          if (ruleHost && metaHost && ruleHost === metaHost) {
+            return true;
+          }
         }
         return false;
       });
@@ -584,70 +418,36 @@
       }
     }
 
-    // 1. 全局样式注入：统一用 CSS 定义高亮及角标样式
     injectGlobalStyles() {
       if (document.getElementById('ad-detector-global-styles')) return;
       const style = document.createElement('style');
       style.id = 'ad-detector-global-styles';
       style.textContent = `
-    /* 容器高亮控制类 */
-    .ad-detector-highlight-active {
-      outline: 3px solid #ff3b30 !important;
-      background-color: rgba(255, 59, 48, 0.2) !important;
-    }
+        .ad-detector-hover-active {
+          outline: 8px dashed #f21414 !important;
+          outline-offset: -2px !important;
+          z-index: 999999 !important;
+          pointer-events: auto !important;
+        }
 
-    /* 针对 static 定位元素的基准修复 */
-    .ad-detector-pos-relative {
-      position: relative !important;
-    }
-
-    /* hover 态预热 */
-    .ad-detector-hover-active {
-/* 1. 强制赋予最高级的 z-index，超越面板的 2147483647 */
-z-index: 2147483648 !important;
-pointer-events: auto !important;
-/* 2. 只有定位元素（relative/absolute/fixed/sticky）才能让 z-index 生效 */
-position: relative !important;
-
-/* 3. 高亮轮廓与视觉提示 */
-outline: 3px solid #ff3b30 !important;
-outline-offset: -3px !important;
-box-shadow: 0 0 20px rgba(255, 59, 48, 0.8), 0 0 0 9999px rgba(0, 0, 0, 0.4) !important;
-
-/* 4. 确保混合模式与平滑过渡 */
-isolation: isolate !important; /* 创建独立的层叠上下文，防止父级 transform 压制 */
-transition: outline 0.15s ease, box-shadow 0.15s ease !important;
-}
-
-    /* 优化后的 Size Badge：基于 CSS content 属性动态渲染尺寸文本 */
-    .ad-detector-size-badge {
-      position: absolute !important;
-      top: 0 !important;
-      left: 0 !important;
-      background: #ff3b30 !important;
-      color: #ffffff !important;
-      font-size: 11px !important;
-      font-weight: 700 !important;
-      padding: 2px 6px !important;
-      border-bottom-right-radius: 6px !important;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.3) !important;
-      z-index: 2147483645 !important;
-      pointer-events: none !important;
-      white-space: nowrap !important;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-      line-height: 1.2 !important;
-      display: none !important;
-    }
-
-    /* 仅当父级带有高亮激活类且未被屏蔽时，显示角标 */
-    .ad-detector-highlight-active > .ad-detector-size-badge {
-      display: block !important;
-    }
-
-    .ad-detector-size-badge::before {
-      content: attr(data-size);
-    }
-  `;
+        .ad-detector-size-badge {
+          position: absolute !important;
+          top: 0 !important;
+          left: 0 !important;
+          background: #ff3b30 !important;
+          color: #ffffff !important;
+          font-size: 11px !important;
+          font-weight: 700 !important;
+          padding: 2px 6px !important;
+          border-bottom-right-radius: 6px !important;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.3) !important;
+          z-index: 2147483645 !important;
+          pointer-events: none !important;
+          white-space: nowrap !important;
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+          line-height: 1.2 !important;
+        }
+      `;
       (document.head || document.documentElement).appendChild(style);
     }
 
@@ -757,24 +557,13 @@ transition: outline 0.15s ease, box-shadow 0.15s ease !important;
     }
 
     calculateAdScore(el) {
+
       if (this.isLegitimateElement(el)) return { score: 0, reasons: [] };
 
       const style = window.getComputedStyle(el);
-
       if (style.pointerEvents === 'none' || style.display === 'none' || style.visibility === 'hidden') {
         if (el.dataset.overlayBlocked === 'true') {
-          const isSavedRule = this.isMatchesBlockedRule({
-            element: el,
-            classAndId: `${el.id ? '#' + el.id : ''}${el.className ? '.' + el.className : ''}`.trim(),
-            fingerprint: `${el.tagName.toLowerCase()}_${el.offsetWidth}x${el.offsetHeight}px_`
-          });
-
-          const blockReason = isSavedRule ? '匹配历史持久化规则自动屏蔽' : '已被当前会话手动屏蔽';
-
-          return {
-            score: 100,
-            reasons: [`${blockReason}（若影响页面功能可点击撤销）`]
-          };
+          return { score: 100, reasons: ['已被用户屏蔽（含持久化记忆｜⚠️无明确原因，或存在误伤）'] };
         }
         return { score: 0, reasons: [] };
       }
@@ -822,6 +611,23 @@ transition: outline 0.15s ease, box-shadow 0.15s ease !important;
       const areaRatio = (rect.width * rect.height) / (viewportArea || 1);
       const isPositioned = style.position === 'fixed' || style.position === 'absolute';
       const zIndex = parseInt(style.zIndex, 10) || 0;
+      const opacity = parseFloat(style.opacity);
+      const bgColor = style.backgroundColor;
+      const isBgTransparent = bgColor === 'transparent' || bgColor.endsWith(', 0)') || bgColor === 'rgba(0, 0, 0, 0)';
+      const isVisuallyInvisible = opacity < 0.15 || isBgTransparent;
+
+      const isFullScreenCover = rect.width >= vw * 0.95 && rect.height >= vh * 0.95;
+      if (isPositioned && isFullScreenCover && zIndex >= 5) {
+        if (isVisuallyInvisible) {
+          // opacity close to zero
+        } else {
+          const rgbaMatch = bgColor.match(/rgba\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*,\s*([\d\.]+)\s*\)/i);
+          const bgAlpha = rgbaMatch ? parseFloat(rgbaMatch[1]) : (isBgTransparent ? 0 : 1);
+          if (bgAlpha > 0 && bgAlpha < 0.85 && opacity > 0.1) {
+            // overlay
+          }
+        }
+      }
 
       const iabSizes = [[728, 90], [300, 250], [336, 280], [160, 600], [300, 600], [970, 90], [320, 50]];
       const isIABSize = iabSizes.some(([w, h]) => Math.abs(rect.width - w) <= 6 && Math.abs(rect.height - h) <= 6);
@@ -1122,6 +928,7 @@ transition: outline 0.15s ease, box-shadow 0.15s ease !important;
       }
       this.scan();
 
+      // ★ 保存面板显示状态
       this.saveUIVisibleState(true);
     }
 
@@ -1132,6 +939,7 @@ transition: outline 0.15s ease, box-shadow 0.15s ease !important;
         this.host.style.display = 'none';
       }
 
+      // ★ 保存面板关闭状态
       this.saveUIVisibleState(false);
     }
 
@@ -1387,7 +1195,7 @@ transition: outline 0.15s ease, box-shadow 0.15s ease !important;
 
           <div class="toast" id="toast">提示信息</div>
           <div class="header" id="panel-header">
-            <span>🛡️ v12.5</span>
+            <span>🛡️ v12.4</span>
             <div style="display:flex;align-items:center;gap:4px;">
               <select id="select-filter" class="select-control" title="过滤显示状态">
                 <option value="all">显示全部</option>
@@ -1520,26 +1328,13 @@ transition: outline 0.15s ease, box-shadow 0.15s ease !important;
       window.addEventListener('pointercancel', stopDrag);
     }
 
-    // 2. 节点高亮状态挂载（极轻量，单节点批量 class 变更）
     applyHighlight(el, enable, sizeText = '') {
-      if (!el || el.dataset.overlayBlocked === 'true') {
-        el.classList.remove('ad-detector-highlight-active', 'ad-detector-pos-relative');
-        return;
-      }
+      const oldBadge = el.querySelector('.ad-detector-size-badge');
+      if (oldBadge) oldBadge.remove();
 
-      if (enable) {
-        // 处理相对定位，避免为 static 节点插入子级时定位偏离
-        if (window.getComputedStyle(el).position === 'static') {
-          el.classList.add('ad-detector-pos-relative');
-        }
-
-        // 更新或注入 Badge（只用 dataset 传参，避免每次创建/销毁 DOM 节点）
-        let badge = el.querySelector(':scope > .ad-detector-size-badge');
-        if (!badge) {
-          badge = document.createElement('div');
-          badge.className = 'ad-detector-size-badge';
-          el.appendChild(badge);
-        }
+      if (enable && el.dataset.overlayBlocked !== 'true') {
+        el.style.setProperty('outline', '3px solid #ff3b30', 'important');
+        el.style.setProperty('background-color', 'rgba(255, 59, 48, 0.2)', 'important');
 
         if (!sizeText) {
           const adId = el.getAttribute('data-ad-detector-id');
@@ -1547,25 +1342,28 @@ transition: outline 0.15s ease, box-shadow 0.15s ease !important;
           sizeText = meta ? meta.size : '0x0px';
         }
 
-        // 仅在尺寸变更时更新 Dataset，通过 CSS 伪元素 ::before 自行渲染 textContent
-        if (badge.dataset.size !== sizeText) {
-          badge.dataset.size = sizeText;
+        const currentPos = window.getComputedStyle(el).position;
+        if (currentPos === 'static') {
+          el.style.setProperty('position', 'relative', 'important');
         }
 
-        el.classList.add('ad-detector-highlight-active');
+        const badge = document.createElement('div');
+        badge.className = 'ad-detector-size-badge';
+        badge.textContent = sizeText;
+        el.appendChild(badge);
       } else {
-        el.classList.remove('ad-detector-highlight-active', 'ad-detector-pos-relative');
+        el.style.removeProperty('outline');
+        el.style.removeProperty('background-color');
       }
     }
 
-    // 3. 一键切换高亮状态：借助 Map 极速遍历，无 DOM 树深度遍历
     toggleHighlight() {
       this.isHighlighted = !this.isHighlighted;
-      for (const meta of this.detectedAds.values()) {
-        if (meta.element && !meta.isBlocked) {
+      this.detectedAds.forEach((meta) => {
+        if (!meta.isBlocked) {
           this.applyHighlight(meta.element, this.isHighlighted, meta.size);
         }
-      }
+      });
     }
 
     showPreviewWindow(adId) {
@@ -1738,18 +1536,14 @@ transition: outline 0.15s ease, box-shadow 0.15s ease !important;
       }
 
       if (isHovering) {
-        // 悬停：只加 Class
         meta.element.classList.add('ad-detector-hover-active');
       } else {
-        // 离开：只撤 Class
         meta.element.classList.remove('ad-detector-hover-active');
 
-        // 关键补充：防止嵌套的 img 或 inner div 遗留状态
-        const activeChildren = meta.element.querySelectorAll('.ad-detector-hover-active');
-        activeChildren.forEach(child => child.classList.remove('ad-detector-hover-active'));
-
-        // 只有在开启了全局高亮时，才去重新铺设高亮（比如红底/角标）
-        if (this.isHighlighted) {
+        if (!this.isHighlighted) {
+          meta.element.style.removeProperty('outline');
+          meta.element.style.removeProperty('box-shadow');
+        } else {
           this.applyHighlight(meta.element, true, meta.size);
         }
       }
@@ -1771,8 +1565,7 @@ transition: outline 0.15s ease, box-shadow 0.15s ease !important;
       toast.classList.add('show');
       setTimeout(() => {
         toast.classList.remove('show');
-        //}, 2200);
-      }, 3500);
+      }, 2200);
     }
 
     bindInteractiveEvents() {
@@ -1865,6 +1658,7 @@ transition: outline 0.15s ease, box-shadow 0.15s ease !important;
       const btnUndo = this.shadow.querySelector('#btn-undo');
       const btnRedo = this.shadow.querySelector('#btn-redo');
 
+      // 实时切换 撤回/重做 按钮可操作状态
       if (btnUndo) btnUndo.disabled = this.undoStack.length === 0;
       if (btnRedo) btnRedo.disabled = this.redoStack.length === 0;
 
@@ -1999,4 +1793,605 @@ transition: outline 0.15s ease, box-shadow 0.15s ease !important;
     return getDetector().cleanAll();
   };
 
+  /**
+   * AdDetector v3.5 - 全通路恶意拦截、网络 API 代理劫持、Location 原型重定向与规则引擎
+   */
+  const AdDetector = (function () {
+    'use strict';
+
+    const STORAGE_KEY = 'ad_detector_blocklist';
+    const WHITE_KEY = 'ad_detector_whitelist';
+
+    const blockList = new Set(JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'));
+    const whiteList = new Set(JSON.parse(localStorage.getItem(WHITE_KEY) || '[]'));
+
+    let lastUserInteractionTime = 0;
+    window.addEventListener('pointerdown', () => { lastUserInteractionTime = Date.now(); }, true);
+    window.addEventListener('keydown', () => { lastUserInteractionTime = Date.now(); }, true);
+
+    function isUserGestureRecent() {
+      return (Date.now() - lastUserInteractionTime) < 1200;
+    }
+
+    function isCrossDomain(targetUrl) {
+      try {
+        const targetOrigin = new URL(targetUrl, location.href).origin;
+        return targetOrigin !== location.origin;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    function checkIsAd(urlStr) {
+      if (!urlStr) return false;
+      let domain = '';
+      try {
+        domain = new URL(urlStr, location.href).hostname;
+      } catch (e) {
+        domain = urlStr;
+      }
+
+      if (whiteList.has(domain) || whiteList.has(urlStr)) return false;
+      if (blockList.has(domain) || blockList.has(urlStr)) return true;
+
+      const adPattern = /(letterrecoveryunplanted|wpadmngr|altkamamhab|popunder|onclickads|adsterra|doubleclick|pagead|redirect)/i;
+      return adPattern.test(urlStr);
+    }
+
+    function triggerPreviewUI(data) {
+      console.warn('[AdDetector] 捕获并拦截恶意行为:', data);
+
+      if (blockList.has(data.domain) || blockList.has(data.url)) {
+        console.log('[AdDetector] 匹配黑名单规则，已自动静默拦截:', data.url);
+        return;
+      }
+
+      showPreviewModal(data);
+    }
+
+    function showPreviewModal(data) {
+      if (document.getElementById('ad-detector-intercept-host')) return;
+
+      const host = document.createElement('div');
+      host.id = 'ad-detector-intercept-host';
+      host.style.cssText = 'position: absolute; top: 0; left: 0; width: 0; height: 0; z-index: 2147483647;';
+
+      const shadowRoot = host.attachShadow({ mode: 'closed' });
+
+      const style = document.createElement('style');
+      style.textContent = `
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        
+        .ad-modal-overlay {
+          position: fixed;
+          bottom: 16px;
+          right: 16px;
+          left: 16px;
+          max-width: 440px;
+          margin: 0 auto;
+          background: #ffffff;
+          border: 1px solid rgba(255, 77, 79, 0.3);
+          border-radius: 14px;
+          padding: 14px;
+          box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          max-height: calc(85vh - env(safe-area-inset-bottom, 0px));
+          z-index: 2147483647;
+          animation: adSlideUp 0.22s cubic-bezier(0.215, 0.61, 0.355, 1);
+        }
+        
+        @keyframes adSlideUp {
+          from { transform: translateY(20px); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
+        }
+        
+        @media (min-width: 480px) {
+          .ad-modal-overlay { left: auto; width: 410px; }
+        }
+
+        .ad-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+        .ad-title {
+          font-weight: 700;
+          color: #ff4d4f;
+          font-size: 14px;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+        .ad-close-btn {
+          cursor: pointer;
+          font-size: 16px;
+          color: #bfbfbf;
+          padding: 2px 6px;
+          line-height: 1;
+          border-radius: 4px;
+        }
+        .ad-close-btn:active { background: #f5f5f5; color: #595959; }
+
+        .ad-grid-meta {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 8px;
+        }
+        .ad-card-item {
+          background: #fafafa;
+          border: 1px solid #f0f0f0;
+          border-radius: 8px;
+          padding: 6px 10px;
+          display: flex;
+          flex-direction: column;
+        }
+        .ad-label {
+          font-size: 10px;
+          color: #8c8c8c;
+          font-weight: 600;
+          text-transform: uppercase;
+          margin-bottom: 2px;
+        }
+        .ad-value {
+          font-size: 12px;
+          color: #262626;
+          font-weight: 500;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .ad-value.highlight-red { color: #ff4d4f; }
+        .ad-value.highlight-blue { color: #096dd9; font-family: monospace; }
+
+        .ad-url-box {
+          background: #fafafa;
+          border: 1px solid #f0f0f0;
+          border-radius: 8px;
+          padding: 8px 10px;
+        }
+        .ad-url-content {
+          font-size: 11px;
+          color: #595959;
+          font-family: SFMono-Regular, Consolas, monospace;
+          line-height: 1.4;
+          max-height: 52px;
+          overflow-y: auto;
+          white-space: pre-wrap;
+          word-break: break-all;
+          overflow-wrap: anywhere;
+          -webkit-overflow-scrolling: touch;
+        }
+
+        .ad-actions {
+          display: flex;
+          gap: 8px;
+          justify-content: flex-end;
+        }
+        .ad-btn {
+          flex: 1;
+          padding: 8px 0;
+          border-radius: 8px;
+          font-size: 12px;
+          font-weight: 600;
+          cursor: pointer;
+          border: none;
+          outline: none;
+          touch-action: manipulation;
+          min-height: 36px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .ad-btn-ignore { border: 1px solid #d9d9d9; background: #ffffff; color: #595959; }
+        .ad-btn-white { border: 1px solid #91caff; background: #e6f4ff; color: #096dd9; }
+        .ad-btn-block { background: #ff4d4f; color: #ffffff; }
+        .ad-btn:active { opacity: 0.85; }
+      `;
+
+      const container = document.createElement('div');
+      container.className = 'ad-modal-overlay';
+      container.innerHTML = `
+        <div class="ad-header">
+          <div class="ad-title">
+            <span>🛡️ AdDetector 已成功拦截</span>
+          </div>
+          <span class="ad-close-btn" id="close-btn">✕</span>
+        </div>
+
+        <div class="ad-grid-meta">
+          <div class="ad-card-item">
+            <span class="ad-label">触发场景</span>
+            <span class="ad-value highlight-red" title="${data.type || '未知'}">${data.type || '未知'}</span>
+          </div>
+          <div class="ad-card-item">
+            <span class="ad-label">目标域名</span>
+            <span class="ad-value highlight-blue" title="${data.domain || '本地/未知'}">${data.domain || '本地/未知'}</span>
+          </div>
+        </div>
+
+        <div class="ad-url-box">
+          <div class="ad-label">目标 URL / 表达式</div>
+          <div class="ad-url-content">${data.url || '未提供（动态内联脚本或未知地址）'}</div>
+        </div>
+
+        <div class="ad-actions">
+          <button class="ad-btn ad-btn-ignore" id="ignore-btn">本次忽略</button>
+          <button class="ad-btn ad-btn-white" id="white-btn">信任域名</button>
+          <button class="ad-btn ad-btn-block" id="block-btn">永久屏蔽</button>
+        </div>
+      `;
+
+      shadowRoot.appendChild(style);
+      shadowRoot.appendChild(container);
+      (document.body || document.documentElement).appendChild(host);
+
+      const removeModal = () => host.remove();
+
+      shadowRoot.getElementById('close-btn').onclick = removeModal;
+      shadowRoot.getElementById('ignore-btn').onclick = removeModal;
+
+      shadowRoot.getElementById('white-btn').onclick = () => {
+        const target = data.domain || data.url;
+        if (target) {
+          whiteList.add(target);
+          localStorage.setItem(WHITE_KEY, JSON.stringify(Array.from(whiteList)));
+          if (instance) instance.showToast(`已将 [${target}] 加入信任名单`);
+        }
+        removeModal();
+      };
+
+      shadowRoot.getElementById('block-btn').onclick = () => {
+        const target = data.domain || data.url;
+        if (target) {
+          blockList.add(target);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(blockList)));
+          if (instance) instance.showToast(`已将 [${target}] 加入黑名单`);
+        }
+        removeModal();
+      };
+    }
+
+    function initInterceptors() {
+
+      try {
+        const locationDescriptor = Object.getOwnPropertyDescriptor(Location.prototype, 'href');
+        if (locationDescriptor && locationDescriptor.set) {
+          const originalHrefSetter = locationDescriptor.set;
+
+          Object.defineProperty(Location.prototype, 'href', {
+            set: function (val) {
+              const targetUrl = String(val);
+              let domain = '';
+              try { domain = new URL(targetUrl, location.href).hostname; } catch (e) { }
+
+              const isAd = checkIsAd(targetUrl);
+              const isGesture = isUserGestureRecent();
+              const crossDomain = isCrossDomain(targetUrl);
+
+              if (isAd || (!isGesture && crossDomain)) {
+                triggerPreviewUI({
+                  type: 'location.href',
+                  url: targetUrl,
+                  domain: domain,
+                  reason: isGesture ? '匹配黑名单/广告重定向' : '无手势意图的跨域重定向'
+                });
+                throw new Error(`[AdDetector] Blocked location redirect to: ${targetUrl}`);
+              }
+
+              return originalHrefSetter.call(this, val);
+            },
+            get: locationDescriptor.get,
+            configurable: true,
+            enumerable: true
+          });
+        }
+      } catch (e) {
+        console.warn('[AdDetector] Location 原型链劫持受限:', e);
+      }
+
+      const originalAssign = Location.prototype.assign;
+      Location.prototype.assign = function (url) {
+        const targetUrl = String(url);
+        let domain = '';
+        try { domain = new URL(targetUrl, location.href).hostname; } catch (e) { }
+
+        if (checkIsAd(targetUrl) || (!isUserGestureRecent() && isCrossDomain(targetUrl))) {
+          triggerPreviewUI({
+            type: 'location.assign',
+            url: targetUrl,
+            domain: domain,
+            reason: '拦截到 location.assign 跳转请求'
+          });
+          return;
+        }
+        return originalAssign.call(this, url);
+      };
+
+      const originalReplace = Location.prototype.replace;
+      Location.prototype.replace = function (url) {
+        const targetUrl = String(url);
+        let domain = '';
+        try { domain = new URL(targetUrl, location.href).hostname; } catch (e) { }
+
+        if (checkIsAd(targetUrl) || (!isUserGestureRecent() && isCrossDomain(targetUrl))) {
+          triggerPreviewUI({
+            type: 'location.replace',
+            url: targetUrl,
+            domain: domain,
+            reason: '拦截到 location.replace 跳转请求'
+          });
+          return;
+        }
+        return originalReplace.call(this, url);
+      };
+
+      const originalOpen = window.open;
+      window.open = function (url, name, features) {
+        const targetUrl = url || '';
+        let domain = '';
+        try { domain = targetUrl ? new URL(targetUrl, location.href).hostname : ''; } catch (e) { }
+
+        const isAd = checkIsAd(targetUrl);
+        const isGesture = isUserGestureRecent();
+
+        if (isAd || (!isGesture && targetUrl)) {
+          triggerPreviewUI({
+            type: 'window.open',
+            url: targetUrl,
+            domain: domain,
+            reason: isGesture ? '匹配黑名单/广告库' : '检测到无用户意图的自动弹窗'
+          });
+          return null;
+        }
+        return originalOpen.apply(this, arguments);
+      };
+
+      const originalCreateElement = document.createElement;
+      document.createElement = function (tagName) {
+        const element = originalCreateElement.apply(this, arguments);
+        if (tagName && tagName.toLowerCase() === 'a') {
+          const originalClick = element.click;
+          element.click = function () {
+            const href = element.href || '';
+            let domain = '';
+            try { domain = href ? new URL(href, location.href).hostname : ''; } catch (e) { }
+
+            if (checkIsAd(href) || !isUserGestureRecent()) {
+              triggerPreviewUI({
+                type: 'a.click()',
+                url: href,
+                domain: domain,
+                reason: '动态 <a> 标签自动触发点击'
+              });
+              return;
+            }
+            return originalClick.apply(this, arguments);
+          };
+        }
+        return element;
+      };
+
+      if (window.fetch) {
+        const originalFetch = window.fetch;
+        window.fetch = function (input, init) {
+          let requestUrl = '';
+          if (typeof input === 'string') {
+            requestUrl = input;
+          } else if (input instanceof Request) {
+            requestUrl = input.url;
+          } else if (input && input.href) {
+            requestUrl = input.href;
+          }
+
+          let domain = '';
+          try { domain = requestUrl ? new URL(requestUrl, location.href).hostname : ''; } catch (e) { }
+
+          if (checkIsAd(requestUrl)) {
+            triggerPreviewUI({
+              type: 'fetch()',
+              url: requestUrl,
+              domain: domain,
+              reason: '拦截到发往广告/恶意域名的 fetch 请求'
+            });
+            return Promise.reject(new TypeError(`[AdDetector] fetch request blocked: ${requestUrl}`));
+          }
+
+          return originalFetch.apply(this, arguments);
+        };
+      }
+
+      if (window.XMLHttpRequest) {
+        const originalXHR = window.XMLHttpRequest;
+
+        function CustomXHR() {
+          const xhr = new originalXHR();
+          const originalOpen = xhr.open;
+
+          xhr.open = function (method, url, async, user, password) {
+            let requestUrl = url || '';
+            let domain = '';
+            try { domain = requestUrl ? new URL(requestUrl, location.href).hostname : ''; } catch (e) { }
+
+            this._adDetectorInfo = { url: requestUrl, domain: domain };
+
+            if (checkIsAd(requestUrl)) {
+              triggerPreviewUI({
+                type: 'XMLHttpRequest',
+                url: requestUrl,
+                domain: domain,
+                reason: '拦截到发往广告/恶意域名的 XHR 请求'
+              });
+              this._isAdDetectorBlocked = true;
+            }
+
+            return originalOpen.apply(this, arguments);
+          };
+
+          const originalSend = xhr.send;
+          xhr.send = function (data) {
+            if (this._isAdDetectorBlocked) {
+              console.warn('[AdDetector] 已静默中断 XHR send 流程');
+              if (typeof this.onerror === 'function') {
+                this.onerror(new ProgressEvent('error'));
+              }
+              this.abort();
+              return;
+            }
+            return originalSend.apply(this, arguments);
+          };
+
+          return xhr;
+        }
+
+        CustomXHR.prototype = originalXHR.prototype;
+        Object.assign(CustomXHR, originalXHR);
+        window.XMLHttpRequest = CustomXHR;
+      }
+
+      window.addEventListener('beforeunload', (event) => {
+        if (!isUserGestureRecent()) {
+          event.preventDefault();
+          const noticeMessage = 'AdDetector 检测到当前页面在无操作情况下尝试自动重定向！';
+          event.returnValue = noticeMessage;
+          return noticeMessage;
+        }
+      }, true);
+
+      const observer = new MutationObserver((mutations) => {
+        for (const mutation of mutations) {
+          mutation.addedNodes.forEach((node) => {
+            if (node.tagName === 'SCRIPT') {
+              const src = node.src || '';
+              const content = node.textContent || '';
+
+              if (checkIsAd(src) || /location\.(href|replace|assign)/i.test(content)) {
+                console.warn('[AdDetector] 动态拦截并移除恶意 Script 标签:', node);
+                node.remove();
+              }
+            }
+          });
+        }
+      });
+
+      observer.observe(document.documentElement || document.body, {
+        childList: true,
+        subtree: true
+      });
+
+      (function initHardRedirectProtection() {
+        const targetCheckPattern = /(enrtx\.com|letterrecoveryunplanted|wpadmngr)/i;
+
+        window.addEventListener('beforeunload', (event) => {
+          if (!isUserGestureRecent()) {
+            event.preventDefault();
+            event.returnValue = 'AdDetector 拦截到跨域恶意重定向 (enrtx.com)！';
+            return event.returnValue;
+          }
+        }, true);
+
+        if (targetCheckPattern.test(window.location.href)) {
+          console.warn('[AdDetector] 检测到页面已被强行重定向至恶意域名，正在强行还原历史堆栈...');
+          try {
+            window.history.pushState(null, '', window.location.origin);
+            window.stop();
+          } catch (e) { }
+        }
+
+        const originalSetTimeout = window.setTimeout;
+        window.setTimeout = function (fn, delay, ...args) {
+          if (typeof fn === 'string' && targetCheckPattern.test(fn)) {
+            console.warn('[AdDetector] 拦截到定时器内的恶意重定向字符串:', fn);
+            return null;
+          }
+          return originalSetTimeout.call(this, fn, delay, ...args);
+        };
+      })();
+
+      if (window.navigation) {
+        window.navigation.addEventListener('navigate', (e) => {
+          const targetUrl = e.destination ? e.destination.url : '';
+          let domain = '';
+          try { domain = targetUrl ? new URL(targetUrl, location.href).hostname : ''; } catch (err) { }
+
+          const isAd = checkIsAd(targetUrl);
+          const isGesture = isUserGestureRecent();
+          const crossDomain = isCrossDomain(targetUrl);
+
+          if (isAd || (!isGesture && crossDomain)) {
+            console.warn('[AdDetector] 捕获并阻止 Navigation API 重定向:', targetUrl);
+
+            if (e.cancelable) {
+              e.preventDefault();
+            }
+
+            triggerPreviewUI({
+              type: 'navigation.navigate()',
+              url: targetUrl,
+              domain: domain,
+              reason: '检测到恶意脚本通过 Navigation API 强制跨域跳转'
+            });
+          }
+        });
+
+        try {
+          if (window.Navigation && window.Navigation.prototype && window.Navigation.prototype.navigate) {
+            const originalNavigate = window.Navigation.prototype.navigate;
+            window.Navigation.prototype.navigate = function (url, options) {
+              const targetUrl = String(url);
+              let domain = '';
+              try { domain = new URL(targetUrl, location.href).hostname; } catch (err) { }
+
+              if (checkIsAd(targetUrl) || (!isUserGestureRecent() && isCrossDomain(targetUrl))) {
+                triggerPreviewUI({
+                  type: 'navigation.navigate() [Hook]',
+                  url: targetUrl,
+                  domain: domain,
+                  reason: '切面代理直接拦截 Navigation.navigate API 调用'
+                });
+                return { committed: Promise.reject(new Error('[AdDetector] Navigation blocked')), finished: Promise.reject(new Error('[AdDetector] Navigation blocked')) };
+              }
+              return originalNavigate.apply(this, arguments);
+            };
+          }
+        } catch (err) {
+          console.warn('[AdDetector] Navigation 原型劫持异常:', err);
+        }
+      }
+
+    }
+
+    return {
+      init: function () {
+        initInterceptors();
+        console.log('[AdDetector v3.5] Location 重定向、DOM 与 Fetch/XHR 网络全通路拦截引擎已启动。');
+      },
+      exportRules: function () {
+        return JSON.stringify({
+          blockList: Array.from(blockList),
+          whiteList: Array.from(whiteList)
+        }, null, 2);
+      },
+      importRules: function (jsonStr) {
+        try {
+          const data = JSON.parse(jsonStr);
+          if (data.blockList) data.blockList.forEach(item => blockList.add(item));
+          if (data.whiteList) data.whiteList.forEach(item => whiteList.add(item));
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(blockList)));
+          localStorage.setItem(WHITE_KEY, JSON.stringify(Array.from(whiteList)));
+          if (instance) instance.showToast('规则导入成功！');
+        } catch (e) {
+          alert('解析失败，请检查规则文件格式。');
+        }
+      },
+      clearBlockList: function () {
+        blockList.clear();
+        localStorage.removeItem(STORAGE_KEY);
+        console.log('[AdDetector] 已清空黑名单规则');
+      }
+    };
+  })();
+
+  AdDetector.init();
 })();
