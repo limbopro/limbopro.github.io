@@ -2325,119 +2325,14 @@
     }
 
     showToast(message) {
-      // 1. 获取或创建紧凑容器
-      let container = document.getElementById('global-toast-container');
-      if (!container) {
-        container = document.createElement('div');
-        container.id = 'global-toast-container';
-        Object.assign(container.style, {
-          position: 'fixed',
-          top: '2px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          zIndex: '2147483647',
-          display: 'flex',
-          flexDirection: 'column-reverse', // 最新消息在最上面
-          alignItems: 'center',
-          gap: '2px', // 进一步缩减间距，强化堆叠效果
-          pointerEvents: 'none',
-          perspective: '1000px'
-        });
-        document.body.appendChild(container);
-      }
-
-      // 超过 4 条时移除最旧的一条
-      if (container.children.length >= 4) {
-        const oldestToast = container.firstElementChild;
-        if (oldestToast) oldestToast.remove();
-      }
-
-      // 2. 遍历所有旧消息：越旧的消息（索引越靠前）尺寸越小，拉开阶梯感
-      const existingToasts = Array.from(container.children);
-      const totalExisting = existingToasts.length;
-
-      existingToasts.forEach((oldToast, index) => {
-        // index 为 0 是最旧的消息，index 越大越靠近最新消息
-        const distanceFromLatest = totalExisting - index; // 距离最新消息的步长 (1, 2, 3...)
-
-        // 递减计算 scale：每旧一级缩小 0.08，最低不低于 0.7
-        const newScale = Math.max(0.7, 1 - distanceFromLatest * 0.08);
-
-        Object.assign(oldToast.style, {
-          padding: '5px 12px',
-          background: 'rgba(12, 12, 15, 0.85)',
-          border: '1px solid rgba(255, 255, 255, 0.05)',
-          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.5)',
-          transform: `scale(${newScale})`, // 动态应用阶梯式缩放
-          transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
-          opacity: '1'
-        });
-
-        // 清除所有旧消息的 NEW 标签
-        const badge = oldToast.querySelector('.toast-new-badge');
-        if (badge) badge.remove();
-      });
-
-      // 3. 创建最新的 Toast 节点（scale(1)，最突出）
-      const toast = document.createElement('div');
-
-      toast.innerHTML = `<span class="toast-new-badge" style="
-    background: #0066FF;
-    color: #FFFFFF;
-    font-size: 9px;
-    font-weight: 700;
-    padding: 1px 5px;
-    border-radius: 6px;
-    margin-right: 6px;
-    display: inline-block;
-    vertical-align: middle;
-    letter-spacing: 0.5px;
-  ">NEW</span><span style="vertical-align: middle;">${message}</span>`;
-
-      // 最新消息的样式
-      Object.assign(toast.style, {
-        padding: '7px 16px',
-        background: 'rgba(18, 18, 22, 0.95)',
-        backdropFilter: 'blur(16px)',
-        webkitBackdropFilter: 'blur(16px)',
-        color: '#ECECF1',
-        fontSize: '12px',
-        fontWeight: '500',
-        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-        borderRadius: '100px',
-        border: '1px solid rgba(0, 102, 255, 0.4)',
-        boxShadow: '0 4px 16px rgba(0, 0, 0, 0.6), 0 0 10px rgba(0, 102, 255, 0.25)',
-        whiteSpace: 'nowrap',
-        opacity: '0',
-        transform: 'translateY(-12px) scale(0.92)',
-        transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
-        pointerEvents: 'auto',
-        cursor: 'default',
-        userSelect: 'none'
-      });
-
-      // 4. 挂载并触发动画
-      container.appendChild(toast);
-
-      requestAnimationFrame(() => {
-        toast.style.opacity = '1';
-        toast.style.transform = 'translateY(0) scale(1)';
-      });
-
-      // 5. 自动清理
+      if (!this.shadow) return;
+      const toast = this.shadow.querySelector('#toast');
+      toast.textContent = message;
+      toast.classList.add('show');
       setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transform = 'translateY(-10px) scale(0.9)';
-
-        setTimeout(() => {
-          toast.remove();
-          if (container.children.length === 0) {
-            container.remove();
-          }
-        }, 250);
-      }, 3200);
+        toast.classList.remove('show');
+      }, 3500);
     }
-
 
     bindInteractiveEvents() {
       const btnScan = this.shadow.querySelector('#btn-scan');
@@ -2477,7 +2372,9 @@
             btnScan.disabled = false;
             btnScan.textContent = '重新扫描';
             this.showToast('✅ 页面诊断完成');
-            this.showToast('🔔 如扫描结果不如预期，请刷新页面');
+            setTimeout(() => {
+              this.showToast('🔔 如扫描结果不如预期，请刷新页面');
+            }, 1500)
           }, 50);
         });
       };
