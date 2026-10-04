@@ -31,14 +31,6 @@
       return 0;
     }
 
-    // 辅助方法
-    extractXPathsFromRules(rules) {
-      if (!Array.isArray(rules)) return [];
-      return rules
-        .filter(r => r.type === 'xpath' && r.xpath)
-        .map(r => r.xpath);
-    }
-
     constructor() {
       this.detectedAds = new Map();
       this.animatedGifCache = new Map();
@@ -63,8 +55,6 @@
       // 域隔离持久化规则库
       this.storageKey = `ad_detector_blocked_${window.location.hostname}`;
       this.blockedRules = this.loadBlockedRules();
-      // 【新增】提取内存中的 XPath 集合
-      this.blockedXPaths = this.extractXPathsFromRules(this.blockedRules);
 
       // 读取上次页面留下的面板开启状态
       this.isUIVisible = this.loadUIVisibleState();
@@ -377,8 +367,7 @@
     cleanAll() {
       const blockedIds = [];
       this.detectedAds.forEach((meta) => {
-        // 增加 DOM 节点存活自检
-        if (meta.element && document.contains(meta.element) && !meta.isBlocked) {
+        if (meta.element && !meta.isBlocked) {
           this.neutralizeSingleInternal(meta.id);
           blockedIds.push(meta.id);
         }
@@ -390,17 +379,9 @@
       return blockedIds.length;
     }
 
-
     resetAll() {
       this.blockedRules = [];
       this.saveBlockedRules();
-
-      // 1. 全局清除 XPath 引擎留下的痕迹
-      document.querySelectorAll('[data-ad-blocked-xpath="true"]').forEach(el => {
-        delete el.dataset.adBlockedXpath;
-        delete el.dataset.overlayBlocked;
-        el.style.removeProperty('display');
-      });
 
       let count = 0;
       this.detectedAds.forEach((meta) => {
@@ -408,11 +389,6 @@
           meta.isBlocked = false;
           count++;
           if (meta.element) {
-            // 2. 断开防御锁 Observer
-            if (meta.element._adLockObserver) {
-              meta.element._adLockObserver.disconnect();
-              delete meta.element._adLockObserver;
-            }
             delete meta.element.dataset.overlayBlocked;
             meta.element.style.removeProperty('display');
             if (this.isHighlighted) {
@@ -424,10 +400,10 @@
 
       this.undoStack = [];
       this.redoStack = [];
+
       this.updateUI();
       return count;
     }
-
 
     loadUIVisibleState() {
       try {
@@ -522,8 +498,6 @@
         } else if (window.localStorage) {
           localStorage.setItem(this.storageKey, data);
         }
-        // 【新增】同步更新内存中的 blockedXPaths
-        this.blockedXPaths = this.extractXPathsFromRules(this.blockedRules);
         this.applyCssRulesFromStorage();
       } catch (e) {
         console.error('[AdDetector] 保存持久化规则失败:', e);
@@ -598,49 +572,7 @@
     // ==========================================
     forceCleanSavedRulesImmediately() {
       const doScan = () => {
-        // 1. 【核心修复】在 scan 之前，提前为所有符合持久化规则的元素打上 overlayBlocked 标记
-        // 这样 calculateAdScore 识别到 display: none 时，能通过 el.dataset.overlayBlocked === 'true' 判定返回 100 分
-        if (Array.isArray(this.blockedRules)) {
-          this.blockedRules.forEach((rule) => {
-            // 处理 CSS / Class / ID 选择器
-            let selector = rule.selector;
-            if (!selector && rule.classAndId && rule.classAndId !== '无 Class/ID') {
-              selector = rule.classAndId
-                .split(' ')
-                .filter(Boolean)
-                .map(cls => cls.startsWith('#') ? cls : '.' + CSS.escape(cls.replace(/^\./, '')))
-                .join('');
-            }
-
-            if (selector) {
-              try {
-                document.querySelectorAll(selector).forEach((el) => {
-                  el.dataset.overlayBlocked = 'true';
-                  el.style.setProperty('display', 'none', 'important');
-                });
-              } catch (e) { }
-            }
-
-            // 处理 XPath 选择器
-            if (rule.type === 'xpath' && rule.xpath) {
-              try {
-                const result = document.evaluate(rule.xpath, document, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
-                for (let i = 0; i < result.snapshotLength; i++) {
-                  const el = result.snapshotItem(i);
-                  if (el && el.nodeType === Node.ELEMENT_NODE) {
-                    el.dataset.overlayBlocked = 'true';
-                    el.style.setProperty('display', 'none', 'important');
-                  }
-                }
-              } catch (e) { }
-            }
-          });
-        }
-
-        // 2. 执行扫描（此时被隐藏的元素会因为 dataset.overlayBlocked === 'true' 被判定为 100 分并纳入 detectedAds）
         this.scan();
-
-        // 3. 遍历检测结果，补全 meta 状态与防篡改 MutationObserver 锁
         this.detectedAds.forEach((meta) => {
           if (this.isMatchesBlockedRule(meta)) {
             meta.isBlocked = true;
@@ -1220,6 +1152,9 @@
     }
 
     // ==========================================
+    // ★ 核心重构模块：高效率全盘与增量 DOM 扫描
+    // ==========================================
+    // ==========================================
     // ★ 高性能重构模块：全量选择器 + 绝对读写隔离 + 极速剪枝
     // ==========================================
     scan() {
@@ -1382,19 +1317,19 @@
           const m = mutations[i];
           const target = m.target;
 
-          // 1. 过滤内部节点修改及已被屏蔽的节点，彻底切断死循环
+          // 1. 过滤内部节点修改，防止死循环
           if (
             target.id === 'ad-detector-host' ||
             target.id === 'ad-detector-dynamic-css-rules' ||
             (target.classList && typeof target.classList.contains === 'function' && target.classList.contains('ad-detector-size-badge')) ||
-            (target.dataset && (target.dataset.overlayBlocked === 'true' || target.dataset.adBlockedXpath === 'true')) // 增加对 XPath 已屏蔽节点的过滤
+            (target.dataset && target.dataset.overlayBlocked === 'true') // 过滤已被屏蔽节点的样式变更
           ) {
             continue;
           }
 
           hasExternalMutation = true;
 
-          // 2. 收集增量添加的节点（优先采用增量检查）
+          // 2. 收集增量添加的节点，优先采用增量检查
           if (m.type === 'childList' && m.addedNodes.length > 0) {
             m.addedNodes.forEach(node => {
               if (node.nodeType === Node.ELEMENT_NODE) {
@@ -1406,22 +1341,17 @@
 
         if (!hasExternalMutation) return;
 
-        // 3. 节流与防抖合并（空闲调度）
+        // 3. 节流与防抖合并，避免频繁拉起全局扫描
         if (!scanScheduled) {
           scanScheduled = true;
           const scheduleTask = window.requestIdleCallback || ((cb) => setTimeout(cb, 200));
 
           scheduleTask(() => {
-            // 如果新增节点较少，仅对新增节点（及其子树）增量排查与 XPath 履约；若过多则降级为全局扫描
+            // 如果新增节点较少，仅对新增节点增量排查；若过多则降级为全局扫描
             if (targetsToScan.size > 0 && targetsToScan.size < 20) {
-              // 执行原有的启发式增量扫描
               this.scanIncremental(targetsToScan);
-              // 对新增的这批节点及其子树单独履行 XPath 规则
-              this.applyXPathsIncremental(targetsToScan);
             } else {
-              // 触发全局启发式扫描 + 全局 XPath 履约
               this.scan();
-              this.applyXPaths(document);
             }
             scanScheduled = false;
           }, { timeout: 1000 });
@@ -1433,64 +1363,11 @@
           childList: true,
           subtree: true,
           attributes: true,
-          attributeFilter: ['src'] // 保持优化：移除 style 和 class 的深度监听
+          attributeFilter: ['src'] // 移除 style 和 class 的全盘深度监听，大幅降低触发频率
         });
       }
 
-      // 页面首次初始化执行
       this.scan();
-      this.applyXPaths(document);
-    }
-
-
-    /**
-     * 【修复版】针对全盘或特定根节点匹配并执行隐藏 XPath 规则
-     */
-    applyXPaths(rootNode = document) {
-      if (!this.blockedXPaths || this.blockedXPaths.length === 0) return;
-
-      this.blockedXPaths.forEach(xpathStr => {
-        try {
-          // evaluate 上下文如果是普通 Element，遇到以 / 开头的绝对路径 XPath 会报错或失效
-          // 因此对于绝对路径，上下文统一回退至 document
-          const contextNode = (xpathStr.startsWith('/') && rootNode !== document)
-            ? document
-            : rootNode;
-
-          const result = document.evaluate(
-            xpathStr,
-            contextNode,
-            null,
-            XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
-            null
-          );
-
-          for (let i = 0; i < result.snapshotLength; i++) {
-            const el = result.snapshotItem(i);
-            if (el && el.nodeType === Node.ELEMENT_NODE && !el.dataset.adBlockedXpath) {
-              el.style.setProperty('display', 'none', 'important');
-              el.dataset.adBlockedXpath = 'true';
-              el.dataset.overlayBlocked = 'true'; // 保持逻辑一致性
-            }
-          }
-        } catch (e) {
-          console.warn('[XPath Engine] 执行表达式失败:', xpathStr, e);
-        }
-      });
-    }
-
-    /**
-     * 【修复版】仅对增量变更的节点集及其子树履行 XPath 检查
-     */
-    applyXPathsIncremental(targetsSet) {
-      if (!this.blockedXPaths || this.blockedXPaths.length === 0) return;
-
-      targetsSet.forEach(targetNode => {
-        if (targetNode.nodeType === Node.ELEMENT_NODE) {
-          // 如果 targetNode 自身或者其子节点匹配了 XPath，执行隐藏
-          this.applyXPaths(targetNode);
-        }
-      });
     }
 
 
@@ -2311,8 +2188,7 @@
         btnReset.textContent = '重置中...';
         requestAnimationFrame(() => {
           setTimeout(() => {
-            const count = this.resetAll(); // 1. 清除规则并还原被屏蔽元素
-            this.scan();                    // 2. 顺带执行一次重新扫描，刷新 DOM 状态
+            const count = this.resetAll();
             btnReset.disabled = false;
             btnReset.textContent = '一键重置';
             this.showToast(`🔄 已重置规则并还原 ${count} 个元素`);
@@ -2509,3 +2385,4 @@
   };
 
 })();
+

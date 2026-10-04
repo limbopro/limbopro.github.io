@@ -598,49 +598,7 @@
     // ==========================================
     forceCleanSavedRulesImmediately() {
       const doScan = () => {
-        // 1. 【核心修复】在 scan 之前，提前为所有符合持久化规则的元素打上 overlayBlocked 标记
-        // 这样 calculateAdScore 识别到 display: none 时，能通过 el.dataset.overlayBlocked === 'true' 判定返回 100 分
-        if (Array.isArray(this.blockedRules)) {
-          this.blockedRules.forEach((rule) => {
-            // 处理 CSS / Class / ID 选择器
-            let selector = rule.selector;
-            if (!selector && rule.classAndId && rule.classAndId !== '无 Class/ID') {
-              selector = rule.classAndId
-                .split(' ')
-                .filter(Boolean)
-                .map(cls => cls.startsWith('#') ? cls : '.' + CSS.escape(cls.replace(/^\./, '')))
-                .join('');
-            }
-
-            if (selector) {
-              try {
-                document.querySelectorAll(selector).forEach((el) => {
-                  el.dataset.overlayBlocked = 'true';
-                  el.style.setProperty('display', 'none', 'important');
-                });
-              } catch (e) { }
-            }
-
-            // 处理 XPath 选择器
-            if (rule.type === 'xpath' && rule.xpath) {
-              try {
-                const result = document.evaluate(rule.xpath, document, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
-                for (let i = 0; i < result.snapshotLength; i++) {
-                  const el = result.snapshotItem(i);
-                  if (el && el.nodeType === Node.ELEMENT_NODE) {
-                    el.dataset.overlayBlocked = 'true';
-                    el.style.setProperty('display', 'none', 'important');
-                  }
-                }
-              } catch (e) { }
-            }
-          });
-        }
-
-        // 2. 执行扫描（此时被隐藏的元素会因为 dataset.overlayBlocked === 'true' 被判定为 100 分并纳入 detectedAds）
         this.scan();
-
-        // 3. 遍历检测结果，补全 meta 状态与防篡改 MutationObserver 锁
         this.detectedAds.forEach((meta) => {
           if (this.isMatchesBlockedRule(meta)) {
             meta.isBlocked = true;
@@ -2311,8 +2269,7 @@
         btnReset.textContent = '重置中...';
         requestAnimationFrame(() => {
           setTimeout(() => {
-            const count = this.resetAll(); // 1. 清除规则并还原被屏蔽元素
-            this.scan();                    // 2. 顺带执行一次重新扫描，刷新 DOM 状态
+            const count = this.resetAll();
             btnReset.disabled = false;
             btnReset.textContent = '一键重置';
             this.showToast(`🔄 已重置规则并还原 ${count} 个元素`);
@@ -2509,3 +2466,4 @@
   };
 
 })();
+
