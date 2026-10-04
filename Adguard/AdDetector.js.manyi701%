@@ -887,24 +887,20 @@
         return this.animatedGifCache.get(url);
       }
 
-      // 1. 处理 Base64 格式
       if (url.startsWith('data:image/gif;base64,') || url.startsWith('data:image/base64,')) {
         try {
           const base64Data = url.split(',')[1];
-          // 增加读取字节范围至 4096，提升多帧识别准确率
-          const binaryString = atob(base64Data.slice(0, 4096));
+          const binaryString = atob(base64Data.slice(0, 2000));
           let frameCount = 0;
           for (let i = 0; i < binaryString.length - 2; i++) {
-            // 匹配 Graphics Control Extension (0x21 0xF9) 或 Image Descriptor (0x2C)
             if (binaryString.charCodeAt(i) === 0x21 && binaryString.charCodeAt(i + 1) === 0xf9) {
               frameCount++;
               if (frameCount > 1) {
-                this.animatedGifCache.set(url, true); // 多帧动态 GIF
+                this.animatedGifCache.set(url, true);
                 return true;
               }
             }
           }
-          // 如果循环结束仅找到 <=1 帧，认定为单帧静态 GIF
           this.animatedGifCache.set(url, false);
           return false;
         } catch (e) {
@@ -913,10 +909,8 @@
         }
       }
 
-      // 2. 处理网络 URL 格式
       try {
-        // 读取前 4096 字节
-        const response = await fetch(url, { headers: { Range: 'bytes=0-4096' } });
+        const response = await fetch(url, { headers: { Range: 'bytes=0-2048' } });
         const buffer = await response.arrayBuffer();
         const bytes = new Uint8Array(buffer);
 
@@ -931,13 +925,11 @@
           if (bytes[i] === 0x21 && bytes[i + 1] === 0xf9) {
             frameCount++;
             if (frameCount > 1) {
-              this.animatedGifCache.set(url, true); // 确认是多帧动图
+              this.animatedGifCache.set(url, true);
               return true;
             }
           }
         }
-
-        // 仅检测到单帧
         this.animatedGifCache.set(url, false);
         return false;
       } catch (e) {
@@ -1056,11 +1048,12 @@
 
         if (isBase64Gif || isNetGif) {
           if (isBase64Gif) {
-            score += 35;
-            reasons.push('使用 Base64 Data-URI 格式内嵌 GIF');
+            // 关键修改：提高 Base64 内嵌 GIF 的同步基础分（直接设为 40 分或以上）
+            score += 45; // 原 35 分，可提至 40 分直接触达默认判定阈值
+            reasons.push('使用 Base64 Data-URI 格式内嵌 GIF (同步直接命中)');
 
             if (imgSrc.includes('R0lGODlh')) {
-              score += 10;
+              score += 15;
               reasons.push('匹配标准 GIF Base64 编码头部');
             }
           }
@@ -1070,28 +1063,29 @@
             reasons.push('GIF 路径包含广告/网盟关键字');
           }
 
-          // 缓存检测与异步补加分/单帧扣减
+          // 缓存检测与异步补加分
           const cacheResult = this.animatedGifCache.get(imgSrc);
           if (cacheResult === true) {
             score += 25;
             reasons.push('检测到多帧动态 GIF (High Attention)');
-          } else if (cacheResult === false) {
-            // 【新增】如果明确检测为单帧 GIF，记录原因或适度削减风险分（避免误杀静态占位图）
-            reasons.push('判定为单帧/静态 GIF (低吸引力)');
           } else if (cacheResult === undefined) {
             // 标记为正在处理中，防止重复发起 Promise 解析
             this.animatedGifCache.set(imgSrc, 'PENDING');
 
+
             this.isAnimatedGif(imgSrc).then((isAnim) => {
               this.animatedGifCache.set(imgSrc, isAnim);
-              // 重新评估：无论检测结果是多帧 (true) 还是单帧 (false)，都重新触发一次扫描更新 UI
-              this.scan();
+              // 如果确认是动态 GIF，且该元素之前因为分值不足没被标记，强制重新触发一轮全量扫描/局部复查
+              if (isAnim) {
+                // 建议使用防抖的 re-scan 或微任务调度
+                this.triggerReScan();
+              }
+
             }).catch(() => {
               this.animatedGifCache.set(imgSrc, false);
             });
           }
         }
-
       }
 
       const badgeEl = el.querySelector('span, div, em, i');
