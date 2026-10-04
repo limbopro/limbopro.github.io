@@ -641,78 +641,85 @@
     // 修正：防爆栈的属性锁定 Observer
     // ==========================================
     forceCleanSavedRulesImmediately() {
-      const applyRulesAndRegister = () => {
-        if (!Array.isArray(this.blockedRules) || this.blockedRules.length === 0) return;
+      const doScan = () => {
+        // 1. 【核心修复】在 scan 之前，提前为所有符合持久化规则的元素打上 overlayBlocked 标记
+        // 这样 calculateAdScore 识别到 display: none 时，能通过 el.dataset.overlayBlocked === 'true' 判定返回 100 分
+        if (Array.isArray(this.blockedRules)) {
+          this.blockedRules.forEach((rule) => {
+            // 处理 CSS / Class / ID 选择器
+            let selector = rule.selector;
+            if (!selector && rule.classAndId && rule.classAndId !== '无 Class/ID') {
+              selector = rule.classAndId
+                .split(' ')
+                .filter(Boolean)
+                .map(cls => cls.startsWith('#') ? cls : '.' + CSS.escape(cls.replace(/^\./, '')))
+                .join('');
+            }
 
-        this.blockedRules.forEach((rule) => {
-          // 1. 根据 选择器 标记 DOM
-          let selector = rule.selector;
-          if (!selector && rule.classAndId && rule.classAndId !== '无 Class/ID') {
-            selector = rule.classAndId
-              .split(' ')
-              .filter(Boolean)
-              .map(cls => cls.startsWith('#') ? cls : '.' + CSS.escape(cls.replace(/^\./, '')))
-              .join('');
-          }
-
-          if (selector) {
-            try {
-              document.querySelectorAll(selector).forEach((el) => {
-                el.dataset.overlayBlocked = 'true';
-                el.style.setProperty('display', 'none', 'important');
-              });
-            } catch (e) { }
-          }
-
-          // 2. 根据 XPath 标记 DOM
-          if (rule.type === 'xpath' && rule.xpath) {
-            try {
-              const result = document.evaluate(rule.xpath, document, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
-              for (let i = 0; i < result.snapshotLength; i++) {
-                const el = result.snapshotItem(i);
-                if (el && el.nodeType === Node.ELEMENT_NODE) {
+            if (selector) {
+              try {
+                document.querySelectorAll(selector).forEach((el) => {
                   el.dataset.overlayBlocked = 'true';
-                  el.dataset.adBlockedXpath = 'true';
                   el.style.setProperty('display', 'none', 'important');
-                }
-              }
-            } catch (e) { }
-          }
-        });
+                });
+              } catch (e) { }
+            }
 
-        // 3. 强制执行一次扫描，将上述标记的节点注册进 detectedAds 映射表
+            // 处理 XPath 选择器
+            if (rule.type === 'xpath' && rule.xpath) {
+              try {
+                const result = document.evaluate(rule.xpath, document, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+                for (let i = 0; i < result.snapshotLength; i++) {
+                  const el = result.snapshotItem(i);
+                  if (el && el.nodeType === Node.ELEMENT_NODE) {
+                    el.dataset.overlayBlocked = 'true';
+                    el.style.setProperty('display', 'none', 'important');
+                  }
+                }
+              } catch (e) { }
+            }
+          });
+        }
+
+        // 2. 执行扫描（此时被隐藏的元素会因为 dataset.overlayBlocked === 'true' 被判定为 100 分并纳入 detectedAds）
         this.scan();
 
-        // 4. 补全 meta 屏蔽状态与尺寸回填
-        this.detectedAds.forEach((meta, adId) => {
-          if (this.isMatchesBlockedRule(meta) || meta.element.dataset.overlayBlocked === 'true') {
+        // 3. 遍历检测结果，补全 meta 状态与防篡改 MutationObserver 锁
+        this.detectedAds.forEach((meta) => {
+          if (this.isMatchesBlockedRule(meta)) {
             meta.isBlocked = true;
+            if (meta.element) {
+              meta.element.dataset.overlayBlocked = 'true';
+              meta.element.style.setProperty('display', 'none', 'important');
 
-            // 如果尺寸因隐藏变为了 0x0px，尝试从持久化规则中回填原尺寸
-            if (meta.size === '0x0px' || meta.size === '0x0') {
-              const matchedRule = this.blockedRules.find(r =>
-                (r.selector && meta.element && this.generateSpecificSelector(meta.element) === r.selector) ||
-                (r.classAndId && r.classAndId === meta.classAndId)
-              );
-              if (matchedRule && matchedRule.size) {
-                meta.size = matchedRule.size;
+              // 使用锁标记位，避免递归触发 MutationObserver 造成浏览器卡死
+              if (!meta.element._adLockObserver) {
+                let isMutating = false;
+                meta.element._adLockObserver = new MutationObserver(() => {
+                  if (isMutating) return; // 阻止自循环触发
+                  if (meta.isBlocked && meta.element.style.display !== 'none') {
+                    isMutating = true;
+                    meta.element.style.setProperty('display', 'none', 'important');
+                    // 延迟释放锁
+                    Promise.resolve().then(() => { isMutating = false; });
+                  }
+                });
+
+                meta.element._adLockObserver.observe(meta.element, {
+                  attributes: true,
+                  attributeFilter: ['style', 'class']
+                });
               }
             }
           }
         });
-
-        if (this.isUIVisible) {
-          this.updateUI();
-        }
       };
 
-      // 全生命周期阶段触发，防止遗漏异步加载的 DOM 节点
-      applyRulesAndRegister();
-
       if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', applyRulesAndRegister);
+        document.addEventListener('DOMContentLoaded', doScan);
+      } else {
+        doScan();
       }
-      window.addEventListener('load', applyRulesAndRegister);
     }
 
     injectGlobalStyles() {
@@ -945,16 +952,17 @@
       const style = window.getComputedStyle(el);
 
       if (style.pointerEvents === 'none' || style.display === 'none' || style.visibility === 'hidden') {
-        const isSavedRule = this.isMatchesBlockedRule({
-          element: el,
-          classAndId: `${el.id ? '#' + el.id : ''}${el.className && typeof el.className === 'string' ? '.' + el.className : ''}`.trim(),
-          fingerprint: `${el.tagName.toLowerCase()}_`
-        });
+        if (el.dataset.overlayBlocked === 'true') {
+          const isSavedRule = this.isMatchesBlockedRule({
+            element: el,
+            classAndId: `${el.id ? '#' + el.id : ''}${el.className ? '.' + el.className : ''}`.trim(),
+            fingerprint: `${el.tagName.toLowerCase()}_${el.offsetWidth}x${el.offsetHeight}px_`
+          });
 
-        if (el.dataset.overlayBlocked === 'true' || el.dataset.adBlockedXpath === 'true' || isSavedRule) {
           const blockReason = isSavedRule ? '匹配历史持久化规则自动屏蔽' : '已被当前会话手动屏蔽';
+
           return {
-            score: 40,
+            score: 100,
             reasons: [`${blockReason}（若影响页面功能可点击撤销）`]
           };
         }
@@ -1344,10 +1352,7 @@
         if (!existingMeta && this.evaluatedNodes.has(el)) return;
 
         // 【剪枝 2】：快速几何过滤，未渲染或隐藏节点直接跳过，避免执行昂贵的 calculateAdScore
-        // if (el.offsetWidth === 0 && el.offsetHeight === 0) return;
-        // 【修复】：如果是已被屏蔽的节点（带标记或匹配持久化规则），允许放行；仅对未屏蔽且未渲染的纯隐形节点进行剪枝
-        const isAlreadyBlocked = el.dataset.overlayBlocked === 'true' || el.dataset.adBlockedXpath === 'true';
-        if (!isAlreadyBlocked && el.offsetWidth === 0 && el.offsetHeight === 0) return;
+        if (el.offsetWidth === 0 && el.offsetHeight === 0) return;
 
         // 【剪枝 3】：对大量无特征的普通文本/容器节点实施毫秒级快速放行
         // 如果是普通 div/section，没有 id/class，也没有子链接，极大概率不是广告
@@ -2486,7 +2491,7 @@
             btnScan.disabled = false;
             btnScan.textContent = '重新扫描';
             this.showToast('✅ 页面诊断完成');
-            this.showToast('🔔 若扫描结果不及预期，请刷新页面重试');
+            this.showToast('🔔 如扫描结果不及预期，请刷新页面');
           }, 50);
         });
       };

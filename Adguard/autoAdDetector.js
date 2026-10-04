@@ -1,3 +1,13 @@
+// 检查当前 URL 或 页面标题 是否包含 "missav"（忽略大小写）
+const keyword = '!missav';
+const currentUrl = window.location.href.toLowerCase();
+const currentTitle = document.title.toLowerCase();
+
+if (currentUrl.includes(keyword) || currentTitle.includes(keyword)) {
+  console.log('匹配到关键字 missav，已终止后续代码执行。');
+  return; // 终止当前函数/脚本的后续执行
+}
+
 /**
  * AdDetector v3.6 - 全通路恶意拦截、网络 API 代理劫持、Location 原型重定向与规则引擎
  * (已修复 instance 未定义、GM/localStorage 降级、重复 beforeunload，并集成全屏透明遮罩自动清理)

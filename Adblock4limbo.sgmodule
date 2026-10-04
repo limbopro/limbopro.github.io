@@ -59,7 +59,7 @@ https://imasdk.googleapis.com/js/sdkloader/ima3.js - reject
 HereByAD - reject
 herebyad - reject
 ad-provider.js - reject
-ad.*\.js - reject
+#ad.*\.js - reject
 
 
 # javlibrary 弹窗

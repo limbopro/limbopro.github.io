@@ -954,7 +954,7 @@
         if (el.dataset.overlayBlocked === 'true' || el.dataset.adBlockedXpath === 'true' || isSavedRule) {
           const blockReason = isSavedRule ? '匹配历史持久化规则自动屏蔽' : '已被当前会话手动屏蔽';
           return {
-            score: 40,
+            score: 100,
             reasons: [`${blockReason}（若影响页面功能可点击撤销）`]
           };
         }
@@ -2486,7 +2486,7 @@
             btnScan.disabled = false;
             btnScan.textContent = '重新扫描';
             this.showToast('✅ 页面诊断完成');
-            this.showToast('🔔 若扫描结果不及预期，请刷新页面重试');
+            this.showToast('🔔 如扫描结果不及预期，请刷新页面');
           }, 50);
         });
       };
