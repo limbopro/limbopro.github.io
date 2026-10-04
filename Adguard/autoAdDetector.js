@@ -566,7 +566,7 @@ const AdDetector = (function () {
 AdDetector.init();
 
 
-
+/*
 // 保存原始的 Function 构造函数（如需后续正常使用）
 const NativeFunction = window.Function;
 
@@ -587,3 +587,4 @@ window.Function = function(...args) {
 
 // 保持原型链完整
 window.Function.prototype = NativeFunction.prototype;
+*/

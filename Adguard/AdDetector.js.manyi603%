@@ -296,50 +296,29 @@
     // 内部恢复逻辑
     restoreSingleInternal(adId) {
       const meta = this.detectedAds.get(adId);
-      if (!meta || !meta.element) return;
+      if (meta && meta.element) {
+        meta.isBlocked = false;
+        delete meta.element.dataset.overlayBlocked;
 
-      const targetElement = meta.element;
+        meta.element.style.removeProperty('display');
 
-      // 1. 获取当前节点以及所有被连带标记的子节点
-      const affectedNodes = [
-        targetElement,
-        ...targetElement.querySelectorAll('[data-overlay-blocked="true"]')
-      ];
-
-      // 2. 遍历恢复所有受影响 DOM 节点及其对应内存中的 meta 状态
-      affectedNodes.forEach((node) => {
-        // 移除 DOM 隐藏标记与内联 display 属性
-        delete node.dataset.overlayBlocked;
-        node.style.removeProperty('display');
-
-        // 同步更新 detectedAds 映射表中的内存状态
-        // 假设每个 ad 节点 DOM 上均存有关联的 ID 标识（如 data-ad-id）
-        const nodeAdId = node.dataset.adDetectorId || adId;
-        const nodeMeta = this.detectedAds.get(nodeAdId);
-        if (nodeMeta) {
-          nodeMeta.isBlocked = false;
+        if (this.isHighlighted) {
+          this.applyHighlight(meta.element, true, meta.size);
         }
 
-        // 恢复高亮逻辑
-        if (this.isHighlighted && nodeMeta) {
-          this.applyHighlight(node, true, nodeMeta.size);
-        }
-      });
+        const currentSelector = this.generateSpecificSelector(meta.element);
+        const currentXPath = this.getElementXPath(meta.element);
 
-      // 3. 清理对应的拦截规则
-      const currentSelector = this.generateSpecificSelector(targetElement);
-      const currentXPath = this.getElementXPath(targetElement);
-
-      this.blockedRules = this.blockedRules.filter(
-        (r) => !(
-          (r.selector && r.selector === currentSelector) ||
-          (r.xpath && r.xpath === currentXPath) ||
-          (r.fingerprint && r.fingerprint === meta.fingerprint) ||
-          (r.classAndId && r.classAndId === meta.classAndId)
-        )
-      );
-
-      this.saveBlockedRules();
+        this.blockedRules = this.blockedRules.filter(
+          (r) => !(
+            (r.selector && r.selector === currentSelector) ||
+            (r.xpath && r.xpath === currentXPath) ||
+            (r.fingerprint && r.fingerprint === meta.fingerprint) ||
+            (r.classAndId && r.classAndId === meta.classAndId)
+          )
+        );
+        this.saveBlockedRules();
+      }
     }
 
     neutralizeSingle(adId) {

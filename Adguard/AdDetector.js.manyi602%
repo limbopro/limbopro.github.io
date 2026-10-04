@@ -296,50 +296,29 @@
     // 内部恢复逻辑
     restoreSingleInternal(adId) {
       const meta = this.detectedAds.get(adId);
-      if (!meta || !meta.element) return;
+      if (meta && meta.element) {
+        meta.isBlocked = false;
+        delete meta.element.dataset.overlayBlocked;
 
-      const targetElement = meta.element;
+        meta.element.style.removeProperty('display');
 
-      // 1. 获取当前节点以及所有被连带标记的子节点
-      const affectedNodes = [
-        targetElement,
-        ...targetElement.querySelectorAll('[data-overlay-blocked="true"]')
-      ];
-
-      // 2. 遍历恢复所有受影响 DOM 节点及其对应内存中的 meta 状态
-      affectedNodes.forEach((node) => {
-        // 移除 DOM 隐藏标记与内联 display 属性
-        delete node.dataset.overlayBlocked;
-        node.style.removeProperty('display');
-
-        // 同步更新 detectedAds 映射表中的内存状态
-        // 假设每个 ad 节点 DOM 上均存有关联的 ID 标识（如 data-ad-id）
-        const nodeAdId = node.dataset.adDetectorId || adId;
-        const nodeMeta = this.detectedAds.get(nodeAdId);
-        if (nodeMeta) {
-          nodeMeta.isBlocked = false;
+        if (this.isHighlighted) {
+          this.applyHighlight(meta.element, true, meta.size);
         }
 
-        // 恢复高亮逻辑
-        if (this.isHighlighted && nodeMeta) {
-          this.applyHighlight(node, true, nodeMeta.size);
-        }
-      });
+        const currentSelector = this.generateSpecificSelector(meta.element);
+        const currentXPath = this.getElementXPath(meta.element);
 
-      // 3. 清理对应的拦截规则
-      const currentSelector = this.generateSpecificSelector(targetElement);
-      const currentXPath = this.getElementXPath(targetElement);
-
-      this.blockedRules = this.blockedRules.filter(
-        (r) => !(
-          (r.selector && r.selector === currentSelector) ||
-          (r.xpath && r.xpath === currentXPath) ||
-          (r.fingerprint && r.fingerprint === meta.fingerprint) ||
-          (r.classAndId && r.classAndId === meta.classAndId)
-        )
-      );
-
-      this.saveBlockedRules();
+        this.blockedRules = this.blockedRules.filter(
+          (r) => !(
+            (r.selector && r.selector === currentSelector) ||
+            (r.xpath && r.xpath === currentXPath) ||
+            (r.fingerprint && r.fingerprint === meta.fingerprint) ||
+            (r.classAndId && r.classAndId === meta.classAndId)
+          )
+        );
+        this.saveBlockedRules();
+      }
     }
 
     neutralizeSingle(adId) {
@@ -413,63 +392,40 @@
 
 
     resetAll() {
-      // 1. 清空本地持久化规则
       this.blockedRules = [];
-      this.blockedXPaths = [];
       this.saveBlockedRules();
 
-      // 2. 清空动态 CSS
-      const dynamicStyle = document.getElementById('ad-detector-dynamic-css-rules');
-      if (dynamicStyle) {
-        dynamicStyle.textContent = '';
-      }
-
-      // 3. 使用 Set 进行 DOM 节点去重，确保计数精准
-      const restoredElements = new Set();
-
-      // 收集通过 Dataset 标记隐藏的元素
-      document.querySelectorAll('[data-overlay-blocked="true"], [data-ad-blocked-xpath="true"]').forEach(el => {
-        restoredElements.add(el);
-      });
-
-      // 收集内存中标记为 hidden/blocked 的元素
-      this.detectedAds.forEach((meta) => {
-        if (meta.isBlocked && meta.element) {
-          restoredElements.add(meta.element);
-        }
-      });
-
-      // 4. 统一执行节点还原
-      restoredElements.forEach(el => {
+      // 1. 全局清除 XPath 引擎留下的痕迹
+      document.querySelectorAll('[data-ad-blocked-xpath="true"]').forEach(el => {
         delete el.dataset.adBlockedXpath;
         delete el.dataset.overlayBlocked;
-
-        if (el.style.display === 'none') {
-          el.style.removeProperty('display');
-        }
-
-        if (el._adLockObserver) {
-          el._adLockObserver.disconnect();
-          delete el._adLockObserver;
-        }
+        el.style.removeProperty('display');
       });
 
-      // 5. 重置内存状态与 UI
+      let count = 0;
       this.detectedAds.forEach((meta) => {
-        meta.isBlocked = false;
+        if (meta.isBlocked) {
+          meta.isBlocked = false;
+          count++;
+          if (meta.element) {
+            // 2. 断开防御锁 Observer
+            if (meta.element._adLockObserver) {
+              meta.element._adLockObserver.disconnect();
+              delete meta.element._adLockObserver;
+            }
+            delete meta.element.dataset.overlayBlocked;
+            meta.element.style.removeProperty('display');
+            if (this.isHighlighted) {
+              this.applyHighlight(meta.element, true, meta.size);
+            }
+          }
+        }
       });
 
-      if (this.evaluatedNodes) {
-        this.evaluatedNodes = new WeakSet();
-      }
-
-      this.scan();
       this.undoStack = [];
       this.redoStack = [];
       this.updateUI();
-
-      // 6. 返回去重后的实际还原 DOM 节点数量
-      return restoredElements.size;
+      return count;
     }
 
 
@@ -2356,6 +2312,7 @@
         requestAnimationFrame(() => {
           setTimeout(() => {
             const count = this.resetAll(); // 1. 清除规则并还原被屏蔽元素
+            this.scan();                    // 2. 顺带执行一次重新扫描，刷新 DOM 状态
             btnReset.disabled = false;
             btnReset.textContent = '一键重置';
             this.showToast(`🔄 已重置规则并还原 ${count} 个元素`);
