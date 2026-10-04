@@ -576,6 +576,38 @@ const AdDetector = (function () {
 AdDetector.init();
 
 
+// 1. 定义拦截函数
+function initNetworkIntercept() {
+    const globalWin = typeof unsafeWindow !== 'undefined' ? unsafeWindow : window;
+
+    // 拦截 fetch
+    const origFetch = globalWin.fetch;
+    if (origFetch) {
+        globalWin.fetch = async function (...args) {
+            const url = typeof args[0] === 'string' ? args[0] : (args[0] && args[0].url);
+            if (url && /adservice|pagead|doubleclick|union\/sdk|popunder/i.test(url)) {
+                console.warn('[AdDetector] 已拦截 fetch 广告:', url);
+                return new Response(JSON.stringify({ code: 0, data: [] }), { status: 200 });
+            }
+            return origFetch.apply(this, args);
+        };
+    }
+
+    // 拦截 XHR
+    const origXhrOpen = globalWin.XMLHttpRequest.prototype.open;
+    globalWin.XMLHttpRequest.prototype.open = function (method, url, ...rest) {
+        if (typeof url === 'string' && /adservice|pagead|doubleclick|union\/sdk|popunder/i.test(url)) {
+            console.warn('[AdDetector] 已拦截 XHR 广告:', url);
+            url = 'data:application/json,{"code":0,"data":[]}';
+        }
+        return origXhrOpen.call(this, method, url, ...rest);
+    };
+}
+
+// 2. 【直接调用】不要等待 DOMContentLoaded 或 window.onload，必须直接执行！
+initNetworkIntercept();
+
+
 /*
 // 保存原始的 Function 构造函数（如需后续正常使用）
 const NativeFunction = window.Function;

@@ -1,0 +1,2719 @@
+// ==UserScript==
+// @name         智能广告与覆盖层检测器 (Silent Backend + Floating UI)
+// @namespace    https://tampermonkey.net/
+// @version      12.6
+// @description  默认静默后台防护，支持捕捉全屏透明/半透明遮罩与拦截内联/动态绑定事件劫持，包含特异性选择器生成、数量交叉校验降级防护与持久化规则恢复。
+// @author       Assistant
+// @match        *://*/*
+// @grant        GM_addStyle
+// @grant        GM_setValue
+// @grant        GM_getValue
+// @grant        unsafeWindow
+// @run-at       document-start
+// ==/UserScript==
+
+(function () {
+  'use strict';
+
+  // 跨沙盒全局 window 挂载对象
+  const globalWin = typeof unsafeWindow !== 'undefined' ? unsafeWindow : window;
+
+  class UniversalAdDetector {
+
+    getElementHeight(meta) {
+      if (meta.element && meta.element.offsetHeight) {
+        return meta.element.offsetHeight;
+      }
+      if (meta.size) {
+        const match = meta.size.match(/x(\d+)px/i);
+        if (match) return parseInt(match[1], 10);
+      }
+      return 0;
+    }
+
+    // 辅助方法
+    extractXPathsFromRules(rules) {
+      if (!Array.isArray(rules)) return [];
+      return rules
+        .filter(r => r.type === 'xpath' && r.xpath)
+        .map(r => r.xpath);
+    }
+
+    constructor() {
+      this.detectedAds = new Map();
+      this.animatedGifCache = new Map();
+      this.counter = 0;
+      this.isHighlighted = false;
+      this.isScanning = false;
+      this.scanTimer = null;
+      this.observer = null;
+
+      // 撤回 (Undo) 与 重做 (Redo) 堆栈
+      this.undoStack = [];
+      this.redoStack = [];
+
+      // 排序与筛选模式
+      this.sortType = 'default';
+      this.filterType = 'all';
+
+      // 面板显示状态标识
+      this.host = null;
+      this.shadow = null;
+
+      // 域隔离持久化规则库
+      this.storageKey = `ad_detector_blocked_${window.location.hostname}`;
+      this.blockedRules = this.loadBlockedRules();
+      // 【新增】提取内存中的 XPath 集合
+      this.blockedXPaths = this.extractXPathsFromRules(this.blockedRules);
+
+      // 读取上次页面留下的面板开启状态
+      this.isUIVisible = this.loadUIVisibleState();
+
+      // 拦截内联与动态事件劫持防护机制
+      this.initClickHijackProtection();
+
+      this.injectGlobalStyles();
+      this.applyCssRulesFromStorage(); // 持久化 CSS 规则转译
+      this.initObserver();
+      this.bindGlobalHotkeys();
+
+      // 立即强制触发 1 次同步全盘清理与持久化规则恢复
+      this.forceCleanSavedRulesImmediately();
+
+      // 如果记忆状态为开启，页面加载时自动显示面板
+      if (this.isUIVisible) {
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', () => this.showUI());
+        } else {
+          this.showUI();
+        }
+      }
+    }
+
+    // ==========================================
+    // ★ 模块一：精准特异性选择器生成器
+    // ==========================================
+    generateSpecificSelector(el) {
+      if (!el || el.nodeType !== Node.ELEMENT_NODE) return '';
+
+      // 1. 如果存在稳固的 ID（过滤纯数字/随机长字串 ID）
+      if (el.id && !/\d{5,}/.test(el.id)) {
+        return `#${CSS.escape(el.id)}`;
+      }
+
+      const path = [];
+      let current = el;
+
+      while (current && current.nodeType === Node.ELEMENT_NODE && current !== document.body && current !== document.documentElement) {
+        let selector = current.tagName.toLowerCase();
+
+        // 过滤掉动态/无意义 class，保留有辨识度的 class
+        const validClasses = Array.from(current.classList || []).filter(
+          c => !/^[0-9_-]+$/.test(c) && !/^(active|show|hide|visible|hover|focus|ad-detector-)/.test(c)
+        );
+
+        if (validClasses.length > 0) {
+          selector += `.${validClasses.map(c => CSS.escape(c)).join('.')}`;
+        }
+
+        // 拼接特征属性约束（如 data-ad-id, href 等）
+        if (current.hasAttribute('data-ad-id')) {
+          selector += `[data-ad-id="${CSS.escape(current.getAttribute('data-ad-id'))}"]`;
+        } else if (current.tagName === 'A' && current.hasAttribute('href')) {
+          const href = current.getAttribute('href');
+          if (href && href.length < 60) {
+            selector += `[href="${CSS.escape(href)}"]`;
+          }
+        }
+
+        // 追加同级节点 index 约束
+        let sibling = current;
+        let nth = 1;
+        while ((sibling = sibling.previousElementSibling)) {
+          if (sibling.tagName === current.tagName) nth++;
+        }
+        if (nth > 1) {
+          selector += `:nth-of-type(${nth})`;
+        }
+
+        path.unshift(selector);
+        current = current.parentElement;
+
+        // 路径向上溯源到 3 层时提前终止，防止选择器过长
+        if (path.length >= 3) break;
+      }
+
+      return path.join(' > ');
+    }
+
+    // ==========================================
+    // ★ 模块二：生成绝对精确的 XPath（降级备份用）
+    // ==========================================
+    getElementXPath(element) {
+      if (!element) return '';
+      if (element.id && !/\d{5,}/.test(element.id)) return `//*[@id="${element.id}"]`;
+      if (element === document.body) return '/html/body';
+
+      let ix = 0;
+      const siblings = element.parentNode ? element.parentNode.childNodes : [];
+
+      for (let i = 0; i < siblings.length; i++) {
+        const sibling = siblings[i];
+        if (sibling === element) {
+          return `${this.getElementXPath(element.parentNode)}/${element.tagName.toLowerCase()}[${ix + 1}]`;
+        }
+        if (sibling.nodeType === 1 && sibling.tagName === element.tagName) {
+          ix++;
+        }
+      }
+      return '';
+    }
+
+    // ==========================================
+    // ★ 撤回 (Undo) / 重做 (Redo) 核心逻辑
+    // ==========================================
+    pushHistoryState(action) {
+      this.undoStack.push(action);
+      this.redoStack = [];
+      this.updateUI();
+    }
+
+    undo() {
+      if (this.undoStack.length === 0) return;
+      const action = this.undoStack.pop();
+
+      if (action.type === 'SINGLE_BLOCK' || action.type === 'BATCH_BLOCK') {
+        action.items.forEach(adId => this.restoreSingleInternal(adId));
+        this.showToast(`↩ 已撤回屏蔽操作 (${action.items.length} 个元素)`);
+      } else if (action.type === 'SINGLE_RESTORE') {
+        action.items.forEach(adId => this.neutralizeSingleInternal(adId));
+        this.showToast(`↩ 已撤回恢复操作 (${action.items.length} 个元素)`);
+      }
+
+      this.redoStack.push(action);
+      this.updateUI();
+    }
+
+    redo() {
+      if (this.redoStack.length === 0) return;
+      const action = this.redoStack.pop();
+
+      if (action.type === 'SINGLE_BLOCK' || action.type === 'BATCH_BLOCK') {
+        action.items.forEach(adId => this.neutralizeSingleInternal(adId));
+        this.showToast(`↪️ 已重做屏蔽操作 (${action.items.length} 个元素)`);
+      } else if (action.type === 'SINGLE_RESTORE') {
+        action.items.forEach(adId => this.restoreSingleInternal(adId));
+        this.showToast(`↪️ 已重做恢复操作 (${action.items.length} 个元素)`);
+      }
+
+      this.undoStack.push(action);
+      this.updateUI();
+    }
+
+    // ==========================================
+    // ★ 模块三 & 四：safeBlockElement 安全屏蔽 + 交叉校验 + 降级 + 规则持久化
+    // ==========================================
+    neutralizeSingleInternal(adId) {
+      const meta = this.detectedAds.get(adId);
+      if (!meta || !meta.element) return;
+
+      const targetEl = meta.element;
+      meta.isBlocked = true;
+      targetEl.dataset.overlayBlocked = 'true';
+
+      this.applyHighlight(targetEl, false);
+
+      // 1. 生成候选 CSS 选择器
+      const candidateSelector = this.generateSpecificSelector(targetEl);
+
+      // 2. 数量交叉校验
+      // 计算预期匹配数 (N_expected)
+      let N_expected = 0;
+      this.detectedAds.forEach(item => {
+        if (item.element === targetEl || (candidateSelector && this.generateSpecificSelector(item.element) === candidateSelector)) {
+          N_expected++;
+        }
+      });
+      N_expected = Math.max(1, N_expected);
+
+      // 计算实际 DOM 匹配数 (N_actual)
+      let matchedElements = [];
+      try {
+        if (candidateSelector) {
+          matchedElements = document.querySelectorAll(candidateSelector);
+        }
+      } catch (e) {
+        console.warn('[AdDetector] 选择器语法异常:', candidateSelector, e);
+      }
+
+      const N_actual = matchedElements.length;
+
+      // 3. 判定分流与降级策略执行
+      if (N_actual > 0 && N_actual <= N_expected) {
+        // 【分支 A：完全匹配/更精准】 -> 全局 CSS 注入 + 写入 CSS 规则
+        targetEl.style.setProperty('display', 'none', 'important');
+        matchedElements.forEach(el => el.style.setProperty('display', 'none', 'important'));
+
+        const rule = {
+          type: 'css',
+          selector: candidateSelector,
+          classAndId: meta.classAndId,
+          tagName: meta.tagName,
+          size: meta.size,
+          fingerprint: meta.fingerprint
+        };
+
+        if (!this.blockedRules.some(r => r.selector === candidateSelector || r.fingerprint === rule.fingerprint)) {
+          this.blockedRules.push(rule);
+          this.saveBlockedRules();
+        }
+      } else {
+        // 【分支 B：实际匹配超标，存在误伤风险】 -> 降级为单节点内联隐藏 + 精准 XPath 规则
+        console.warn(`[AdDetector] 误伤预警: "${candidateSelector}" 实际匹配 ${N_actual} 个, 预期 ${N_expected} 个。执行单节点 XPath 降级。`);
+
+        meta.isDowngraded = true; // 👈 新增：标记为降级/有误伤风险
+        meta.downgradeReason = `选择器匹配了 ${N_actual} 个节点，远超预期 ${N_expected} 个`; // 👈 新增原因说明
+
+        targetEl.style.setProperty('display', 'none', 'important');
+        const exactXPath = this.getElementXPath(targetEl);
+
+        const rule = {
+          type: 'xpath',
+          xpath: exactXPath,
+          classAndId: meta.classAndId,
+          tagName: meta.tagName,
+          size: meta.size,
+          fingerprint: meta.fingerprint
+        };
+
+        if (!this.blockedRules.some(r => r.xpath === exactXPath || r.fingerprint === rule.fingerprint)) {
+          this.blockedRules.push(rule);
+          this.saveBlockedRules();
+        }
+      }
+    }
+
+    // 内部恢复逻辑
+    restoreSingleInternal(adId) {
+      const meta = this.detectedAds.get(adId);
+      if (!meta || !meta.element) return;
+
+      const targetElement = meta.element;
+
+      // 1. 获取当前节点以及所有被连带标记的子节点
+      const affectedNodes = [
+        targetElement,
+        ...targetElement.querySelectorAll('[data-overlay-blocked="true"]')
+      ];
+
+      // 2. 遍历恢复所有受影响 DOM 节点及其对应内存中的 meta 状态
+      affectedNodes.forEach((node) => {
+        // 移除 DOM 隐藏标记与内联 display 属性
+        delete node.dataset.overlayBlocked;
+        node.style.removeProperty('display');
+
+        // 同步更新 detectedAds 映射表中的内存状态
+        // 假设每个 ad 节点 DOM 上均存有关联的 ID 标识（如 data-ad-id）
+        const nodeAdId = node.dataset.adDetectorId || adId;
+        const nodeMeta = this.detectedAds.get(nodeAdId);
+        if (nodeMeta) {
+          nodeMeta.isBlocked = false;
+        }
+
+        // 恢复高亮逻辑
+        if (this.isHighlighted && nodeMeta) {
+          this.applyHighlight(node, true, nodeMeta.size);
+        }
+      });
+
+      // 3. 清理对应的拦截规则
+      const currentSelector = this.generateSpecificSelector(targetElement);
+      const currentXPath = this.getElementXPath(targetElement);
+
+      this.blockedRules = this.blockedRules.filter(
+        (r) => !(
+          (r.selector && r.selector === currentSelector) ||
+          (r.xpath && r.xpath === currentXPath) ||
+          (r.fingerprint && r.fingerprint === meta.fingerprint) ||
+          (r.classAndId && r.classAndId === meta.classAndId)
+        )
+      );
+
+      this.saveBlockedRules();
+    }
+
+    neutralizeSingle(adId) {
+      const meta = this.detectedAds.get(adId);
+      if (meta && !meta.isBlocked) {
+        // 1. 先记录历史状态
+        this.pushHistoryState({ type: 'SINGLE_BLOCK', items: [adId] });
+
+        // 2. 标记已被屏蔽 & 更新状态
+        meta.isBlocked = true;
+        const el = meta.element;
+
+        if (el && el.nodeType === Node.ELEMENT_NODE) {
+          el.dataset.overlayBlocked = 'true';
+
+          // 3. 清理自身及子元素的高亮与 Hover 类
+          el.classList.remove('ad-detector-hover-active', 'ad-detector-highlight-active');
+          el.style.removeProperty('outline');
+          el.style.removeProperty('outline-offset');
+
+          const activeChildren = el.querySelectorAll('.ad-detector-hover-active, .ad-detector-highlight-active');
+          activeChildren.forEach(child => {
+            child.classList.remove('ad-detector-hover-active', 'ad-detector-highlight-active');
+            child.style.removeProperty('outline');
+            child.style.removeProperty('outline-offset');
+          });
+
+          // 4. 清除角标 (Badge) 与高亮图层
+          this.applyHighlight(el, false);
+        }
+
+        // 5. 执行底层规则生成与 CSS 写入
+        this.neutralizeSingleInternal(adId);
+
+        // 6. 反馈提示
+        this.showToast('🛡 已通过安全交叉校验执行屏蔽');
+
+        // 7. 显式确保 UI 更新
+        this.updateUI();
+
+      }
+    }
+
+    restoreSingle(adId) {
+      const meta = this.detectedAds.get(adId);
+      if (meta && meta.isBlocked) {
+        this.restoreSingleInternal(adId);
+        this.pushHistoryState({ type: 'SINGLE_RESTORE', items: [adId] });
+        this.showToast('↩️ 已撤销屏蔽，已更新本地规则库');
+
+        // 补充：确保撤销屏蔽后面板列表同步还原状态
+        this.updateUI();
+      }
+    }
+
+    cleanAll() {
+      const blockedIds = [];
+      this.detectedAds.forEach((meta) => {
+        // 增加 DOM 节点存活自检
+        if (meta.element && document.contains(meta.element) && !meta.isBlocked) {
+          this.neutralizeSingleInternal(meta.id);
+          blockedIds.push(meta.id);
+        }
+      });
+
+      if (blockedIds.length > 0) {
+        this.pushHistoryState({ type: 'BATCH_BLOCK', items: blockedIds });
+      }
+      return blockedIds.length;
+    }
+
+
+    resetAll() {
+      // 1. 清空本地持久化规则
+      this.blockedRules = [];
+      this.blockedXPaths = [];
+      this.saveBlockedRules();
+
+      // 2. 清空动态 CSS
+      const dynamicStyle = document.getElementById('ad-detector-dynamic-css-rules');
+      if (dynamicStyle) {
+        dynamicStyle.textContent = '';
+      }
+
+      // 3. 使用 Set 进行 DOM 节点去重，确保计数精准
+      const restoredElements = new Set();
+
+      // 收集通过 Dataset 标记隐藏的元素
+      document.querySelectorAll('[data-overlay-blocked="true"], [data-ad-blocked-xpath="true"]').forEach(el => {
+        restoredElements.add(el);
+      });
+
+      // 收集内存中标记为 hidden/blocked 的元素
+      this.detectedAds.forEach((meta) => {
+        if (meta.isBlocked && meta.element) {
+          restoredElements.add(meta.element);
+        }
+      });
+
+      // 4. 统一执行节点还原
+      restoredElements.forEach(el => {
+        delete el.dataset.adBlockedXpath;
+        delete el.dataset.overlayBlocked;
+
+        if (el.style.display === 'none') {
+          el.style.removeProperty('display');
+        }
+
+        if (el._adLockObserver) {
+          el._adLockObserver.disconnect();
+          delete el._adLockObserver;
+        }
+      });
+
+      // 5. 重置内存状态与 UI
+      this.detectedAds.forEach((meta) => {
+        meta.isBlocked = false;
+      });
+
+      if (this.evaluatedNodes) {
+        this.evaluatedNodes = new WeakSet();
+      }
+
+      this.scan();
+      this.undoStack = [];
+      this.redoStack = [];
+      this.updateUI();
+
+      // 6. 返回去重后的实际还原 DOM 节点数量
+      return restoredElements.size;
+    }
+
+
+    loadUIVisibleState() {
+      try {
+        if (typeof GM_getValue !== 'undefined') {
+          return GM_getValue('ad_detector_ui_open', false);
+        } else if (window.localStorage) {
+          return localStorage.getItem('ad_detector_ui_open') === 'true';
+        }
+      } catch (e) {
+        console.warn('[AdDetector] 读取面板状态失败:', e);
+      }
+      return false;
+    }
+
+    saveUIVisibleState(isOpen) {
+      try {
+        if (typeof GM_setValue !== 'undefined') {
+          GM_setValue('ad_detector_ui_open', isOpen);
+        } else if (window.localStorage) {
+          localStorage.setItem('ad_detector_ui_open', isOpen ? 'true' : 'false');
+        }
+      } catch (e) {
+        console.warn('[AdDetector] 保存面板状态失败:', e);
+      }
+    }
+
+    initClickHijackProtection() {
+      window.addEventListener('click', (e) => {
+        const path = e.composedPath ? e.composedPath() : [];
+        for (let el of path) {
+          if (!el || el === window || el === document) continue;
+          if (this.isExcludedElement(el)) continue;
+
+          if (el.dataset && el.dataset.overlayBlocked === 'true') {
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            console.warn('[AdDetector] 已拦截针对被屏蔽元素的点击劫持行为:', el);
+            return false;
+          }
+
+          if (el.tagName === 'A' || el.hasAttribute('onclick')) {
+            const onclickAttr = el.getAttribute('onclick') || '';
+            const hrefAttr = el.getAttribute('href') || '';
+
+            const isSuspiciousOnclick = /(window|self|top)\.open|location\.(href|replace|assign)|click/i.test(onclickAttr);
+            const isSuspiciousHref = /^javascript\s*:/i.test(hrefAttr) || /(\/|\?)(goto|redirect|out|click|jump|target=|\?url=|\&url=)/i.test(hrefAttr);
+
+            const style = window.getComputedStyle(el);
+            if ((isSuspiciousOnclick || isSuspiciousHref) && (style.position === 'fixed' || style.position === 'absolute') && parseFloat(style.opacity) < 0.2) {
+              e.preventDefault();
+              e.stopPropagation();
+              e.stopImmediatePropagation();
+              console.warn('[AdDetector] 已精准拦截高风险透明点击劫持事件:', el);
+              this.neutralizeSingle(el.getAttribute('data-ad-detector-id') || this.registerAdElement(el));
+              return false;
+            }
+          }
+        }
+      }, true);
+    }
+
+    registerAdElement(el) {
+      this.counter++;
+      const adId = `ad-detected-${this.counter}`;
+      el.setAttribute('data-ad-detector-id', adId);
+      return adId;
+    }
+
+    loadBlockedRules() {
+      try {
+        let raw = null;
+        if (typeof GM_getValue !== 'undefined') {
+          raw = GM_getValue(this.storageKey, '[]');
+        } else if (window.localStorage) {
+          raw = localStorage.getItem(this.storageKey) || '[]';
+        }
+        const rules = JSON.parse(raw || '[]');
+        console.log(`[AdDetector] 已加载 ${rules.length} 条本地持久化规则`);
+        return rules;
+      } catch (e) {
+        console.warn('[AdDetector] 读取本地存储规则失败，回退为空:', e);
+        return [];
+      }
+    }
+
+    saveBlockedRules() {
+      try {
+        const data = JSON.stringify(this.blockedRules);
+        if (typeof GM_setValue !== 'undefined') {
+          GM_setValue(this.storageKey, data);
+        } else if (window.localStorage) {
+          localStorage.setItem(this.storageKey, data);
+        }
+        // 【新增】同步更新内存中的 blockedXPaths
+        this.blockedXPaths = this.extractXPathsFromRules(this.blockedRules);
+        this.applyCssRulesFromStorage();
+      } catch (e) {
+        console.error('[AdDetector] 保存持久化规则失败:', e);
+      }
+    }
+
+    // ==========================================
+    // ★ 应用 CSS 屏蔽规则 + 履约 XPath 降级规则
+    // ==========================================
+    applyCssRulesFromStorage() {
+      let styleEl = document.getElementById('ad-detector-dynamic-css-rules');
+      if (!styleEl) {
+        styleEl = document.createElement('style');
+        styleEl.id = 'ad-detector-dynamic-css-rules';
+        (document.head || document.documentElement).appendChild(styleEl);
+      }
+
+      const cssSelectors = [];
+      this.blockedRules.forEach((rule) => {
+        if (rule.type === 'css' && rule.selector) {
+          cssSelectors.push(rule.selector);
+        } else if (rule.classAndId && rule.classAndId !== '无 Class/ID') {
+          const formattedSelector = rule.classAndId
+            .split(' ')
+            .filter(Boolean)
+            .map(cls => cls.startsWith('#') ? cls : '.' + CSS.escape(cls.replace(/^\./, '')))
+            .join('');
+          if (formattedSelector) {
+            cssSelectors.push(`${formattedSelector}`);
+          }
+        }
+
+        // 履约 XPath 类型的规则
+        if (rule.type === 'xpath' && rule.xpath) {
+          try {
+            const result = document.evaluate(rule.xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
+            if (result.singleNodeValue) {
+              result.singleNodeValue.style.setProperty('display', 'none', 'important');
+              result.singleNodeValue.dataset.overlayBlocked = 'true';
+            }
+          } catch (e) { }
+        }
+      });
+
+      if (cssSelectors.length > 0) {
+        styleEl.textContent = `${cssSelectors.join(', ')} { display: none !important; visibility: hidden !important; opacity: 0 !important; pointer-events: none !important; }`;
+      } else {
+        styleEl.textContent = '';
+      }
+    }
+
+    isMatchesBlockedRule(meta) {
+      const currentSelector = meta.element ? this.generateSpecificSelector(meta.element) : '';
+      const currentXPath = meta.element ? this.getElementXPath(meta.element) : '';
+
+      return this.blockedRules.some((rule) => {
+        if (rule.selector && currentSelector && rule.selector === currentSelector) return true;
+        if (rule.xpath && currentXPath && rule.xpath === currentXPath) return true;
+        if (rule.classAndId && meta.classAndId && rule.classAndId === meta.classAndId && meta.classAndId !== '无 Class/ID') return true;
+        if (rule.fingerprint && meta.fingerprint && rule.fingerprint === meta.fingerprint) return true;
+        if (rule.tagName === meta.tagName && rule.size === meta.size && rule.size !== '0x0px') {
+          const ruleHost = (rule.fingerprint || '').split('_')[2] || '';
+          const metaHost = (meta.fingerprint || '').split('_')[2] || '';
+          if (ruleHost && metaHost && ruleHost === metaHost) return true;
+        }
+        return false;
+      });
+    }
+
+    // ==========================================
+    // 修正：防爆栈的属性锁定 Observer
+    // ==========================================
+    forceCleanSavedRulesImmediately() {
+      const applyRulesAndRegister = () => {
+        if (!Array.isArray(this.blockedRules) || this.blockedRules.length === 0) return;
+
+        this.blockedRules.forEach((rule) => {
+          // 1. 根据 选择器 标记 DOM
+          let selector = rule.selector;
+          if (!selector && rule.classAndId && rule.classAndId !== '无 Class/ID') {
+            selector = rule.classAndId
+              .split(' ')
+              .filter(Boolean)
+              .map(cls => cls.startsWith('#') ? cls : '.' + CSS.escape(cls.replace(/^\./, '')))
+              .join('');
+          }
+
+          if (selector) {
+            try {
+              document.querySelectorAll(selector).forEach((el) => {
+                el.dataset.overlayBlocked = 'true';
+                el.style.setProperty('display', 'none', 'important');
+              });
+            } catch (e) { }
+          }
+
+          // 2. 根据 XPath 标记 DOM
+          if (rule.type === 'xpath' && rule.xpath) {
+            try {
+              const result = document.evaluate(rule.xpath, document, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+              for (let i = 0; i < result.snapshotLength; i++) {
+                const el = result.snapshotItem(i);
+                if (el && el.nodeType === Node.ELEMENT_NODE) {
+                  el.dataset.overlayBlocked = 'true';
+                  el.dataset.adBlockedXpath = 'true';
+                  el.style.setProperty('display', 'none', 'important');
+                }
+              }
+            } catch (e) { }
+          }
+        });
+
+        // 3. 强制执行一次扫描，将上述标记的节点注册进 detectedAds 映射表
+        this.scan();
+
+        // 4. 补全 meta 屏蔽状态与尺寸回填
+        this.detectedAds.forEach((meta, adId) => {
+          if (this.isMatchesBlockedRule(meta) || meta.element.dataset.overlayBlocked === 'true') {
+            meta.isBlocked = true;
+
+            // 如果尺寸因隐藏变为了 0x0px，尝试从持久化规则中回填原尺寸
+            if (meta.size === '0x0px' || meta.size === '0x0') {
+              const matchedRule = this.blockedRules.find(r =>
+                (r.selector && meta.element && this.generateSpecificSelector(meta.element) === r.selector) ||
+                (r.classAndId && r.classAndId === meta.classAndId)
+              );
+              if (matchedRule && matchedRule.size) {
+                meta.size = matchedRule.size;
+              }
+            }
+          }
+        });
+
+        if (this.isUIVisible) {
+          this.updateUI();
+        }
+      };
+
+      // 全生命周期阶段触发，防止遗漏异步加载的 DOM 节点
+      applyRulesAndRegister();
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', applyRulesAndRegister);
+      }
+      window.addEventListener('load', applyRulesAndRegister);
+    }
+
+    injectGlobalStyles() {
+      if (document.getElementById('ad-detector-global-styles')) return;
+      const style = document.createElement('style');
+      style.id = 'ad-detector-global-styles';
+      style.textContent = `
+    .ad-detector-highlight-active {
+      outline: 3px solid #ff3b30 !important;
+      background-color: rgba(255, 59, 48, 0.2) !important;
+    }
+
+    .ad-detector-pos-relative {
+      position: relative !important;
+    }
+
+    .ad-detector-hover-active {
+  z-index: 2147483648 !important;
+  pointer-events: auto !important;
+  position: relative !important;
+  outline: 4px solid #ff3b30 !important;
+  outline-offset: -4px !important;
+  box-shadow: 0 0 20px rgba(255, 59, 48, 0.8), 0 0 0 9999px rgba(0, 0, 0, 0.35) !important;
+  box-shadow: 0 0 0 5000px rgba(0, 0, 0, 0.6) !important;
+  isolation: isolate !important;
+  transition: outline 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+/* ===== 新增：周边霓虹流光效果 ===== */
+.ad-detector-hover-active::after {
+  content: "" !important;
+  position: absolute !important;
+  top: -6px !important;
+  left: -6px !important;
+  right: -6px !important;
+  bottom: -6px !important;
+  z-index: -1 !important;
+  border-radius: inherit !important;
+  background: linear-gradient(
+    90deg,
+    #ff0055,
+    #ff5000,
+    #ffcc00,
+    #00ff66,
+    #00ffff,
+    #0066ff,
+    #ff00ff,
+    #ff0055
+  ) !important;
+  background-size: 400% 400% !important;
+  animation: ad-detector-neon-glow 3s linear infinite !important;
+  filter: blur(4px) !important;
+  pointer-events: none !important;
+}
+
+/* 霓虹色彩流动动画 */
+@keyframes ad-detector-neon-glow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@media (max-width: 768px) {
+  .ad-detector-hover-active {
+    box-shadow: 0 0 15px rgba(255, 59, 48, 0.9) !important;
+  }
+  
+  /* 移动端微调流光外延与模糊，提升性能与显示效果 */
+  .ad-detector-hover-active::after {
+    top: -4px !important;
+    left: -4px !important;
+    right: -4px !important;
+    bottom: -4px !important;
+    filter: blur(3px) !important;
+  }
+}
+
+    .ad-detector-size-badge {
+      position: absolute !important;
+      top: 0 !important;
+      left: 0 !important;
+      background: #ff3b30 !important;
+      color: #ffffff !important;
+      font-size: 11px !important;
+      font-weight: 700 !important;
+      padding: 2px 6px !important;
+      border-bottom-right-radius: 6px !important;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3) !important;
+      z-index: 2147483645 !important;
+      pointer-events: none !important;
+      white-space: nowrap !important;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+      line-height: 1.2 !important;
+      display: none !important;
+    }
+
+    .ad-detector-highlight-active > .ad-detector-size-badge {
+      display: block !important;
+    }
+
+    .ad-detector-size-badge::before {
+      content: attr(data-size);
+    }
+  `;
+      (document.head || document.documentElement).appendChild(style);
+    }
+
+    bindGlobalHotkeys() {
+      window.addEventListener('keydown', (e) => {
+        if (e.altKey && (e.code === 'KeyA' || e.key === 'a' || e.key === 'A')) {
+          e.preventDefault();
+          this.toggleUI();
+        }
+      });
+    }
+
+    isExcludedElement(el) {
+      if (!el) return true;
+
+      if (el.id === 'dh_pageContainer' || el.closest('#dh_pageContainer')) return true;
+      if (el.id === 'ad-detector-host' || el.closest('#ad-detector-host')) return true;
+      if (el.id === 'previewContainer' || el.closest('#previewContainer')) return true;
+
+      if (el.closest('a[href*="limbopro.com"]')) return true;
+
+      const excludeRegex = /\b(limbo|notranslate)\b|limbo-/i;
+
+      let curr = el;
+      while (curr && curr !== document.documentElement) {
+        const classAndId = `${curr.id || ''} ${curr.className || ''}`;
+        if (excludeRegex.test(classAndId)) {
+          return true;
+        }
+        curr = curr.parentElement;
+      }
+
+      return false;
+    }
+
+    isLegitimateElement(el) {
+      if (!el || el === document.body || el === document.documentElement) return true;
+      if (this.isExcludedElement(el)) return true;
+      if (el.querySelector('input, textarea, select, button, [role="dialog"], [aria-modal="true"]')) return true;
+      const role = el.getAttribute('role');
+      if (['main', 'navigation', 'search', 'dialog'].includes(role)) return true;
+      return false;
+    }
+
+    getMainDomain(hostname) {
+      if (!hostname) return '';
+      const parts = hostname.split('.').filter(Boolean);
+      if (parts.length <= 2) return hostname;
+      return parts.slice(-2).join('.');
+    }
+
+    async isAnimatedGif(url) {
+      if (!url) return false;
+      if (this.animatedGifCache.has(url)) {
+        return this.animatedGifCache.get(url);
+      }
+
+      // 1. 处理 Base64 格式
+      if (url.startsWith('data:image/gif;base64,') || url.startsWith('data:image/base64,')) {
+        try {
+          const base64Data = url.split(',')[1];
+          // 增加读取字节范围至 4096，提升多帧识别准确率
+          const binaryString = atob(base64Data.slice(0, 4096));
+          let frameCount = 0;
+          for (let i = 0; i < binaryString.length - 2; i++) {
+            // 匹配 Graphics Control Extension (0x21 0xF9) 或 Image Descriptor (0x2C)
+            if (binaryString.charCodeAt(i) === 0x21 && binaryString.charCodeAt(i + 1) === 0xf9) {
+              frameCount++;
+              if (frameCount > 1) {
+                this.animatedGifCache.set(url, true); // 多帧动态 GIF
+                return true;
+              }
+            }
+          }
+          // 如果循环结束仅找到 <=1 帧，认定为单帧静态 GIF
+          this.animatedGifCache.set(url, false);
+          return false;
+        } catch (e) {
+          this.animatedGifCache.set(url, false);
+          return false;
+        }
+      }
+
+      // 2. 处理网络 URL 格式
+      try {
+        // 读取前 4096 字节
+        const response = await fetch(url, { headers: { Range: 'bytes=0-4096' } });
+        const buffer = await response.arrayBuffer();
+        const bytes = new Uint8Array(buffer);
+
+        const header = String.fromCharCode(...bytes.subarray(0, 6));
+        if (!header.startsWith('GIF')) {
+          this.animatedGifCache.set(url, false);
+          return false;
+        }
+
+        let frameCount = 0;
+        for (let i = 0; i < bytes.length - 2; i++) {
+          if (bytes[i] === 0x21 && bytes[i + 1] === 0xf9) {
+            frameCount++;
+            if (frameCount > 1) {
+              this.animatedGifCache.set(url, true); // 确认是多帧动图
+              return true;
+            }
+          }
+        }
+
+        // 仅检测到单帧
+        this.animatedGifCache.set(url, false);
+        return false;
+      } catch (e) {
+        this.animatedGifCache.set(url, false);
+        return false;
+      }
+    }
+
+    calculateAdScore(el) {
+      if (this.isLegitimateElement(el)) return { score: 0, reasons: [] };
+
+      const style = window.getComputedStyle(el);
+
+      if (style.pointerEvents === 'none' || style.display === 'none' || style.visibility === 'hidden') {
+        const isSavedRule = this.isMatchesBlockedRule({
+          element: el,
+          classAndId: `${el.id ? '#' + el.id : ''}${el.className && typeof el.className === 'string' ? '.' + el.className : ''}`.trim(),
+          fingerprint: `${el.tagName.toLowerCase()}_`
+        });
+
+        if (el.dataset.overlayBlocked === 'true' || el.dataset.adBlockedXpath === 'true' || isSavedRule) {
+          const blockReason = isSavedRule ? '匹配历史持久化规则自动屏蔽' : '已被当前会话手动屏蔽';
+          return {
+            score: 40,
+            reasons: [`${blockReason}（若影响页面功能可点击撤销）`]
+          };
+        }
+        return { score: 0, reasons: [] };
+      }
+
+      let score = 0;
+      const reasons = [];
+
+      const rect = el.getBoundingClientRect();
+      if (rect.width === 0 && rect.height === 0) return { score: 0, reasons: [] };
+
+      const vw = window.innerWidth || document.documentElement.clientWidth;
+      const vh = window.innerHeight || document.documentElement.clientHeight;
+      const viewportArea = vw * vh;
+
+      const originHost = window.location.hostname;
+      const currentMainDomain = this.getMainDomain(originHost);
+
+      const allAnchors = Array.from(el.querySelectorAll('a[href]'));
+      let sameDomainLinkCount = 0;
+      let crossDomainLinkCount = 0;
+
+      allAnchors.forEach(a => {
+        try {
+          const u = new URL(a.href, window.location.href);
+          if (this.getMainDomain(u.hostname) === currentMainDomain && !u.protocol.startsWith('javascript')) {
+            sameDomainLinkCount++;
+          } else {
+            crossDomainLinkCount++;
+          }
+        } catch (e) { }
+      });
+
+      if (sameDomainLinkCount >= 2) {
+        return { score: 0, reasons: ['容器内包含多个站内正常链接，判定为合法内容板块'] };
+      }
+
+      const adWordRegex = /(^|[-_ \/])(ad|ads|advert|advertising|advertisement|banner|popup|pop|backdrop|overlay|mask|modal|dialog|sponsor|sponsored|promoted|promo|guanggao|gg|float|floatad|float-ad|couplet|duilian|billboard|paster|sticky-ad|recommend-ad|right-ad|top-ad|bottom-ad|side-ad)([-_ \/]|s?$)/i;
+
+      const classAndId = `${el.id || ''} ${el.className || ''}`;
+      if (adWordRegex.test(classAndId)) {
+        score += 35;
+        reasons.push('Class/ID 命中广告/遮罩关键词');
+      }
+
+      const areaRatio = (rect.width * rect.height) / (viewportArea || 1);
+      const isPositioned = style.position === 'fixed' || style.position === 'absolute';
+      const zIndex = parseInt(style.zIndex, 10) || 0;
+
+      const iabSizes = [[728, 90], [300, 250], [336, 280], [160, 600], [300, 600], [970, 90], [320, 50]];
+      const isIABSize = iabSizes.some(([w, h]) => Math.abs(rect.width - w) <= 6 && Math.abs(rect.height - h) <= 6);
+      if (isIABSize) {
+        score += 30;
+        reasons.push('符合 IAB 标准广告尺寸');
+      }
+
+      if ((style.position === 'fixed' || style.position === 'sticky') && zIndex > 50) {
+        if (rect.height < 260 && (rect.top <= 10 || rect.bottom >= vh - 10)) {
+          score += 30;
+          reasons.push('顶/底悬浮贴片弹窗');
+        }
+      }
+
+      const imgEl = el.tagName === 'IMG' ? el : el.querySelector('img');
+      if (imgEl) {
+        // 1. 增强图片 SRC 提取（兼容懒加载与响应式图片）
+        const imgSrc = imgEl.currentSrc ||
+          imgEl.src ||
+          imgEl.getAttribute('data-src') ||
+          imgEl.getAttribute('data-original') || '';
+
+        const imgAlt = imgEl.getAttribute('alt') || '';
+
+        // 2. 扩充 Base64 GIF 正则匹配（覆盖带 charset 等情况）
+        const isBase64Gif = /^data:image\/gif/i.test(imgSrc) ||
+          (imgSrc.startsWith('data:image/') && imgSrc.includes('base64,') && imgSrc.includes('R0lGODlh'));
+        const isNetGif = /\.gif($|\?)/i.test(imgSrc) || imgSrc.includes('format=gif');
+
+        // Alt 属性判断
+        if (/(广告|横幅|推广|赞助|sponsor|promoted|banner|ad)/i.test(imgAlt)) {
+          score += 40;
+          reasons.push(`图片 Alt 属性命中广告描述 ("${imgAlt}")`);
+        }
+
+        // 链接路径判断
+        if (/\/promo\/|\/ad[s_]?\d*|\/advert/i.test(imgSrc)) {
+          score += 35;
+          reasons.push('图片链接路径包含广告/推广目录 (/promo/或/ad_)');
+        }
+
+        if (isBase64Gif || isNetGif) {
+          if (isBase64Gif) {
+            score += 35;
+            reasons.push('使用 Base64 Data-URI 格式内嵌 GIF');
+
+            if (imgSrc.includes('R0lGODlh')) {
+              score += 10;
+              reasons.push('匹配标准 GIF Base64 编码头部');
+            }
+          }
+
+          if (isNetGif && /ad|banner|union|pop|sp|delivery|gg|float/i.test(imgSrc)) {
+            score += 30;
+            reasons.push('GIF 路径包含广告/网盟关键字');
+          }
+
+          // 缓存检测与异步补加分/单帧扣减
+          const cacheResult = this.animatedGifCache.get(imgSrc);
+          if (cacheResult === true) {
+            score += 25;
+            reasons.push('检测到多帧动态 GIF (High Attention)');
+          } else if (cacheResult === false) {
+            // 【新增】如果明确检测为单帧 GIF，记录原因或适度削减风险分（避免误杀静态占位图）
+            reasons.push('判定为单帧/静态 GIF (低吸引力)');
+          } else if (cacheResult === undefined) {
+            // 标记为正在处理中，防止重复发起 Promise 解析
+            this.animatedGifCache.set(imgSrc, 'PENDING');
+
+            this.isAnimatedGif(imgSrc).then((isAnim) => {
+              this.animatedGifCache.set(imgSrc, isAnim);
+              // 重新评估：无论检测结果是多帧 (true) 还是单帧 (false)，都重新触发一次扫描更新 UI
+              this.scan();
+            }).catch(() => {
+              this.animatedGifCache.set(imgSrc, false);
+            });
+          }
+        }
+
+      }
+
+      const badgeEl = el.querySelector('span, div, em, i');
+      if (badgeEl) {
+        const badgeText = (badgeEl.textContent || '').trim();
+        if (/^(AD|广告|赞助|推广)$/i.test(badgeText)) {
+          score += 45;
+          reasons.push(`匹配到独立的角标文本 ("${badgeText}")`);
+        }
+      }
+
+      if (el.tagName === 'IFRAME') {
+        const src = el.src || '';
+        let matchedSpecificRule = false;
+
+        // 1. 检测跨域 iframe
+        if (src && !src.startsWith(window.location.origin) && !src.startsWith('about:')) {
+          score += 25;
+          reasons.push('跨域 iframe 嵌套');
+          matchedSpecificRule = true;
+        }
+
+        // 2. 检测匹配网盟或可疑外链
+        if (/pos|slot|pagead|doubleclick|union|ssp|popunder|m3u8|embed/i.test(src)) {
+          score += 35;
+          reasons.push('匹配网盟或可疑外链 iframe');
+          matchedSpecificRule = true;
+        }
+
+        // 3. 都不符合条件时的默认保底分
+        if (!matchedSpecificRule) {
+          score += 40;
+          reasons.push('默认 iframe 基础风险分');
+        }
+      }
+
+
+
+
+      // 1. 缓存正则表达式，避免重复创建正则对象提升性能
+      // 扩展常见合法前缀（包含 Lit, Shoelace, Material, Prime, Nuxt, Next 等）
+      const LEGITIMATE_PREFIX_REGEX = /^(el|ant|ion|mat|ng|van|sl|mwc|p|pwa|next|nuxt|sw)-/i;
+
+      // 检测 Shadow DOM / 自定义节点
+      if (el.shadowRoot || (el.tagName && el.tagName.includes('-'))) {
+        const tagName = el.tagName.toLowerCase();
+        const role = el.getAttribute('role');
+
+        // 快捷判断：常规 UI 库前缀或正规语义角色直接过
+        const isLegitimate = LEGITIMATE_PREFIX_REGEX.test(tagName) ||
+          ['navigation', 'main', 'button', 'search', 'dialog', 'banner'].includes(role);
+
+        if (!isLegitimate) {
+          score += 40;
+          reasons.push(`检测到可疑 Shadow DOM / 自定义隔离节点 (<${tagName}>)`);
+        }
+      }
+
+      // 2. 检测 fixed/sticky 高层级悬浮容器
+      if (el instanceof HTMLElement) {
+        // 性能优化：非普通块级/容器元素（如 span, a, b, i）不耗费 getComputedStyle 计算
+        const isContainer = /^(DIV|SECTION|ARTICLE|ASIDE|HEADER|FOOTER|MAIN|NAV|FORM|TABLE|IFRAME)$/i.test(el.tagName) || el.shadowRoot;
+
+        if (isContainer) {
+          const style = window.getComputedStyle(el);
+          const position = style.position;
+
+          if (position === 'fixed' || position === 'sticky') {
+            const parsedZIndex = parseInt(style.zIndex, 10);
+            // 处理 z-index 为 'auto' 或 NaN 的情况（sticky 经常为 auto，但依靠层叠上下文置顶）
+            const zIndex = isNaN(parsedZIndex) ? 0 : parsedZIndex;
+
+            // 判定条件：z-index >= 99，或者 fixed 定位下 z-index 即使为 auto 也会脱离文档流
+            if (zIndex >= 99 || (position === 'fixed' && style.zIndex === 'auto')) {
+
+              // 防误杀优化 1：语义与标签检查
+              const role = el.getAttribute('role');
+              const isNavigation = ['navigation', 'main', 'search', 'banner', 'dialog'].includes(role) ||
+                ['NAV', 'HEADER', 'FOOTER', 'SEARCH'].includes(el.tagName);
+
+              // 防误杀优化 2：内部交互元素检查（表单/按钮/链接）
+              const hasInteractiveElements = el.querySelector('input, textarea, select, button, a[href]');
+
+              // 防误杀优化 3：尺寸过滤（排除全屏布局根容器，如 Vue/React 的 #app / #root 绑定的 fixed 壳）
+              const rect = el.getBoundingClientRect();
+              const isFullViewportShell = rect.width >= window.innerWidth && rect.height >= window.innerHeight && !style.backgroundColor;
+
+              if (!isNavigation && !hasInteractiveElements && !isFullViewportShell) {
+                score += 40;
+                reasons.push(`高风险悬浮/黏性容器 (${position}, z-index: ${style.zIndex})`);
+              }
+            }
+          }
+        }
+      }
+
+
+
+      const anchor = el.tagName === 'A' ? el : (allAnchors[0] || null);
+      if (anchor) {
+        const rawHref = anchor.getAttribute('href') || '';
+
+        const suspiciousRedirectRegex = /(\/|\?)(go|goto|redirect|out|click|jump|target|url|link|visit)(\/|\?|=|_)/i;
+        if (suspiciousRedirectRegex.test(rawHref)) {
+          score += 35;
+          reasons.push(`命中站内重定向/广告跳转路径 ("${rawHref.slice(0, 30)}...")`);
+        }
+
+        if (/\/go\/[A-Za-z0-9%_\-~]{20,}/i.test(rawHref)) {
+          score += 25;
+          reasons.push('检测到长串 Base64 加密型广告跳转链接');
+        }
+
+        if (rawHref === '#' || rawHref.startsWith('javascript:')) {
+          if (isPositioned && areaRatio > 0.05) {
+            score += 50;
+            reasons.push('透明/伪装点击劫持 (JS/空链接)');
+          }
+        }
+
+        const redirectPattern = /(\/|\?)(goto|redirect|out|click|jump|target=|\?url=|\&url=)/i;
+        if (redirectPattern.test(rawHref)) {
+          score += 30;
+          reasons.push('站内隐蔽重定向跳转链接');
+        }
+
+        try {
+          const targetUrl = new URL(anchor.href, window.location.href);
+          const targetMainDomain = this.getMainDomain(targetUrl.hostname);
+
+          if (targetMainDomain && targetMainDomain !== currentMainDomain && !targetUrl.protocol.startsWith('javascript')) {
+            let linkScore = 35;
+            let linkReason = `跨域外链 (${targetUrl.hostname})`;
+            if (anchor.target === '_blank') {
+              linkScore += 15;
+              linkReason += ' + _blank';
+            }
+
+            const img = anchor.querySelector('img');
+            if (img) {
+              linkScore += 10;
+              const imgSrc = img.getAttribute('src') || '';
+              if (imgSrc.startsWith('data:image/') || /\.gif($|\?)/i.test(imgSrc)) {
+                linkReason += ' + GIF/Base64 动图跳转';
+              } else {
+                linkReason += ' + 图片占位';
+              }
+            }
+
+            if (el.tagName !== 'A') {
+              if (sameDomainLinkCount > 0) {
+                linkScore = Math.floor(linkScore * 0.2);
+                linkReason += ' (父容器含正常链接，大幅削减权重)';
+              } else if (el.childElementCount > 3) {
+                linkScore = Math.floor(linkScore * 0.5);
+                linkReason += ' (父节点包含多元素，权重半折)';
+              }
+            }
+
+            score += linkScore;
+            reasons.push(linkReason);
+          }
+        } catch (e) { }
+
+        const textContent = (anchor.textContent || '').trim();
+        if (textContent) {
+          const highRiskRegex = /(裸聊|菠菜|博彩|荷官|约炮|黄播|六合|反波胆|爆率|必中|挂机|刷单|🈲|🔞)/i;
+          const mediumRiskRegex = /(免费看|激情|性感|棋牌|投注|充值|特惠|点击看|加微信|私聊|App下载|点击播放|同城|福利|兼职|日赚|提现|领红包|免费领|加薇|加V|Vx|v信)/i;
+
+          let wordScore = 0;
+          let matchedWord = '';
+
+          if (highRiskRegex.test(textContent)) {
+            wordScore = 35;
+            matchedWord = textContent.match(highRiskRegex)[0];
+          } else if (mediumRiskRegex.test(textContent)) {
+            wordScore = 15;
+            matchedWord = textContent.match(mediumRiskRegex)[0];
+          }
+
+          if (wordScore > 0) {
+            if (el.tagName !== 'A' && sameDomainLinkCount > 0) {
+              wordScore = Math.floor(wordScore * 0.3);
+            }
+            score += wordScore;
+            reasons.push(`命中诱导敏感词 ("${matchedWord}")`);
+          }
+        }
+      }
+
+      if (sameDomainLinkCount > 0 && crossDomainLinkCount > 0) {
+        const totalLinks = sameDomainLinkCount + crossDomainLinkCount;
+        const normalRatio = sameDomainLinkCount / totalLinks;
+        const deduction = Math.floor(score * normalRatio);
+        score -= deduction;
+        reasons.push(`混有 ${sameDomainLinkCount} 个站内正常链接 (稀释扣除 ${deduction} 分)`);
+      }
+
+      return { score: Math.max(0, score), reasons };
+    }
+
+    // ==========================================
+    // ★ 高性能重构模块：全量选择器 + 绝对读写隔离 + 极速剪枝
+    // ==========================================
+    scan() {
+      if (this.isScanning) return this.detectedAds;
+      this.isScanning = true;
+
+      // 初始化节点评估缓存（若类构造函数中未定义，可单例创建）
+      if (!this.evaluatedNodes) {
+        this.evaluatedNodes = new WeakSet();
+      }
+
+      // 1. 节点存活度与有效性自检（清理已从 DOM 卸载的无效记录）
+      for (const [adId, meta] of this.detectedAds.entries()) {
+        if (!meta.element || !document.contains(meta.element)) {
+          this.detectedAds.delete(adId);
+        }
+      }
+
+      // 2. 多源收集候选节点（原封不动保留你的全量 Selector 与 Shadow DOM 递归）
+      const candidateNodes = new Set();
+      const collectCandidatesFromRoot = (root) => {
+        if (!root) return;
+
+        // 彻底保留你原有的完整全量选择器
+        const selector = [
+          'div', 'iframe', 'a', 'img', 'section', 'article', 'ins', 'aside', 'header', 'footer', 'canvas', 'video', 'embed', 'object',
+          '[class*="ad"]', '[id*="ad"]', '[class*="overlay"]', '[class*="backdrop"]', '[id*="overlay"]', '[id*="backdrop"]',
+          '[class*="popup"]', '[id*="popup"]', '[class*="modal"]', '[id*="modal"]', '[class*="sponsor"]', '[id*="sponsor"]'
+        ].join(', ');
+
+        const elements = root.querySelectorAll(selector);
+        for (let i = 0; i < elements.length; i++) {
+          const el = elements[i];
+          candidateNodes.add(el);
+          // 深度穿透开放的 Shadow DOM 节点
+          if (el.shadowRoot) {
+            collectCandidatesFromRoot(el.shadowRoot);
+          }
+        }
+      };
+
+      collectCandidatesFromRoot(document);
+
+      // 用于读写分离的临时队列
+      const updatesToApply = [];
+
+      // 3. 【第一阶段：纯读取与极速过滤 (READ PHASE)】
+      // 绝对禁止在此循环内修改任何 DOM（不设置 attribute，不改 style）
+      candidateNodes.forEach((el) => {
+        if (this.isExcludedElement(el)) return;
+
+        let adId = el.getAttribute('data-ad-detector-id');
+        const existingMeta = adId ? this.detectedAds.get(adId) : null;
+
+        // 【剪枝 1】：非广告且已评估过的节点，直接跳过
+        if (!existingMeta && this.evaluatedNodes.has(el)) return;
+
+        // 【剪枝 2】：快速几何过滤，未渲染或隐藏节点直接跳过，避免执行昂贵的 calculateAdScore
+        // if (el.offsetWidth === 0 && el.offsetHeight === 0) return;
+        // 【修复】：如果是已被屏蔽的节点（带标记或匹配持久化规则），允许放行；仅对未屏蔽且未渲染的纯隐形节点进行剪枝
+        const isAlreadyBlocked = el.dataset.overlayBlocked === 'true' || el.dataset.adBlockedXpath === 'true';
+        if (!isAlreadyBlocked && el.offsetWidth === 0 && el.offsetHeight === 0) return;
+
+        // 【剪枝 3】：对大量无特征的普通文本/容器节点实施毫秒级快速放行
+        // 如果是普通 div/section，没有 id/class，也没有子链接，极大概率不是广告
+        if (!existingMeta && (el.tagName === 'DIV' || el.tagName === 'SECTION' || el.tagName === 'ARTICLE')) {
+          if (!el.id && !el.className && !el.querySelector('a[href]')) {
+            this.evaluatedNodes.add(el);
+            return;
+          }
+        }
+
+        // 执行算法判别与打分
+        const { score, reasons } = this.calculateAdScore(el);
+
+        if (score >= 40 || (existingMeta && existingMeta.isBlocked)) {
+          // 读取节点布局与链接属性（仅 Read，不 Write）
+          const rect = el.getBoundingClientRect();
+          const formattedSize = existingMeta ? existingMeta.size : `${Math.round(rect.width)}x${Math.round(rect.height)}px`;
+
+          const anchor = el.tagName === 'A' ? el : el.querySelector('a[href]');
+          let hrefHost = '';
+          try {
+            if (anchor && anchor.href) hrefHost = new URL(anchor.href, window.location.href).hostname;
+          } catch (e) { }
+
+          const fingerprint = `${el.tagName.toLowerCase()}_${formattedSize}_${hrefHost}`;
+          const finalScore = existingMeta ? Math.max(existingMeta.score, score) : score;
+          const finalReasons = (existingMeta && existingMeta.score > score) ? existingMeta.reasons : reasons;
+
+          // 暂存计算好的数据，推迟到 Write 阶段统一处理
+          updatesToApply.push({
+            el,
+            adId,
+            existingMeta,
+            score: finalScore,
+            reasons: finalReasons,
+            formattedSize,
+            fingerprint
+          });
+        } else {
+          // 记录为普通节点，下一次扫描无需重复打分
+          this.evaluatedNodes.add(el);
+        }
+      });
+
+      // 4. 【第二阶段：批量统一写入 DOM (WRITE PHASE)】
+      // 将所有对 DOM 的写操作集中在一起处理，强制浏览器仅触发 1 次重排
+      if (updatesToApply.length > 0) {
+        updatesToApply.forEach(({ el, adId, existingMeta, score, reasons, formattedSize, fingerprint }) => {
+          if (!adId) {
+            this.counter++;
+            adId = `ad-detected-${this.counter}`;
+            el.setAttribute('data-ad-detector-id', adId);
+          }
+
+          const meta = {
+            id: adId,
+            element: el,
+            score: score,
+            reasons: reasons,
+            tagName: el.tagName.toLowerCase(),
+            size: formattedSize,
+            classAndId: `${el.id ? '#' + el.id : ''}${el.className && typeof el.className === 'string' ? '.' + el.className : ''}`.trim(),
+            fingerprint: fingerprint,
+            isBlocked: existingMeta ? existingMeta.isBlocked : false
+          };
+
+          if (!meta.isBlocked && this.isMatchesBlockedRule(meta)) {
+            meta.isBlocked = true;
+            el.dataset.overlayBlocked = 'true';
+            el.style.setProperty('display', 'none', 'important');
+          }
+
+          this.detectedAds.set(adId, meta);
+
+          if (this.isHighlighted && !meta.isBlocked) {
+            this.applyHighlight(el, true, formattedSize);
+          }
+        });
+      }
+
+      this.isScanning = false;
+      if (this.isUIVisible) {
+        this.updateUI();
+      }
+      return this.detectedAds;
+    }
+
+
+    // ==========================================
+    // 优化后的 MutationObserver 及锁机制
+    // ==========================================
+
+    initObserver() {
+      let scanScheduled = false;
+
+      this.observer = new MutationObserver((mutations) => {
+        let hasExternalMutation = false;
+        const targetsToScan = new Set();
+
+        for (let i = 0; i < mutations.length; i++) {
+          const m = mutations[i];
+          const target = m.target;
+
+          // 1. 过滤内部节点修改及已被屏蔽的节点，彻底切断死循环
+          if (
+            target.id === 'ad-detector-host' ||
+            target.id === 'ad-detector-dynamic-css-rules' ||
+            (target.classList && typeof target.classList.contains === 'function' && target.classList.contains('ad-detector-size-badge')) ||
+            (target.dataset && (target.dataset.overlayBlocked === 'true' || target.dataset.adBlockedXpath === 'true')) // 增加对 XPath 已屏蔽节点的过滤
+          ) {
+            continue;
+          }
+
+          hasExternalMutation = true;
+
+          // 2. 收集增量添加的节点（优先采用增量检查）
+          if (m.type === 'childList' && m.addedNodes.length > 0) {
+            m.addedNodes.forEach(node => {
+              if (node.nodeType === Node.ELEMENT_NODE) {
+                targetsToScan.add(node);
+              }
+            });
+          }
+        }
+
+        if (!hasExternalMutation) return;
+
+        // 3. 节流与防抖合并（空闲调度）
+        if (!scanScheduled) {
+          scanScheduled = true;
+          const scheduleTask = window.requestIdleCallback || ((cb) => setTimeout(cb, 200));
+
+          scheduleTask(() => {
+            // 如果新增节点较少，仅对新增节点（及其子树）增量排查与 XPath 履约；若过多则降级为全局扫描
+            if (targetsToScan.size > 0 && targetsToScan.size < 20) {
+              // 执行原有的启发式增量扫描
+              this.scanIncremental(targetsToScan);
+              // 对新增的这批节点及其子树单独履行 XPath 规则
+              this.applyXPathsIncremental(targetsToScan);
+            } else {
+              // 触发全局启发式扫描 + 全局 XPath 履约
+              this.scan();
+              this.applyXPaths(document);
+            }
+            scanScheduled = false;
+          }, { timeout: 1000 });
+        }
+      });
+
+      if (document.body) {
+        this.observer.observe(document.body, {
+          childList: true,
+          subtree: true,
+          attributes: true,
+          attributeFilter: ['src'] // 保持优化：移除 style 和 class 的深度监听
+        });
+      }
+
+      // 页面首次初始化执行
+      this.scan();
+      this.applyXPaths(document);
+
+      // 增加：页面初始化及每次 MutationObserver 监听到新节点时，立即进行规则比对与状态锁死
+      this.applySavedRulesToDOM();
+      this.scan();
+
+    }
+
+    applySavedRulesToDOM() {
+      if (!Array.isArray(this.blockedRules)) return;
+      this.blockedRules.forEach((rule) => {
+        let selector = rule.selector;
+        if (selector) {
+          try {
+            document.querySelectorAll(selector).forEach((el) => {
+              el.dataset.overlayBlocked = 'true';
+              el.style.setProperty('display', 'none', 'important');
+            });
+          } catch (e) { }
+        }
+      });
+    }
+
+
+    /**
+     * 【修复版】针对全盘或特定根节点匹配并执行隐藏 XPath 规则
+     */
+    applyXPaths(rootNode = document) {
+      if (!this.blockedXPaths || this.blockedXPaths.length === 0) return;
+
+      this.blockedXPaths.forEach(xpathStr => {
+        try {
+          // evaluate 上下文如果是普通 Element，遇到以 / 开头的绝对路径 XPath 会报错或失效
+          // 因此对于绝对路径，上下文统一回退至 document
+          const contextNode = (xpathStr.startsWith('/') && rootNode !== document)
+            ? document
+            : rootNode;
+
+          const result = document.evaluate(
+            xpathStr,
+            contextNode,
+            null,
+            XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
+            null
+          );
+
+          for (let i = 0; i < result.snapshotLength; i++) {
+            const el = result.snapshotItem(i);
+            if (el && el.nodeType === Node.ELEMENT_NODE && !el.dataset.adBlockedXpath) {
+              el.style.setProperty('display', 'none', 'important');
+              el.dataset.adBlockedXpath = 'true';
+              el.dataset.overlayBlocked = 'true'; // 保持逻辑一致性
+            }
+          }
+        } catch (e) {
+          console.warn('[XPath Engine] 执行表达式失败:', xpathStr, e);
+        }
+      });
+    }
+
+    /**
+     * 【修复版】仅对增量变更的节点集及其子树履行 XPath 检查
+     */
+    applyXPathsIncremental(targetsSet) {
+      if (!this.blockedXPaths || this.blockedXPaths.length === 0) return;
+
+      targetsSet.forEach(targetNode => {
+        if (targetNode.nodeType === Node.ELEMENT_NODE) {
+          // 如果 targetNode 自身或者其子节点匹配了 XPath，执行隐藏
+          this.applyXPaths(targetNode);
+        }
+      });
+    }
+
+
+
+    // ==========================================
+    // 新增：高效增量节点扫描机制
+    // ==========================================
+    scanIncremental(nodes) {
+      if (this.isScanning) return;
+
+      nodes.forEach(node => {
+        if (this.isExcludedElement(node)) return;
+
+        // 如果节点本身是候选者
+        const candidateSelector = 'div, iframe, a, img, section, ins, [class*="ad"], [id*="ad"]';
+        if (node.matches && node.matches(candidateSelector)) {
+          this.evaluateAndRegisterElement(node);
+        }
+
+        // 处理子节点
+        if (node.querySelectorAll) {
+          const children = node.querySelectorAll(candidateSelector);
+          children.forEach(child => this.evaluateAndRegisterElement(child));
+        }
+      });
+
+      if (this.isUIVisible) {
+        this.updateUI();
+      }
+    }
+
+    // 把单节点评估与注册提炼为独立轻量函数
+    evaluateAndRegisterElement(el) {
+      if (this.isExcludedElement(el)) return;
+
+      let adId = el.getAttribute('data-ad-detector-id');
+      const existingMeta = adId ? this.detectedAds.get(adId) : null;
+
+      // 打分前优先进行快速不合规排查（避开计算重排属性）
+      const { score, reasons } = this.calculateAdScore(el);
+
+      if (score >= 40 || (existingMeta && existingMeta.isBlocked)) {
+        if (!adId) {
+          this.counter++;
+          adId = `ad-detected-${this.counter}`;
+          el.setAttribute('data-ad-detector-id', adId);
+        }
+
+        const formattedSize = existingMeta ? existingMeta.size : `${el.offsetWidth || 0}x${el.offsetHeight || 0}px`;
+        const fingerprint = `${el.tagName.toLowerCase()}_${formattedSize}_`;
+
+        const meta = {
+          id: adId,
+          element: el,
+          score: existingMeta ? Math.max(existingMeta.score, score) : score,
+          reasons: existingMeta && existingMeta.score > score ? existingMeta.reasons : reasons,
+          tagName: el.tagName.toLowerCase(),
+          size: formattedSize,
+          classAndId: `${el.id ? '#' + el.id : ''}${el.className && typeof el.className === 'string' ? '.' + el.className : ''}`.trim(),
+          fingerprint: fingerprint,
+          isBlocked: existingMeta ? existingMeta.isBlocked : false
+        };
+
+        if (!meta.isBlocked && this.isMatchesBlockedRule(meta)) {
+          meta.isBlocked = true;
+          el.dataset.overlayBlocked = 'true';
+          el.style.setProperty('display', 'none', 'important');
+        }
+
+        this.detectedAds.set(adId, meta);
+      }
+    }
+
+
+    toggleUI() {
+      if (this.isUIVisible) {
+        this.hideUI();
+      } else {
+        this.showUI();
+      }
+    }
+
+    showUI() {
+      if (this.isUIVisible && this.host && this.host.style.display !== 'none') return;
+      this.isUIVisible = true;
+
+      if (!this.host) {
+        this.initUI();
+      } else {
+        this.host.style.display = 'block';
+      }
+      this.scan();
+
+      this.saveUIVisibleState(true);
+    }
+
+    hideUI() {
+      if (!this.isUIVisible) return;
+      this.isUIVisible = false;
+      if (this.host) {
+        this.host.style.display = 'none';
+      }
+
+      this.saveUIVisibleState(false);
+    }
+
+    initUI() {
+      this.host = document.createElement('div');
+      this.host.id = 'ad-detector-host';
+      this.shadow = this.host.attachShadow({ mode: 'open' });
+
+      let savedPos = null;
+      try {
+        if (typeof GM_getValue !== 'undefined') {
+          savedPos = GM_getValue('ad_detector_panel_pos', null);
+        } else if (window.localStorage) {
+          savedPos = JSON.parse(localStorage.getItem('ad_detector_panel_pos') || 'null');
+        }
+      } catch (e) {
+        savedPos = null;
+      }
+
+      let initStyle = 'bottom: 20px; right: 20px;';
+      if (savedPos && savedPos.left !== undefined && savedPos.top !== undefined) {
+        initStyle = `left: ${savedPos.left}px; top: ${savedPos.top}px;`;
+      }
+
+      this.shadow.innerHTML = `
+        <style>
+          .panel {
+            padding: 2vw;
+            position: fixed; ${initStyle} z-index: 2147483647;
+            width: min(460px, 92vw); max-height: 80vh; background: rgba(28, 28, 30, 0.95);
+            backdrop-filter: blur(20px); color: #f2f2f7;
+            border-radius: 14px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6); display: flex; flex-direction: column;
+            border: 1px solid rgba(255, 255, 255, 0.12); font-size: 13px;
+            user-select: none;
+            touch-action: none !important;
+          }
+
+          @media (max-width: 768px), (orientation: portrait) {
+            .panel { max-height: 55vh !important; }
+          }
+
+          .edge-drag {
+            position: absolute;
+            z-index: 10;
+            touch-action: none !important;
+            cursor: move;
+          }
+          .edge-top { top: -10px; left: 0; width: 100%; height: 20px; }
+          .edge-bottom { bottom: -10px; left: 0; width: 100%; height: 20px; }
+          .edge-left { top: 0; left: -10px; width: 20px; height: 100%; }
+          .edge-right { top: 0; right: -10px; width: 20px; height: 100%; }
+
+          
+
+          .header {
+            padding: 10px 14px; font-weight: 600; border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex; justify-content: space-between; align-items: center;
+            cursor: move; touch-action: none !important;
+          }
+          .select-control {
+            background: rgba(255, 255, 255, 0.12);
+            color: #f2f2f7;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            padding: 2px 4px;
+            font-size: 11px;
+            outline: none;
+            cursor: pointer;
+          }
+          .select-control option { background: #1c1c1e; color: #f2f2f7; }
+          .close-btn {
+            cursor: pointer; font-size: 16px; color: #8e8e93; transition: color 0.15s;
+            padding: 2px 6px; border-radius: 4px;
+          }
+          .close-btn:hover { color: #ffffff; background: rgba(255, 255, 255, 0.1); }
+
+          .body { padding: 12px; overflow-y: auto; flex: 1; touch-action: pan-y !important; }
+          .item {
+            background: rgba(255, 255, 255, 0.06); padding: 10px; border-radius: 8px;
+            margin-bottom: 8px; border: 1px solid rgba(255, 255, 255, 0.04);
+            transition: all 0.2s ease;
+          }
+          .item:hover { background: rgba(110, 25, 25, 0.64); }
+          .item.is-blocked { opacity: 0.45; background: rgba(0, 0, 0, 0.25); border-color: rgba(255, 255, 255, 0.02); }
+          .item.is-blocked .item-title { text-decoration: line-through; color: #8e8e93; }
+
+          .item-top { display: flex; justify-content: space-between; align-items: center; }
+          .score { color: #ff9500; font-weight: bold; }
+          .status-tag { font-size: 10px; padding: 2px 6px; border-radius: 4px; background: rgba(255, 69, 58, 0.25); color: #ff453a; font-weight: 600; }
+          .reasons { font-size: 11px; color: #aeaeb2; margin-top: 4px; line-height: 1.4; }
+          .actions { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+
+          .btn-action {
+            padding: 4px 8px; font-size: 11px; border-radius: 4px; border: none;
+            cursor: pointer; font-weight: 600; transition: all 0.15s ease;
+            background: rgba(255, 255, 255, 0.12); color: #f2f2f7;
+          }
+          .btn-action:hover { background: rgba(255, 255, 255, 0.25); }
+          .btn-preview { background: rgba(10, 132, 255, 0.2); color: #64d2ff; }
+          .btn-preview:hover { background: rgba(10, 132, 255, 0.4); }
+          .btn-hide-single { background: rgba(255, 69, 58, 0.2); color: #ff453a; }
+          .btn-hide-single:hover { background: rgba(255, 69, 58, 0.4); }
+          .btn-restore-single { background: rgba(48, 209, 88, 0.2); color: #30d158; }
+          .btn-restore-single:hover { background: rgba(48, 209, 88, 0.4); }
+
+          .footer { padding: 12px; border-top: 1px solid rgba(255, 255, 255, 0.1); display: flex; gap: 6px; flex-wrap: wrap; }
+
+          button.footer-btn {
+            flex: 1; padding: 8px 4px; border: none; border-radius: 8px;
+            font-weight: 600; font-size: 11px; cursor: pointer;
+            transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-flex; align-items: center; justify-content: center;
+            outline: none; white-space: nowrap;
+          }
+          button.footer-btn:hover:not(:disabled) { filter: brightness(1.15); transform: translateY(-1px); }
+          button.footer-btn:active:not(:disabled) { transform: scale(0.95) translateY(0); filter: brightness(0.9); }
+          button.footer-btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none !important; filter: none !important; }
+
+          .btn-scan { background: #0a84ff; color: #ffffff; box-shadow: 0 2px 8px rgba(10, 132, 255, 0.3); }
+          .btn-hl { background: #3a3a3c; color: #f2f2f7; border: 1px solid rgba(255, 255, 255, 0.1); }
+          .btn-hl.active { background: #5e5ce6; color: #ffffff; box-shadow: 0 2px 8px rgba(94, 92, 230, 0.4); }
+          .btn-clean { background: #ff453a; color: #ffffff; box-shadow: 0 2px 8px rgba(255, 69, 58, 0.3); }
+          .btn-reset { background: #ff9500; color: #ffffff; box-shadow: 0 2px 8px rgba(255, 149, 0, 0.3); }
+          .btn-undo { background: #3a3a3c; color: #f2f2f7; border: 1px solid rgba(255, 255, 255, 0.1); }
+          .btn-redo { background: #3a3a3c; color: #f2f2f7; border: 1px solid rgba(255, 255, 255, 0.1); }
+
+          .toast {
+            position: absolute; top: -38px; left: 50%; transform: translateX(-50%) translateY(10px);
+            background: rgba(44, 44, 46, 0.95); color: #ffffff; padding: 6px 14px;
+            border-radius: 20px; font-size: 12px; font-weight: 500;
+            border: 1px solid rgba(255, 255, 255, 0.15); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            opacity: 0; pointer-events: none; transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            white-space: nowrap; max-width: 90%; overflow: hidden; text-overflow: ellipsis;
+          }
+          .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+          .preview-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: min(560px, 90vw);
+            max-height: 80vh;
+            background: rgba(28, 28, 30, 0.98);
+            backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+            border-radius: 14px;
+            z-index: 2147483648;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            animation: previewPopIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+          }
+
+          @keyframes previewPopIn {
+            from { opacity: 0; transform: translate(-50%, -45%) scale(0.95); }
+            to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+          }
+
+          .preview-header {
+            padding: 10px 14px;
+            background: rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            color: #f2f2f7;
+          }
+
+          .preview-body {
+            padding: 12px 16px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background: rgba(0, 0, 0, 0.3);
+            max-height: 70vh;
+          }
+
+          .preview-section-title {
+            font-size: 11px;
+            font-weight: 600;
+            color: #8e8e93;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+          }
+
+          .preview-container {
+            width: 100%;
+            min-height: 120px;
+            max-height: 300px;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            border: 1px dashed rgba(255, 255, 255, 0.15);
+          }
+
+          .code-container {
+            position: relative;
+            background: #121214;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 10px;
+            max-height: 180px;
+            overflow: auto;
+          }
+
+          .code-block {
+            margin: 0;
+            font-family: "SF Mono", Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-size: 11px;
+            color: #64d2ff;
+            white-space: pre-wrap;
+            word-break: break-all;
+            line-height: 1.4;
+          }
+
+          .btn-copy-code {
+            padding: 2px 8px;
+            font-size: 10px;
+            border-radius: 4px;
+            border: none;
+            background: rgba(255, 255, 255, 0.15);
+            color: #f2f2f7;
+            cursor: pointer;
+            transition: all 0.15s ease;
+          }
+          .btn-copy-code:hover { background: rgba(255, 255, 255, 0.3); }
+
+          .preview-actions {
+            padding: 10px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+          }
+        </style>
+
+        <div class="panel" id="main-panel">
+          <div class="edge-drag edge-top"></div>
+          <div class="edge-drag edge-bottom"></div>
+          <div class="edge-drag edge-left"></div>
+          <div class="edge-drag edge-right"></div>
+
+          <div class="toast" id="toast">提示信息</div>
+          <div class="header" id="panel-header">
+            <span>🛡️ v12.6</span>
+            <div style="display:flex;align-items:center;gap:4px;">
+              <select id="select-filter" class="select-control" title="过滤显示状态">
+                <option value="all">显示全部</option>
+                <option value="unread">仅未处理</option>
+                <option value="blocked">仅已屏蔽</option>
+              </select>
+              <select id="select-sort" class="select-control" title="选择排序方式">
+                <option value="default">默认排序(风险系数)</option>
+                <option value="height">按元素高度排序(Height)</option> <!-- 新增选项 -->
+              </select>
+              <span id="count-badge" style="background:rgba(255,255,255,0.1);padding:2px 6px;border-radius:10px;font-size:11px;">0 个</span>
+              <span class="close-btn" id="btn-close-panel" title="关闭面板 (Alt+A)">✕</span>
+            </div>
+          </div>
+          <div class="body" id="list">
+            <div style="text-align:center;color:#8e8e93;padding:20px;">正在加载检测分析...</div>
+          </div>
+          <div class="footer">
+            <button class="footer-btn btn-scan" id="btn-scan">重新扫描</button>
+            <button class="footer-btn btn-hl" id="btn-hl">高亮标注</button>
+            <button class="footer-btn btn-clean" id="btn-clean">一键屏蔽</button>
+            <button class="footer-btn btn-reset" id="btn-reset" title="恢复所有屏蔽并清除规则">一键重置</button>
+            <button class="footer-btn btn-undo" id="btn-undo" title="撤回上一步操作">↩️ 撤回</button>
+            <button class="footer-btn btn-redo" id="btn-redo" title="重做上一步撤回">↪️ 重做</button>
+          </div>
+        </div>
+
+        <div class="preview-modal" id="preview-modal">
+          <div class="preview-header">
+            <span id="preview-title" style="word-break:break-all;padding-right:10px;">🔍 元素预览</span>
+            <span class="close-btn" id="btn-close-preview" title="关闭预览">✕</span>
+          </div>
+          <div class="preview-body">
+            <div class="preview-section-title">🖼️ 渲染效果</div>
+            <div class="preview-container" id="preview-container"></div>
+          </div>
+          <div class="preview-actions" id="preview-actions">
+          </div>
+        </div>
+      `;
+
+      const targetParent = document.body || document.documentElement;
+      targetParent.appendChild(this.host);
+      this.bindInteractiveEvents();
+      this.makeDraggable();
+    }
+
+    makeDraggable() {
+      const panel = this.shadow.querySelector('#main-panel');
+      const header = this.shadow.querySelector('#panel-header');
+      const edges = this.shadow.querySelectorAll('.edge-drag');
+
+      let isDragging = false;
+      let startX = 0;
+      let startY = 0;
+
+      let currentTranslateX = 0;
+      let currentTranslateY = 0;
+      let startTranslateX = 0;
+      let startTranslateY = 0;
+
+      try {
+        let savedPos = null;
+        if (typeof GM_getValue !== 'undefined') {
+          savedPos = GM_getValue('ad_detector_panel_transform', null);
+        } else if (window.localStorage) {
+          savedPos = JSON.parse(localStorage.getItem('ad_detector_panel_transform') || 'null');
+        }
+        if (savedPos && savedPos.x !== undefined && savedPos.y !== undefined) {
+          currentTranslateX = savedPos.x;
+          currentTranslateY = savedPos.y;
+          panel.style.transform = `translate3d(${currentTranslateX}px, ${currentTranslateY}px, 0)`;
+        }
+      } catch (e) { }
+
+      const startDrag = (e) => {
+        if (e.target.closest('#btn-close-panel') || e.target.closest('.select-control')) return;
+        if (e.button !== undefined && e.button !== 0) return;
+
+        isDragging = true;
+        startX = e.clientX;
+        startY = e.clientY;
+
+        startTranslateX = currentTranslateX;
+        startTranslateY = currentTranslateY;
+
+        document.body.style.userSelect = 'none';
+        e.preventDefault();
+      };
+
+      const moveDrag = (e) => {
+        if (!isDragging) return;
+
+        const deltaX = e.clientX - startX;
+        const deltaY = e.clientY - startY;
+
+        currentTranslateX = startTranslateX + deltaX;
+        currentTranslateY = startTranslateY + deltaY;
+
+        panel.style.transform = `translate3d(${currentTranslateX}px, ${currentTranslateY}px, 0)`;
+      };
+
+      const stopDrag = () => {
+        if (!isDragging) return;
+        isDragging = false;
+
+        document.body.style.userSelect = '';
+
+        const posData = { x: currentTranslateX, y: currentTranslateY };
+        try {
+          if (typeof GM_setValue !== 'undefined') {
+            GM_setValue('ad_detector_panel_transform', posData);
+          } else if (window.localStorage) {
+            localStorage.setItem('ad_detector_panel_transform', JSON.stringify(posData));
+          }
+        } catch (err) {
+          console.warn('[AdDetector] 无法保存面板位置', err);
+        }
+      };
+
+      const dragTargets = [header, ...edges];
+      dragTargets.forEach((el) => {
+        if (!el) return;
+        el.addEventListener('pointerdown', startDrag);
+      });
+
+      window.addEventListener('pointermove', moveDrag);
+      window.addEventListener('pointerup', stopDrag);
+      window.addEventListener('pointercancel', stopDrag);
+    }
+
+    applyHighlight(el, enable, sizeText = '') {
+      if (!el || el.dataset.overlayBlocked === 'true') {
+        el.classList.remove('ad-detector-highlight-active', 'ad-detector-pos-relative');
+        return;
+      }
+
+      if (enable) {
+        if (window.getComputedStyle(el).position === 'static') {
+          el.classList.add('ad-detector-pos-relative');
+        }
+
+        let badge = el.querySelector(':scope > .ad-detector-size-badge');
+        if (!badge) {
+          badge = document.createElement('div');
+          badge.className = 'ad-detector-size-badge';
+          el.appendChild(badge);
+        }
+
+        // 核心修复点：若未显式传入 sizeText，统一从 meta 获取并拼接 tagName 和 size
+        if (!sizeText) {
+          const adId = el.getAttribute('data-ad-detector-id');
+          const meta = this.detectedAds.get(adId);
+          if (meta) {
+            sizeText = `${meta.tagName} 宽高:${meta.size}`;
+          } else {
+            sizeText = `${el.tagName.toLowerCase()} 宽高:${el.offsetWidth || 0}x${el.offsetHeight || 0}px`;
+          }
+        }
+
+        if (badge.dataset.size !== sizeText) {
+          badge.dataset.size = sizeText;
+        }
+
+        el.classList.add('ad-detector-highlight-active');
+      } else {
+        el.classList.remove('ad-detector-highlight-active', 'ad-detector-pos-relative');
+      }
+    }
+
+    toggleHighlight() {
+      this.isHighlighted = !this.isHighlighted;
+      for (const meta of this.detectedAds.values()) {
+        if (meta.element && !meta.isBlocked) {
+          // 保持在这里进行拼接，meta.size 依然是原始数值
+          this.applyHighlight(meta.element, this.isHighlighted, meta.tagName + " 宽高:" + meta.size);
+        }
+      }
+    }
+
+    showPreviewWindow(adId) {
+      const meta = this.detectedAds.get(adId);
+      if (!meta || !meta.element) return;
+
+      const modal = this.shadow.querySelector('#preview-modal');
+      const container = this.shadow.querySelector('#preview-container');
+      const title = this.shadow.querySelector('#preview-title');
+      const actionsContainer = this.shadow.querySelector('#preview-actions');
+
+      title.textContent = `🔍 预览: <${meta.tagName}> (${meta.size})`;
+      container.innerHTML = '';
+
+      const cloneForCode = meta.element.cloneNode(true);
+      cloneForCode.removeAttribute('data-ad-detector-id');
+      const badgeInClone = cloneForCode.querySelector('.ad-detector-size-badge');
+      if (badgeInClone) badgeInClone.remove();
+
+      const rawHtml = cloneForCode.outerHTML;
+
+      const iframe = document.createElement('iframe');
+      iframe.style.setProperty('width', '100%', 'important');
+      iframe.style.setProperty('height', '200px', 'important');
+      iframe.style.setProperty('border', 'none', 'important');
+      iframe.style.setProperty('background', 'transparent', 'important');
+
+      container.appendChild(iframe);
+
+      const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+      iframeDoc.open();
+      iframeDoc.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <style>
+            body {
+              margin: 0;
+              padding: 16px;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              min-height: 100vh;
+              box-sizing: border-box;
+              background: transparent;
+              overflow: auto;
+            }
+          </style>
+        </head>
+        <body>
+          <div id="iframe-preview-root"></div>
+        </body>
+        </html>
+      `);
+      iframeDoc.close();
+
+      const iframeHead = iframeDoc.head;
+      document.querySelectorAll('style').forEach((styleTag) => {
+        if (styleTag.id !== 'ad-detector-global-styles' && styleTag.id !== 'ad-detector-dynamic-css-rules') {
+          iframeHead.appendChild(styleTag.cloneNode(true));
+        }
+      });
+
+      document.querySelectorAll('link[rel="stylesheet"]').forEach((linkTag) => {
+        const clonedLink = linkTag.cloneNode(true);
+        if (clonedLink.href) clonedLink.href = clonedLink.href;
+        iframeHead.appendChild(clonedLink);
+      });
+
+      const origRect = meta.element.getBoundingClientRect();
+      const origStyle = window.getComputedStyle(meta.element);
+      const cloneForRender = cloneForCode.cloneNode(true);
+
+      const finalWidth = origRect.width > 0 ? origRect.width : (parseInt(meta.size.split('x')[0]) || 300);
+      const finalHeight = origRect.height > 0 ? origRect.height : (parseInt(meta.size.split('x')[1]) || 250);
+
+      cloneForRender.style.setProperty('display', 'block', 'important');
+      cloneForRender.style.setProperty('position', 'relative', 'important');
+      cloneForRender.style.setProperty('visibility', 'visible', 'important');
+      cloneForRender.style.setProperty('opacity', '1', 'important');
+      cloneForRender.style.setProperty('transform', 'none', 'important');
+      cloneForRender.style.setProperty('transition', 'none', 'important');
+      cloneForRender.style.setProperty('margin', '0 auto', 'important');
+      cloneForRender.style.setProperty('width', `${finalWidth}px`, 'important');
+      cloneForRender.style.setProperty('height', `${finalHeight}px`, 'important');
+
+      if (origStyle.backgroundColor && origStyle.backgroundColor !== 'rgba(0, 0, 0, 0)' && origStyle.backgroundColor !== 'transparent') {
+        cloneForRender.style.setProperty('background-color', origStyle.backgroundColor, 'important');
+      }
+
+      const root = iframeDoc.getElementById('iframe-preview-root');
+      root.appendChild(cloneForRender);
+
+      let codeSection = this.shadow.querySelector('#preview-code-section');
+      if (!codeSection) {
+        const previewBody = this.shadow.querySelector('.preview-body');
+        codeSection = document.createElement('div');
+        codeSection.id = 'preview-code-section';
+        codeSection.innerHTML = `
+          <div class="preview-section-title">
+            <span>📄 元素原代码 (HTML)</span>
+            <button class="btn-copy-code" id="btn-copy-code">复制源码</button>
+          </div>
+          <div class="code-container" id="preview-code-container">
+            <pre class="code-block" id="preview-code-block"></pre>
+          </div>
+        `;
+        previewBody.appendChild(codeSection);
+      }
+
+      const codeBlock = this.shadow.querySelector('#preview-code-block');
+      const copyBtn = this.shadow.querySelector('#btn-copy-code');
+
+      codeBlock.textContent = rawHtml;
+
+      copyBtn.onclick = () => {
+        navigator.clipboard.writeText(codeBlock.textContent).then(() => {
+          copyBtn.textContent = '已复制！';
+          setTimeout(() => { copyBtn.textContent = '复制源码'; }, 1500);
+        }).catch(err => {
+          console.error('复制代码失败:', err);
+        });
+      };
+
+      const renderPreviewActions = () => {
+        if (!meta.isBlocked) {
+          actionsContainer.innerHTML = `
+            <button class="btn-action btn-hide-single" id="btn-preview-hide">🚫 单独屏蔽</button>
+          `;
+          const btnHide = actionsContainer.querySelector('#btn-preview-hide');
+          btnHide.onclick = () => {
+            this.neutralizeSingle(adId);
+            renderPreviewActions();
+            setTimeout(() => {
+              modal.style.display = 'none';
+              container.innerHTML = '';
+            }, 1200);
+          };
+        } else {
+          actionsContainer.innerHTML = `
+            <button class="btn-action btn-restore-single" id="btn-preview-restore">↩️ 撤销屏蔽</button>
+          `;
+          const btnRestore = actionsContainer.querySelector('#btn-preview-restore');
+          btnRestore.onclick = () => {
+            this.restoreSingle(adId);
+            renderPreviewActions();
+          };
+        }
+      };
+
+      renderPreviewActions();
+
+      modal.style.display = 'flex';
+
+      const closeBtn = this.shadow.querySelector('#btn-close-preview');
+      closeBtn.onclick = () => {
+        modal.style.display = 'none';
+        container.innerHTML = '';
+        this.updateUI();
+      };
+    }
+
+    previewHoverElement(adId, isHovering) {
+      const meta = this.detectedAds.get(adId);
+      if (!meta || !meta.element || meta.isBlocked) return;
+
+      if (this.observer) {
+        this.observer.disconnect();
+      }
+
+      if (isHovering) {
+        meta.element.classList.add('ad-detector-hover-active');
+
+        // 使元素平滑滚动至视野中央
+        try {
+          meta.element.scrollIntoView({
+            behavior: 'smooth', // 平滑动画
+            block: 'center',    // 垂直方向居中
+            inline: 'center'    // 水平方向居中
+          });
+        } catch (e) {
+          // 兼容旧版浏览器的降级处理
+          meta.element.scrollIntoView(false);
+        }
+      } else {
+        meta.element.classList.remove('ad-detector-hover-active');
+
+        const activeChildren = meta.element.querySelectorAll('.ad-detector-hover-active');
+        activeChildren.forEach(child => child.classList.remove('ad-detector-hover-active'));
+
+        if (this.isHighlighted) {
+          // this.applyHighlight(meta.element, true, meta.size);
+          this.applyHighlight(meta.element, true);
+        }
+      }
+
+      if (this.observer && document.body) {
+        this.observer.observe(document.body, {
+          childList: true,
+          subtree: true,
+          attributes: true,
+          attributeFilter: ['style', 'class', 'src']
+        });
+      }
+    }
+
+    showToast(message) {
+      // 1. 获取或创建紧凑容器
+      let container = document.getElementById('global-toast-container');
+      if (!container) {
+        container = document.createElement('div');
+        container.id = 'global-toast-container';
+        Object.assign(container.style, {
+          position: 'fixed',
+          top: '2px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: '2147483647',
+          display: 'flex',
+          flexDirection: 'column-reverse',
+          alignItems: 'center',
+          gap: '2px',
+          pointerEvents: 'none',
+          perspective: '1000px'
+        });
+        document.body.appendChild(container);
+      }
+
+      // 超过 4 条时移除最旧的一条
+      if (container.children.length >= 4) {
+        const oldestToast = container.firstElementChild;
+        if (oldestToast) oldestToast.remove();
+      }
+
+      // 2. 遍历所有旧消息：尺寸与字体双重递减
+      const existingToasts = Array.from(container.children);
+      const totalExisting = existingToasts.length;
+
+      existingToasts.forEach((oldToast, index) => {
+        const distanceFromLatest = totalExisting - index;
+        const newScale = Math.max(0.7, 1 - distanceFromLatest * 0.08);
+
+        Object.assign(oldToast.style, {
+          padding: '5px 12px',
+          background: 'rgba(12, 12, 15, 0.85)',
+          border: '1px solid rgba(255, 255, 255, 0.05)',
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.5)',
+          fontSize: '11px', // 旧消息字体缩小，突显主次
+          fontWeight: '400',
+          transform: `scale(${newScale})`,
+          transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+          opacity: '1'
+        });
+
+        const badge = oldToast.querySelector('.toast-new-badge');
+        if (badge) badge.remove();
+      });
+
+      // 3. 创建最新的 Toast 节点
+      const toast = document.createElement('div');
+
+      toast.innerHTML = `<span class="toast-new-badge" style="
+    background: #0066FF;
+    color: #FFFFFF;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 6px;
+    margin-right: 6px;
+    display: inline-block;
+    vertical-align: middle;
+    letter-spacing: 0.5px;
+  ">NEW</span><span style="vertical-align: middle;">${message}</span>`;
+
+      // 最新消息的暗黑高亮与大字号样式
+      Object.assign(toast.style, {
+        padding: '8px 18px',
+        background: 'rgba(18, 18, 22, 0.95)',
+        backdropFilter: 'blur(16px)',
+        webkitBackdropFilter: 'blur(16px)',
+        color: '#ECECF1',
+        fontSize: '13.5px', // 字体加粗加大
+        lineHeight: '1.4',
+        fontWeight: '600',
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        borderRadius: '14px',
+        border: '1px solid rgba(0, 102, 255, 0.4)',
+        boxShadow: '0 4px 16px rgba(0, 0, 0, 0.6), 0 0 10px rgba(0, 102, 255, 0.25)',
+
+        /* 盒模型限制与换行逻辑 */
+        boxSizing: 'border-box',
+        maxWidth: 'min(85vw, 380px)',
+        width: 'max-content',
+        whiteSpace: 'normal',
+        wordBreak: 'break-word',
+        textAlign: 'center',
+
+        opacity: '0',
+        transform: 'translateY(-12px) scale(0.92)',
+        transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+        pointerEvents: 'auto',
+        cursor: 'default',
+        userSelect: 'none'
+      });
+
+      // 4. 挂载并触发动画
+      container.appendChild(toast);
+
+      requestAnimationFrame(() => {
+        toast.style.opacity = '1';
+        toast.style.transform = 'translateY(0) scale(1)';
+      });
+
+      // 5. 自动清理
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(-10px) scale(0.9)';
+
+        setTimeout(() => {
+          toast.remove();
+          if (container.children.length === 0) {
+            container.remove();
+          }
+        }, 250);
+      }, 3200);
+    }
+
+
+    bindInteractiveEvents() {
+      const btnScan = this.shadow.querySelector('#btn-scan');
+      const btnHl = this.shadow.querySelector('#btn-hl');
+      const btnClean = this.shadow.querySelector('#btn-clean');
+      const btnReset = this.shadow.querySelector('#btn-reset');
+      const btnUndo = this.shadow.querySelector('#btn-undo');
+      const btnRedo = this.shadow.querySelector('#btn-redo');
+      const btnClose = this.shadow.querySelector('#btn-close-panel');
+      const selectSort = this.shadow.querySelector('#select-sort');
+      const selectFilter = this.shadow.querySelector('#select-filter');
+
+      btnClose.onclick = () => this.hideUI();
+
+      if (selectSort) {
+        selectSort.value = this.sortType;
+        selectSort.onchange = (e) => {
+          this.sortType = e.target.value;
+          this.updateUI();
+        };
+      }
+
+      if (selectFilter) {
+        selectFilter.value = this.filterType;
+        selectFilter.onchange = (e) => {
+          this.filterType = e.target.value;
+          this.updateUI();
+        };
+      }
+
+      btnScan.onclick = () => {
+        btnScan.disabled = true;
+        btnScan.textContent = '扫描中...';
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            this.scan();
+            btnScan.disabled = false;
+            btnScan.textContent = '重新扫描';
+            this.showToast('✅ 页面诊断完成');
+            this.showToast('🔔 若扫描结果不及预期，请刷新页面重试');
+          }, 50);
+        });
+      };
+
+      btnHl.onclick = () => {
+        this.toggleHighlight();
+        if (this.isHighlighted) {
+          btnHl.classList.add('active');
+          this.showToast('🔴 已高亮标注高风险元素，请滑动页面查看👀');
+        } else {
+          btnHl.classList.remove('active');
+          this.showToast('⚪ 已还原元素标注');
+        }
+      };
+
+      btnClean.onclick = () => {
+        btnClean.disabled = true;
+        btnClean.textContent = '屏蔽中...';
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            const count = this.cleanAll();
+            btnClean.disabled = false;
+            btnClean.textContent = '一键屏蔽';
+            this.showToast(`🛡 已成功屏蔽 ${count} 个威胁`);
+          }, 50);
+        });
+      };
+
+      btnReset.onclick = () => {
+        btnReset.disabled = true;
+        btnReset.textContent = '重置中...';
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            const count = this.resetAll(); // 1. 清除规则并还原被屏蔽元素
+            btnReset.disabled = false;
+            btnReset.textContent = '一键重置';
+            this.showToast(`🔄 已重置规则并还原 ${count} 个元素`);
+          }, 50);
+        });
+      };
+
+      btnUndo.onclick = () => this.undo();
+      btnRedo.onclick = () => this.redo();
+    }
+
+    updateUI() {
+      if (!this.shadow) return;
+      const listEl = this.shadow.querySelector('#list');
+      const badge = this.shadow.querySelector('#count-badge');
+      const btnUndo = this.shadow.querySelector('#btn-undo');
+      const btnRedo = this.shadow.querySelector('#btn-redo');
+
+      if (btnUndo) btnUndo.disabled = this.undoStack.length === 0;
+      if (btnRedo) btnRedo.disabled = this.redoStack.length === 0;
+
+      let allDetected = Array.from(this.detectedAds.values());
+      const activeUnreadThreats = allDetected.filter((meta) => !meta.isBlocked);
+
+      badge.textContent = `${activeUnreadThreats.length} 未处理 / 共 ${allDetected.length} 个`;
+
+      if (allDetected.length === 0) {
+        listEl.innerHTML = '<div style="text-align:center;color:#30d158;padding:20px;">未发现高风险劫持或广告元素</div>';
+        return;
+      }
+
+      if (this.filterType === 'unread') {
+        allDetected = allDetected.filter((meta) => !meta.isBlocked);
+      } else if (this.filterType === 'blocked') {
+        allDetected = allDetected.filter((meta) => meta.isBlocked);
+      }
+
+      if (allDetected.length === 0) {
+        const filterTextMap = { unread: '未处理', blocked: '已屏蔽' };
+        listEl.innerHTML = `<div style="text-align:center;color:#8e8e93;padding:20px;">没有符合 [${filterTextMap[this.filterType] || '当前'}] 筛选条件的项</div>`;
+        return;
+      }
+
+      allDetected.sort((a, b) => {
+        if (this.sortType === 'height') {
+          return this.getElementHeight(b) - this.getElementHeight(a);
+        }
+        // 默认排序（按风险分数降序）
+        return b.score - a.score;
+      });
+
+      let html = '';
+      allDetected.forEach((meta) => {
+        const isBlocked = meta.isBlocked;
+        const isDowngraded = meta.isDowngraded || false;
+
+        // 状态标签生成逻辑（区分常规屏蔽与降级防误伤屏蔽）
+        let statusHtml = `<span class="score">${meta.score}分</span>`;
+        if (isBlocked) {
+          if (isDowngraded) {
+            statusHtml = `<div><span class="status-tag" style="background:rgba(255,149,0,0.25);color:#ff9500;">⚠️ 降级防误伤</span> <span class="score">${meta.score}分</span></div>`;
+          } else {
+            statusHtml = `<div><span class="status-tag">已屏蔽</span> <span class="score">${meta.score}分</span></div>`;
+          }
+        }
+
+        // 预警说明信息
+        const downgradeWarnHtml = isBlocked && isDowngraded && meta.downgradeReason
+          ? `<div style="font-size:11px;color:#ff9500;margin-top:4px;line-height:1.3;background:rgba(255,149,0,0.1);padding:4px 6px;border-radius:4px;">
+           ⚠️ <strong>误伤预警：</strong>${meta.downgradeReason}
+         </div>`
+          : '';
+
+        html += `
+      <div class="item ${isBlocked ? 'is-blocked' : ''}" data-ad-id="${meta.id}">
+        <div class="item-top">
+          <div class="item-title">
+            <strong>${meta.tagName}</strong>
+            <span style="color:#8e8e93;"> 宽高:${meta.size}</span>
+          </div>
+          ${statusHtml}
+        </div>
+        <div style="font-size:11px;color:#0a84ff;word-break:break-all;margin-top:2px;">${meta.classAndId || '无 Class/ID'}</div>
+        <div class="reasons">原因: ${meta.reasons.join(' | ')}</div>
+        ${downgradeWarnHtml}
+        <div class="actions">
+          ${!isBlocked
+            ? `<button class="btn-action btn-preview" data-action="preview" data-id="${meta.id}">🔍 预览元素</button>
+               <button class="btn-action btn-hide-single" data-action="hide" data-id="${meta.id}">🚫 单独屏蔽</button>`
+            : `<button class="btn-action btn-preview" data-action="preview" data-id="${meta.id}">🔍 预览元素</button>
+            <button class="btn-action btn-restore-single" data-action="restore" data-id="${meta.id}">↩️ 撤销屏蔽</button>`
+          }
+        </div>
+      </div>
+    `;
+      });
+      listEl.innerHTML = html;
+
+      listEl.querySelectorAll('.item').forEach((item) => {
+        const adId = item.getAttribute('data-ad-id');
+        const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+        if (!isTouchDevice) {
+          item.addEventListener('pointerenter', (e) => {
+            e.stopPropagation();
+            this.previewHoverElement(adId, true);
+          });
+
+          item.addEventListener('pointerleave', (e) => {
+            e.stopPropagation();
+            this.previewHoverElement(adId, false);
+          });
+        } else {
+          item.addEventListener('click', (e) => {
+            if (e.target.closest('.btn-action')) return;
+
+            e.stopPropagation();
+
+            const currentActiveId = this.activeTouchAdId;
+
+            if (currentActiveId === adId) {
+              this.previewHoverElement(adId, false);
+              this.activeTouchAdId = null;
+            } else {
+              if (currentActiveId) {
+                this.previewHoverElement(currentActiveId, false);
+              }
+              this.previewHoverElement(adId, true);
+              this.activeTouchAdId = adId;
+            }
+          });
+        }
+
+        item.addEventListener('click', (e) => {
+          const btn = e.target.closest('.btn-action');
+          if (!btn) return;
+
+          const action = btn.getAttribute('data-action');
+          const id = btn.getAttribute('data-id');
+
+          if (action === 'preview') {
+            this.showPreviewWindow(id);
+          } else if (action === 'hide') {
+            this.neutralizeSingle(id);
+          } else if (action === 'restore') {
+            this.restoreSingle(id);
+          }
+        });
+      });
+
+      if (!this.hasTouchGlobalListener) {
+        document.addEventListener('click', (e) => {
+          if (!e.target.closest('.ad-detector-container') && this.activeTouchAdId) {
+            this.previewHoverElement(this.activeTouchAdId, false);
+            this.activeTouchAdId = null;
+          }
+        });
+        this.hasTouchGlobalListener = true;
+      }
+    }
+
+  }
+
+  // 单例挂载
+  let instance = null;
+  function getDetector() {
+    if (!instance) {
+      instance = new UniversalAdDetector();
+    }
+    return instance;
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => getDetector());
+  } else {
+    getDetector();
+  }
+
+  // 绑定至全局 window 对象
+  globalWin.toggleAdDetectorUI = function () {
+    getDetector().toggleUI();
+  };
+
+  globalWin.showAdDetectorUI = function () {
+    getDetector().showUI();
+  };
+
+  globalWin.hideAdDetectorUI = function () {
+    getDetector().hideUI();
+  };
+
+  globalWin.cleanAdsSilently = function () {
+    return getDetector().cleanAll();
+  };
+
+})();
