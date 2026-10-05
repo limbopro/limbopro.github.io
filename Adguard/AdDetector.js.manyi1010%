@@ -2151,23 +2151,8 @@ ${selector} {
           }
 
           @media (max-width: 768px), (orientation: portrait) {
-            .panel { max-height: 75vh !important; 
-            width :min(420px, 60vw);
-            }
-
-            .header {
-            display:inline !important;
-            }
+            .panel { max-height: 55vh !important; }
           }
-
-
-          .header {
-            padding: 10px 14px; font-weight: 600; border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            display: flex; justify-content: space-between; align-items: center;
-            cursor: move; touch-action: none !important;
-          }
-
-
 
           .edge-drag {
             position: absolute;
@@ -2182,7 +2167,11 @@ ${selector} {
 
           
 
-          
+          .header {
+            padding: 10px 14px; font-weight: 600; border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex; justify-content: space-between; align-items: center;
+            cursor: move; touch-action: none !important;
+          }
           .select-control {
             background: rgba(255, 255, 255, 0.12);
             color: #f2f2f7;

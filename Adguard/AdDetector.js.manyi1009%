@@ -1222,14 +1222,6 @@ ${selector} {
       const isLowOpacity = !isNaN(opacityVal) && opacityVal >= 0 && opacityVal <= 0.5;
 
       // =============================================================
-      // ★【优化 1】：识别合法社交分享/交互组件（白名单前置）
-      // =============================================================
-      const isSocialShareComponent = !!(
-        el.querySelector?.('.social-share, .share-component, [class*="social-share"]') ||
-        /(social-share|share-component|bshare|bdshare)/i.test(`${el.id || ''} ${el.className || ''}`)
-      );
-
-      // =============================================================
       // ★【修复点 1】：解锁 pointer-events: none 对低透明度元素的一票否决
       // =============================================================
       if (style.display === 'none' || style.visibility === 'hidden') {
@@ -1262,54 +1254,39 @@ ${selector} {
         let addedScore = 0;
         let riskLabel = '';
 
-        // -------------------------------------------------------------
-        // ★【新增防护】：识别常见 UI 提示/通知组件，并检查是否具备交互能力
-        // -------------------------------------------------------------
-        const isNotificationUI = /(toast|tooltip|message|notice|alert|notification|snackbar)/i.test(`${el.id || ''} ${el.className || ''}`);
-        const hasClickableElements = !!(el.querySelector && el.querySelector('a[href], button, input, select, textarea, iframe, [onclick]'));
-
-        // 如果是合法的社交分享组件，动画过程中的透明度变化不视为点击劫持
-        if (isSocialShareComponent) {
-          addedScore = 0;
-          riskLabel = '合法社交分享组件(忽略透明度风险)';
-        } else if (isPositioned1 && opacityVal <= 0.1) {
-          // ★【保持原本规则】：若为无交互能力的 Toast/UI 提示节点，降级为低危（15分），避免无害提示框过线（40分）
-          if (isNotificationUI && !hasClickableElements) {
-            addedScore = 15;
-            riskLabel = `无交互 UI 提示组件/Toast (fixed/absolute + Opacity: ${opacityVal.toFixed(2)})`;
-          } else {
-            // 高危组合：直接赋予 55 分，确保稳定在 40 分门槛之上（原本规则）
-            addedScore = 55;
-            riskLabel = `高危透明点击劫持 (fixed/absolute + Opacity: ${opacityVal.toFixed(2)})`;
-          }
+        // 1. 梯度计分：区分高危点击劫持与常规低透明
+        if (isPositioned1 && opacityVal <= 0.1) {
+          // 高危组合：定位 + 极低透明度，赋予高分（突破拦截门槛）
+          addedScore = 65;
+          riskLabel = `高危透明点击劫持 (fixed/absolute + Opacity: ${opacityVal.toFixed(2)})`;
         } else if (isPositioned1) {
-          // 中危组合：定位 + 普通低透明度，给 30 分（原本规则）
-          addedScore = 30;
+          // 中危组合：定位 + 普通低透明 (0.1 < opacity <= 0.5)
+          addedScore = 35;
           riskLabel = `定位低透明度元素 (fixed/absolute + Opacity: ${opacityVal.toFixed(2)})`;
         } else {
-          // 低危组合：普通文档流低透明，给 15 分（原本规则）
-          addedScore = 15;
+          // 低危组合：常规文档流低透明元素
+          addedScore = 20;
           riskLabel = `透明度异常低 (Opacity: ${opacityVal.toFixed(2)})`;
         }
 
-        // 尺寸校验：宽高均等于 0，扣除 15 分降级（原本规则）
-        if (!isSocialShareComponent && rect.width === 0 && rect.height === 0) {
+        // 2. 尺寸校验：宽高均等于 0，降低 15 分风险权重
+        if (rect.width === 0 && rect.height === 0) {
           addedScore -= 15;
-          riskLabel += ' [宽高均为0, 风险降低 -15分]';
+          riskLabel += ' [宽高均位0, 风险降低 -15分]';
         }
 
-        // 防负分截断（原本规则）
+        // 3. 防负分截断
         addedScore = Math.max(0, addedScore);
 
-        // 结果结算（原本规则）
+        // 4. 结果结算
         if (addedScore > 0) {
           score += addedScore;
           reasons.push(`${riskLabel} [加${addedScore}分]`);
-        } else if (riskLabel) {
-          reasons.push(`${riskLabel} [不计分]`);
+        } else {
+          reasons.push(`${riskLabel} [经判定风险较低，不计分]`);
         }
 
-        // =================【写入 localStorage 日志】（原本规则保持不变）=================
+        // =================【写入 localStorage 日志】=================
         try {
           const parent = el.parentElement;
           const index = parent ? Array.from(parent.children).indexOf(el) : 0;
@@ -1325,7 +1302,7 @@ ${selector} {
             existingLogs.push({
               selector: elSelector,
               opacity: opacityVal,
-              score: score,
+              score: score, // 记录当前节点截至目前的总 score
               pos: elPosition,
               style: el.getAttribute('style') || '',
               text: (el.textContent || '').trim().slice(0, 50),
@@ -1341,6 +1318,7 @@ ${selector} {
           // 静默兜底
         }
       }
+
 
 
       // 透明度积分项结束
@@ -1370,13 +1348,12 @@ ${selector} {
         return { score: 0, reasons: ['容器内包含多个站内正常链接，判定为合法内容板块'] };
       }
 
-      // ★【优化 2】：精准化广告词库，去掉了易误杀通用组件的 (dialog|modal|pop|mask|overlay)
-      const adWordRegex = /(^|[-_ \/])(ad|ads|advert|advertising|advertisement|banner|backdrop|sponsor|sponsored|promoted|promo|guanggao|gg|floatad|float-ad|couplet|duilian|billboard|paster|sticky-ad|recommend-ad|right-ad|top-ad|bottom-ad|side-ad)([-_ \/]|s?$)/i;
+      const adWordRegex = /(^|[-_ \/])(ad|ads|advert|advertising|advertisement|banner|popup|pop|backdrop|overlay|mask|modal|dialog|sponsor|sponsored|promoted|promo|guanggao|gg|float|floatad|float-ad|couplet|duilian|billboard|paster|sticky-ad|recommend-ad|right-ad|top-ad|bottom-ad|side-ad)([-_ \/]|s?$)/i;
 
       const classAndId = `${el.id || ''} ${el.className || ''}`;
-      if (!isSocialShareComponent && adWordRegex.test(classAndId)) {
+      if (adWordRegex.test(classAndId)) {
         score += 35;
-        reasons.push('Class/ID 命中广告关键词');
+        reasons.push('Class/ID 命中广告/遮罩关键词');
       }
 
       const areaRatio = (rect.width * rect.height) / (viewportArea || 1);
@@ -1511,24 +1488,15 @@ ${selector} {
             const parsedZIndex = parseInt(style.zIndex, 10);
             const zIndex = isNaN(parsedZIndex) ? 0 : parsedZIndex;
 
-            if (zIndex >= 50 || (position === 'fixed' && style.zIndex === 'auto')) {
+            if (zIndex >= 99 || (position === 'fixed' && style.zIndex === 'auto')) {
               const role = el.getAttribute('role');
               const isNavigation = ['navigation', 'main', 'search', 'banner', 'dialog'].includes(role) ||
                 ['NAV', 'HEADER', 'FOOTER', 'SEARCH'].includes(el.tagName);
 
-              const hasInteractiveElements = !!el.querySelector('input, textarea, select, button, a[href]');
+              const hasInteractiveElements = el.querySelector('input, textarea, select, button, a[href]');
               const isFullViewportShell = rect.width >= window.innerWidth && rect.height >= window.innerHeight && !style.backgroundColor;
 
-              // ★【补丁修复 1】：识别微型悬浮挂载容器（如 390x1px 的 positionFooter）
-              // 逻辑：只要高度或宽度 <= 5px，且不是 0x0，说明是伪装成 Footer/Banner 的挂马容器，无视 isNavigation 语义白名单！
-              const isMicroContainer = (rect.height > 0 && rect.height <= 5) || (rect.width > 0 && rect.width <= 5);
-
-              if (isMicroContainer) {
-                score += 45;
-                reasons.push(`高风险微型悬浮挂载容器 (${position}, z-index: ${style.zIndex}, 尺寸: ${Math.round(rect.width)}x${Math.round(rect.height)}px)`);
-              }
-              // ★【保持原本逻辑】：常规容器校验
-              else if (zIndex >= 99 && !isNavigation && !hasInteractiveElements && !isFullViewportShell) {
+              if (!isNavigation && !hasInteractiveElements && !isFullViewportShell) {
                 score += 40;
                 reasons.push(`高风险悬浮/黏性容器 (${position}, z-index: ${style.zIndex})`);
               }
@@ -1537,58 +1505,32 @@ ${selector} {
         }
       }
 
-
-
-      const scriptText = el.querySelector('script')?.textContent || '';
-      if (scriptText.includes('opacity:0') || scriptText.includes('touchend') && scriptText.includes('location.href')) {
-        if (scriptText.includes('new Function') || scriptText.includes('eval') || scriptText.includes('document.write')) {
-          score += 50;
-          reasons.push('容器内包含低透明度动态注入的混淆脚本');
-        }
-      }
-
-
-      // ★【优化 3】：新增知名合法社交/服务域名白名单，避免分享链接被判为可疑跳转
-      const KNOWN_SOCIAL_DOMAINS = [
-        'weibo.com', 'qq.com', 'douban.com', 'facebook.com',
-        'twitter.com', 'linkedin.com', 'weixin.qq.com', 'qzone.qq.com'
-      ];
-
       const anchor = el.tagName === 'A' ? el : (allAnchors[0] || null);
       if (anchor) {
         const rawHref = anchor.getAttribute('href') || '';
 
-        let isKnownSocialLink = false;
-        try {
-          const targetUrl = new URL(anchor.href, window.location.href);
-          isKnownSocialLink = KNOWN_SOCIAL_DOMAINS.some(domain => targetUrl.hostname.includes(domain));
-        } catch (e) { }
+        const suspiciousRedirectRegex = /(\/|\?)(go|goto|redirect|out|click|jump|target|url|link|visit)(\/|\?|=|_)/i;
+        if (suspiciousRedirectRegex.test(rawHref)) {
+          score += 35;
+          reasons.push(`命中站内重定向/广告跳转路径 ("${rawHref.slice(0, 30)}...")`);
+        }
 
-        // 只有当非知名社交平台链接时，才进行重定向检测
-        if (!isKnownSocialLink) {
-          const suspiciousRedirectRegex = /(\/|\?)(go|goto|redirect|out|click|jump|target|url|link|visit)(\/|\?|=|_)/i;
-          if (suspiciousRedirectRegex.test(rawHref)) {
-            score += 35;
-            reasons.push(`命中站内重定向/广告跳转路径 ("${rawHref.slice(0, 30)}...")`);
-          }
+        if (/\/go\/[A-Za-z0-9%_\-~]{20,}/i.test(rawHref)) {
+          score += 25;
+          reasons.push('检测到长串 Base64 加密型广告跳转链接');
+        }
 
-          if (/\/go\/[A-Za-z0-9%_\-~]{20,}/i.test(rawHref)) {
-            score += 25;
-            reasons.push('检测到长串 Base64 加密型广告跳转链接');
+        if (rawHref === '#' || rawHref.startsWith('javascript:')) {
+          if (isPositioned && areaRatio > 0.05) {
+            score += 50;
+            reasons.push('透明/伪装点击劫持 (JS/空链接)');
           }
+        }
 
-          if (rawHref === '#' || rawHref.startsWith('javascript:')) {
-            if (isPositioned && areaRatio > 0.05) {
-              score += 50;
-              reasons.push('透明/伪装点击劫持 (JS/空链接)');
-            }
-          }
-
-          const redirectPattern = /(\/|\?)(goto|redirect|out|click|jump|target=|\?url=|\&url=)/i;
-          if (redirectPattern.test(rawHref)) {
-            score += 30;
-            reasons.push('站内隐蔽重定向跳转链接');
-          }
+        const redirectPattern = /(\/|\?)(goto|redirect|out|click|jump|target=|\?url=|\&url=)/i;
+        if (redirectPattern.test(rawHref)) {
+          score += 30;
+          reasons.push('站内隐蔽重定向跳转链接');
         }
 
         try {
@@ -1598,7 +1540,6 @@ ${selector} {
           if (targetMainDomain && targetMainDomain !== currentMainDomain && !targetUrl.protocol.startsWith('javascript')) {
             let linkScore = 35;
             let linkReason = `跨域外链 (${targetUrl.hostname})`;
-
             if (anchor.target === '_blank') {
               linkScore += 15;
               linkReason += ' + _blank';
@@ -1625,16 +1566,8 @@ ${selector} {
               }
             }
 
-            // ★【优化 4】：已知社交平台链接，大幅降权（削减至 10% 或忽略），防止正规分享误杀
-            if (isKnownSocialLink) {
-              linkScore = Math.floor(linkScore * 0.1);
-              linkReason += ' [知名社交分享链接，已豁免降权]';
-            }
-
-            if (linkScore > 0) {
-              score += linkScore;
-              reasons.push(linkReason);
-            }
+            score += linkScore;
+            reasons.push(linkReason);
           }
         } catch (e) { }
 
@@ -2151,23 +2084,8 @@ ${selector} {
           }
 
           @media (max-width: 768px), (orientation: portrait) {
-            .panel { max-height: 75vh !important; 
-            width :min(420px, 60vw);
-            }
-
-            .header {
-            display:inline !important;
-            }
+            .panel { max-height: 55vh !important; }
           }
-
-
-          .header {
-            padding: 10px 14px; font-weight: 600; border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            display: flex; justify-content: space-between; align-items: center;
-            cursor: move; touch-action: none !important;
-          }
-
-
 
           .edge-drag {
             position: absolute;
@@ -2182,7 +2100,11 @@ ${selector} {
 
           
 
-          
+          .header {
+            padding: 10px 14px; font-weight: 600; border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex; justify-content: space-between; align-items: center;
+            cursor: move; touch-action: none !important;
+          }
           .select-control {
             background: rgba(255, 255, 255, 0.12);
             color: #f2f2f7;
