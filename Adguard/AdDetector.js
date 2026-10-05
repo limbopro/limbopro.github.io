@@ -1101,11 +1101,25 @@ ${selector} {
     isLegitimateElement(el) {
       if (!el || el === document.body || el === document.documentElement) return true;
       if (this.isExcludedElement(el)) return true;
+
+      // ★【关键修复】：在安全校验前，优先提取透明度和定位样式
+      // 如果是低透明度风险元素，拒绝一票否决，强制放行去 calculateAdScore 打分！
+      const style = window.getComputedStyle(el);
+      const opacityVal = parseFloat(style.opacity);
+      const isLowOpacity = !isNaN(opacityVal) && opacityVal >= 0 && opacityVal <= 0.5;
+
+      if (isLowOpacity) {
+        return false; // 低透明度元素必须放行检测，不能直接判定为合法！
+      }
+
+      // 以下为常规非透明元素的保底放行逻辑
       if (el.querySelector('input, textarea, select, button, [role="dialog"], [aria-modal="true"]')) return true;
       const role = el.getAttribute('role');
       if (['main', 'navigation', 'search', 'dialog'].includes(role)) return true;
+
       return false;
     }
+
 
     getMainDomain(hostname) {
       if (!hostname) return '';
@@ -1202,36 +1216,97 @@ ${selector} {
         };
       }
 
-
-      // 只有非屏蔽节点，才对计算样式中的 hidden / pointer-events: none 进行剪枝清零
       const style = window.getComputedStyle(el);
-      if (style.pointerEvents === 'none' || style.display === 'none' || style.visibility === 'hidden') {
+      const opacityVal = parseFloat(style.opacity);
+      // 判断当前元素是否属于低透明度风险元素
+      const isLowOpacity = !isNaN(opacityVal) && opacityVal >= 0 && opacityVal <= 0.5;
+
+      // =============================================================
+      // ★【修复点 1】：解锁 pointer-events: none 对低透明度元素的一票否决
+      // =============================================================
+      if (style.display === 'none' || style.visibility === 'hidden') {
         return { score: 0, reasons: [] };
       }
 
+      // 如果设置了 pointer-events: none，但不是低透明度元素，才剪枝；如果是低透明度元素，放行检测！
+      if (style.pointerEvents === 'none' && !isLowOpacity) {
+        return { score: 0, reasons: [] };
+      }
 
+      // =============================================================
+      // ★【修复点 2】：放宽尺寸限制，防止 0 尺寸低透明遮罩被提前 Exit
+      // =============================================================
       const rect = el.getBoundingClientRect();
-      if (rect.width === 0 && rect.height === 0) return { score: 0, reasons: [] };
+      if (rect.width === 0 && rect.height === 0 && !isLowOpacity) {
+        return { score: 0, reasons: [] };
+      }
 
       const vw = window.innerWidth || document.documentElement.clientWidth;
       const vh = window.innerHeight || document.documentElement.clientHeight;
       const viewportArea = vw * vh;
 
+      // -------------------------------------------------------------
+      // ★【重构】透明点击劫持与网格遮罩检测 (Anti-Clickjacking Module)
+      // -------------------------------------------------------------
+      const isPositioned1 = style.position === 'fixed' || style.position === 'absolute';
 
-      // -------------------------------------------------------------
-      // ★【新增】透明度检测积分项 (Opacity Detection Module)
-      // -------------------------------------------------------------
-      let isLowOpacityAd = false; // 增加标记
-      const opacityVal = parseFloat(style.opacity);
-      if (!isNaN(opacityVal) && opacityVal >= 0 && opacityVal <= 0.5) {
-        score += 40;
-        reasons.push(`透明度异常低 (Opacity: ${opacityVal.toFixed(2)}) [加40分]`);
-        isLowOpacityAd = true;
-        console.log('[AdDetector] 捕捉到低透明度元素:', el, opacityVal);
+      if (isLowOpacity) {
+        // 计分项
+        // =============================================================
+        let addedScore = 40; // 原为 40
+        let riskLabel = `透明度异常低 (Opacity: ${opacityVal.toFixed(2)})`;
+
+        // 联合惩罚：如果是悬浮/定位元素 + 极低透明度 (<=0.1)，判定为高危点击劫持
+        if (isPositioned1 && opacityVal <= 0.1) {
+          addedScore = 75; // 进一步提高高危透明劫持分数
+          riskLabel = `高危透明点击劫持 (fixed/absolute + Opacity: ${opacityVal.toFixed(2)})`;
+        } else {
+          addedScore -= 25; // 非高危组合，扣除 25 分（实际得分: 30 分）
+        }
+
+        // 3. 【新增】尺寸校验：如果宽高均等于 0，再扣除 25 分
+        if (rect.width === 0 && rect.height === 0) {
+          addedScore -= 25;
+          riskLabel += ' [宽高为0，风险降低 -25分]';
+        }
+
+        score += addedScore;
+        reasons.push(`${riskLabel} [加${addedScore}分]`);
+
+        // =================【写入 localStorage（保留你原有的完整逻辑）】=================
+        try {
+          const parent = el.parentElement;
+          const index = parent ? Array.from(parent.children).indexOf(el) : 0;
+          const elSelector = `${el.tagName.toLowerCase()}${el.id ? '#' + el.id : ''}${el.className && typeof el.className === 'string' ? '.' + el.className.trim().replace(/\s+/g, '.') : ''}:nth-child(${index + 1})`;
+
+          const storageKey = 'ad_detector_low_opacity_logs';
+          const existingLogs = JSON.parse(localStorage.getItem(storageKey) || '[]');
+
+          const elPosition = `${style.bottom}_${style.left}_${style.zIndex}`;
+          const isDuplicate = existingLogs.some(item => item.selector === elSelector && item.pos === elPosition);
+
+          if (!isDuplicate) {
+            existingLogs.push({
+              selector: elSelector,
+              opacity: opacityVal,
+              score: score,
+              pos: elPosition,
+              style: el.getAttribute('style') || '',
+              text: (el.textContent || '').trim().slice(0, 50),
+              html: el.outerHTML.slice(0, 150),
+              time: new Date().toLocaleTimeString()
+            });
+
+            if (existingLogs.length > 50) existingLogs.shift();
+
+            localStorage.setItem(storageKey, JSON.stringify(existingLogs));
+          }
+        } catch (err) {
+          // 防止静默报错
+        }
       }
 
       // 透明度积分项结束
-
 
       const originHost = window.location.hostname;
       const currentMainDomain = this.getMainDomain(originHost);
@@ -1251,7 +1326,10 @@ ${selector} {
         } catch (e) { }
       });
 
-      if (sameDomainLinkCount >= 2) {
+      // =============================================================
+      // ★【保护项】：避免低透明度元素被“容器内有2个站内链接”一票否决
+      // =============================================================
+      if (sameDomainLinkCount >= 2 && !isLowOpacity) {
         return { score: 0, reasons: ['容器内包含多个站内正常链接，判定为合法内容板块'] };
       }
 
@@ -1281,11 +1359,8 @@ ${selector} {
         }
       }
 
-
-
       const imgEl = el.tagName === 'IMG' ? el : el.querySelector('img');
       if (imgEl) {
-        // 1. 增强图片 SRC 提取（兼容懒加载与响应式图片）
         const imgSrc = imgEl.currentSrc ||
           imgEl.src ||
           imgEl.getAttribute('data-src') ||
@@ -1293,18 +1368,15 @@ ${selector} {
 
         const imgAlt = imgEl.getAttribute('alt') || '';
 
-        // 2. 扩充 Base64 GIF 正则匹配（覆盖带 charset 等情况）
         const isBase64Gif = /^data:image\/gif/i.test(imgSrc) ||
           (imgSrc.startsWith('data:image/') && imgSrc.includes('base64,') && imgSrc.includes('R0lGODlh'));
         const isNetGif = /\.gif($|\?)/i.test(imgSrc) || imgSrc.includes('format=gif');
 
-        // Alt 属性判断
         if (/(广告|横幅|推广|赞助|sponsor|promoted|banner|ad)/i.test(imgAlt)) {
           score += 40;
           reasons.push(`图片 Alt 属性命中广告描述 ("${imgAlt}")`);
         }
 
-        // 链接路径判断
         if (/\/promo\/|\/ad[s_]?\d*|\/advert/i.test(imgSrc)) {
           score += 35;
           reasons.push('图片链接路径包含广告/推广目录 (/promo/或/ad_)');
@@ -1326,28 +1398,23 @@ ${selector} {
             reasons.push('GIF 路径包含广告/网盟关键字');
           }
 
-          // 缓存检测与异步补加分/单帧扣减
           const cacheResult = this.animatedGifCache.get(imgSrc);
           if (cacheResult === true) {
             score += 25;
             reasons.push('检测到多帧动态 GIF (High Attention)');
           } else if (cacheResult === false) {
-            // 【新增】如果明确检测为单帧 GIF，记录原因或适度削减风险分（避免误杀静态占位图）
             reasons.push('判定为单帧/静态 GIF (低吸引力)');
           } else if (cacheResult === undefined) {
-            // 标记为正在处理中，防止重复发起 Promise 解析
             this.animatedGifCache.set(imgSrc, 'PENDING');
 
             this.isAnimatedGif(imgSrc).then((isAnim) => {
               this.animatedGifCache.set(imgSrc, isAnim);
-              // 重新评估：无论检测结果是多帧 (true) 还是单帧 (false)，都重新触发一次扫描更新 UI
               this.scan();
             }).catch(() => {
               this.animatedGifCache.set(imgSrc, false);
             });
           }
         }
-
       }
 
       const badgeEl = el.querySelector('span, div, em, i');
@@ -1363,40 +1430,30 @@ ${selector} {
         const src = el.src || '';
         let matchedSpecificRule = false;
 
-        // 1. 检测跨域 iframe
         if (src && !src.startsWith(window.location.origin) && !src.startsWith('about:')) {
           score += 25;
           reasons.push('跨域 iframe 嵌套');
           matchedSpecificRule = true;
         }
 
-        // 2. 检测匹配网盟或可疑外链
         if (/pos|slot|pagead|doubleclick|union|ssp|popunder|m3u8|embed/i.test(src)) {
           score += 35;
           reasons.push('匹配网盟或可疑外链 iframe');
           matchedSpecificRule = true;
         }
 
-        // 3. 都不符合条件时的默认保底分
         if (!matchedSpecificRule) {
           score += 40;
           reasons.push('默认 iframe 基础风险分');
         }
       }
 
-
-
-
-      // 1. 缓存正则表达式，避免重复创建正则对象提升性能
-      // 扩展常见合法前缀（包含 Lit, Shoelace, Material, Prime, Nuxt, Next 等）
       const LEGITIMATE_PREFIX_REGEX = /^(el|ant|ion|mat|ng|van|sl|mwc|p|pwa|next|nuxt|sw)-/i;
 
-      // 检测 Shadow DOM / 自定义节点
       if (el.shadowRoot || (el.tagName && el.tagName.includes('-'))) {
         const tagName = el.tagName.toLowerCase();
         const role = el.getAttribute('role');
 
-        // 快捷判断：常规 UI 库前缀或正规语义角色直接过
         const isLegitimate = LEGITIMATE_PREFIX_REGEX.test(tagName) ||
           ['navigation', 'main', 'button', 'search', 'dialog', 'banner'].includes(role);
 
@@ -1406,33 +1463,22 @@ ${selector} {
         }
       }
 
-      // 2. 检测 fixed/sticky 高层级悬浮容器
       if (el instanceof HTMLElement) {
-        // 性能优化：非普通块级/容器元素（如 span, a, b, i）不耗费 getComputedStyle 计算
         const isContainer = /^(DIV|SECTION|ARTICLE|ASIDE|HEADER|FOOTER|MAIN|NAV|FORM|TABLE|IFRAME)$/i.test(el.tagName) || el.shadowRoot;
 
         if (isContainer) {
-          const style = window.getComputedStyle(el);
           const position = style.position;
 
           if (position === 'fixed' || position === 'sticky') {
             const parsedZIndex = parseInt(style.zIndex, 10);
-            // 处理 z-index 为 'auto' 或 NaN 的情况（sticky 经常为 auto，但依靠层叠上下文置顶）
             const zIndex = isNaN(parsedZIndex) ? 0 : parsedZIndex;
 
-            // 判定条件：z-index >= 99，或者 fixed 定位下 z-index 即使为 auto 也会脱离文档流
             if (zIndex >= 99 || (position === 'fixed' && style.zIndex === 'auto')) {
-
-              // 防误杀优化 1：语义与标签检查
               const role = el.getAttribute('role');
               const isNavigation = ['navigation', 'main', 'search', 'banner', 'dialog'].includes(role) ||
                 ['NAV', 'HEADER', 'FOOTER', 'SEARCH'].includes(el.tagName);
 
-              // 防误杀优化 2：内部交互元素检查（表单/按钮/链接）
               const hasInteractiveElements = el.querySelector('input, textarea, select, button, a[href]');
-
-              // 防误杀优化 3：尺寸过滤（排除全屏布局根容器，如 Vue/React 的 #app / #root 绑定的 fixed 壳）
-              const rect = el.getBoundingClientRect();
               const isFullViewportShell = rect.width >= window.innerWidth && rect.height >= window.innerHeight && !style.backgroundColor;
 
               if (!isNavigation && !hasInteractiveElements && !isFullViewportShell) {
@@ -1443,8 +1489,6 @@ ${selector} {
           }
         }
       }
-
-
 
       const anchor = el.tagName === 'A' ? el : (allAnchors[0] || null);
       if (anchor) {
@@ -1467,7 +1511,6 @@ ${selector} {
             reasons.push('透明/伪装点击劫持 (JS/空链接)');
           }
         }
-
 
         const redirectPattern = /(\/|\?)(goto|redirect|out|click|jump|target=|\?url=|\&url=)/i;
         if (redirectPattern.test(rawHref)) {
@@ -1539,7 +1582,8 @@ ${selector} {
         }
       }
 
-      if (sameDomainLinkCount > 0 && crossDomainLinkCount > 0) {
+      // 防误杀：如果不是低透明度元素，才对多域名链接做稀释扣分
+      if (sameDomainLinkCount > 0 && crossDomainLinkCount > 0 && !isLowOpacity) {
         const totalLinks = sameDomainLinkCount + crossDomainLinkCount;
         const normalRatio = sameDomainLinkCount / totalLinks;
         const deduction = Math.floor(score * normalRatio);
@@ -1549,6 +1593,7 @@ ${selector} {
 
       return { score: Math.max(0, score), reasons };
     }
+
 
     // ==========================================
     // ★ 高性能重构模块：全量选择器 + 绝对读写隔离 + 极速剪枝
@@ -1635,13 +1680,25 @@ ${selector} {
         }
 
         // 【剪枝 3】：对大量无特征的普通文本/容器节点实施毫秒级快速放行
-        // 如果是普通 div/section，没有 id/class，也没有子链接，极大概率不是广告
+        // 注意：必须排除带有低透明度/悬浮定位的高危隐藏节点！
         if (!existingMeta && (el.tagName === 'DIV' || el.tagName === 'SECTION' || el.tagName === 'ARTICLE')) {
           if (!el.id && !el.className && !el.querySelector('a[href]')) {
-            this.evaluatedNodes.add(el);
-            return;
+
+            // ★【关键修复】：在剪枝前，先校验它是否为隐蔽/透明节点
+            const style = window.getComputedStyle(el);
+            const opacityVal = parseFloat(style.opacity);
+            const isLowOpacity = !isNaN(opacityVal) && opacityVal <= 0.5;
+            const isFloating = style.position === 'fixed' || style.position === 'absolute';
+
+            // 如果既没有 Class/ID/链接，又是正常的非透明/非悬浮元素，才进行快速剪枝
+            if (!isLowOpacity && !isFloating) {
+              this.evaluatedNodes.add(el);
+              return;
+            }
+            // 如果是透明或悬浮的无 Class/ID 节点，放行进入后续的 calculateAdScore 打分！
           }
         }
+
 
         // 执行算法判别与打分
         const { score, reasons } = this.calculateAdScore(el);
