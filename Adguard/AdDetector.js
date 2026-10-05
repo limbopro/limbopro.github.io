@@ -20,6 +20,43 @@
 
   class UniversalAdDetector {
 
+    // 新增：专门还原 applyExtraHideStyle 设定的样式
+    removeExtraHideStyle(el) {
+      if (!el || !el.style) return;
+      el.style.removeProperty('visibility');
+      el.style.removeProperty('opacity');
+      el.style.removeProperty('z-index');
+      el.style.removeProperty('pointer-events');
+      el.style.removeProperty('width');
+      el.style.removeProperty('height');
+      el.style.removeProperty('min-width');
+      el.style.removeProperty('min-height');
+      el.style.removeProperty('display');
+    }
+
+    // 辅助隐藏样式设置
+    applyExtraHideStyle(el) {
+      if (!el || !el.style) return;
+      el.style.setProperty('visibility', 'hidden', 'important');
+      el.style.setProperty('opacity', '0', 'important');
+      el.style.setProperty('z-index', '-99999', 'important');
+      el.style.setProperty('pointer-events', 'none', 'important');
+      el.style.setProperty('width', '1px', 'important');
+      el.style.setProperty('height', '1px', 'important');
+      el.style.setProperty('min-width', '1px', 'important');
+      el.style.setProperty('min-height', '1px', 'important');
+    }
+
+    // 单元素隐藏封装
+    hideSingleElement(el) {
+      if (!el) return;
+      if (this.isSpecialStickyOrPopup(el)) {
+        this.applyExtraHideStyle(el);
+      } else {
+        el.style.setProperty('display', 'none', 'important');
+      }
+    }
+
     getElementHeight(meta) {
       if (meta.element && meta.element.offsetHeight) {
         return meta.element.offsetHeight;
@@ -210,6 +247,54 @@
       this.updateUI();
     }
 
+
+    // ==========================================
+    // ★ 特殊悬浮/贴片 节点特征判定器
+    // ==========================================
+    isSpecialStickyOrPopup(target) {
+      if (!target) return false;
+
+      // 1. 如果传入的是 adId 或 meta 对象
+      let meta = null;
+      let el = null;
+
+      if (typeof target === 'string') {
+        meta = this.detectedAds.get(target);
+        el = meta ? meta.element : null;
+      } else if (target.element) {
+        meta = target;
+        el = meta.element;
+      } else if (target instanceof HTMLElement) {
+        el = target;
+        const adId = el.getAttribute('data-ad-detector-id');
+        meta = adId ? this.detectedAds.get(adId) : null;
+      }
+
+      // 2. 依据 meta 中记录的诊断原因判定
+      if (meta && Array.isArray(meta.reasons)) {
+        const hasSpecialReason = meta.reasons.some(reason =>
+          reason.includes('贴片弹窗') ||
+          reason.includes('黏性容器') 
+        );
+        if (hasSpecialReason) return true;
+      }
+
+      // 3. 依据 DOM 元素的计算样式 (Computed Style) 兜底判定
+      if (el && el instanceof HTMLElement) {
+        try {
+          const style = window.getComputedStyle(el);
+          const position = style.position;
+          const zIndex = parseInt(style.zIndex, 10) || 0;
+
+          if ((position === 'fixed' || position === 'sticky') && (zIndex >= 50 || style.zIndex === 'auto')) {
+            return true;
+          }
+        } catch (e) { }
+      }
+
+      return false;
+    }
+
     // ==========================================
     // ★ 模块三 & 四：safeBlockElement 安全屏蔽 + 交叉校验 + 降级 + 规则持久化
     // ==========================================
@@ -222,6 +307,9 @@
       targetEl.dataset.overlayBlocked = 'true';
 
       this.applyHighlight(targetEl, false);
+
+      // 【核心修改】调用封装好的检查函数
+      const isSpecial = this.isSpecialStickyOrPopup(meta);
 
       // 1. 生成候选 CSS 选择器
       const candidateSelector = this.generateSpecificSelector(targetEl);
@@ -250,9 +338,12 @@
 
       // 3. 判定分流与降级策略执行
       if (N_actual > 0 && N_actual <= N_expected) {
-        // 【分支 A：完全匹配/更精准】 -> 全局 CSS 注入 + 写入 CSS 规则
-        targetEl.style.setProperty('display', 'none', 'important');
-        matchedElements.forEach(el => el.style.setProperty('display', 'none', 'important'));
+
+        // 1. 隐藏主节点 targetEl
+        this.hideSingleElement(targetEl);
+
+        // 2. 隐藏匹配到的所有节点（包括或不包括 targetEl 均安全）
+        matchedElements.forEach(el => this.hideSingleElement(el));
 
         const rule = {
           type: 'css',
@@ -260,7 +351,8 @@
           classAndId: meta.classAndId,
           tagName: meta.tagName,
           size: meta.size,
-          fingerprint: meta.fingerprint
+          fingerprint: meta.fingerprint,
+          hideMethod: isSpecial ? 'extra' : 'default'
         };
 
         if (!this.blockedRules.some(r => r.selector === candidateSelector || r.fingerprint === rule.fingerprint)) {
@@ -274,7 +366,13 @@
         meta.isDowngraded = true; // 👈 新增：标记为降级/有误伤风险
         meta.downgradeReason = `选择器匹配了 ${N_actual} 个节点，远超预期 ${N_expected} 个`; // 👈 新增原因说明
 
-        targetEl.style.setProperty('display', 'none', 'important');
+
+        if (isSpecial) {
+          this.applyExtraHideStyle(targetEl);
+        } else {
+          targetEl.style.setProperty('display', 'none', 'important'); // 修正为隐藏
+        }
+
         const exactXPath = this.getElementXPath(targetEl);
 
         const rule = {
@@ -283,7 +381,8 @@
           classAndId: meta.classAndId,
           tagName: meta.tagName,
           size: meta.size,
-          fingerprint: meta.fingerprint
+          fingerprint: meta.fingerprint,
+          hideMethod: isSpecial ? 'extra' : 'default'
         };
 
         if (!this.blockedRules.some(r => r.xpath === exactXPath || r.fingerprint === rule.fingerprint)) {
@@ -295,6 +394,7 @@
 
     // 内部恢复逻辑
     restoreSingleInternal(adId) {
+
       const meta = this.detectedAds.get(adId);
       if (!meta || !meta.element) return;
 
@@ -310,7 +410,8 @@
       affectedNodes.forEach((node) => {
         // 移除 DOM 隐藏标记与内联 display 属性
         delete node.dataset.overlayBlocked;
-        node.style.removeProperty('display');
+        // node.style.removeProperty('display');
+        this.removeExtraHideStyle(node);
 
         // 同步更新 detectedAds 映射表中的内存状态
         // 假设每个 ad 节点 DOM 上均存有关联的 ID 标识（如 data-ad-id）
@@ -340,6 +441,7 @@
       );
 
       this.saveBlockedRules();
+      this.applyCssRulesFromStorage();
     }
 
     neutralizeSingle(adId) {
@@ -447,6 +549,8 @@
         if (el.style.display === 'none') {
           el.style.removeProperty('display');
         }
+
+        this.removeExtraHideStyle(el);
 
         if (el._adLockObserver) {
           el._adLockObserver.disconnect();
@@ -605,7 +709,8 @@
           try {
             const result = document.evaluate(rule.xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
             if (result.singleNodeValue) {
-              result.singleNodeValue.style.setProperty('display', 'none', 'important');
+              // result.singleNodeValue.style.setProperty('display', 'none', 'important');
+              this.applyExtraHideStyle(result.singleNodeValue)
               result.singleNodeValue.dataset.overlayBlocked = 'true';
             }
           } catch (e) { }
@@ -613,7 +718,8 @@
       });
 
       if (cssSelectors.length > 0) {
-        styleEl.textContent = `${cssSelectors.join(', ')} { display: none !important; visibility: hidden !important; opacity: 0 !important; pointer-events: none !important; }`;
+        //styleEl.textContent = `${cssSelectors.join(', ')} { display: none !important; visibility: hidden !important; opacity: 0 !important; pointer-events: none !important; }`;
+        styleEl.textContent = `${cssSelectors.join(', ')} { visibility: hidden !important; opacity: 0 !important; z-index: -99999 !important; pointer-events: none !important; width: 1px !important; height: 1px !important; min-width: 1px !important; min-height: 1px !important; }`;
       } else {
         styleEl.textContent = '';
       }
@@ -659,7 +765,8 @@
             try {
               document.querySelectorAll(selector).forEach((el) => {
                 el.dataset.overlayBlocked = 'true';
-                el.style.setProperty('display', 'none', 'important');
+                // el.style.setProperty('display', 'none', 'important');
+                this.hideSingleElement(el)
               });
             } catch (e) { }
           }
@@ -673,7 +780,8 @@
                 if (el && el.nodeType === Node.ELEMENT_NODE) {
                   el.dataset.overlayBlocked = 'true';
                   el.dataset.adBlockedXpath = 'true';
-                  el.style.setProperty('display', 'none', 'important');
+                  // el.style.setProperty('display', 'none', 'important');
+                  this.hideSingleElement(el)
                 }
               }
             } catch (e) { }
@@ -1417,7 +1525,9 @@
           if (!meta.isBlocked && this.isMatchesBlockedRule(meta)) {
             meta.isBlocked = true;
             el.dataset.overlayBlocked = 'true';
-            el.style.setProperty('display', 'none', 'important');
+            // el.style.setProperty('display', 'none', 'important');
+            this.applyExtraHideStyle(el)
+
           }
 
           this.detectedAds.set(adId, meta);
@@ -1524,7 +1634,8 @@
           try {
             document.querySelectorAll(selector).forEach((el) => {
               el.dataset.overlayBlocked = 'true';
-              el.style.setProperty('display', 'none', 'important');
+              // el.style.setProperty('display', 'none', 'important');
+              this.applyExtraHideStyle(el)
             });
           } catch (e) { }
         }
@@ -1557,7 +1668,8 @@
           for (let i = 0; i < result.snapshotLength; i++) {
             const el = result.snapshotItem(i);
             if (el && el.nodeType === Node.ELEMENT_NODE && !el.dataset.adBlockedXpath) {
-              el.style.setProperty('display', 'none', 'important');
+              // el.style.setProperty('display', 'none', 'important');
+              this.applyExtraHideStyle(el)
               el.dataset.adBlockedXpath = 'true';
               el.dataset.overlayBlocked = 'true'; // 保持逻辑一致性
             }
@@ -1646,7 +1758,8 @@
         if (!meta.isBlocked && this.isMatchesBlockedRule(meta)) {
           meta.isBlocked = true;
           el.dataset.overlayBlocked = 'true';
-          el.style.setProperty('display', 'none', 'important');
+          // el.style.setProperty('display', 'none', 'important');
+          this.applyExtraHideStyle(el)
         }
 
         this.detectedAds.set(adId, meta);
