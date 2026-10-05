@@ -44,35 +44,41 @@
       // 1. 移除状态标记
       delete el.dataset.overlayBlocked;
 
-      // 2. 修正：查找并移除统一的动态唯一类名 anti-ad-target-
-      const uniqueClass = Array.from(el.classList || []).find(c => c.startsWith('anti-ad-target-'));
+      // 2. 如果存在动态生成的唯一类名，清理该类名
+      const uniqueClass = Array.from(el.classList || []).find(c => c.startsWith('anti-ad-unique-'));
       if (uniqueClass) {
         el.classList.remove(uniqueClass);
       }
 
-      // 3. 构建需要清理的选择器列表
+      // 3. 构建当前节点对应的匹配选择器，以便从全局 style 标签中精准清理 CSS 规则
       const selectorsToClean = [];
-      if (uniqueClass) {
-        selectorsToClean.push(`.${uniqueClass}`);
-      }
       if (el.id) {
         selectorsToClean.push(`#${CSS.escape(el.id)}`);
       }
+      if (el.classList && el.classList.length > 0) {
+        selectorsToClean.push('.' + Array.from(el.classList).map(c => CSS.escape(c)).join('.'));
+      }
+      if (uniqueClass) {
+        selectorsToClean.push(`.${uniqueClass}`);
+      }
 
-      // 4. 从全局动态 <style> 中精确定位并清理 CSS 规则
+      // 4. 从全局动态 <style> 挂载点中移除包含该选择器的 CSS 规则 block
       const STYLE_ID = 'anti-ad-fixed-dynamic-style';
       const styleEl = document.getElementById(STYLE_ID);
       if (styleEl && styleEl.textContent && selectorsToClean.length > 0) {
         let cssText = styleEl.textContent;
+
         selectorsToClean.forEach(sel => {
+          // 匹配诸如: ".anti-ad-unique-xxx {\n z-index: ... \n}" 的 CSS 规则段落
           const escapedSel = sel.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
           const ruleRegex = new RegExp(`${escapedSel}\\s*\\{[^\\}]*\\}`, 'g');
           cssText = cssText.replace(ruleRegex, '');
         });
+
         styleEl.textContent = cssText;
       }
 
-      // 5. 刷新 UI 界面
+      // 5. 若 UI 界面正在显示，同步刷新面板数据
       if (this.isUIVisible) {
         this.updateUI();
       }
@@ -93,75 +99,79 @@
     }
     */
 
+
     applyExtraHideStyle(el) {
       if (!el || !el.tagName) return;
 
-      // 1. 设置屏蔽标记
+      // ★ 关键补充：显式设置状态标记，防止 scan() 阶段将其从内存中剔除/过滤
       el.dataset.overlayBlocked = 'true';
 
-      // 2. 内存 Map 状态同步更新
-      const adId = el.getAttribute('data-ad-detector-id') || this.registerAdElement(el);
-      let meta = this.detectedAds.get(adId);
-      if (meta) {
-        meta.isBlocked = true;
-      } else {
-        this.detectedAds.set(adId, {
-          id: adId,
-          element: el,
-          score: 40,
-          reasons: ['已被额外隐藏样式屏蔽'],
-          tagName: el.tagName.toLowerCase(),
-          size: '1x1px',
-          classAndId: el.id ? `#${el.id}` : `[data-ad-detector-id="${adId}"]`,
-          fingerprint: `${el.tagName.toLowerCase()}_blocked_`,
-          isBlocked: true
-        });
-      }
-
-      // 3. 构建高优先级且唯一的 Selector
+      // 1. 尝试获取或为元素构建一个唯一的 selector
       let selector = '';
+
+      // 1.1 如果有 ID，优先使用 #id
       if (el.id) {
         selector = `#${CSS.escape(el.id)}`;
-      } else {
-        // 优先使用已有的唯一 ID 属性；若无，则生成独立 Unique Class
-        let uniqueClass = Array.from(el.classList).find(c => c.startsWith('anti-ad-target-'));
-        if (!uniqueClass) {
-          uniqueClass = 'anti-ad-target-' + Math.random().toString(36).substring(2, 9);
-          el.classList.add(uniqueClass);
-        }
-        selector = `.${uniqueClass}`;
+      }
+      // 1.2 如果有 class，使用多 Class 组合形式（如 .class1.class2）
+      else if (el.classList && el.classList.length > 0) {
+        selector = '.' + Array.from(el.classList).map(c => CSS.escape(c)).join('.');
+      }
+      // 1.3 极端无特征节点：生成一个动态唯一类名赋予该元素
+      else {
+        const UNIQUE_CLASS = 'anti-ad-unique-' + Math.random().toString(36).substring(2, 9);
+        el.classList.add(UNIQUE_CLASS);
+        selector = `.${UNIQUE_CLASS}`;
       }
 
-      // 4. 应用样式规则（带去重）
+      // 2. 调用 applyFixedAdHideRule 注入全局规则
       this.applyFixedAdHideRule(selector);
     }
 
-    applyFixedAdHideRule(selector) {
-      let styleEl = document.getElementById('anti-ad-fixed-dynamic-style');
+    /**
+     * 动态追加“置底欺骗式”隐藏广告样式（独立函数）
+     * @param {string|string[]} selectors - 广告选择器（例如: '.pop-ad' 或 ['.pop-ad', '#float-ad']）
+     */
+    applyFixedAdHideRule(selectors) {
+      if (!selectors) return;
+
+      // 1. 统一转换为选择器字符串格式
+      const selectorStr = Array.isArray(selectors) ? selectors.join(',\n') : selectors;
+      if (!selectorStr.trim()) return;
+
+      // 2. 查找或创建专属的 <style> 标签挂载点
+      const STYLE_ID = 'anti-ad-fixed-dynamic-style';
+      let styleEl = document.getElementById(STYLE_ID);
+
       if (!styleEl) {
         styleEl = document.createElement('style');
-        styleEl.id = 'anti-ad-fixed-dynamic-style';
-        document.head.appendChild(styleEl);
+        styleEl.id = STYLE_ID;
+        // 优先挂载至 head，若 head 尚未生成则挂载至 documentElement (html 标签)
+        (document.head || document.documentElement).appendChild(styleEl);
       }
 
-      // 校验去重：如果该 Selector 的规则已经存在，则不再重复添加
-      if (styleEl.textContent.includes(selector)) {
-        return;
-      }
-
+      // 3. 构建 7 重伪装与屏蔽 CSS 规则
       const cssRule = `
-${selector} {
-    z-index: -99999 !important;
-    opacity: 0 !important;
-    visibility: hidden !important;
-    pointer-events: none !important;
-    width: 1px !important;
+${selectorStr} {
+    z-index: -99999 !important;      /* 置底：降入视界盲区 */
+    opacity: 0 !important;           /* 视觉抹平：防止背景透明透出 */
+    visibility: hidden !important;   /* 双重隐形 */
+    pointer-events: none !important; /* 点击穿透：防止拦截页面点击事件 */
+    width: 1px !important;           /* 保留物理微尺寸：欺骗 SDK 认为渲染成功 */
     height: 1px !important;
     min-width: 1px !important;
     min-height: 1px !important;
 }
 `;
+
+      // 4. 追加样式规则到 style 元素中
       styleEl.textContent += cssRule;
+
+      // 在隐藏逻辑执行完后，补上一句刷新面板列表：
+      if (this.isUIVisible) {
+        this.updateUI();
+      }
+
     }
 
 
@@ -536,7 +546,7 @@ ${selector} {
       affectedNodes.forEach((node) => {
         // 移除 DOM 隐藏标记与内联 display 属性
         delete node.dataset.overlayBlocked;
-        node.style.removeProperty('display');
+        // node.style.removeProperty('display');
         this.removeExtraHideStyle(node);
 
         // 同步更新 detectedAds 映射表中的内存状态
@@ -1196,9 +1206,14 @@ ${selector} {
       }
 
 
-      // 只有非屏蔽节点，才对计算样式中的 hidden / pointer-events: none 进行剪枝清零
       const style = window.getComputedStyle(el);
+
       if (style.pointerEvents === 'none' || style.display === 'none' || style.visibility === 'hidden') {
+        const isSavedRule = this.isMatchesBlockedRule({
+          element: el,
+          classAndId: `${el.id ? '#' + el.id : ''}${el.className && typeof el.className === 'string' ? '.' + el.className : ''}`.trim(),
+          fingerprint: `${el.tagName.toLowerCase()}_`
+        });
         return { score: 0, reasons: [] };
       }
 

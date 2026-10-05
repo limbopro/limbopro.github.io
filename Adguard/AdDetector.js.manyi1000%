@@ -21,8 +21,6 @@
   class UniversalAdDetector {
 
     // 新增：专门还原 applyExtraHideStyle 设定的样式
-
-    /*
     removeExtraHideStyle(el) {
       if (!el || !el.style) return;
       el.style.removeProperty('visibility');
@@ -35,54 +33,11 @@
       el.style.removeProperty('min-height');
       el.style.removeProperty('display');
     }
-    */
-
-    // 新增：专门还原 applyExtraHideStyle 设定的样式
-    removeExtraHideStyle(el) {
-      if (!el || !el.tagName) return;
-
-      // 1. 移除状态标记
-      delete el.dataset.overlayBlocked;
-
-      // 2. 修正：查找并移除统一的动态唯一类名 anti-ad-target-
-      const uniqueClass = Array.from(el.classList || []).find(c => c.startsWith('anti-ad-target-'));
-      if (uniqueClass) {
-        el.classList.remove(uniqueClass);
-      }
-
-      // 3. 构建需要清理的选择器列表
-      const selectorsToClean = [];
-      if (uniqueClass) {
-        selectorsToClean.push(`.${uniqueClass}`);
-      }
-      if (el.id) {
-        selectorsToClean.push(`#${CSS.escape(el.id)}`);
-      }
-
-      // 4. 从全局动态 <style> 中精确定位并清理 CSS 规则
-      const STYLE_ID = 'anti-ad-fixed-dynamic-style';
-      const styleEl = document.getElementById(STYLE_ID);
-      if (styleEl && styleEl.textContent && selectorsToClean.length > 0) {
-        let cssText = styleEl.textContent;
-        selectorsToClean.forEach(sel => {
-          const escapedSel = sel.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-          const ruleRegex = new RegExp(`${escapedSel}\\s*\\{[^\\}]*\\}`, 'g');
-          cssText = cssText.replace(ruleRegex, '');
-        });
-        styleEl.textContent = cssText;
-      }
-
-      // 5. 刷新 UI 界面
-      if (this.isUIVisible) {
-        this.updateUI();
-      }
-    }
 
     // 辅助隐藏样式设置
-
-    /*applyExtraHideStyle(el) {
+    applyExtraHideStyle(el) {
       if (!el || !el.style) return;
-      //el.style.setProperty('visibility', 'hidden', 'important');
+      el.style.setProperty('visibility', 'hidden', 'important');
       el.style.setProperty('opacity', '0', 'important');
       el.style.setProperty('z-index', '-99999', 'important');
       el.style.setProperty('pointer-events', 'none', 'important');
@@ -91,79 +46,6 @@
       el.style.setProperty('min-width', '1px', 'important');
       el.style.setProperty('min-height', '1px', 'important');
     }
-    */
-
-    applyExtraHideStyle(el) {
-      if (!el || !el.tagName) return;
-
-      // 1. 设置屏蔽标记
-      el.dataset.overlayBlocked = 'true';
-
-      // 2. 内存 Map 状态同步更新
-      const adId = el.getAttribute('data-ad-detector-id') || this.registerAdElement(el);
-      let meta = this.detectedAds.get(adId);
-      if (meta) {
-        meta.isBlocked = true;
-      } else {
-        this.detectedAds.set(adId, {
-          id: adId,
-          element: el,
-          score: 40,
-          reasons: ['已被额外隐藏样式屏蔽'],
-          tagName: el.tagName.toLowerCase(),
-          size: '1x1px',
-          classAndId: el.id ? `#${el.id}` : `[data-ad-detector-id="${adId}"]`,
-          fingerprint: `${el.tagName.toLowerCase()}_blocked_`,
-          isBlocked: true
-        });
-      }
-
-      // 3. 构建高优先级且唯一的 Selector
-      let selector = '';
-      if (el.id) {
-        selector = `#${CSS.escape(el.id)}`;
-      } else {
-        // 优先使用已有的唯一 ID 属性；若无，则生成独立 Unique Class
-        let uniqueClass = Array.from(el.classList).find(c => c.startsWith('anti-ad-target-'));
-        if (!uniqueClass) {
-          uniqueClass = 'anti-ad-target-' + Math.random().toString(36).substring(2, 9);
-          el.classList.add(uniqueClass);
-        }
-        selector = `.${uniqueClass}`;
-      }
-
-      // 4. 应用样式规则（带去重）
-      this.applyFixedAdHideRule(selector);
-    }
-
-    applyFixedAdHideRule(selector) {
-      let styleEl = document.getElementById('anti-ad-fixed-dynamic-style');
-      if (!styleEl) {
-        styleEl = document.createElement('style');
-        styleEl.id = 'anti-ad-fixed-dynamic-style';
-        document.head.appendChild(styleEl);
-      }
-
-      // 校验去重：如果该 Selector 的规则已经存在，则不再重复添加
-      if (styleEl.textContent.includes(selector)) {
-        return;
-      }
-
-      const cssRule = `
-${selector} {
-    z-index: -99999 !important;
-    opacity: 0 !important;
-    visibility: hidden !important;
-    pointer-events: none !important;
-    width: 1px !important;
-    height: 1px !important;
-    min-width: 1px !important;
-    min-height: 1px !important;
-}
-`;
-      styleEl.textContent += cssRule;
-    }
-
 
     // 单元素隐藏封装
     hideSingleElement(el) {
@@ -392,8 +274,7 @@ ${selector} {
       if (meta && Array.isArray(meta.reasons)) {
         const hasSpecialReason = meta.reasons.some(reason =>
           reason.includes('贴片弹窗') ||
-          reason.includes('黏性容器') ||
-          reason.includes('角标文本')
+          reason.includes('黏性容器')
         );
         if (hasSpecialReason) return true;
       }
@@ -536,7 +417,7 @@ ${selector} {
       affectedNodes.forEach((node) => {
         // 移除 DOM 隐藏标记与内联 display 属性
         delete node.dataset.overlayBlocked;
-        node.style.removeProperty('display');
+        // node.style.removeProperty('display');
         this.removeExtraHideStyle(node);
 
         // 同步更新 detectedAds 映射表中的内存状态
@@ -676,14 +557,12 @@ ${selector} {
           el.style.removeProperty('display');
         }
 
+        this.removeExtraHideStyle(el);
 
         if (el._adLockObserver) {
           el._adLockObserver.disconnect();
           delete el._adLockObserver;
         }
-
-        this.removeExtraHideStyle(el);
-
       });
 
       // 5. 重置内存状态与 UI
@@ -847,7 +726,7 @@ ${selector} {
 
       if (cssSelectors.length > 0) {
         //styleEl.textContent = `${cssSelectors.join(', ')} { display: none !important; visibility: hidden !important; opacity: 0 !important; pointer-events: none !important; }`;
-        styleEl.textContent = `${cssSelectors.join(', ')} { /*visibility: hidden !important;*/ opacity: 0 !important; z-index: -99999 !important; pointer-events: none !important; width: 1px !important; height: 1px !important; min-width: 1px !important; min-height: 1px !important; }`;
+        styleEl.textContent = `${cssSelectors.join(', ')} { visibility: hidden !important; opacity: 0 !important; z-index: -99999 !important; pointer-events: none !important; width: 1px !important; height: 1px !important; min-width: 1px !important; min-height: 1px !important; }`;
       } else {
         styleEl.textContent = '';
       }
@@ -1178,27 +1057,22 @@ ${selector} {
     calculateAdScore(el) {
       if (this.isLegitimateElement(el)) return { score: 0, reasons: [] };
 
-
-      // ★ 1. 优先判定是否已被手动标记屏蔽或匹配规则
-      const isBlockedDataset = el.dataset && (el.dataset.overlayBlocked === 'true' || el.dataset.adBlockedXpath === 'true');
-      const isSavedRule = this.isMatchesBlockedRule({
-        element: el,
-        classAndId: `${el.id ? '#' + el.id : ''}${el.className && typeof el.className === 'string' ? '.' + el.className : ''}`.trim(),
-        fingerprint: `${el.tagName ? el.tagName.toLowerCase() : ''}_`
-      });
-
-      if (isBlockedDataset || isSavedRule) {
-        const blockReason = isSavedRule ? '匹配历史持久化规则自动屏蔽' : '已被当前会话手动屏蔽';
-        return {
-          score: 40, // 强制赋予 40 分，确保稳定留在 scan 列表中
-          reasons: [`${blockReason}（已置底/额外方式隐藏）`]
-        };
-      }
-
-
-      // 只有非屏蔽节点，才对计算样式中的 hidden / pointer-events: none 进行剪枝清零
       const style = window.getComputedStyle(el);
+
       if (style.pointerEvents === 'none' || style.display === 'none' || style.visibility === 'hidden') {
+        const isSavedRule = this.isMatchesBlockedRule({
+          element: el,
+          classAndId: `${el.id ? '#' + el.id : ''}${el.className && typeof el.className === 'string' ? '.' + el.className : ''}`.trim(),
+          fingerprint: `${el.tagName.toLowerCase()}_`
+        });
+
+        if (el.dataset.overlayBlocked === 'true' || el.dataset.adBlockedXpath === 'true' || isSavedRule) {
+          const blockReason = isSavedRule ? '匹配历史持久化规则自动屏蔽' : '已被当前会话手动屏蔽';
+          return {
+            score: 40,
+            reasons: [`${blockReason}（若影响页面功能可点击撤销）`]
+          };
+        }
         return { score: 0, reasons: [] };
       }
 
@@ -1589,17 +1463,11 @@ ${selector} {
         // 【剪枝 1】：非广告且已评估过的节点，直接跳过
         if (!existingMeta && this.evaluatedNodes.has(el)) return;
 
-        // 【剪枝 2】：如果是已被屏蔽的节点（带标记或匹配持久化规则），允许放行；仅对未屏蔽且未渲染的纯隐形节点进行剪枝
-        /*const isAlreadyBlocked = el.dataset.overlayBlocked === 'true' || el.dataset.adBlockedXpath === 'true';
-        if (!isAlreadyBlocked && el.offsetWidth === 0 && el.offsetHeight === 0) return;*/
-
-        // 【剪枝 2】：如果是已被屏蔽的节点（带标记或匹配持久化规则），允许放行；仅对未屏蔽且未渲染的纯隐形节点进行剪枝
-        const isAlreadyBlocked = (el.dataset && (el.dataset.overlayBlocked === 'true' || el.dataset.adBlockedXpath === 'true')) || this.isMatchesBlockedRule({ element: el });
-
-        if (!isAlreadyBlocked) {
-          // 未屏蔽的节点，如果完全不可见/无尺寸则剪枝
-          if (el.offsetWidth === 0 && el.offsetHeight === 0) return;
-        }
+        // 【剪枝 2】：快速几何过滤，未渲染或隐藏节点直接跳过，避免执行昂贵的 calculateAdScore
+        // if (el.offsetWidth === 0 && el.offsetHeight === 0) return;
+        // 【修复】：如果是已被屏蔽的节点（带标记或匹配持久化规则），允许放行；仅对未屏蔽且未渲染的纯隐形节点进行剪枝
+        const isAlreadyBlocked = el.dataset.overlayBlocked === 'true' || el.dataset.adBlockedXpath === 'true';
+        if (!isAlreadyBlocked && el.offsetWidth === 0 && el.offsetHeight === 0) return;
 
         // 【剪枝 3】：对大量无特征的普通文本/容器节点实施毫秒级快速放行
         // 如果是普通 div/section，没有 id/class，也没有子链接，极大概率不是广告
