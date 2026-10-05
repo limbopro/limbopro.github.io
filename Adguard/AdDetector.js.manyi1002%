@@ -165,9 +165,6 @@ ${selector} {
     }
 
 
-
-
-
     // 单元素隐藏封装
     hideSingleElement(el) {
       if (!el) return;
@@ -246,7 +243,6 @@ ${selector} {
           this.showUI();
         }
       }
-
     }
 
     // ==========================================
@@ -1180,11 +1176,8 @@ ${selector} {
     }
 
     calculateAdScore(el) {
-
-      let score = 0;
-      const reasons = [];
-
       if (this.isLegitimateElement(el)) return { score: 0, reasons: [] };
+
 
       // ★ 1. 优先判定是否已被手动标记屏蔽或匹配规则
       const isBlockedDataset = el.dataset && (el.dataset.overlayBlocked === 'true' || el.dataset.adBlockedXpath === 'true');
@@ -1209,6 +1202,8 @@ ${selector} {
         return { score: 0, reasons: [] };
       }
 
+      let score = 0;
+      const reasons = [];
 
       const rect = el.getBoundingClientRect();
       if (rect.width === 0 && rect.height === 0) return { score: 0, reasons: [] };
@@ -1216,22 +1211,6 @@ ${selector} {
       const vw = window.innerWidth || document.documentElement.clientWidth;
       const vh = window.innerHeight || document.documentElement.clientHeight;
       const viewportArea = vw * vh;
-
-
-      // -------------------------------------------------------------
-      // ★【新增】透明度检测积分项 (Opacity Detection Module)
-      // -------------------------------------------------------------
-      let isLowOpacityAd = false; // 增加标记
-      const opacityVal = parseFloat(style.opacity);
-      if (!isNaN(opacityVal) && opacityVal >= 0 && opacityVal <= 0.5) {
-        score += 40;
-        reasons.push(`透明度异常低 (Opacity: ${opacityVal.toFixed(2)}) [加40分]`);
-        isLowOpacityAd = true;
-        console.log('[AdDetector] 捕捉到低透明度元素:', el, opacityVal);
-      }
-
-      // 透明度积分项结束
-
 
       const originHost = window.location.hostname;
       const currentMainDomain = this.getMainDomain(originHost);
@@ -1280,8 +1259,6 @@ ${selector} {
           reasons.push('顶/底悬浮贴片弹窗');
         }
       }
-
-
 
       const imgEl = el.tagName === 'IMG' ? el : el.querySelector('img');
       if (imgEl) {
@@ -1468,7 +1445,6 @@ ${selector} {
           }
         }
 
-
         const redirectPattern = /(\/|\?)(goto|redirect|out|click|jump|target=|\?url=|\&url=)/i;
         if (redirectPattern.test(rawHref)) {
           score += 30;
@@ -1614,24 +1590,15 @@ ${selector} {
         if (!existingMeta && this.evaluatedNodes.has(el)) return;
 
         // 【剪枝 2】：如果是已被屏蔽的节点（带标记或匹配持久化规则），允许放行；仅对未屏蔽且未渲染的纯隐形节点进行剪枝
+        /*const isAlreadyBlocked = el.dataset.overlayBlocked === 'true' || el.dataset.adBlockedXpath === 'true';
+        if (!isAlreadyBlocked && el.offsetWidth === 0 && el.offsetHeight === 0) return;*/
+
+        // 【剪枝 2】：如果是已被屏蔽的节点（带标记或匹配持久化规则），允许放行；仅对未屏蔽且未渲染的纯隐形节点进行剪枝
         const isAlreadyBlocked = (el.dataset && (el.dataset.overlayBlocked === 'true' || el.dataset.adBlockedXpath === 'true')) || this.isMatchesBlockedRule({ element: el });
 
-        ////if (!isAlreadyBlocked) {
-        // 未屏蔽的节点，如果完全不可见/无尺寸则剪枝
-        ////if (el.offsetWidth === 0 && el.offsetHeight === 0) return;
-        ////}
-
-        // 修改后：
         if (!isAlreadyBlocked) {
-          // 即使 offsetWidth/offsetHeight 为 0，如果是 fixed/absolute 定位或带透明度，也不要直接剪枝
-          const style = window.getComputedStyle(el);
-          const opacityVal = parseFloat(style.opacity);
-          const isTransparent = !isNaN(opacityVal) && opacityVal <= 0.5;
-          const isFloating = style.position === 'fixed' || style.position === 'absolute';
-
-          if (el.offsetWidth === 0 && el.offsetHeight === 0 && !isTransparent && !isFloating) {
-            return;
-          }
+          // 未屏蔽的节点，如果完全不可见/无尺寸则剪枝
+          if (el.offsetWidth === 0 && el.offsetHeight === 0) return;
         }
 
         // 【剪枝 3】：对大量无特征的普通文本/容器节点实施毫秒级快速放行
@@ -3005,6 +2972,5 @@ ${selector} {
   globalWin.cleanAdsSilently = function () {
     return getDetector().cleanAll();
   };
-
 
 })();
