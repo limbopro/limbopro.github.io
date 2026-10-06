@@ -368,7 +368,8 @@ ${selector} {
       if (meta && Array.isArray(meta.reasons)) {
         const hasSpecialReason = meta.reasons.some(reason =>
           reason.includes('贴片弹窗') ||
-          reason.includes('黏性容器')
+          reason.includes('黏性容器') ||
+          reason.includes('角标文本')
         );
         if (hasSpecialReason) return true;
       }
@@ -1342,23 +1343,13 @@ ${selector} {
       }
 
       // ★【优化 2】：精准化广告词库，去掉了易误杀通用组件的 (dialog|modal|pop|mask|overlay)
-      // 1. 广告特征正则（保留精准匹配）
       const adWordRegex = /(^|[-_ \/])(ad|ads|advert|advertising|advertisement|banner|backdrop|sponsor|sponsored|promoted|promo|guanggao|gg|floatad|float-ad|couplet|duilian|billboard|paster|sticky-ad|recommend-ad|right-ad|top-ad|bottom-ad|side-ad)([-_ \/]|s?$)/i;
 
-      // 2. 自用检测器 / 反拦截组件排除正则（白名单）
-      const selfOrAntiAdRegex = /(^|[-_ \/])(ad-detector|anti-ad|anti-adblock|adblock-warning|ad-blocker)([-_ \/]|$)/i;
-
       const classAndId = `${el.id || ''} ${el.className || ''}`;
-
-      // 3. 组合判定逻辑
-      const isSelfOrAntiAd = selfOrAntiAdRegex.test(classAndId);
-
-      if (!isSocialShareComponent && !isSelfOrAntiAd && adWordRegex.test(classAndId)) {
+      if (!isSocialShareComponent && adWordRegex.test(classAndId)) {
         score += 35;
         reasons.push('Class/ID 命中广告关键词');
       }
-
-
 
       const areaRatio = (rect.width * rect.height) / (viewportArea || 1);
       const isPositioned = style.position === 'fixed' || style.position === 'absolute';
@@ -3138,9 +3129,5 @@ ${selector} {
     return getDetector().cleanAll();
   };
 
-   // ✅ 修正写法：通过闭包包装，接收参数并转发给单例实例
-  globalWin.showToast = function (message) {
-    getDetector().showToast(message);
-  };
 
 })();

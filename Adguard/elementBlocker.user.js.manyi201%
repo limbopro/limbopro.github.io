@@ -821,50 +821,18 @@
 
         .smallTools {
         grid-template-columns: 1fr 1fr;margin-bottom:2px;display: grid;gap: 2px
-
-        /* 底部 15px 呈现渐隐效果，强化“下方有隐去内容”的视觉提示 */
-    -webkit-mask-image: linear-gradient(to bottom, black calc(100% - 18px), transparent 100%);
-    mask-image: linear-gradient(to bottom, black calc(100% - 18px), transparent 100%);
-
         }
-
-
-        /* 强制在任何时候都展示微弱的滚动条轨 */
-.smallTools::-webkit-scrollbar {
-    width: 5px !important;
-    display: block !important;
-}
-
-.smallTools::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.05); /* 极暗轨道 */
-    border-radius: 3px;
-}
-
-.smallTools::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.3); /* 高亮滑块，提醒可滚动 */
-    border-radius: 3px;
-}
-
-/* Firefox 支持 */
-.smallTools {
-    scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.3) rgba(0, 0, 0, 0.1);
-}
-
 
 
          @media (max-width: 768px), (orientation: portrait) {
             .smallTools {
-            grid-template-columns: 1fr;
-        margin-bottom: 2px;
-        display: grid;
-        gap: 2px;
-
-        /* 👇 将高度设为非整数倍（如 88px/95px），让被裁切半截的按钮露出来 */
-        max-height: 92px; 
+            /* 👇 新增限制高度与滚动逻辑 */
+        max-height: 100px;
         overflow-y: auto;
-        
-        -webkit-overflow-scrolling: touch;
+        grid-template-columns: 1fr;
+        margin-bottom:2px;
+        display: grid;
+        gap: 2px
         }
 
           }
@@ -965,7 +933,7 @@
     /* 布局与尺寸 */
     flex: 1;
     width: 100%;
-    height: 34px;
+    height: 40px;
     padding: 8px 5px;
     margin-bottom: 2px;
 
@@ -3861,7 +3829,6 @@ border: white !important;
             btn.innerText = `❌退出${originalText}`;
             btn.classList.add('closer')
             statusBar.textContent = `${originalText} -> 模式已启用，请点击任意元素进行调试...`;
-            window.showToast?.(`${originalText} -> 模式已启用，请点击任意元素进行调试...`);
 
             // 2. 启动工具
             startSelectorTool();
@@ -3875,7 +3842,6 @@ border: white !important;
                     btn.innerText = `启用 ${originalText}`;
                     btn.classList.remove('closer')
                     statusBar.textContent = `${originalText} -> 模式已关闭...`;
-                    window.showToast?.(`${originalText} -> 模式已关闭...`);
                     clearInterval(checkExit);
                 }
             }, 500); // 每半秒检查一次工具是否还存在
@@ -3927,7 +3893,6 @@ border: white !important;
                 const selector = e.target.getAttribute('data-selector');
                 if (removeCssRemovalChoice(selector)) {
                     statusBar.textContent = `🚫 CSS 选择器移除记录已取消：${safeTruncate(selector, 30)}。请刷新页面恢复元素。`;
-                    window.showToast?.(`🚫 CSS 选择器移除记录已取消：${safeTruncate(selector, 30)}。请刷新页面恢复元素。`);
                     updateSavedListContent();
                 }
             }
@@ -4004,7 +3969,6 @@ border: white !important;
 
             if (target.tagName === 'HTML' || target.tagName === 'BODY') {
                 statusBar.textContent = "不能屏蔽整个页面，请选择具体元素。";
-                window.showToast?.("不能屏蔽整个页面，请选择具体元素。");
                 toggleSelectionMode(false);
                 return;
             }
@@ -4015,7 +3979,6 @@ border: white !important;
                 saveRemovalChoice(xpath);
             } else {
                 statusBar.textContent = "无法获取该元素的唯一路径，屏蔽失败。";
-                window.showToast?.("无法获取该元素的唯一路径，屏蔽失败。");
                 toggleSelectionMode(false);
                 return;
             }
@@ -4023,7 +3986,6 @@ border: white !important;
             target.remove();
 
             statusBar.textContent = `🎉 已永久屏蔽元素: ${target.tagName}。请刷新页面查看效果。`;
-            window.showToast?.(`🎉 已永久屏蔽元素: ${target.tagName}。请刷新页面查看效果。`);
             updateSavedListContent();
 
             toggleSelectionMode(false);
@@ -4114,13 +4076,11 @@ border: white !important;
             if (isDebuggingElementClick) {
                 debugClickToggle.textContent = '🛠️ 元素点击调试 (开)';
                 debugClickToggle.classList.add('greener')
-                statusBar.textContent = '✅ 元素点击与调试已开启，**立即生效**。请点击可疑按钮。';
-                window.showToast?.('✅ 元素点击与调试已开启，**立即生效**。请点击可疑按钮。');
+                statusBar.textContent = '✅ 元素点击拦截已开启，**立即生效**。请点击可疑按钮。';
             } else {
                 debugClickToggle.classList.remove('greener')
                 debugClickToggle.textContent = '🛠️ 元素点击调试 (关)';
-                statusBar.textContent = '❌ 元素点击与调试已关闭，**立即生效**。';
-                window.showToast?.('❌ 元素点击与调试已关闭，**立即生效**。');
+                statusBar.textContent = '❌ 元素点击拦截已关闭，**立即生效**。';
             }
             statusBar.textContent += "（💡 建议：切换模式后刷新页面，以确保 Iframe 和 Hook 状态完全同步）";
 
@@ -4177,7 +4137,6 @@ border: white !important;
                     element.remove();
                     listItem.remove();
                     statusBar.textContent = `✅ 元素 ${elementEntry.tagName} 已永久移除并保存。`;
-                    window.showToast?.(`✅ 元素 ${elementEntry.tagName} 已永久移除并保存。`);
                     updateSavedListContent();
                 }
                 return;
@@ -4220,7 +4179,6 @@ border: white !important;
                     // Update tab counter
                     tabIframe.textContent = `当前 Iframe 记录 (${document.querySelectorAll('iframe').length})`;
                     statusBar.textContent = `✅ Iframe 元素已永久移除并保存。请刷新页面查看效果。`;
-                    window.showToast?.(`✅ Iframe 元素已永久移除并保存。请刷新页面查看效果。`);
                     updateSavedListContent();
                 }
                 return;
@@ -4236,8 +4194,6 @@ border: white !important;
 
                 lastHighlightedElement = element;
                 statusBar.textContent = `选中 Iframe: ${elementEntry.isCrossDomain ? '跨域' : '同源'} | Src: ${safeTruncate(elementEntry.src, 50)}`;
-                window.showToast?.(`选中 Iframe: ${elementEntry.isCrossDomain ? '跨域' : '同源'} | Src: ${safeTruncate(elementEntry.src, 50)}`);
-
             }
         });
 
@@ -4248,7 +4204,6 @@ border: white !important;
                 const xpath = e.target.getAttribute('data-xpath');
                 if (removeRemovalChoice(xpath)) {
                     statusBar.textContent = `🚫 元素移除记录已取消。请刷新页面以恢复元素。`;
-                    window.showToast?.(`🚫 元素移除记录已取消。请刷新页面以恢复元素。`);
                     updateSavedListContent();
                 }
             }
@@ -4258,7 +4213,6 @@ border: white !important;
                 const xpath = e.target.getAttribute('data-xpath');
                 if (removeIframeRemovalChoice(xpath)) {
                     statusBar.textContent = `🚫 Iframe 移除记录已取消。请刷新页面以恢复 Iframe。`;
-                    window.showToast?.(`🚫 Iframe 移除记录已取消。请刷新页面以恢复 Iframe。`);
                     updateSavedListContent();
                 }
             }
@@ -4272,7 +4226,6 @@ border: white !important;
                         blacklistToggle.textContent = '➕ 标记为黑名单页 (启用严格沙箱)';
                     }
                     statusBar.textContent = `✅ 已移除黑名单 ${safeTruncate(pageKey, 15)}。请刷新页面。`;
-                    window.showToast?.(`✅ 已移除黑名单 ${safeTruncate(pageKey, 15)}。请刷新页面。`);
                     updateSavedListContent();
                 }
             }

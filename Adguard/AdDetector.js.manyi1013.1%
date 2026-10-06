@@ -3138,9 +3138,5 @@ ${selector} {
     return getDetector().cleanAll();
   };
 
-   // ✅ 修正写法：通过闭包包装，接收参数并转发给单例实例
-  globalWin.showToast = function (message) {
-    getDetector().showToast(message);
-  };
 
 })();
