@@ -1,5 +1,7 @@
+//alert('test')
+
 // 检查当前 URL 或 页面标题 是否包含 "missav"（忽略大小写）
-const keyword = '!missav';
+const keyword = 'missav';
 const currentUrl = window.location.href.toLowerCase();
 const currentTitle = document.title.toLowerCase();
 
@@ -630,3 +632,34 @@ window.Function = function(...args) {
 // 保持原型链完整
 window.Function.prototype = NativeFunction.prototype;
 */
+
+
+(function() {
+  // 全局私有事件账本
+  window.__DOM_EVENT_REGISTRY__ = new Map();
+
+  const originalAdd = EventTarget.prototype.addEventListener;
+  const originalRemove = EventTarget.prototype.removeEventListener;
+
+  // 1. 拦截注册事件
+  EventTarget.prototype.addEventListener = function(type, listener, options) {
+    if (!window.__DOM_EVENT_REGISTRY__.has(this)) {
+      window.__DOM_EVENT_REGISTRY__.set(this, []);
+    }
+    const list = window.__DOM_EVENT_REGISTRY__.get(this);
+    list.push({ type, listener, options });
+
+    return originalAdd.call(this, type, listener, options);
+  };
+
+  // 2. 拦截移除事件（保证数据同步）
+  EventTarget.prototype.removeEventListener = function(type, listener, options) {
+    if (window.__DOM_EVENT_REGISTRY__.has(this)) {
+      const list = window.__DOM_EVENT_REGISTRY__.get(this);
+      const index = list.findIndex(item => item.type === type && item.listener === listener);
+      if (index !== -1) list.splice(index, 1);
+      if (list.length === 0) window.__DOM_EVENT_REGISTRY__.delete(this);
+    }
+    return originalRemove.call(this, type, listener, options);
+  };
+})();
