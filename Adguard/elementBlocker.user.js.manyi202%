@@ -820,7 +820,12 @@
 
 
         .smallTools {
-        grid-template-columns: 1fr 1fr;margin-bottom:2px;display: grid;gap: 2px;
+        grid-template-columns: 1fr 1fr;margin-bottom:2px;display: grid;gap: 2px
+
+        /* 底部 15px 呈现渐隐效果，强化“下方有隐去内容”的视觉提示 */
+    -webkit-mask-image: linear-gradient(to bottom, black calc(100% - 18px), transparent 100%);
+    mask-image: linear-gradient(to bottom, black calc(100% - 18px), transparent 100%);
+
         }
 
 
@@ -847,51 +852,25 @@
 }
 
 
-    @media (max-width: 768px),
-(orientation: portrait) {
 
-    .smallTools {
-
-        /* 底部 15px 呈现渐隐效果，强化“下方有隐去内容”的视觉提示 */
-        -webkit-mask-image: linear-gradient(to bottom, black calc(100% - 18px), transparent 100%);
-        mask-image: linear-gradient(to bottom, black calc(100% - 18px), transparent 100%);
-        grid-template-columns: 1fr;
+         @media (max-width: 768px), (orientation: portrait) {
+            .smallTools {
+            grid-template-columns: 1fr;
         margin-bottom: 2px;
         display: grid;
         gap: 2px;
 
         /* 👇 将高度设为非整数倍（如 88px/95px），让被裁切半截的按钮露出来 */
-        max-height: 92px;
+        max-height: 92px; 
         overflow-y: auto;
-
+        
         -webkit-overflow-scrolling: touch;
-    }
+        }
+
+          }
 
 
-    .gemini-tip-text {
-
-        /* 底部 15px 呈现渐隐效果，强化“下方有隐去内容”的视觉提示 */
-        -webkit-mask-image: linear-gradient(to bottom, black calc(100% - 18px), transparent 100%);
-        mask-image: linear-gradient(to bottom, black calc(100% - 18px), transparent 100%);
-
-        padding: 6px 12px;
-        line-height: 1.4;
-        background: #fafafa;
-        color: #888;
-        font-size: 11px;
-        border-top: 1px dashed #eee;
-        text-align: center;
-        box-sizing: border-box;
-
-        /* 2. 底部渐变遮罩：给底部加上 10px 的渐隐效果，暗示下方还有文字 */
-        -webkit-mask-image: linear-gradient(to bottom, black calc(100% - 10px), transparent 100%);
-        mask-image: linear-gradient(to bottom, black calc(100% - 10px), transparent 100%);
-    }
-
-}
-
-
-/* 标题样式 */
+          /* 标题样式 */
 .small-tools-title {
     font-size: 12px;
     font-weight: bold;
@@ -903,7 +882,7 @@
 }
 
 
-#gemini-main-container,
+       #gemini-main-container,
 #gemini-float-window {
     /* 1. 禁用任何 CSS 过渡动画，防止拖拽坐标延迟 */
     transition: none !important;
@@ -920,59 +899,59 @@
 }
 
 
-.gemini-debug-exit {
-    position: absolute !important;
-    top: -10px !important;
-    right: -10px !important;
-    width: 28px !important;
-    height: 28px !important;
-    background-color: #dc3545 !important;
-    color: white !important;
-    border: 2px solid white !important;
-    border-radius: 50% !important;
-    cursor: pointer !important;
-    font-size: 18px !important;
-    font-weight: bold !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    z-index: 10001 !important;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
-    padding: 0 !important;
-    line-height: 1 !important;
-    transition: all 0.2s ease !important;
-    outline: none !important;
-}
+        .gemini-debug-exit {
+        position: absolute !important; 
+        top: -10px !important; 
+        right: -10px !important; 
+        width: 28px !important; 
+        height: 28px !important; 
+        background-color: #dc3545 !important; 
+        color: white !important; 
+        border: 2px solid white !important; 
+        border-radius: 50% !important; 
+        cursor: pointer !important; 
+        font-size: 18px !important; 
+        font-weight: bold !important;
+        display: flex !important; 
+        align-items: center !important; 
+        justify-content: center !important; 
+        z-index: 10001 !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3) !important;
+        padding: 0 !important;
+        line-height: 1 !important;
+        transition: all 0.2s ease !important;
+        outline: none !important;
+    }
 
-.gemini-debug-exit:hover {
-    background-color: #c82333 !important;
-    transform: scale(1.1) !important;
-}
+    .gemini-debug-exit:hover {
+        background-color: #c82333 !important;
+        transform: scale(1.1) !important;
+    }
 
-.gemini-debug-exit:active {
-    transform: scale(0.9) !important;
-}
+    .gemini-debug-exit:active {
+        transform: scale(0.9) !important;
+    }
+
+        
+
+    /*xx-small*/
 
 
-
-/*xx-small*/
-
-
-#element-debug-click-toggle,
+    #element-debug-click-toggle,
 #debug-location-toggle {
     /* 布局与尺寸 */
     flex: 1;
     width: 100%;
     padding: 8px 5px;
-
+    
     /* 视觉属性 */
     /*background: #151a15;*/
-    background: #000000d6;
+    background:#000000d6;
     border: none;
     border-radius: 4px;
     box-shadow: inset 42px 14px 27px 2px rgba(0, 0, 0, 0.2);
     cursor: pointer;
-
+    
     /* 文字属性 */
     color: #8e8f8e;
     font-size: xx-small;
@@ -994,13 +973,13 @@
     /*
     background: #151a15;
     */
-    background: #000000d6;
+    background:#000000d6;
     border: none;
     border-radius: 4px;
     /*
     box-shadow: inset 2px 2px 2px 2px rgba(9, 14, 4, 0.2);
     */
-    box-shadow: inset 0px 4px 8px 0px rgb(0 0 0 / 80%), 0px 1px 1px 0px rgba(255, 255, 255, 2.05);
+    box-shadow:inset 0px 4px 8px 0px rgb(0 0 0 / 80%), 0px 1px 1px 0px rgba(255, 255, 255, 2.05);
     cursor: pointer;
 
     /* 文字属性 */
@@ -1013,36 +992,36 @@
 
 
 
-#showXPath,
-#manual-css-add,
-#manual-xpath-add,
-#manual-xpath-runCode,
-#manual-css-webdebug,
-#crazyMode,
-#manual-css-switchClear {
-    background: rgb(57 64 56);
-    color: #9a9a9a;
-    border: none;
-    box-shadow: inset 42px 14px 27px 2px rgba(0, 0, 0, 0.2);
-    padding: 3px 3px;
-    /* margin-bottom:5px; */
-    cursor: pointer;
-    border-radius: 4px;
-    width: 100%;
-    font-weight: normal;
-}
+    #showXPath,
+    #manual-css-add,
+    #manual-xpath-add,
+    #manual-xpath-runCode,
+    #manual-css-webdebug,
+    #crazyMode,
+    #manual-css-switchClear {
+     background: rgb(57 64 56);
+        color: #9a9a9a;
+        border: none;
+        box-shadow:inset 42px 14px 27px 2px rgba(0, 0, 0, 0.2);
+        padding: 3px 3px;
+        /* margin-bottom:5px; */
+        cursor: pointer;
+        border-radius: 4px;
+        width: 100%;
+        font-weight:normal;
+    }
 
 .closer {
-    background: #D12C25 !important;
-    color: white !important;
-    border: white !important;
-    box-shadow: inset 0px 4px 8px 0px rgb(0 0 0 / 40%), 0px 1px 1px 0px rgba(255, 255, 255, 2.05) !important
+background: #D12C25 !important;
+color: white !important;
+border: white !important;
+box-shadow: inset 0px 4px 8px 0px rgb(0 0 0 / 40%), 0px 1px 1px 0px rgba(255, 255, 255, 2.05) !important
 }
 
 .greener {
-    background: green !important;
-    color: white !important;
-    border: white !important;
+background: green !important;
+color: white !important;
+border: white !important;
 }
 
 
@@ -1111,7 +1090,7 @@
                 border-bottom: 1px solid #ececec;
                 /*display: flex;*/
                 display:grid;
-                grid-template-columns:8fr 2fr 1fr;
+                grid-template-columns:8fr 1fr 1fr;
                 justify-content: space-between;
                 align-items: center;
             }
@@ -1147,7 +1126,7 @@
 
             /* 提示信息样式 (美化) */
             #${windowId} .gemini-tip-text {
-                padding: 10px 10px;
+                padding: 15px 15px;
                 line-height: 1.25;
                 background: #fafafa; 
                  /*
@@ -1249,7 +1228,7 @@
             @media (max-width: 768px) {
                 #${containerId} {
                     /*width: 90vw;*/
-                    width :min(420px, 64vw); 
+                    width :min(420px, 60vw); 
                     right: 5vw; 
                     left: 5vw; 
                     top: 5px;
@@ -3689,7 +3668,7 @@
 
         windowDiv.innerHTML = `
 <div id="gemini-header">
-    <strong>⚡️ 元素调试与屏蔽工具</strong>
+    <strong>🔍 元素调试与屏蔽工具 (V26.40)</strong>
     <button id="gemini-pin-btn">📌</button>
     <span id="gemini-close-btn">&times;</span>
 </div>
@@ -3821,7 +3800,7 @@
 </div>
 
 <div class="gemini-tip-text">
-    🌟提示: 右上角📍及调试模式用完记得手动关闭；<a href='https://www.google.com/search?q=xpath+%E6%98%AF%E4%BB%80%E4%B9%88'
+    🌟**提示:** 右上角📍及调试模式用完记得手动关闭；<a href='https://www.google.com/search?q=xpath+%E6%98%AF%E4%BB%80%E4%B9%88'
         target='_blank' style='color:blue !important;'>了解 xPath</a>；*CSS选择器屏蔽：使用 <a style="color:blue !important"
         href='https://www.google.com/search?q=mutationobserver+%E4%BB%8B%E7%BB%8D'>MutationObserver</a> & <a
         style="color:blue !important"
