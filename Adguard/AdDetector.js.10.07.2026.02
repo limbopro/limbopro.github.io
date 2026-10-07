@@ -1519,21 +1519,8 @@ ${selector} {
 
       // ★【优化 3】：新增知名合法社交/服务域名白名单
       const KNOWN_SOCIAL_DOMAINS = [
-        // --- 国内平台 ---
-        'weibo.com', 'weibo.cn',
-        'qq.com', 'qzone.qq.com', 'weixin.qq.com', 'mp.weixin.qq.com',
-        'douban.com', 'zhihu.com', 'tieba.baidu.com',
-        'xiaohongshu.com', 'bilibili.com', 'douyin.com', 'kuaishou.com',
-        'gitee.com',
-
-        // --- 国外平台 ---
-        'line.me', 'timeline.line.me',
-        'twitter.com', 'x.com',
-        'facebook.com', 'instagram.com', 'threads.net', 'pinterest.com',
-        'linkedin.com', 'reddit.com', 'tumblr.com', 'flickr.com',
-        'youtube.com', 'youtu.be', 'tiktok.com', 'vimeo.com',
-        't.me', 'telegram.org', 'whatsapp.com', 'discord.com', 'discord.gg',
-        'github.com', 'medium.com'
+        'weibo.com', 'qq.com', 'douban.com', 'facebook.com',
+        'twitter.com', 'linkedin.com', 'weixin.qq.com', 'qzone.qq.com'
       ];
 
       const anchor = el.tagName === 'A' ? el : (allAnchors[0] || null);
