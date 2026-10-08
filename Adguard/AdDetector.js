@@ -3221,49 +3221,48 @@ ${selector} {
 const HIJACK_KEY = 'hijack_defuser_enabled';
 
 // 页面加载完成后恢复状态
-document.addEventListener('DOMContentLoaded', () => {
-    const btn = document.getElementById('btn-hijack');
-    if (!btn) {
-        console.error('[错误] 未找到 #btn-hijack 按钮节点，请检查 HTML 中是否存在该 ID！');
-        return;
-    }
-    
-    // 强制转为布尔值（localStorage 存的是字符串 "true" / "false"）
-    const isEnabled = localStorage.getItem(HIJACK_KEY) === 'true';
-    console.log('[调试] 页面刷新读取到的状态为:', isEnabled);
+const btn = document.getElementById('btn-hijack');
+if (!btn) {
+  console.error('[错误] 未找到 #btn-hijack 按钮节点，请检查 HTML 中是否存在该 ID！');
+  return;
+}
 
-    applyHijackState(btn, isEnabled);
-});
+// 强制转为布尔值（localStorage 存的是字符串 "true" / "false"）
+const isEnabled = localStorage.getItem(HIJACK_KEY) === 'true';
+console.log('[调试] 页面刷新读取到的状态为:', isEnabled);
+
+applyHijackState(btn, isEnabled);
+
 
 // onclick 点击切换
 function toggleHijackDefuser(btn) {
-    // 获取最新存的状态，如果不存在默认是 false
-    const currentState = localStorage.getItem(HIJACK_KEY) === 'true';
-    const nextState = !currentState;
+  // 获取最新存的状态，如果不存在默认是 false
+  const currentState = localStorage.getItem(HIJACK_KEY) === 'true';
+  const nextState = !currentState;
 
-    console.log('[调试] 点击切换，新状态为:', nextState);
-    applyHijackState(btn, nextState);
+  console.log('[调试] 点击切换，新状态为:', nextState);
+  applyHijackState(btn, nextState);
 }
 
 // 统一更新状态
 function applyHijackState(btn, enable) {
-    // 写入本地存储
-    localStorage.setItem(HIJACK_KEY, enable ? 'true' : 'false');
-    
-    // 切换样式类
-    btn.classList.toggle('active', enable);
+  // 写入本地存储
+  localStorage.setItem(HIJACK_KEY, enable ? 'true' : 'false');
 
-    // 修改按钮文字
-    btn.innerText = enable ? '🛡️ 拦截恶意劫持：开' : '🔒 拦截恶意劫持：关';
+  // 切换样式类
+  btn.classList.toggle('active', enable);
 
-    // 如果开启，则调用防御函数
-    if (enable) {
-        if (typeof addEventListener_defuser === 'function') {
-            addEventListener_defuser();
-        } else {
-            console.warn('[警告] addEventListener_defuser 函数未定义');
-        }
+  // 修改按钮文字
+  btn.innerText = enable ? '🛡️ 拦截恶意劫持：开' : '🔒 拦截恶意劫持：关';
+
+  // 如果开启，则调用防御函数
+  if (enable) {
+    if (typeof addEventListener_defuser === 'function') {
+      addEventListener_defuser();
+    } else {
+      console.warn('[警告] addEventListener_defuser 函数未定义');
     }
+  }
 }
 
 
