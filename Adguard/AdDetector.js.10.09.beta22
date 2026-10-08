@@ -337,7 +337,7 @@ ${selector} {
       const restoreTimer = setInterval(() => {
 
         const button =
-          this.shadow?.querySelector('#btn-hijack');
+          this.shadow.querySelector('#btn-hijack');
 
         // 按钮还没生成，继续等待
         if (!button) return;
