@@ -20,58 +20,6 @@
 
   class UniversalAdDetector {
 
-
-    installEventBlocker(el) {
-      // alert('test')
-      if (!el || el.nodeType !== Node.ELEMENT_NODE) return;
-      // 防止重复安装
-      if (el.__adEventBlockerInstalled) return;
-
-      const events = [
-        'click',
-        'dblclick',
-        'mousedown',
-        'mouseup',
-        'touchstart',
-        'touchend',
-        'touchmove',
-        'pointerdown',
-        'pointerup',
-        'pointermove'
-      ];
-
-      const blocker = function (e) {
-        try {
-          // ① 阻断浏览器默认行为
-          e.preventDefault();
-
-          // ② 阻止事件继续冒泡
-          e.stopPropagation();
-
-          // ③ 阻止当前元素上后续监听器
-          e.stopImmediatePropagation();
-        } catch (_) { }
-      };
-
-      events.forEach(type => {
-        el.addEventListener(type, blocker, true);
-      });
-
-      Object.defineProperty(el, '__adEventBlockerInstalled', {
-        value: true,
-        configurable: true
-      });
-
-      // 保存下来，方便以后解除
-      Object.defineProperty(el, '__adEventBlocker', {
-        value: {
-          blocker,
-          events
-        },
-        configurable: true
-      });
-    }
-
     // 新增：专门还原 applyExtraHideStyle 设定的样式
     removeExtraHideStyle(el) {
       if (!el || !el.tagName) return;
@@ -117,9 +65,6 @@
 
     applyExtraHideStyle(el) {
       if (!el || !el.tagName) return;
-
-      // 2.5 事件级阻断：阻断默认行为、冒泡、同节点后续监听器
-      this.installEventBlocker(el);
 
       // 1. 设置屏蔽标记
       el.dataset.overlayBlocked = 'true';
@@ -199,8 +144,6 @@ ${selector} {
       if (this.isSpecialStickyOrPopup(el)) {
         this.applyExtraHideStyle(el);
       } else {
-        // 2.5 事件级阻断：阻断默认行为、冒泡、同节点后续监听器
-        this.installEventBlocker(el);
         el.style.setProperty('display', 'none', 'important');
       }
     }
@@ -528,8 +471,6 @@ ${selector} {
         if (isSpecial) {
           this.hideSingleElement(targetEl);
         } else {
-          // 2.5 事件级阻断：阻断默认行为、冒泡、同节点后续监听器
-          this.installEventBlocker(el);
           targetEl.style.setProperty('display', 'none', 'important'); // 修正为隐藏
         }
 
@@ -614,9 +555,7 @@ ${selector} {
         meta.isBlocked = true;
         const el = meta.element;
 
-
         if (el && el.nodeType === Node.ELEMENT_NODE) {
-
           el.dataset.overlayBlocked = 'true';
 
           // 3. 清理自身及子元素的高亮与 Hover 类
@@ -2456,7 +2395,6 @@ ${selector} {
             <button class="footer-btn btn-reset" id="btn-reset" title="恢复所有屏蔽并清除规则">一键重置</button>
             <button class="footer-btn btn-undo" id="btn-undo" title="撤回上一步操作">↩️ 撤回</button>
             <button class="footer-btn btn-redo" id="btn-redo" title="重做上一步撤回">↪️ 重做</button>
-<button class="footer-btn btn-hijack" id="btn-hijack" title="拦截恶意劫持" onclick="toggleHijackDefuser(this)">🔒 拦截恶意劫持：关</button>
           </div>
         </div>
 
@@ -3214,63 +3152,3 @@ ${selector} {
   };
 
 })();
-
-
-
-
-const HIJACK_KEY = 'hijack_defuser_enabled';
-
-// 页面加载完成后恢复状态
-document.addEventListener('DOMContentLoaded', () => {
-    const btn = document.getElementById('btn-hijack');
-    if (!btn) {
-        console.error('[错误] 未找到 #btn-hijack 按钮节点，请检查 HTML 中是否存在该 ID！');
-        return;
-    }
-    
-    // 强制转为布尔值（localStorage 存的是字符串 "true" / "false"）
-    const isEnabled = localStorage.getItem(HIJACK_KEY) === 'true';
-    console.log('[调试] 页面刷新读取到的状态为:', isEnabled);
-
-    applyHijackState(btn, isEnabled);
-});
-
-// onclick 点击切换
-function toggleHijackDefuser(btn) {
-    // 获取最新存的状态，如果不存在默认是 false
-    const currentState = localStorage.getItem(HIJACK_KEY) === 'true';
-    const nextState = !currentState;
-
-    console.log('[调试] 点击切换，新状态为:', nextState);
-    applyHijackState(btn, nextState);
-}
-
-// 统一更新状态
-function applyHijackState(btn, enable) {
-    // 写入本地存储
-    localStorage.setItem(HIJACK_KEY, enable ? 'true' : 'false');
-    
-    // 切换样式类
-    btn.classList.toggle('active', enable);
-
-    // 修改按钮文字
-    btn.innerText = enable ? '🛡️ 拦截恶意劫持：开' : '🔒 拦截恶意劫持：关';
-
-    // 如果开启，则调用防御函数
-    if (enable) {
-        if (typeof addEventListener_defuser === 'function') {
-            addEventListener_defuser();
-        } else {
-            console.warn('[警告] addEventListener_defuser 函数未定义');
-        }
-    }
-}
-
-
-// defuser
-// addEventListener_defuser("touchend")
-//  addEventListener_defuser(); // 打断监听器
-//window_open_defuser(); // 打断 window.open 施法
-//noWindowOpenIf('window.open')
-//          noWindowOpenIf('touchend')
-
