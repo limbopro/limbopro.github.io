@@ -3800,7 +3800,8 @@ if (
   //// addEventListener_defuserV2('', '');
 
 
-addEventListener_defuserV2('', '');
+//addEventListener_defuserV2('', '');
+  addEventListener_defuserV2('/^(touchstart|touchend)$/', 'open');
 
   // 匹配重定向相关代码
   // 测试 1：只匹配事件类型
