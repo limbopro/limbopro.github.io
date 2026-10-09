@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Adblock4limbo.[github]
 // @namespace    https://github.com/limbopro/Adblock4limbo/raw/main/Adguard/Adblock4limbo.user.js
-// @version      0.2026.10.10
+// @version      0.2026.09.30
 // @license      CC BY-NC-SA 4.0
 // @description  毒奶去网页广告计划用户脚本 For Quantumult X & Surge & Shadowrocket & Loon & Stash & 油猴 ；1.新增页面右下角导航；2.通过 JavaScript 移除特定网站网页广告 —— 搜索引擎（Bing/Google）广告及内容农场结果清除/低端影视/欧乐影院/iyf爱壹帆/哔滴影视/Pornhub/Javbus/Supjav/Jable(支持抓取M3U8链接)/MissAv/Njav/91porn(支持视频下载)/hitomi/紳士漫畫/禁漫天堂/等视频&ACG&小说&漫画网站上的弹窗广告&视频广告&Gif图片广告等，保持网页清爽干净无打扰！ P.S. 欢迎提交issue
 // @author       limbopro
@@ -4492,7 +4492,7 @@ function addEventListener_defuser() {
 * addEventListener_defuserV2('touchstart', 'window.open');
 * addEventListener_defuserV2('/^touchstart$/', '/\bwindow\s*\.\s*open\s*\(/');
   */
-function addEventListener_defuserV2_original(needle1 = '', needle2 = '') {
+function addEventListener_defuserV2(needle1 = '', needle2 = '') {
     // 将输入转换为正则表达式：
     // 普通字符串按字面量匹配，/内容/ 则作为正则表达式
     function toRegExp(value) {
@@ -4539,9 +4539,10 @@ function addEventListener_defuserV2_original(needle1 = '', needle2 = '') {
 }
 
 
-
-window.addEventListener_defuserV2 = function addEventListener_defuserV2(needle1 = '', needle2 = '') {
-    // 将输入转换为正则表达式：
+function addEventListener_defuserV2_log_original(needle1 = '', needle2 = '') {
+    const STORAGE_KEY = 'addEventListener_defuserV2_records';
+    const MAX_RECORDS = 1000;
+    // 将输入转换为正则表达式
     // 普通字符串按字面量匹配，/内容/ 则作为正则表达式
     function toRegExp(value) {
         value = String(value);
@@ -4561,38 +4562,60 @@ window.addEventListener_defuserV2 = function addEventListener_defuserV2(needle1 
     const reHandler = toRegExp(needle2);
     const originalAddEventListener =
         self.EventTarget.prototype.addEventListener;
-    // ===== 新增：LocalStorage 日志存储 =====
-    const storageKey = 'addEventListener_defuserV3_records';
-    const maxRecords = 200;
-    function saveLog(record) {
+    // 获取监听目标的基本信息
+    function getTargetInfo(target) {
         try {
-            let records = [];
-            try {
-                const stored = localStorage.getItem(storageKey);
-                if (stored) {
-                    const parsed = JSON.parse(stored);
-                    if (Array.isArray(parsed)) {
-                        records = parsed;
-                    }
-                }
-            } catch (ex) {
-                records = [];
+            if (target === self) {
+                return { type: 'window' };
             }
+            if (target === self.document) {
+                return { type: 'document' };
+            }
+            if (target instanceof Element) {
+                return {
+                    type: 'element',
+                    tagName: target.tagName,
+                    id: target.id || '',
+                    className:
+                        typeof target.className === 'string'
+                            ? target.className
+                            : ''
+                };
+            }
+            return {
+                type: target?.constructor?.name || typeof target
+            };
+        } catch (e) {
+            return { type: 'unknown' };
+        }
+    }
+    // 读取历史记录
+    function readRecords() {
+        try {
+            const value = localStorage.getItem(STORAGE_KEY);
+            const records = value ? JSON.parse(value) : [];
+            return Array.isArray(records) ? records : [];
+        } catch (e) {
+            return [];
+        }
+    }
+    // 保存采集记录：不让存储异常影响原有拦截逻辑
+    function saveRecord(record) {
+        try {
+            const records = readRecords();
             records.push(record);
-            // 最多保留最近 200 条，新进旧出
-            if (records.length > maxRecords) {
-                records = records.slice(-maxRecords);
+            // 只保留最新的 1000 条，避免存储无限增长
+            if (records.length > MAX_RECORDS) {
+                records.splice(0, records.length - MAX_RECORDS);
             }
-            // 格式化 JSON 存储
             localStorage.setItem(
-                storageKey,
+                STORAGE_KEY,
                 JSON.stringify(records, null, 2)
             );
-        } catch (ex) {
-            // 日志存储失败时，不影响原有逻辑
+        } catch (e) {
+            // 存储失败时不影响监听器原本的拦截或注册流程
         }
     }
-    // ===== 原始 Proxy 逻辑 =====
     self.EventTarget.prototype.addEventListener = new Proxy(
         originalAddEventListener,
         {
@@ -4605,43 +4628,38 @@ window.addEventListener_defuserV2 = function addEventListener_defuserV2(needle1 
                 } catch (ex) {
                     return target.apply(thisArg, args);
                 }
-                // ===== 新增：记录监听器注册信息 =====
-                try {
-                    let elementInfo = '';
-                    let elementId = '';
-                    if (thisArg === window) {
-                        elementInfo = 'window';
-                    } else if (thisArg === document) {
-                        elementInfo = 'document';
-                    } else if (thisArg && thisArg.nodeType === 1) {
-                        elementInfo = {
-                            tagName: thisArg.tagName || '',
-                            id: thisArg.id || '',
-                            className:
-                                typeof thisArg.className === 'string'
-                                    ? thisArg.className
-                                    : ''
-                        };
-                        elementId = thisArg.id || '';
-                    } else {
-                        elementInfo = Object.prototype.toString.call(thisArg);
-                    }
-                    saveLog({
-                        type: type,
-                        handler: handler.substring(0, 3000),
-                        element: elementInfo,
-                        elementId: elementId,
-                        stack: new Error().stack || '',
-                        time: new Date().toLocaleTimeString()
-                    });
-                } catch (ex) {
-                    // 日志记录失败时，不影响原有逻辑
-                }
-                // 只有事件类型和处理器源码同时匹配，才拦截
-                if (
+                // 保持原有判断逻辑：
+                // 事件类型与处理器源码必须同时匹配才拦截
+                const blocked =
                     reType.test(type) &&
-                    reHandler.test(handler)
-                ) {
+                    reHandler.test(handler);
+                // 新增：采集完整记录，不改变原有匹配结果
+                saveRecord({
+                    timestamp: new Date().toISOString(),
+                    // 新增：记录监听器注册时的调用栈
+                    stack: new Error().stack || '',
+                    eventType: type,
+                    handler: handler,
+                    target: getTargetInfo(thisArg),
+                    // 不读取 options 对象的属性，
+                    // 避免额外触发 capture、once 等属性的 getter
+                    options: {
+                        kind:
+                            typeof args[2] === 'boolean'
+                                ? 'boolean'
+                                : args[2] === undefined
+                                    ? 'undefined'
+                                    : args[2] === null
+                                        ? 'null'
+                                        : typeof args[2]
+                    },
+                    blocked: blocked,
+                    match: {
+                        type: reType.test(type),
+                        handler: reHandler.test(handler)
+                    }
+                });
+                if (blocked) {
                     return;
                 }
                 return target.apply(thisArg, args);
@@ -4649,6 +4667,8 @@ window.addEventListener_defuserV2 = function addEventListener_defuserV2(needle1 
         }
     );
 }
+
+
 
 
 document.querySelectorAll('a').forEach((x) => {
