@@ -5150,6 +5150,63 @@ function addEventListener_defuser() {
     );
 };
 
+
+/**
+* addEventListener 拦截器
+* @param {string} needle1 要匹配的事件类型
+* @param {string} needle2 要匹配的处理器源码
+*
+* 示例：
+* addEventListener_defuserV2('touchstart', 'window.open');
+* addEventListener_defuserV2('/^touchstart$/', '/\bwindow\s*\.\s*open\s*\(/');
+  */
+function addEventListener_defuserV2(needle1 = '', needle2 = '') {
+    // 将输入转换为正则表达式：
+    // 普通字符串按字面量匹配，/内容/ 则作为正则表达式
+    function toRegExp(value) {
+        value = String(value);
+        if (value === '') {
+            return /.?/;
+        }
+        // /正则表达式/ 格式
+        if (/^\/.+\/$/.test(value)) {
+            return new RegExp(value.slice(1, -1));
+        }
+        // 普通字符串：转义正则元字符
+        return new RegExp(
+            value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+        );
+    }
+    const reType = toRegExp(needle1);
+    const reHandler = toRegExp(needle2);
+    const originalAddEventListener =
+        self.EventTarget.prototype.addEventListener;
+    self.EventTarget.prototype.addEventListener = new Proxy(
+        originalAddEventListener,
+        {
+            apply(target, thisArg, args) {
+                let type;
+                let handler;
+                try {
+                    type = String(args[0]);
+                    handler = String(args[1]);
+                } catch (ex) {
+                    return target.apply(thisArg, args);
+                }
+                // 只有事件类型和处理器源码同时匹配，才拦截
+                if (
+                    reType.test(type) &&
+                    reHandler.test(handler)
+                ) {
+                    return;
+                }
+                return target.apply(thisArg, args);
+            }
+        }
+    );
+}
+
+
 document.querySelectorAll('a').forEach((x) => {
     x.innerHTML
 })

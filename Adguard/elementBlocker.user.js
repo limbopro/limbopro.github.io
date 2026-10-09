@@ -3113,22 +3113,47 @@
         resultWin.querySelector('#sel-reset').onclick = resetMode;
         //resultWin.querySelector('#sel-exit')?.onclick = destroyTool;
 
-        document.addEventListener(
-            'pointermove',
-            onPointerMove,
-            true
-        );
 
-        document.addEventListener(
-            'pointerdown',
-            onPointerDown,
-            true
-        );
 
-        document.addEventListener(
-            'pointerup',
-            onPointerUp,
-            true
+
+
+        const nativeAddEventListener =
+            window.__selectorToolNativeAddEventListener;
+
+        if (typeof nativeAddEventListener === 'function') {
+            Reflect.apply(nativeAddEventListener, document, [
+                'pointermove',
+                onPointerMove,
+                true
+            ]);
+
+            Reflect.apply(nativeAddEventListener, document, [
+                'pointerdown',
+                onPointerDown,
+                true
+            ]);
+
+            Reflect.apply(nativeAddEventListener, document, [
+                'pointerup',
+                onPointerUp,
+                true
+            ]);
+        } else {
+            console.warn(
+                '[SelectorTool] 原始 addEventListener 未提前保存，无法绕过拦截器'
+            );
+
+            document.addEventListener('pointermove', onPointerMove, true);
+            document.addEventListener('pointerdown', onPointerDown, true);
+            document.addEventListener('pointerup', onPointerUp, true);
+        }
+
+
+        console.log(
+            '[SelectorTool] 原始监听方法状态:',
+            typeof nativeAddEventListener,
+            '当前方法是否已被代理:',
+            EventTarget.prototype.addEventListener !== nativeAddEventListener
         );
 
         document.body.style.cursor = 'crosshair';
@@ -4319,19 +4344,26 @@
         }
 
         // === 2. 绑定到你的 HTML 按钮上并切换文本 ===
-
         window.startSelectorTool_Click = function () {
             const btn = document.getElementById('selector-debug-click-toggle');
+
+            if (!btn) {
+                console.warn('[SelectorTool] 未找到按钮 #selector-debug-click-toggle');
+                return;
+            }
+
             const originalText = "⚓元素CSS选择器获取与调试"; // 你的原始按钮文字
 
             // 如果工具已经运行，则不重复执行逻辑
             if (document.getElementById('selector-tool-style-final')) {
                 stopSelectorTool()
+                localStorage.setItem(DEBUG_SELECTOR_CLICK_KEY, 'false');
                 return;
             }
 
             if (localStorage.getItem('gemini_debug_element_click_mode') == 'true') { // 如果元素点击调试模式已经开了，则无法开启 css 选择器获取
                 stopSelectorTool()
+                localStorage.setItem(DEBUG_SELECTOR_CLICK_KEY, 'false');
                 return;
             }
 
@@ -4343,6 +4375,7 @@
 
             // 2. 启动工具
             startSelectorTool();
+
             localStorage.setItem(DEBUG_SELECTOR_CLICK_KEY, 'true')
 
             // 3. 增强：拦截工具内的“退出”按钮，点击时恢复按钮文字
@@ -4569,7 +4602,7 @@
         selectorToggle.onclick = () => toggleSelectionMode();
 
 
-        debugClickToggle.onclick = () => {
+        debugClickToggle.onclick = () => { //元素点击与调试
             if (localStorage.getItem('gemini_debug_preciseSelector_click_mode') == 'true') {  // 如果元素CSS选择器获取与调试打开则不能打开元素点击调试
                 return;
             }
@@ -4826,7 +4859,7 @@
             isDragging = true;
 
 
-            
+
             e.preventDefault();
 
 

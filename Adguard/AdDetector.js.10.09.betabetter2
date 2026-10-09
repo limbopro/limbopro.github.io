@@ -3788,27 +3788,14 @@ const hijackDefuserEnabled =
 // 如果用户之前开启了拦截，并且函数存在，则立即启用
 if (
   hijackDefuserEnabled &&
-  typeof addEventListener_defuserV2 === 'function'
+  typeof addEventListener_defuser === 'function'
 ) {
 
-  // 必须在 addEventListener_defuser() 执行之前运行
-  window.__selectorToolNativeAddEventListener =
+	// 必须在 addEventListener_defuser() 执行之前运行
+window.__selectorToolNativeAddEventListener =
     EventTarget.prototype.addEventListener;
-
-
-  // 匹配重定向相关代码
-  addEventListener_defuserV2('', '');
-
-
-  // 匹配重定向相关代码
-  /*
-  addEventListener_defuserV2(
-    '/^(click|touchstart|touchend)$/',
-    '/(?:\\bwindow\\s*\\.\\s*open\\s*\\(|\\bt\\s*\\.\\s*open\\s*\\(|\\b(?:window\\s*\\.\\s*)?location\\s*(?:\\.\\s*(?:href|assign|replace)\\b|=))/'
-  );
-  */
-
-  //addEventListener_defuser();
+    
+  addEventListener_defuser();
 }
 
 // 以上应该放在 Adblock4limbo.user.js
