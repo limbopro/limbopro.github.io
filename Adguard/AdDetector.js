@@ -3797,10 +3797,10 @@ if (
 
 
   // 匹配重定向相关代码
-  addEventListener_defuserV2('', '');
+  //// addEventListener_defuserV2('', '');
 
 
-  showToast
+addEventListener_defuserV2('', '');
 
   // 匹配重定向相关代码
   // 测试 1：只匹配事件类型
@@ -3813,18 +3813,7 @@ if (
   // 测试 3：匹配 click、touchstart、touchend
   // addEventListener_defuserV2('/^(click|touchstart|touchend)$/', '');
   //addEventListener_defuserV2('/^(click|touchstart|touchend)$/', 'open');
-//addEventListener_defuserV2('/^(click|touchstart|touchend)$/', 't.open');
-//addEventListener_defuserV2('/^(click|touchstart|touchend)$/', 'location');
 
-/*
-addEventListener_defuserV2(
-    '/^(click|touchstart|touchend)$/',
-    '/\\bt\\s*\\.\\s*open\\s*\\(/'
-);
-
-*/
-
-  //addEventListener_defuser();
 }
 
 // 以上应该放在 Adblock4limbo.user.js
