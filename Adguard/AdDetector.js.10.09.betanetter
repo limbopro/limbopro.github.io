@@ -21,85 +21,6 @@
   class UniversalAdDetector {
 
 
-    // ==========================================
-    // ★ 顶部进度条：独立封装
-    // ==========================================
-    showTopProgress() {
-      let bar = document.getElementById('ad-detector-top-progress');
-
-
-      if (!bar) {
-        bar = document.createElement('div');
-        bar.id = 'ad-detector-top-progress';
-
-        Object.assign(bar.style, {
-          position: 'fixed',
-          top: '0',
-          left: '0',
-          width: '0%',
-          height: '4px',
-          background: '#00aaff',
-          zIndex: '2147483647',
-          pointerEvents: 'none',
-          opacity: '1',
-          transition: 'width 0.15s linear, opacity 0.35s ease',
-          boxShadow: '0 0 8px rgba(0, 170, 255, 0.85)',
-          borderRadius: '0 3px 3px 0'
-        });
-
-        document.documentElement.appendChild(bar);
-      }
-
-      // 重置进度条
-      bar.style.transition = 'none';
-      bar.style.width = '0%';
-      bar.style.opacity = '1';
-
-      // 强制浏览器应用初始状态
-      void bar.offsetWidth;
-
-      // 开始显示进度
-      bar.style.transition = 'width 0.15s linear, opacity 0.35s ease';
-      bar.style.width = '80%';
-
-      const startTime = Date.now();
-      let finished = false;
-
-      return {
-        update: (percent) => {
-          if (finished) return;
-
-          bar.style.width =
-            `${Math.max(0, Math.min(100, percent))}%`;
-        },
-
-        finish: () => {
-          if (finished) return;
-          finished = true;
-
-          // 即使任务很快完成，也至少显示 500ms
-          const elapsed = Date.now() - startTime;
-          const delay = Math.max(0, 500 - elapsed);
-
-          setTimeout(() => {
-            bar.style.width = '100%';
-
-            setTimeout(() => {
-              bar.style.opacity = '0';
-
-              setTimeout(() => {
-                bar.remove();
-              }, 350);
-            }, 300);
-          }, delay);
-        }
-      };
-
-
-    }
-
-
-
     installEventBlocker(el) {
       // alert('test')
       if (!el || el.nodeType !== Node.ELEMENT_NODE) return;
@@ -617,7 +538,6 @@ ${selector} {
     // ★ 模块三 & 四：safeBlockElement 安全屏蔽 + 交叉校验 + 降级 + 规则持久化
     // ==========================================
     neutralizeSingleInternal(adId) {
-
       const meta = this.detectedAds.get(adId);
       if (!meta || !meta.element) return;
 
@@ -637,17 +557,10 @@ ${selector} {
       // 计算预期匹配数 (N_expected)
       let N_expected = 0;
       this.detectedAds.forEach(item => {
-        if (!item || !item.element) return;
-        if (item.element === targetEl ||
-          (
-            candidateSelector &&
-            this.generateSpecificSelector(item.element) === candidateSelector
-          )
-        ) {
+        if (item.element === targetEl || (candidateSelector && this.generateSpecificSelector(item.element) === candidateSelector)) {
           N_expected++;
         }
       });
-
       N_expected = Math.max(1, N_expected);
 
       // 计算实际 DOM 匹配数 (N_actual)
@@ -697,8 +610,7 @@ ${selector} {
           this.hideSingleElement(targetEl);
         } else {
           // 2.5 事件级阻断：阻断默认行为、冒泡、同节点后续监听器
-          // this.installEventBlocker(el);
-          this.installEventBlocker(targetEl);
+          this.installEventBlocker(el);
           targetEl.style.setProperty('display', 'none', 'important'); // 修正为隐藏
         }
 
@@ -773,9 +685,6 @@ ${selector} {
       this.applyCssRulesFromStorage();
     }
 
-
-
-    /*
     neutralizeSingle(adId) {
       const meta = this.detectedAds.get(adId);
       if (meta && !meta.isBlocked) {
@@ -818,86 +727,6 @@ ${selector} {
 
       }
     }
-    */
-
-
-
-    async neutralizeSingle(adId) {
-      const meta = this.detectedAds.get(adId);
-
-
-      if (!meta || meta.isBlocked) return;
-
-      // 1. 显示顶部进度条
-      const progress = this.showTopProgress();
-
-      // 2. 给浏览器时间绘制进度条
-      // 给浏览器两次绘制机会
-      await new Promise(resolve => {
-        requestAnimationFrame(() => {
-          requestAnimationFrame(resolve);
-        });
-      });
-
-      try {
-        // 3. 记录历史状态
-        this.pushHistoryState({
-          type: 'SINGLE_BLOCK',
-          items: [adId]
-        });
-
-        const el = meta.element;
-
-        if (el && el.nodeType === Node.ELEMENT_NODE) {
-          el.dataset.overlayBlocked = 'true';
-
-          // 清理自身及子元素的高亮与 Hover 类
-          el.classList.remove(
-            'ad-detector-hover-active',
-            'ad-detector-highlight-active'
-          );
-          el.style.removeProperty('outline');
-          el.style.removeProperty('outline-offset');
-
-          const activeChildren = el.querySelectorAll(
-            '.ad-detector-hover-active, .ad-detector-highlight-active'
-          );
-
-          activeChildren.forEach(child => {
-            child.classList.remove(
-              'ad-detector-hover-active',
-              'ad-detector-highlight-active'
-            );
-            child.style.removeProperty('outline');
-            child.style.removeProperty('outline-offset');
-          });
-
-          // 清除角标与高亮图层
-          this.applyHighlight(el, false);
-        }
-
-        // 4. 执行底层屏蔽逻辑
-        this.neutralizeSingleInternal(adId);
-
-        // 5. 反馈提示
-        this.showToast('🛡 已通过安全交叉校验执行屏蔽');
-
-        // 6. 更新 UI
-        this.updateUI();
-
-      } catch (error) {
-        console.error('[AdDetector] 单节点屏蔽失败:', error);
-        this.showToast('⚠️ 屏蔽操作执行异常，请检查控制台');
-      } finally {
-        // 7. 统一结束进度条
-        progress.finish();
-      }
-
-
-    }
-
-
-
 
     restoreSingle(adId) {
       const meta = this.detectedAds.get(adId);
@@ -911,8 +740,6 @@ ${selector} {
       }
     }
 
-
-    /*
     cleanAll() {
       const blockedIds = [];
       this.detectedAds.forEach((meta) => {
@@ -927,52 +754,6 @@ ${selector} {
         this.pushHistoryState({ type: 'BATCH_BLOCK', items: blockedIds });
       }
       return blockedIds.length;
-    }
-    */
-
-    async cleanAll() {
-      const progress = this.showTopProgress();
-      // 等待浏览器有机会绘制进度条
-      await new Promise(resolve => {
-        requestAnimationFrame(() => {
-          requestAnimationFrame(resolve);
-        });
-      });
-
-      const blockedIds = [];
-
-      try {
-        this.detectedAds.forEach((meta) => {
-          // DOM 节点存活自检
-          if (
-            meta.element &&
-            document.contains(meta.element) &&
-            !meta.isBlocked
-          ) {
-            this.neutralizeSingleInternal(meta.id);
-            blockedIds.push(meta.id);
-          }
-        });
-
-        if (blockedIds.length > 0) {
-          this.pushHistoryState({
-            type: 'BATCH_BLOCK',
-            items: blockedIds
-          });
-        }
-
-        return blockedIds.length;
-
-      } catch (error) {
-        console.error('[AdDetector] 批量屏蔽失败:', error);
-        this.showToast('⚠️ 批量屏蔽执行异常，请检查控制台');
-        return blockedIds.length;
-
-      } finally {
-        progress.finish();
-      }
-
-
     }
 
 
@@ -2800,6 +2581,94 @@ ${selector} {
       this.makeDraggable();
     }
 
+
+    /*
+    makeDraggable() {
+      const panel = this.shadow.querySelector('#main-panel');
+      const header = this.shadow.querySelector('#panel-header');
+      const edges = this.shadow.querySelectorAll('.edge-drag');
+
+      let isDragging = false;
+      let startX = 0;
+      let startY = 0;
+
+      let currentTranslateX = 0;
+      let currentTranslateY = 0;
+      let startTranslateX = 0;
+      let startTranslateY = 0;
+
+      try {
+        let savedPos = null;
+        if (typeof GM_getValue !== 'undefined') {
+          savedPos = GM_getValue('ad_detector_panel_transform', null);
+        } else if (window.localStorage) {
+          savedPos = JSON.parse(localStorage.getItem('ad_detector_panel_transform') || 'null');
+        }
+        if (savedPos && savedPos.x !== undefined && savedPos.y !== undefined) {
+          currentTranslateX = savedPos.x;
+          currentTranslateY = savedPos.y;
+          panel.style.transform = `translate3d(${currentTranslateX}px, ${currentTranslateY}px, 0)`;
+        }
+      } catch (e) { }
+
+      const startDrag = (e) => {
+        if (e.target.closest('#btn-close-panel') || e.target.closest('.select-control')) return;
+        if (e.button !== undefined && e.button !== 0) return;
+
+        isDragging = true;
+        startX = e.clientX;
+        startY = e.clientY;
+
+        startTranslateX = currentTranslateX;
+        startTranslateY = currentTranslateY;
+
+        document.body.style.userSelect = 'none';
+        e.preventDefault();
+      };
+
+      const moveDrag = (e) => {
+        if (!isDragging) return;
+
+        const deltaX = e.clientX - startX;
+        const deltaY = e.clientY - startY;
+
+        currentTranslateX = startTranslateX + deltaX;
+        currentTranslateY = startTranslateY + deltaY;
+
+        panel.style.transform = `translate3d(${currentTranslateX}px, ${currentTranslateY}px, 0)`;
+      };
+
+      const stopDrag = () => {
+        if (!isDragging) return;
+        isDragging = false;
+
+        document.body.style.userSelect = '';
+
+        const posData = { x: currentTranslateX, y: currentTranslateY };
+        try {
+          if (typeof GM_setValue !== 'undefined') {
+            GM_setValue('ad_detector_panel_transform', posData);
+          } else if (window.localStorage) {
+            localStorage.setItem('ad_detector_panel_transform', JSON.stringify(posData));
+          }
+        } catch (err) {
+          console.warn('[AdDetector] 无法保存面板位置', err);
+        }
+      };
+
+      const dragTargets = [header, ...edges];
+      dragTargets.forEach((el) => {
+        if (!el) return;
+        el.addEventListener('pointerdown', startDrag);
+      });
+
+      window.addEventListener('pointermove', moveDrag);
+      window.addEventListener('pointerup', stopDrag);
+      window.addEventListener('pointercancel', stopDrag);
+    }
+    */
+
+
     makeDraggable() {
 
       const panel =
@@ -2899,8 +2768,6 @@ ${selector} {
 
 
         isDragging = true;
-
-
 
         startX = e.clientX;
         startY = e.clientY;
@@ -3455,45 +3322,18 @@ ${selector} {
         }
       };
 
-      /*
       btnClean.onclick = () => {
         btnClean.disabled = true;
         btnClean.textContent = '屏蔽中...';
         requestAnimationFrame(() => {
           setTimeout(() => {
-            //const count = this.cleanAll();
+            const count = this.cleanAll();
             btnClean.disabled = false;
             btnClean.textContent = '一键屏蔽';
             this.showToast(`🛡 已成功屏蔽 ${count} 个威胁`);
           }, 50);
         });
       };
-      */
-
-      btnClean.onclick = async () => {
-        btnClean.disabled = true;
-        btnClean.textContent = '屏蔽中...';
-
-
-        try {
-          // 先让浏览器有机会更新按钮状态
-          await new Promise(resolve => requestAnimationFrame(resolve));
-
-          // 批量屏蔽
-          const count = await this.cleanAll();
-
-          this.showToast(`🛡 已成功屏蔽 ${count} 个威胁`);
-        } catch (error) {
-          console.error('[AdDetector] 一键屏蔽失败:', error);
-          this.showToast('⚠️ 批量屏蔽失败，请检查控制台');
-        } finally {
-          // 无论成功或失败，都恢复按钮
-          btnClean.disabled = false;
-          btnClean.textContent = '一键屏蔽';
-        }
-
-      };
-
 
       btnReset.onclick = () => {
         btnReset.disabled = true;
@@ -3601,28 +3441,21 @@ ${selector} {
 
       listEl.querySelectorAll('.item').forEach((item) => {
         const adId = item.getAttribute('data-ad-id');
+        const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
-        const isTouchDevice =
-          'ontouchstart' in window ||
-          navigator.maxTouchPoints > 0;
-
-        // PC 端：鼠标悬停预览
         if (!isTouchDevice) {
-          item.onpointerenter = (e) => {
+          item.addEventListener('pointerenter', (e) => {
             e.stopPropagation();
             this.previewHoverElement(adId, true);
-          };
+          });
 
-          item.onpointerleave = (e) => {
+          item.addEventListener('pointerleave', (e) => {
             e.stopPropagation();
             this.previewHoverElement(adId, false);
-          };
+          });
         } else {
-          // 移动端：点击卡片切换预览状态
-          item.onclick = (e) => {
-            if (e.target.closest('.btn-action')) {
-              return;
-            }
+          item.addEventListener('click', (e) => {
+            if (e.target.closest('.btn-action')) return;
 
             e.stopPropagation();
 
@@ -3635,56 +3468,27 @@ ${selector} {
               if (currentActiveId) {
                 this.previewHoverElement(currentActiveId, false);
               }
-
               this.previewHoverElement(adId, true);
               this.activeTouchAdId = adId;
             }
-          };
+          });
         }
 
-        // 统一处理按钮点击
-        // 使用 onclick，避免依赖 addEventListener
-        item.onclick = isTouchDevice
-          ? ((originalHandler) => {
-            return (e) => {
-              if (e.target.closest('.btn-action')) {
-                e.stopPropagation();
+        item.addEventListener('click', (e) => {
+          const btn = e.target.closest('.btn-action');
+          if (!btn) return;
 
-                const btn = e.target.closest('.btn-action');
-                const action = btn.getAttribute('data-action');
-                const id = btn.getAttribute('data-id');
+          const action = btn.getAttribute('data-action');
+          const id = btn.getAttribute('data-id');
 
-                if (action === 'preview') {
-                  this.showPreviewWindow(id);
-                } else if (action === 'hide') {
-                  this.neutralizeSingle(id);
-                } else if (action === 'restore') {
-                  this.restoreSingle(id);
-                }
-
-                return;
-              }
-
-              originalHandler(e);
-            };
-          })(item.onclick)
-          : (e) => {
-            const btn = e.target.closest('.btn-action');
-            if (!btn) return;
-
-            e.stopPropagation();
-
-            const action = btn.getAttribute('data-action');
-            const id = btn.getAttribute('data-id');
-
-            if (action === 'preview') {
-              this.showPreviewWindow(id);
-            } else if (action === 'hide') {
-              this.neutralizeSingle(id);
-            } else if (action === 'restore') {
-              this.restoreSingle(id);
-            }
-          };
+          if (action === 'preview') {
+            this.showPreviewWindow(id);
+          } else if (action === 'hide') {
+            this.neutralizeSingle(id);
+          } else if (action === 'restore') {
+            this.restoreSingle(id);
+          }
+        });
       });
 
       if (!this.hasTouchGlobalListener) {
@@ -3700,27 +3504,6 @@ ${selector} {
 
   }
 
-
-  // 全局测试进度条
-  window.testAdDetectorProgress = function () {
-    const detector = window.getDetector();
-    const progress = detector.showTopProgress();
-
-    let percent = 0;
-
-    const timer = setInterval(() => {
-      percent += 10;
-      progress.update(percent);
-
-      if (percent >= 90) {
-        clearInterval(timer);
-        progress.finish();
-      }
-    }, 200);
-
-    return '进度条测试已启动';
-  };
-
   // 单例挂载
   let instance = null;
   function getDetector() {
@@ -3735,10 +3518,8 @@ ${selector} {
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => getDetector());
-    window.testAdDetectorProgress();
   } else {
     getDetector();
-    window.testAdDetectorProgress();
   }
 
   // 绑定至全局 window 对象
@@ -3771,10 +3552,10 @@ ${selector} {
 
 // defuser
 // addEventListener_defuser("touchend")
-// addEventListener_defuser(); // 打断监听器
-// window_open_defuser(); // 打断 window.open 施法
-// noWindowOpenIf('window.open')
-// noWindowOpenIf('touchend')
+//  addEventListener_defuser(); // 打断监听器
+//window_open_defuser(); // 打断 window.open 施法
+//noWindowOpenIf('window.open')
+//          noWindowOpenIf('touchend')
 
 
 
