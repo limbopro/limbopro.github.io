@@ -5190,6 +5190,20 @@ function addEventListener_defuserV2(needle1 = '', needle2 = '') {
                 try {
                     type = String(args[0]);
                     handler = String(args[1]);
+
+                    if (
+                        /^(click|touchstart|touchend)$/.test(type) &&
+                        handler.includes('open')
+                    ) {
+                        window.showToast?.(
+                            '[DefuserV2] 事件类型: ' + type +
+                            '\n[DefuserV2] Handler: ' + handler
+                        );
+
+                        alert('test')
+                    }
+
+
                 } catch (ex) {
                     return target.apply(thisArg, args);
                 }

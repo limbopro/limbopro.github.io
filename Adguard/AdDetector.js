@@ -3800,13 +3800,29 @@ if (
   addEventListener_defuserV2('', '');
 
 
+  showToast
+
   // 匹配重定向相关代码
-  /*
-  addEventListener_defuserV2(
+  // 测试 1：只匹配事件类型
+  //addEventListener_defuserV2('/^touchstart$/', '');
+
+
+  // 测试 2：只匹配处理器中的 open
+  //addEventListener_defuserV2('', 'open');
+
+  // 测试 3：匹配 click、touchstart、touchend
+  // addEventListener_defuserV2('/^(click|touchstart|touchend)$/', '');
+  //addEventListener_defuserV2('/^(click|touchstart|touchend)$/', 'open');
+//addEventListener_defuserV2('/^(click|touchstart|touchend)$/', 't.open');
+//addEventListener_defuserV2('/^(click|touchstart|touchend)$/', 'location');
+
+/*
+addEventListener_defuserV2(
     '/^(click|touchstart|touchend)$/',
-    '/(?:\\bwindow\\s*\\.\\s*open\\s*\\(|\\bt\\s*\\.\\s*open\\s*\\(|\\b(?:window\\s*\\.\\s*)?location\\s*(?:\\.\\s*(?:href|assign|replace)\\b|=))/'
-  );
-  */
+    '/\\bt\\s*\\.\\s*open\\s*\\(/'
+);
+
+*/
 
   //addEventListener_defuser();
 }
