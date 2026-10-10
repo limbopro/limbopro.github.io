@@ -4418,62 +4418,50 @@ ${selector} {
 // noWindowOpenIf('touchend')
 
 
-// ==============================
-// 获取拦截状态
-// ==============================
-
-function getHijackStorageItem(key) {
-  try {
-    return localStorage.getItem(key);
-  } catch (e) {
-    return null;
-  }
-}
 
 // ==============================
 // 恶意劫持拦截状态
 // ==============================
 
 const hijackDefuserEnabled =
-  getHijackStorageItem('hijackDefuser') === '1';
+  localStorage.getItem('hijackDefuser') === '1';
 
 // 如果用户之前开启了点击跳转拦截，并且函数存在，则立即启用
 if (
   hijackDefuserEnabled &&
   typeof addEventListener_defuserV2 === 'function'
 ) {
-  // 必须在 addEventListener_defuserV2() 执行之前运行
+
+  // 必须在 addEventListener_defuser() 执行之前运行
   window.__selectorToolNativeAddEventListener =
     EventTarget.prototype.addEventListener;
-
   addEventListener_defuserV2('/^(touchstart|touchend)$/', '');
-
-  if (typeof startEventLogViewerV3 === 'function') {
-    startEventLogViewerV3();
+  if (
+    typeof startEventLogViewerV3 === 'function'
+  ) {
+    startEventLogViewerV3()
   }
+
 }
 
 // ==============================
 // 恶意频繁打开新窗口状态
 // ==============================
 
-/*const windowhijackDefuserEnabled =
-  getHijackStorageItem('windowhijackDefuser') === '1';
-*/
-
 const windowhijackDefuserEnabled =
-  window.self !== window.top ||
   localStorage.getItem('windowhijackDefuser') === '1';
 
-// 如果用户之前开启了 window.open 拦截，并且函数存在，则立即启用
+// 如果用户之前开启了window.open拦截，并且函数存在，则立即启用
 if (
   windowhijackDefuserEnabled &&
   typeof window_open_defuser === 'function'
 ) {
-  // 必须在 window_open_defuser() 执行之前运行
+
+  // 必须在 window_open_defuser 执行之前运行
   window.__selectorToolNativeWindowOpen = window.open;
 
-  window_open_defuser();
+  window_open_defuser()
+
 }
 
 // 以上应该放在 Adblock4limbo.user.js

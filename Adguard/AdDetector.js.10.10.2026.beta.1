@@ -309,16 +309,12 @@ ${selector} {
 
       window.toggleHijackDefuser =
         this.toggleHijackDefuser.bind(this);
-      window.toggleWindowHijackDefuser =
-        this.toggleWindowHijackDefuser.bind(this);
 
       // ==============================
       // 恢复恶意劫持拦截按钮状态
       // ==============================
 
       this.restoreHijackButton();
-      this.restoreWindowHijackButton();
-
 
       this.detectedAds = new Map();
       this.animatedGifCache = new Map();
@@ -396,8 +392,8 @@ ${selector} {
 
       // 更新按钮文字
       button.textContent = newState
-        ? '拦截恶意点击跳转'
-        : '拦截恶意点击跳转';
+        ? '🔓 拦截恶意点击跳转：开'
+        : '🔒 拦截恶意点击跳转：关';
 
       // 更新按钮颜色
       button.classList.toggle('active', newState);
@@ -405,42 +401,8 @@ ${selector} {
       // 提示
       this.showToast(
         newState
-          ? '✅ 拦截恶意点击跳转：已开启，刷新页面即可测试效果...(右上角或可查看拦截日志📔，若误伤正常跳转，请关闭)'
-          : '拦截恶意点击跳转：已关闭，请刷新页面'
-      );
-    }
-
-
-    toggleWindowHijackDefuser() {
-      const button =
-        this.shadow.querySelector('#btn-window-hijack');
-
-      if (!button) return;
-
-      const enabled =
-        localStorage.getItem('windowhijackDefuser') === '1';
-
-      const newState = !enabled;
-
-      // 保存状态
-      localStorage.setItem(
-        'windowhijackDefuser',
-        newState ? '1' : '0'
-      );
-
-      // 更新按钮文字
-      button.textContent = newState
-        ? '拦截点击弹窗广告'
-        : '拦截点击弹窗广告';
-
-      // 更新按钮颜色
-      button.classList.toggle('active', newState);
-
-      // 提示
-      this.showToast(
-        newState
-          ? '✅ 拦截点击弹窗广告：已开启，刷新页面即可测试效果...(若误伤正常新窗口打开，请关闭)'
-          : '拦截点击弹窗广告：已关闭，请刷新页面'
+          ? '🔓 拦截恶意点击跳转：已开启，刷新页面即可测试效果...(右上角或可查看拦截日志📔)'
+          : '🔒 拦截恶意点击跳转：已关闭，请刷新页面'
       );
     }
 
@@ -463,8 +425,8 @@ ${selector} {
           localStorage.getItem('hijackDefuser') === '1';
 
         button.textContent = enabled
-          ? '拦截恶意点击跳转'
-          : '拦截恶意点击跳转';
+          ? '🔓 拦截恶意点击跳转：开'
+          : '🔒 拦截恶意点击跳转：关';
 
 
         // 恢复按钮颜色
@@ -475,36 +437,6 @@ ${selector} {
 
       }, 500);
     }
-
-
-    restoreWindowHijackButton() {
-
-      const restoreTimer = setInterval(() => {
-
-        const button =
-          this.shadow?.querySelector('#btn-window-hijack');
-
-        // 按钮还没生成，继续等待
-        if (!button) return;
-
-        const enabled =
-          localStorage.getItem('windowhijackDefuser') === '1';
-
-        button.textContent = enabled
-          ? '拦截点击弹窗广告'
-          : '拦截点击弹窗广告';
-
-
-        // 恢复按钮颜色
-        button.classList.toggle('active', enabled);
-
-        // 找到按钮后停止循环
-        clearInterval(restoreTimer);
-
-      }, 500);
-    }
-
-
 
     // ==========================================
     // ★ 模块一：精准特异性选择器生成器
@@ -1425,7 +1357,7 @@ ${selector} {
   .ad-detector-hover-active {
     box-shadow: 0 0 15px rgba(255, 59, 48, 0.9) !important;
   }
-
+  
   /* 移动端微调流光外延与模糊，提升性能与显示效果 */
   .ad-detector-hover-active::after {
     top: -4px !important;
@@ -2606,7 +2538,7 @@ ${selector} {
 .edge-right { top: 0; right: 0; width: 25px; height: 100%; }
 
 
-
+          
           .select-control {
             background: rgba(255, 255, 255, 0.12);
             color: #f2f2f7;
@@ -2672,30 +2604,13 @@ ${selector} {
           .btn-clean { background: #ff453a; color: #ffffff; box-shadow: 0 2px 8px rgba(255, 69, 58, 0.3); }
           .btn-reset { background: #ff9500; color: #ffffff; box-shadow: 0 2px 8px rgba(255, 149, 0, 0.3); }
 
-
-          #hijacktools {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 4px;
-    align-items: stretch;
-    width: 100%;
-}
-
-@media (max-width: 480px) {
-    #hijacktools {
-        gap: 4px;
-    }
-
- 
-    }
-
-        .btn-window-hijack,.btn-hijack {
+        .btn-hijack {
     background: #475569;
     color: #ffffff;
     box-shadow: 0 2px 8px rgba(71, 85, 105, 0.3);
 }
 
-.btn-window-hijack.active,.btn-hijack.active {
+.btn-hijack.active {
     background: #16a34a;
     color: #ffffff;
     box-shadow: 0 2px 8px rgba(22, 163, 74, 0.3);
@@ -2860,21 +2775,13 @@ ${selector} {
             <button class="footer-btn btn-undo" id="btn-undo" title="撤回上一步操作">↩️ 撤回</button>
             <button class="footer-btn btn-redo" id="btn-redo" title="重做上一步撤回">↪️ 重做</button>
 
-            <div id='hijacktools'>
             <button class="footer-btn btn-hijack"
         id="btn-hijack"
         title="拦截恶意点击跳转"
         onclick="toggleHijackDefuser()">
-    拦截恶意点击跳转
+    🔒 拦截恶意点击跳转：关
 </button>
 
-<button class="footer-btn btn-window-hijack"
-        id="btn-window-hijack"
-        title="拦截点击弹窗广告"
-        onclick="toggleWindowHijackDefuser()">
-    拦截点击弹窗广告
-</button>
-</div>
             </div>
         </div>
 
@@ -4418,62 +4325,52 @@ ${selector} {
 // noWindowOpenIf('touchend')
 
 
-// ==============================
-// 获取拦截状态
-// ==============================
-
-function getHijackStorageItem(key) {
-  try {
-    return localStorage.getItem(key);
-  } catch (e) {
-    return null;
-  }
-}
 
 // ==============================
 // 恶意劫持拦截状态
 // ==============================
 
 const hijackDefuserEnabled =
-  getHijackStorageItem('hijackDefuser') === '1';
+  localStorage.getItem('hijackDefuser') === '1';
 
-// 如果用户之前开启了点击跳转拦截，并且函数存在，则立即启用
+// 如果用户之前开启了拦截，并且函数存在，则立即启用
 if (
   hijackDefuserEnabled &&
   typeof addEventListener_defuserV2 === 'function'
 ) {
-  // 必须在 addEventListener_defuserV2() 执行之前运行
+
+  // 必须在 addEventListener_defuser() 执行之前运行
   window.__selectorToolNativeAddEventListener =
     EventTarget.prototype.addEventListener;
 
+  // 匹配重定向相关代码
+  //// addEventListener_defuserV2('', '');
+
+
+  //addEventListener_defuserV2('', '');
+  // addEventListener_defuserV2('/^(touchstart|touchend)$/', 'open');
   addEventListener_defuserV2('/^(touchstart|touchend)$/', '');
 
-  if (typeof startEventLogViewerV3 === 'function') {
-    startEventLogViewerV3();
+
+  if (
+    typeof startEventLogViewerV3 === 'function'
+  ) {
+    startEventLogViewerV3()
   }
-}
 
-// ==============================
-// 恶意频繁打开新窗口状态
-// ==============================
 
-/*const windowhijackDefuserEnabled =
-  getHijackStorageItem('windowhijackDefuser') === '1';
-*/
+  // 匹配重定向相关代码
+  // 测试 1：只匹配事件类型
+  //addEventListener_defuserV2('/^touchstart$/', '');
 
-const windowhijackDefuserEnabled =
-  window.self !== window.top ||
-  localStorage.getItem('windowhijackDefuser') === '1';
 
-// 如果用户之前开启了 window.open 拦截，并且函数存在，则立即启用
-if (
-  windowhijackDefuserEnabled &&
-  typeof window_open_defuser === 'function'
-) {
-  // 必须在 window_open_defuser() 执行之前运行
-  window.__selectorToolNativeWindowOpen = window.open;
+  // 测试 2：只匹配处理器中的 open
+  //addEventListener_defuserV2('', 'open');
 
-  window_open_defuser();
+  // 测试 3：匹配 click、touchstart、touchend
+  // addEventListener_defuserV2('/^(click|touchstart|touchend)$/', '');
+  //addEventListener_defuserV2('/^(click|touchstart|touchend)$/', 'open');
+
 }
 
 // 以上应该放在 Adblock4limbo.user.js
